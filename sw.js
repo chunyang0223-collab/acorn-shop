@@ -1,0 +1,43 @@
+/* =====================================================
+   🌰 도토리 상점 v4 — Service Worker
+   ===================================================== */
+const CACHE_NAME = 'acorn-shop-v4';
+const CACHE_URLS = ['./index.html', './manifest.json'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(CACHE_URLS)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+  ).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  if (e.request.url.startsWith('chrome-extension')) return;
+  e.respondWith(
+    fetch(e.request).then(res => {
+      if (res && res.status === 200) {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
+  );
+});
+self.addEventListener('push', e => {
+  if (!e.data) return;
+  let d = {};
+  try { d = e.data.json(); } catch { d = { title: '도토리 상점', body: e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || '도토리 상점 🌰', {
+    body: d.body, icon: './icons/icon-192x192.png', badge: './icons/icon-72x72.png',
+    tag: d.tag || 'acorn', vibrate: [200, 100, 200],
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.matchAll({ type: 'window' }).then(cs => {
+    for (const c of cs) if ('focus' in c) return c.focus();
+    if (clients.openWindow) return clients.openWindow('./');
+  }));
+});
