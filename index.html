@@ -721,23 +721,45 @@ let reqFilter = 'all';
 //  앱 시작
 // ──────────────────────────────────────────────
 async function boot() {
-  console.log("boot 실행됨");
-  // Auth 상태 변경 구독
-  sb.auth.onAuthStateChange(async (event, s) => {
-    session = s;
-    if (s) {
-      await onSignedIn(s);
-    } else {
-      showLoginScreen();
+  // 1. 카카오 로그인 후 돌아왔을 때 URL의 토큰을 확인합니다.
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const expiresIn = params.get('expires_in');
+    
+    if (accessToken) {
+      const session = {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_at: Math.floor(Date.now() / 1000) + parseInt(expiresIn || 3600),
+        user: {} 
+      };
+      
+      // 토큰을 저장합니다.
+      localStorage.setItem('sb_session', JSON.stringify(session));
+      
+      // 주소창을 깨끗하게 정리하고 새로고침합니다.
+      window.history.replaceState(null, null, window.location.pathname);
+      window.location.reload(); 
+      return;
     }
-  });
-
-  // 현재 세션 확인
-  const { data } = await sb.auth.getSession();
-  if (!data.session) {
-    showLoginScreen();
   }
-  // onAuthStateChange가 처리함
+
+  // 2. 현재 로그인 상태(세션)가 있는지 확인합니다.
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (session) {
+    // 로그인 된 경우: 상점 화면 표시
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appRoot').classList.remove('hidden');
+    await loadData(); 
+  } else {
+    // 로그인 안 된 경우: 로그인 화면 표시
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('appRoot').classList.add('hidden');
+  }
 }
 
 function showLoginScreen() {
