@@ -419,7 +419,7 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
 
     <!-- 회원가입 -->
     <div class="text-center">
-      <button class="text-xs text-amber-600 font-bold underline" onclick="showSignup()">계정이 없으신가요? 회원가입</button>
+      <button class="text-xs text-amber-600 font-bold underline" onclick="console.log('버튼클릭됨'); showSignup();">계정이 없으신가요? 회원가입</button>
     </div>
   </div>
 </div>
@@ -721,6 +721,7 @@ let reqFilter = 'all';
 //  앱 시작
 // ──────────────────────────────────────────────
 async function boot() {
+  console.log("boot 실행됨");
   // Auth 상태 변경 구독
   sb.auth.onAuthStateChange(async (event, s) => {
     session = s;
@@ -740,6 +741,7 @@ async function boot() {
 }
 
 function showLoginScreen() {
+  console.log("showLoginScreen 실행됨");
   document.getElementById('loadingScreen').classList.add('hidden');
   document.getElementById('appRoot').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
@@ -893,6 +895,7 @@ function showErr(msg) {
 }
 
 function showSignup() {
+  console.log("showSignup 실행됨");
   showModal(`
     <h2 class="text-lg font-black text-gray-800 mb-4">✨ 회원가입</h2>
     <div class="space-y-3">
