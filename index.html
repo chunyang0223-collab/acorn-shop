@@ -1729,7 +1729,17 @@ function fmtTs(iso) {
   catch { return iso.slice(0,16).replace('T',' '); }
 }
 
-function showModal(html) { document.getElementById('modalContent').innerHTML=html; document.getElementById('modal').classList.remove('hidden'); }
+function showModal(html) { 
+  console.log("showModal 실행됨");
+  const modalEl = document.getElementById('modal');
+  const contentEl = document.getElementById('modalContent');
+  console.log("modal 엘리먼트:", modalEl);
+  console.log("modalContent 엘리먼트:", contentEl);
+  if (!modalEl || !contentEl) { console.error("모달 엘리먼트를 못 찾음!"); return; }
+  contentEl.innerHTML = html; 
+  modalEl.classList.remove('hidden'); 
+  console.log("모달 클래스:", modalEl.className);
+}
 function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
 let _toastT;
