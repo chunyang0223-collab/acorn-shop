@@ -850,7 +850,7 @@ body {
         <h2 class="text-lg font-black text-gray-800 mb-5">🌰 도토리 지급</h2>
         <div class="space-y-4">
           <div><label class="text-sm font-bold text-gray-600 mb-1 block">사용자 선택</label><select class="field" id="giveUser"></select></div>
-          <div><label class="text-sm font-bold text-gray-600 mb-1 block">지급량</label><input class="field" type="number" id="giveAmount" placeholder="지급할 도토리 수" min="1"></div>
+          <div><label class="text-sm font-bold text-gray-600 mb-1 block">지급량</label><input class="field" type="number" id="giveAmount" placeholder="지급(+) / 차감(-)"></div>
           <div><label class="text-sm font-bold text-gray-600 mb-1 block">메모</label><input class="field" type="text" id="giveMemo" placeholder="지급 사유"></div>
           <button class="btn btn-primary w-full py-3 text-base" onclick="giveAcorns()">🌰 지급하기</button>
         </div>
@@ -2445,14 +2445,19 @@ async function _giveAcornsInner() {
     const userId = document.getElementById('giveUser').value;
     const amount = parseInt(document.getElementById('giveAmount').value);
     const memo   = document.getElementById('giveMemo')?.value || '';
-    if (!userId || !amount || amount <= 0) { toast('❌', '사용자와 지급량을 확인해주세요'); return; }
+    if (!userId || !amount || amount === 0) { toast('❌', '사용자와 지급량을 확인해주세요'); return; }
 
     const res = await sb.rpc('admin_give_acorns', { p_target_user_id: userId, p_amount: amount, p_memo: memo || '관리자 지급' });
     if (!res.data?.success) { toast('❌', '지급 실패: ' + (res.data?.error || '')); return; }
 
     const { data: u } = await sb.from('users').select('display_name').eq('id', userId).single();
-    await pushNotif(userId, 'admin', '도토리 지급! 🌰', `관리자가 ${amount} 도토리를 지급했어요! ${memo ? '(' + memo + ')' : ''}`);
-    toast('✅', `${u?.display_name||'사용자'}에게 ${amount} 도토리 지급!`);
+    const isDeduct = amount < 0;
+    const absAmt = Math.abs(amount);
+    await pushNotif(userId, 'admin',
+      isDeduct ? '도토리 차감 🌰' : '도토리 지급! 🌰',
+      `관리자가 ${absAmt} 도토리를 ${isDeduct ? '차감했어요' : '지급했어요'}! ${memo ? '(' + memo + ')' : ''}`
+    );
+    toast('✅', `${u?.display_name||'사용자'}에게 ${absAmt} 도토리 ${isDeduct ? '차감' : '지급'}!`);
     document.getElementById('giveAmount').value = '';
     document.getElementById('giveMemo').value = '';
     populateGiveSelect();
