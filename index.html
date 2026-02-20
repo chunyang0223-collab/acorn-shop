@@ -624,7 +624,7 @@ body {
 }
 
 /* ── 위치 고정 클래스들 ── */
-.toast-container { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%); z-index: 500; min-width: 220px; max-width: calc(100vw - 48px); white-space: nowrap; }
+.toast-container { position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%); z-index: 500; min-width: 220px; max-width: calc(100vw - 48px); white-space: nowrap; }
 .notif-scroll { max-height: 55dvh; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
 .text-ellipsis { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -1701,11 +1701,11 @@ async function doGacha(count) {
   }
 
   try {
-    playSound('gacha');
     const cost = GACHA_COST * count;
     if ((myProfile.acorns||0) < cost) {
       playSound('reject'); toast('❌', '도토리가 부족해요!'); return;
     }
+    playSound('gacha');
 
     // 뽑기 풀 최신화
     const pool = await loadGachaPool();
