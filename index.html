@@ -645,8 +645,8 @@ body {
 
 
 /* ── 탭 콘텐츠 상단 여백 통일 ── */
-[id^="utab-"] { padding-top: 4px; }
-[id^="atab-"] { padding-top: 4px; }
+[id^="utab-"] { padding-top: 12px; }
+[id^="atab-"] { padding-top: 12px; }
 
 /* ── 페이지네이션 버튼 ── */
 .page-nav-btn {
@@ -668,6 +668,90 @@ body {
   border-color: rgba(249,168,212,0.5);
 }
 .page-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+
+/* ── 테마 변수 ── */
+:root {
+  --bg-grad: linear-gradient(-45deg, #ffd6e7, #ffefba, #c3e8ff, #fce4ff);
+  --card-bg:    rgba(255,255,255,0.72);
+  --card-border:rgba(255,255,255,0.85);
+  --card-shadow:rgba(180,140,200,0.13);
+  --text-main:  #3d2b5e;
+  --text-sub:   #6b7280;
+  --text-muted: #9ca3af;
+  --input-bg:   rgba(255,255,255,0.7);
+  --input-border:rgba(210,180,240,0.4);
+  --tab-inactive:#b0a0c0;
+  --tab-bar-bg: rgba(255,255,255,0.72);
+  --row-bg:     rgba(255,255,255,0.5);
+  --acorn-pill-bg: linear-gradient(135deg,#fde68a,#f59e0b);
+  --acorn-pill-color: #78350f;
+  --header-title: #7c2d92;
+  --header-sub:   #f59e0b;
+}
+[data-theme="dark"] {
+  --bg-grad: linear-gradient(-45deg, #1a0a2e, #0d1a3a, #1a1040, #220a30);
+  --card-bg:    rgba(40,20,70,0.75);
+  --card-border:rgba(255,255,255,0.10);
+  --card-shadow:rgba(0,0,0,0.4);
+  --text-main:  #e8d5ff;
+  --text-sub:   #b0a0c8;
+  --text-muted: #7c6d96;
+  --input-bg:   rgba(255,255,255,0.08);
+  --input-border:rgba(180,140,240,0.25);
+  --tab-inactive:#7060a0;
+  --tab-bar-bg: rgba(30,15,55,0.8);
+  --row-bg:     rgba(255,255,255,0.07);
+  --acorn-pill-bg: linear-gradient(135deg,#78350f,#d97706);
+  --acorn-pill-color: #fde68a;
+  --header-title: #d8b4fe;
+  --header-sub:   #fcd34d;
+}
+
+/* ── 테마 변수 적용 ── */
+body { background: var(--bg-grad) !important; }
+.clay-card {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  box-shadow: 0 8px 32px var(--card-shadow), 0 2px 8px var(--card-shadow) !important;
+}
+.field {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-main) !important;
+}
+.tab-btn { color: var(--tab-inactive) !important; }
+.acorn-pill { background: var(--acorn-pill-bg) !important; color: var(--acorn-pill-color) !important; }
+
+/* 다크모드 텍스트 색 */
+[data-theme="dark"] .text-gray-800 { color: #e8d5ff !important; }
+[data-theme="dark"] .text-gray-700 { color: #c8b8e8 !important; }
+[data-theme="dark"] .text-gray-400 { color: #8070a8 !important; }
+[data-theme="dark"] .text-gray-300 { color: #6a5a88 !important; }
+[data-theme="dark"] .text-amber-900 { color: #d8b4fe !important; }
+[data-theme="dark"] .text-amber-700 { color: #c4a0f8 !important; }
+[data-theme="dark"] .text-amber-500 { color: #fcd34d !important; }
+[data-theme="dark"] .bg-gray-50 { background: rgba(255,255,255,0.06) !important; }
+[data-theme="dark"] .bg-amber-50 { background: rgba(180,100,255,0.12) !important; }
+[data-theme="dark"] .bg-pink-50  { background: rgba(255,100,180,0.1) !important; }
+[data-theme="dark"] .bg-yellow-100 { background: rgba(255,200,50,0.1) !important; }
+[data-theme="dark"] .bg-green-100  { background: rgba(50,200,100,0.1) !important; }
+[data-theme="dark"] select, [data-theme="dark"] option { background: #1a0a35; color: #e8d5ff; }
+
+/* 테마 토글 버튼 */
+.theme-toggle-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--card-border);
+  background: var(--card-bg);
+  backdrop-filter: blur(8px);
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  box-shadow: 0 2px 8px var(--card-shadow);
+}
+.theme-toggle-btn:hover { transform: scale(1.1); }
 
 </style>
 </head>
@@ -733,6 +817,9 @@ body {
       </div>
     </div>
     <div class="flex items-center gap-2">
+      <button class="theme-toggle-btn hidden" id="themeToggleBtn" onclick="toggleTheme()" title="테마 전환">
+        <span id="themeIcon">🌙</span>
+      </button>
       <button class="relative p-2 rounded-2xl bg-white shadow-sm hidden" onclick="showNotifications()" id="notifBtn">
         <span class="text-xl">🔔</span>
         <span class="notif-dot hidden" id="notifDot"></span>
@@ -1305,7 +1392,7 @@ async function onSignedIn(s) {
     myProfile = profile;
 
     // 마지막 접속 시간 기록 (await 안 함 - UI 블로킹 방지)
-    sb.from('users').update({ last_seen_at: new Date().toISOString() }).eq('id', profile.id);
+    sb.from('users').update({ last_seen_at: new Date().toISOString() }).eq('id', s.user.id);
 
     // 뽑기 풀 로드
     const { data: gi } = await sb.from('gacha_items').select('*').eq('active', true);
@@ -1420,6 +1507,7 @@ function initAppUI() {
     document.getElementById('headerUserLabel').textContent = myProfile.display_name;
     document.getElementById('headerAcorns').classList.remove('hidden');
     document.getElementById('notifBtn').classList.remove('hidden');
+  document.getElementById('themeToggleBtn')?.classList.remove('hidden');
     document.getElementById('userMode').classList.remove('hidden');
     document.getElementById('adminMode').classList.add('hidden');
     updateAcornDisplay();
@@ -3091,6 +3179,24 @@ function fmtTs(iso) {
     return date.toLocaleString('ko-KR', { timeZone:'Asia/Seoul', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
   } catch { return iso.slice(0,16).replace('T',' '); }
 }
+
+// ── 테마 관리 ──
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('acornTheme', theme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+// 저장된 테마 또는 시스템 다크모드 반영
+(function() {
+  const saved = localStorage.getItem('acornTheme');
+  const preferDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved || (preferDark ? 'dark' : 'light'));
+})();
 
 function _blockScroll(e) {
   // 모달 내부 스크롤(.modal-box)은 허용, 오버레이 터치는 차단
