@@ -578,6 +578,7 @@ body {
 @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
 @keyframes slideUp  { from{transform:translateY(40px) scale(.95);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
 @keyframes bounceIn { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes toastIn { from{opacity:0;scale:.85} to{opacity:1;scale:1} }
 @keyframes popIn    { 0%{transform:scale(0) rotate(-180deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
 @keyframes shake    { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
 @keyframes pulse    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
@@ -624,7 +625,7 @@ body {
 }
 
 /* ── 위치 고정 클래스들 ── */
-.toast-container { position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%); z-index: 500; min-width: 220px; max-width: calc(100vw - 48px); white-space: nowrap; }
+.toast-container { position: fixed; top: 35%; left: 50%; transform: translateX(-50%); z-index: 500; min-width: 220px; max-width: calc(100vw - 48px); pointer-events: none; }
 .notif-scroll { max-height: 55dvh; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
 .text-ellipsis { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -1055,9 +1056,9 @@ body {
 
 <!-- 토스트 -->
 <div id="toast" class="toast-container hidden">
-  <div class="clay-card px-5 py-3 flex items-center gap-2 border-b-4 border-amber-400 bounce-in">
-    <span id="toastIcon" class="text-lg"></span>
-    <span id="toastMsg" class="font-bold text-gray-800 text-sm"></span>
+  <div id="toastInner" style="text-align:center;animation:toastIn .25s cubic-bezier(.34,1.56,.64,1) both;background:rgba(40,20,60,0.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1.5px solid rgba(255,255,255,0.15);border-radius:20px;padding:14px 24px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 8px 32px rgba(80,40,120,0.35)">
+    <span id="toastIcon" class="text-2xl"></span>
+    <span id="toastMsg" style="font-weight:800;font-size:14px;color:rgba(255,255,255,0.92)"></span>
   </div>
 </div>
 
@@ -3101,7 +3102,9 @@ function toast(icon, msg) {
   document.getElementById('toastIcon').textContent = icon;
   document.getElementById('toastMsg').textContent  = msg;
   const el = document.getElementById('toast');
-  el.classList.remove('hidden'); el.style.animation='none'; void el.offsetWidth; el.style.animation='bounceIn .3s';
+  const inner = document.getElementById('toastInner');
+  el.classList.remove('hidden');
+  if (inner) { inner.style.animation='none'; void inner.offsetWidth; inner.style.animation='toastIn .25s cubic-bezier(.34,1.56,.64,1) both'; }
   _toastT = setTimeout(()=>{ el.classList.add('hidden'); el.style.animation=''; }, 3000);
 }
 
