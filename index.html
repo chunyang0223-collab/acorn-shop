@@ -507,7 +507,7 @@ body {
   border: 1.5px solid rgba(255,255,255,0.9);
   border-radius: 32px;
   padding: 28px;
-  width: 92%; max-width: 440px;
+  width: 92%; max-width: min(440px, calc(100vw - 32px));
   animation: slideUp .25s cubic-bezier(.34,1.56,.64,1);
   box-shadow: 0 24px 80px rgba(140,100,200,.25);
   max-height: 90dvh; overflow-y: auto;
@@ -624,7 +624,7 @@ body {
 }
 
 /* ── 위치 고정 클래스들 ── */
-.toast-container { position: fixed; top: 24px; right: 24px; z-index: 500; min-width: 220px; }
+.toast-container { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%); z-index: 500; min-width: 220px; max-width: calc(100vw - 48px); white-space: nowrap; }
 .notif-scroll { max-height: 55dvh; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
 .text-ellipsis { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -1055,7 +1055,7 @@ body {
 
 <!-- 토스트 -->
 <div id="toast" class="toast-container hidden">
-  <div class="clay-card px-5 py-3 flex items-center gap-2 border-l-4 border-amber-400 bounce-in">
+  <div class="clay-card px-5 py-3 flex items-center gap-2 border-b-4 border-amber-400 bounce-in">
     <span id="toastIcon" class="text-lg"></span>
     <span id="toastMsg" class="font-bold text-gray-800 text-sm"></span>
   </div>
@@ -1563,7 +1563,7 @@ async function requestProduct(id) {
   if (!p) return;
   const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
   if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(); return; }
-  if ((myProfile.acorns || 0) < p.price) { toast('❌', '도토리가 부족해요!'); return; }
+  if ((myProfile.acorns || 0) < p.price) { playSound('reject'); toast('❌', '도토리가 부족해요!'); return; }
   showModal(`
     <div class="text-center">
       <div class="text-6xl mb-3">${p.icon}</div>
@@ -1704,7 +1704,7 @@ async function doGacha(count) {
     playSound('gacha');
     const cost = GACHA_COST * count;
     if ((myProfile.acorns||0) < cost) {
-      toast('❌', '도토리가 부족해요!'); return;
+      playSound('reject'); toast('❌', '도토리가 부족해요!'); return;
     }
 
     // 뽑기 풀 최신화
@@ -2411,7 +2411,7 @@ async function showNotifications() {
       notifs.map(n => `<div class="p-3 rounded-2xl bg-gray-50 mb-2 flex gap-3">
         <span class="text-xl shrink-0">${typeIcon[n.type]||'🔔'}</span>
         <div><p class="text-sm font-black text-gray-800">${n.title}</p>
-          <p class="text-xs text-gray-400 font-semibold">${n.body}</p>
+          <p class="text-xs text-gray-400 font-semibold" style="word-break:break-word">${n.body}</p>
           <p class="text-xs text-gray-300 mt-1">${fmtTs(n.created_at)}</p>
         </div>
       </div>`).join('')}
@@ -3069,8 +3069,26 @@ function fmtTs(iso) {
   } catch { return iso.slice(0,16).replace('T',' '); }
 }
 
-function showModal(html) { document.getElementById('modalContent').innerHTML=html; document.getElementById('modal').classList.remove('hidden'); }
-function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+let _modalScrollY = 0;
+function showModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').classList.remove('hidden');
+  // iOS Safari: 스크롤된 상태에서 fixed 모달 열면 viewport 틀어짐 방지
+  _modalScrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${_modalScrollY}px`;
+  document.body.style.width = '100%';
+  document.body.style.overflowY = 'scroll';
+}
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+  // 스크롤 위치 복원
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  document.body.style.overflowY = '';
+  window.scrollTo(0, _modalScrollY);
+}
 
 let _toastT;
 function toast(icon, msg) {
