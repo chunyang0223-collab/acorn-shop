@@ -772,6 +772,10 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
 // ──────────────────────────────────────────────
 let _audioCtx = null;
 
+// 모바일 여부 감지 → 볼륨 배율 (모바일 +15%)
+const _isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const _volMult = _isMobile ? 1.15 : 1.0;
+
 // 첫 터치/클릭 시 AudioContext 생성 (브라우저 자동재생 정책 우회)
 function _ensureAudio() {
   if (!_audioCtx) {
@@ -791,7 +795,7 @@ function _playTone(freq, type, duration, vol=0.165) {
     const gain = _audioCtx.createGain();
     osc.connect(gain); gain.connect(_audioCtx.destination);
     osc.type = type; osc.frequency.setValueAtTime(freq, _audioCtx.currentTime);
-    gain.gain.setValueAtTime(vol, _audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol * _volMult, _audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, _audioCtx.currentTime + duration);
     osc.start(); osc.stop(_audioCtx.currentTime + duration);
   } catch(e) {}
