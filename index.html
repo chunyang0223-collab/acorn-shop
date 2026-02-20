@@ -3078,22 +3078,23 @@ function fmtTs(iso) {
 let _modalScrollY = 0;
 function showModal(html) {
   document.getElementById('modalContent').innerHTML = html;
-  // iOS Safari: body fixed 고정 전 스크롤바 너비 보정 (레이아웃 밀림 방지)
-  const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
-  document.body.style.paddingRight = scrollbarW ? scrollbarW + 'px' : '';
   _modalScrollY = window.scrollY;
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${_modalScrollY}px`;
-  document.body.style.width = '100%';
+  // iOS Safari: 스크롤된 상태일 때만 body fixed 적용 (안 하면 다른 탭에서 레이아웃 흔들림)
+  if (_modalScrollY > 0) {
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${_modalScrollY}px`;
+    document.body.style.width = '100%';
+  }
   document.getElementById('modal').classList.remove('hidden');
 }
 function closeModal() {
   document.getElementById('modal').classList.add('hidden');
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.width = '';
-  document.body.style.paddingRight = '';
-  window.scrollTo(0, _modalScrollY);
+  if (_modalScrollY > 0) {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, _modalScrollY);
+  }
 }
 
 let _toastT;
