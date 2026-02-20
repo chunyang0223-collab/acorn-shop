@@ -1348,14 +1348,18 @@ const rcClass = r => ({common:'rc-common',rare:'rc-rare',epic:'rc-epic',legend:'
 async function renderGachaProbTable() {
   const el = document.getElementById('gachaProbTable');
   if (!el) return;
-  const { data: items } = await sb.from('products').select('name,icon,probability,rarity').eq('active', true).eq('item_type', 'gacha').order('probability', { ascending: false });
+  const { data: items, error } = await sb.from('products')
+    .select('name,icon,probability,description')
+    .eq('active', true).eq('item_type', 'gacha')
+    .order('probability', { ascending: false });
+  if (error) { el.innerHTML = `<p class="text-xs text-red-400 text-center py-2">오류: ${error.message}</p>`; return; }
   if (!items?.length) { el.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">등록된 뽑기 상품 없음</p>'; return; }
   const total = items.reduce((s,x) => s+(x.probability||0), 0);
   el.innerHTML = items.map(x => {
     const pct = total > 0 ? ((x.probability||0)/total*100).toFixed(1) : (100/items.length).toFixed(1);
-    return `<div class="flex justify-between items-center py-1">
-      <span class="text-sm">${x.icon||'🎁'} ${x.name}</span>
-      <span class="badge ${rcClass(x.rarity||'common')}">${pct}%</span>
+    return `<div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+      <span class="text-sm font-bold text-gray-700">${x.icon||'🎁'} ${x.name}</span>
+      <span style="background:#ede9fe;color:#7c3aed;border-radius:10px;padding:2px 10px;font-size:12px;font-weight:800">${pct}%</span>
     </div>`;
   }).join('');
 }
