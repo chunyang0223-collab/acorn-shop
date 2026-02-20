@@ -1660,7 +1660,13 @@ async function addStoreProduct() {
   if (!name) { toast('❌', '상품명을 입력해주세요'); return; }
   if (!price) { toast('❌', '가격을 입력해주세요'); return; }
   const { data: all } = await sb.from('products').select('id');
-  await sb.from('products').insert({ name, price, icon, description: desc, reward_type: rewardType, acorn_amt: acornAmt, item_type: 'store', probability: 0, sort_order: (all?.length||0)+1 });
+  const { error } = await sb.from('products').insert({
+    name, price, icon, description: desc,
+    reward_type: rewardType, acorn_amt: acornAmt,
+    item_type: 'store', probability: 0,
+    active: true, sort_order: (all?.length||0)+1
+  });
+  if (error) { toast('❌', '추가 실패: ' + error.message); return; }
   ['ns-name','ns-icon','ns-price','ns-desc','ns-acornAmt'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
   playSound('click');
   renderProductAdmin(); toast('✅', '상점 상품 추가 완료!');
@@ -1676,7 +1682,13 @@ async function addGachaProduct() {
   if (!name) { toast('❌', '아이템명을 입력해주세요'); return; }
   if (!probability) { toast('❌', '확률을 입력해주세요 (예: 10)'); return; }
   const { data: all } = await sb.from('products').select('id');
-  await sb.from('products').insert({ name, price: 0, icon, description: desc, reward_type: rewardType, acorn_amt: acornAmt, item_type: 'gacha', probability, sort_order: (all?.length||0)+1 });
+  const { error } = await sb.from('products').insert({
+    name, price: 0, icon, description: desc,
+    reward_type: rewardType, acorn_amt: acornAmt,
+    item_type: 'gacha', probability,
+    active: true, sort_order: (all?.length||0)+1
+  });
+  if (error) { toast('❌', '추가 실패: ' + error.message); return; }
   ['ng-name','ng-icon','ng-probability','ng-desc','ng-acornAmt'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
   playSound('click');
   renderProductAdmin(); toast('✅', '뽑기 상품 추가 완료!');
