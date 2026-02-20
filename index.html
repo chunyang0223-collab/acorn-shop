@@ -137,24 +137,29 @@ const supabase = (() => {
       let _select = '*';
       let _order = null;
       let _single = false;
+      let _maybeSingle = false;
       let _upsert = false;
+      let _countExact = false;
 
       const q = {
-        select(cols) { _select = cols; _url = url + '/rest/v1/' + table + '?select=' + cols; return q; },
-        eq(col, val) { _filters.push(col + '=eq.' + encodeURIComponent(val)); return q; },
-        neq(col, val) { _filters.push(col + '=neq.' + encodeURIComponent(val)); return q; },
-        order(col, opts) { _order = col + (opts?.ascending === false ? '.desc' : '.asc'); return q; },
-        limit(n) { _filters.push('limit=' + n); return q; },
-        single() { _single = true; return q; },
-        insert(data) { _method = 'POST'; _body = JSON.stringify(data); return q; },
-        upsert(data, opts) { 
-          _method = 'POST'; 
-          _body = JSON.stringify(data); 
-          _upsert = true;
-          return q; 
+        select(cols, opts) {
+          _select = cols || '*';
+          _url = url + '/rest/v1/' + table + '?select=' + _select;
+          if (opts?.count === 'exact') _countExact = true;
+          return q;
         },
-        update(data) { _method = 'PATCH'; _body = JSON.stringify(data); return q; },
-        delete() { _method = 'DELETE'; return q; },
+        eq(col, val)   { _filters.push(col + '=eq.'   + encodeURIComponent(val)); return q; },
+        neq(col, val)  { _filters.push(col + '=neq.'  + encodeURIComponent(val)); return q; },
+        ilike(col, val){ _filters.push(col + '=ilike.' + encodeURIComponent(val)); return q; },
+        gte(col, val)  { _filters.push(col + '=gte.'  + encodeURIComponent(val)); return q; },
+        order(col, opts){ _order = col + (opts?.ascending === false ? '.desc' : '.asc'); return q; },
+        limit(n)       { _filters.push('limit=' + n); return q; },
+        single()       { _single = true; return q; },
+        maybeSingle()  { _maybeSingle = true; return q; },
+        insert(data)   { _method = 'POST'; _body = JSON.stringify(data); return q; },
+        upsert(data)   { _method = 'POST'; _body = JSON.stringify(data); _upsert = true; return q; },
+        update(data)   { _method = 'PATCH'; _body = JSON.stringify(data); return q; },
+        delete()       { _method = 'DELETE'; return q; },
 
         async then(resolve, reject) {
           try {
@@ -166,19 +171,31 @@ const supabase = (() => {
             const h = { ...headers };
             if (_upsert) h['Prefer'] = 'resolution=merge-duplicates,return=representation';
             else if (_method === 'POST') h['Prefer'] = 'return=representation';
-            if (_single) h['Accept'] = 'application/vnd.pgrst.object+json';
+            if (_countExact) h['Prefer'] = (h['Prefer'] ? h['Prefer'] + ',' : '') + 'count=exact';
+            if (_single || _maybeSingle) h['Accept'] = 'application/vnd.pgrst.object+json';
 
             const r = await fetch(finalUrl, { method: _method, headers: h, body: _body });
             const text = await r.text();
             let d = null;
             try { d = text ? JSON.parse(text) : null; } catch(e) { d = null; }
+
+            // Content-Range 헤더에서 count 파싱
+            let count = null;
+            const cr = r.headers?.get?.('Content-Range');
+            if (cr) { const m = cr.match(/\/(\d+)/); if (m) count = parseInt(m[1]); }
+
             if (!r.ok) {
-              resolve({ data: null, error: { message: d?.message || d?.hint || r.statusText } });
+              // maybeSingle: 406(결과없음)은 에러 아님 → data:null, error:null
+              if (_maybeSingle && (r.status === 406 || r.status === 404)) {
+                resolve({ data: null, error: null, count });
+              } else {
+                resolve({ data: null, error: { message: d?.message || d?.hint || r.statusText }, count });
+              }
             } else {
-              resolve({ data: d, error: null });
+              resolve({ data: d, error: null, count });
             }
           } catch(e) {
-            resolve({ data: null, error: { message: e.message } });
+            resolve({ data: null, error: { message: e.message }, count: null });
           }
         }
       };
@@ -564,37 +581,67 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
 
     <!-- 상품 -->
     <div id="atab-products" class="hidden">
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-4">➕ 상품 등록</h2>
-        <div class="space-y-3">
-          <input class="field" type="text" id="np-name" placeholder="상품 이름">
-          <div class="grid grid-cols-2 gap-3">
-            <input class="field" type="number" id="np-price" placeholder="도토리 가격">
-            <input class="field" type="text" id="np-icon" placeholder="이모지 아이콘">
-          </div>
-          <input class="field" type="text" id="np-desc" placeholder="상품 설명">
-          <div><label class="text-sm font-bold text-gray-600 mb-1 block">보상 타입</label>
-            <select class="field" id="np-rewardType" onchange="toggleAcornField('np')">
-              <option value="MANUAL_ITEM">📬 MANUAL_ITEM — 관리자 승인 필요</option>
-              <option value="AUTO_ACORN">⚡ AUTO_ACORN — 즉시 도토리 지급</option>
+
+      <!-- 등록 폼: 2열 (상점 / 뽑기) -->
+      <div class="grid grid-cols-2 gap-3 mb-4" style="align-items:start">
+
+        <!-- 상점 상품 등록 -->
+        <div class="clay-card p-4">
+          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🛍️ <span>상점 상품</span></h3>
+          <div class="space-y-2">
+            <input class="field" type="text" id="ns-name" placeholder="상품명">
+            <div class="grid grid-cols-2 gap-2">
+              <input class="field" type="text" id="ns-icon" placeholder="이모지 🎁">
+              <input class="field" type="number" id="ns-price" placeholder="가격(🌰)">
+            </div>
+            <input class="field" type="text" id="ns-desc" placeholder="설명">
+            <select class="field" id="ns-rewardType" onchange="toggleAcornField('ns')">
+              <option value="MANUAL_ITEM">📬 승인 필요</option>
+              <option value="AUTO_ACORN">⚡ 즉시 지급</option>
             </select>
+            <div id="ns-acornWrap" class="hidden">
+              <input class="field" type="number" id="ns-acornAmt" placeholder="지급 도토리량">
+            </div>
+            <button class="btn btn-primary w-full py-2 text-sm" onclick="addStoreProduct()">➕ 추가</button>
           </div>
-          <div id="np-acornWrap" class="hidden"><input class="field" type="number" id="np-acornAmt" placeholder="지급 도토리 수량"></div>
-          <div><label class="text-sm font-bold text-gray-600 mb-1 block">상품 타입</label>
-            <select class="field" id="np-itemType" onchange="toggleItemType('np')">
-              <option value="store">🛍️ 상점 상품 — 상점에서 구매</option>
-              <option value="gacha">🎲 뽑기 상품 — 뽑기에서만 등장</option>
+        </div>
+
+        <!-- 뽑기 상품 등록 -->
+        <div class="clay-card p-4">
+          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🎲 <span>뽑기 상품</span></h3>
+          <div class="space-y-2">
+            <input class="field" type="text" id="ng-name" placeholder="아이템명">
+            <div class="grid grid-cols-2 gap-2">
+              <input class="field" type="text" id="ng-icon" placeholder="이모지 ✨">
+              <input class="field" type="number" id="ng-probability" placeholder="확률 %" step="0.1" min="0">
+            </div>
+            <input class="field" type="text" id="ng-desc" placeholder="설명">
+            <select class="field" id="ng-rewardType" onchange="toggleAcornField('ng')">
+              <option value="MANUAL_ITEM">📬 승인 필요</option>
+              <option value="AUTO_ACORN">⚡ 즉시 지급</option>
             </select>
+            <div id="ng-acornWrap" class="hidden">
+              <input class="field" type="number" id="ng-acornAmt" placeholder="지급 도토리량">
+            </div>
+            <p class="text-xs text-gray-400">※ 확률 합≠100이어도 자동 정규화</p>
+            <button class="btn btn-purple w-full py-2 text-sm" onclick="addGachaProduct()">➕ 추가</button>
           </div>
-          <div id="np-probabilityWrap" class="hidden">
-            <label class="text-sm font-bold text-gray-600 mb-1 block">확률 (%)</label>
-            <input class="field" type="number" step="0.1" min="0" id="np-probability" placeholder="예: 10 → 10%">
-            <p class="text-xs text-gray-400 mt-1">※ 합이 100이 아니어도 자동으로 정규화돼요</p>
-          </div>
-          <button class="btn btn-primary w-full py-3" onclick="addProduct()">🛍️ 상품 추가</button>
+        </div>
+
+      </div>
+
+      <!-- 목록: 2열 (상점 / 뽑기) -->
+      <div class="grid grid-cols-2 gap-3" style="align-items:start">
+        <div class="clay-card p-4">
+          <p class="text-sm font-black text-gray-700 mb-3">🛍️ 상점 상품</p>
+          <div id="storeProductList" class="space-y-2"></div>
+        </div>
+        <div class="clay-card p-4">
+          <p class="text-sm font-black text-gray-700 mb-3">🎲 뽑기 상품</p>
+          <div id="gachaProductList" class="space-y-2"></div>
         </div>
       </div>
-      <div class="clay-card p-5"><p class="text-sm font-black text-gray-700 mb-4">📦 상품 목록</p><div id="productAdminList" class="space-y-3"></div></div>
+
     </div>
 
     <!-- 퀘스트 -->
@@ -700,12 +747,22 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
 // ──────────────────────────────────────────────
 //  SOUND SYSTEM (Web Audio API - 외부 파일 없음)
 // ──────────────────────────────────────────────
-const _audioCtx = (() => {
-  try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
-})();
+let _audioCtx = null;
 
-function _playTone(freq, type, duration, vol=0.15, decay=0.8) {
-  if (!_audioCtx) return;
+// 첫 터치/클릭 시 AudioContext 생성 (브라우저 자동재생 정책 우회)
+function _ensureAudio() {
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (_audioCtx && _audioCtx.state === 'suspended') _audioCtx.resume();
+}
+['touchstart', 'mousedown', 'keydown'].forEach(e =>
+  document.addEventListener(e, _ensureAudio, { once: false, passive: true })
+);
+
+function _playTone(freq, type, duration, vol=0.15) {
+  _ensureAudio();
+  if (!_audioCtx || _audioCtx.state !== 'running') return;
   try {
     const osc = _audioCtx.createOscillator();
     const gain = _audioCtx.createGain();
@@ -1538,45 +1595,91 @@ function toggleAcornField(prefix) {
   if (sel && fld) fld.classList.toggle('hidden', sel.value !== 'AUTO_ACORN');
 }
 
-async function renderProductAdmin() {
-  const { data: products } = await sb.from('products').select('*').order('sort_order');
-  const el = document.getElementById('productAdminList');
-  if (!products?.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">상품이 없어요</p>'; return; }
-  el.innerHTML = products.map((p,i) => `
-    <div class="flex items-center gap-3 p-3 rounded-2xl ${p.active?'bg-gray-50':'bg-red-50 opacity-60'} drag-item border-2 border-transparent"
-      draggable="true" ondragstart="drgStart(event,${i})" ondragover="drgOver(event)"
-      ondrop="drgDrop(event,'${p.id}')" ondragend="drgEnd(event)">
-      <div class="text-gray-300 text-lg select-none">⠿</div>
-      <div class="text-2xl">${p.icon}</div>
-      <div class="flex-1 min-w-0">
-        <p class="font-black text-gray-800 text-sm">${p.name}</p>
-        <div class="flex items-center gap-1 flex-wrap mt-0.5">
-          <span class="text-xs text-gray-400">${p.price}🌰</span>
-          <span class="${p.reward_type==='AUTO_ACORN'?'rt-auto':'rt-manual'}">${p.reward_type==='AUTO_ACORN'?'⚡ AUTO':'📬 MANUAL'}</span>
-          ${p.reward_type==='AUTO_ACORN'?`<span class="text-xs text-green-600 font-bold">+${p.acorn_amt}🌰</span>`:''}
-          <span style="background:${(p.item_type||'store')==='gacha'?'#ede9fe':'#dbeafe'};color:${(p.item_type||'store')==='gacha'?'#7c3aed':'#1d4ed8'};border-radius:8px;padding:1px 7px;font-size:11px;font-weight:800">${(p.item_type||'store')==='gacha'?'🎲 뽑기':'🛍️ 상점'}</span>
-          ${(p.item_type||'store')==='gacha'&&p.probability?`<span class="text-xs text-purple-600 font-bold">${p.probability}%</span>`:''}
-        </div>
-      </div>
-      <button class="btn btn-blue px-3 py-1 text-xs flex-shrink-0" onclick="editProduct('${p.id}')">수정</button>
-      <button class="btn btn-red px-3 py-1 text-xs flex-shrink-0" onclick="deleteProduct('${p.id}')">삭제</button>
-    </div>`).join('');
+function toggleItemType(prefix) {
+  const sel = document.getElementById(prefix+'-itemType');
+  const probWrap = document.getElementById(prefix+'-probabilityWrap');
+  const priceWrap = document.getElementById(prefix+'-priceWrap');
+  if (sel && probWrap) probWrap.classList.toggle('hidden', sel.value !== 'gacha');
+  if (sel && priceWrap) priceWrap.classList.toggle('hidden', sel.value === 'gacha');
 }
 
-async function addProduct() {
-  const name       = document.getElementById('np-name').value.trim();
-  const price      = parseInt(document.getElementById('np-price').value);
-  const icon       = document.getElementById('np-icon').value || '🎁';
-  const desc       = document.getElementById('np-desc').value || '';
-  const rewardType = document.getElementById('np-rewardType').value;
-  const acornAmt   = parseInt(document.getElementById('np-acornAmt').value) || 0;
-  const itemType   = document.getElementById('np-itemType').value;
-  const probability = itemType === 'gacha' ? (parseFloat(document.getElementById('np-probability').value) || 0) : 0;
-  if (!name || !price) { toast('❌', '이름과 가격을 입력해주세요'); return; }
-  const { count } = await sb.from('products').select('*', { count: 'exact', head: true });
-  await sb.from('products').insert({ name, price, icon, description: desc, reward_type: rewardType, acorn_amt: acornAmt, item_type: itemType, probability, sort_order: (count||0)+1 });
-  ['np-name','np-price','np-icon','np-desc','np-acornAmt','np-probability'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
-  renderProductAdmin(); toast('✅', '상품 추가 완료!');
+function _productCard(p, i, listType) {
+  const bg = p.active ? 'bg-gray-50' : 'bg-red-50 opacity-60';
+  return `<div class="p-3 rounded-2xl ${bg} drag-item border-2 border-transparent"
+      data-id="${p.id}" data-type="${listType}" data-order="${p.sort_order}"
+      draggable="true"
+      ondragstart="drgStart(event,'${p.id}','${listType}')"
+      ondragover="drgOver(event)"
+      ondrop="drgDrop(event,'${p.id}','${listType}')"
+      ondragend="drgEnd(event)">
+    <div class="flex items-center gap-2">
+      <div class="text-gray-300 select-none">⠿</div>
+      <div class="text-xl">${p.icon}</div>
+      <div class="flex-1 min-w-0">
+        <p class="font-black text-gray-800 text-sm truncate">${p.name}</p>
+        <div class="flex items-center gap-1 flex-wrap mt-0.5">
+          ${listType === 'store' ? `<span class="text-xs text-gray-500 font-bold">${p.price}🌰</span>` : `<span class="text-xs text-purple-600 font-bold">${p.probability||0}%</span>`}
+          <span class="${p.reward_type==='AUTO_ACORN'?'rt-auto':'rt-manual'} text-xs">${p.reward_type==='AUTO_ACORN'?'⚡':'📬'}</span>
+          ${p.reward_type==='AUTO_ACORN'?`<span class="text-xs text-green-600 font-bold">+${p.acorn_amt}🌰</span>`:''}
+          ${!p.active?'<span style="background:#fee2e2;color:#b91c1c;border-radius:6px;padding:1px 5px;font-size:10px;font-weight:800">비활성</span>':''}
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-1 mt-2">
+      <button class="btn btn-blue flex-1 py-1 text-xs" onclick="editProduct('${p.id}')">수정</button>
+      <button class="btn btn-red px-2 py-1 text-xs" onclick="deleteProduct('${p.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+async function renderProductAdmin() {
+  const { data: products } = await sb.from('products').select('*').order('sort_order');
+  const storeEl = document.getElementById('storeProductList');
+  const gachaEl = document.getElementById('gachaProductList');
+  if (!storeEl || !gachaEl) return;
+
+  const storeItems = (products||[]).filter(p => (p.item_type||'store') === 'store');
+  const gachaItems = (products||[]).filter(p => p.item_type === 'gacha');
+
+  storeEl.innerHTML = storeItems.length
+    ? storeItems.map((p,i) => _productCard(p,i,'store')).join('')
+    : '<p class="text-xs text-gray-400 text-center py-3">상품이 없어요</p>';
+
+  gachaEl.innerHTML = gachaItems.length
+    ? gachaItems.map((p,i) => _productCard(p,i,'gacha')).join('')
+    : '<p class="text-xs text-gray-400 text-center py-3">상품이 없어요</p>';
+}
+
+async function addStoreProduct() {
+  const name       = document.getElementById('ns-name').value.trim();
+  const icon       = document.getElementById('ns-icon').value || '🎁';
+  const price      = parseInt(document.getElementById('ns-price').value) || 0;
+  const desc       = document.getElementById('ns-desc').value || '';
+  const rewardType = document.getElementById('ns-rewardType').value;
+  const acornAmt   = parseInt(document.getElementById('ns-acornAmt').value) || 0;
+  if (!name) { toast('❌', '상품명을 입력해주세요'); return; }
+  if (!price) { toast('❌', '가격을 입력해주세요'); return; }
+  const { data: all } = await sb.from('products').select('id');
+  await sb.from('products').insert({ name, price, icon, description: desc, reward_type: rewardType, acorn_amt: acornAmt, item_type: 'store', probability: 0, sort_order: (all?.length||0)+1 });
+  ['ns-name','ns-icon','ns-price','ns-desc','ns-acornAmt'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+  playSound('click');
+  renderProductAdmin(); toast('✅', '상점 상품 추가 완료!');
+}
+
+async function addGachaProduct() {
+  const name        = document.getElementById('ng-name').value.trim();
+  const icon        = document.getElementById('ng-icon').value || '✨';
+  const probability = parseFloat(document.getElementById('ng-probability').value) || 0;
+  const desc        = document.getElementById('ng-desc').value || '';
+  const rewardType  = document.getElementById('ng-rewardType').value;
+  const acornAmt    = parseInt(document.getElementById('ng-acornAmt').value) || 0;
+  if (!name) { toast('❌', '아이템명을 입력해주세요'); return; }
+  if (!probability) { toast('❌', '확률을 입력해주세요 (예: 10)'); return; }
+  const { data: all } = await sb.from('products').select('id');
+  await sb.from('products').insert({ name, price: 0, icon, description: desc, reward_type: rewardType, acorn_amt: acornAmt, item_type: 'gacha', probability, sort_order: (all?.length||0)+1 });
+  ['ng-name','ng-icon','ng-probability','ng-desc','ng-acornAmt'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+  playSound('click');
+  renderProductAdmin(); toast('✅', '뽑기 상품 추가 완료!');
 }
 
 async function deleteProduct(id) {
@@ -1646,11 +1749,54 @@ async function saveProduct(id) {
 // ──────────────────────────────────────────────
 //  DRAG & DROP
 // ──────────────────────────────────────────────
-let _dragSrc = null;
-function drgStart(e,idx){ _dragSrc=idx; setTimeout(()=>{e.target.style.opacity='.4';},0); e.dataTransfer.effectAllowed='move'; }
-function drgOver(e){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-function drgDrop(e,targetId){ e.preventDefault(); document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')); _dragSrc=null; e.currentTarget.style.opacity=''; /* simple swap - re-render */ renderProductAdmin(); }
-function drgEnd(e){ e.currentTarget.style.opacity=''; document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')); }
+let _dragSrcId = null;
+let _dragSrcType = null;
+
+function drgStart(e, id, type) {
+  _dragSrcId = id;
+  _dragSrcType = type;
+  setTimeout(() => { e.target.style.opacity = '.4'; }, 0);
+  e.dataTransfer.effectAllowed = 'move';
+}
+function drgOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function drgEnd(e) {
+  e.currentTarget.style.opacity = '';
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+async function drgDrop(e, targetId, targetType) {
+  e.preventDefault();
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  if (!_dragSrcId || _dragSrcId === targetId || _dragSrcType !== targetType) {
+    _dragSrcId = null; return;
+  }
+
+  // 같은 타입 내에서만 순서 변경
+  const listEl = targetType === 'store'
+    ? document.getElementById('storeProductList')
+    : document.getElementById('gachaProductList');
+  const cards = Array.from(listEl.querySelectorAll('[data-id]'));
+  const ids = cards.map(c => c.dataset.id);
+
+  const srcIdx = ids.indexOf(_dragSrcId);
+  const tgtIdx = ids.indexOf(targetId);
+  if (srcIdx === -1 || tgtIdx === -1) { _dragSrcId = null; return; }
+
+  // 배열 순서 교환
+  ids.splice(srcIdx, 1);
+  ids.splice(tgtIdx, 0, _dragSrcId);
+
+  // DB에 sort_order 저장
+  await Promise.all(ids.map((id, idx) =>
+    sb.from('products').update({ sort_order: idx + 1 }).eq('id', id)
+  ));
+
+  _dragSrcId = null;
+  renderProductAdmin();
+  playSound('click');
+}
 
 // ──────────────────────────────────────────────
 //  ADMIN — QUESTS
