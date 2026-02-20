@@ -1178,9 +1178,11 @@ async function renderShop() {
   }).join('');
 }
 
-async function requestProduct(id) {
+async async function requestProduct(id) {
   const { data: p } = await sb.from('products').select('*').eq('id', id).single();
   if (!p) return;
+  const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
+  if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(); return; }
   if ((myProfile.acorns || 0) < p.price) { toast('❌', '도토리가 부족해요!'); return; }
   showModal(`
     <div class="text-center">
@@ -1648,7 +1650,7 @@ async function confirmUseItem(inventoryId) {
 
   // 관리자에게 알림 (DB + 브라우저 Push)
   try {
-    const { data: adminUser } = await sb.from('users').select('id').eq('is_admin', true).single();
+    const { data: adminUser } = await sb.from('users').select('id').eq('is_admin', true).maybeSingle();
     if (adminUser) {
       await pushNotif(
         adminUser.id, 'request',
@@ -2201,6 +2203,7 @@ async function renderRequestAdmin() {
 }
 
 async function updateReq(id, status) {
+  playSound(status === 'approved' ? 'approve' : 'reject');
   const { data: r } = await sb.from('product_requests').select('*, users(display_name)').eq('id', id).single();
   await sb.from('product_requests').update({ status }).eq('id', id);
   if (r) await pushNotif(r.user_id, status==='approved'?'approved':'rejected',
