@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f59e0b">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="도토리 상점">
 <link rel="manifest" href="manifest.json">
@@ -419,7 +420,7 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
 
     <!-- 회원가입 -->
     <div class="text-center">
-      <button class="text-xs text-amber-600 font-bold underline" onclick="console.log('버튼클릭됨'); showSignup();">계정이 없으신가요? 회원가입</button>
+      <button class="text-xs text-amber-600 font-bold underline" onclick="showSignup()">계정이 없으신가요? 회원가입</button>
     </div>
   </div>
 </div>
@@ -474,12 +475,9 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
         <div id="gachaResultItems" class="flex flex-wrap justify-center gap-4"></div>
       </div>
       <div class="clay-card p-4">
-        <p class="text-sm font-black text-gray-700 mb-3">📊 확률표</p>
-        <div class="space-y-2">
-          <div class="flex justify-between"><span class="text-sm font-bold">⚪ 일반</span><span class="badge rc-common">50%</span></div>
-          <div class="flex justify-between"><span class="text-sm font-bold">🔵 레어</span><span class="badge rc-rare">30%</span></div>
-          <div class="flex justify-between"><span class="text-sm font-bold">🟣 에픽</span><span class="badge rc-epic">15%</span></div>
-          <div class="flex justify-between"><span class="text-sm font-bold">🔴 전설</span><span class="badge rc-legend">5%</span></div>
+        <p class="text-sm font-black text-gray-700 mb-3">📊 뽑기 상품 & 확률</p>
+        <div id="gachaProbTable" class="space-y-1">
+          <p class="text-xs text-gray-400 text-center py-2">로딩 중...</p>
         </div>
       </div>
     </div>
@@ -582,6 +580,17 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
             </select>
           </div>
           <div id="np-acornWrap" class="hidden"><input class="field" type="number" id="np-acornAmt" placeholder="지급 도토리 수량"></div>
+          <div><label class="text-sm font-bold text-gray-600 mb-1 block">상품 타입</label>
+            <select class="field" id="np-itemType" onchange="toggleItemType('np')">
+              <option value="store">🛍️ 상점 상품 — 상점에서 구매</option>
+              <option value="gacha">🎲 뽑기 상품 — 뽑기에서만 등장</option>
+            </select>
+          </div>
+          <div id="np-probabilityWrap" class="hidden">
+            <label class="text-sm font-bold text-gray-600 mb-1 block">확률 (%)</label>
+            <input class="field" type="number" step="0.1" min="0" id="np-probability" placeholder="예: 10 → 10%">
+            <p class="text-xs text-gray-400 mt-1">※ 합이 100이 아니어도 자동으로 정규화돼요</p>
+          </div>
           <button class="btn btn-primary w-full py-3" onclick="addProduct()">🛍️ 상품 추가</button>
         </div>
       </div>
@@ -687,6 +696,59 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
    🌰 도토리 상점 v4 — Supabase 완전 연동
    ================================================================ */
 
+
+// ──────────────────────────────────────────────
+//  SOUND SYSTEM (Web Audio API - 외부 파일 없음)
+// ──────────────────────────────────────────────
+const _audioCtx = (() => {
+  try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+})();
+
+function _playTone(freq, type, duration, vol=0.15, decay=0.8) {
+  if (!_audioCtx) return;
+  try {
+    const osc = _audioCtx.createOscillator();
+    const gain = _audioCtx.createGain();
+    osc.connect(gain); gain.connect(_audioCtx.destination);
+    osc.type = type; osc.frequency.setValueAtTime(freq, _audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, _audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, _audioCtx.currentTime + duration);
+    osc.start(); osc.stop(_audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+function _playChord(notes, type='sine', duration=0.12, vol=0.12) {
+  notes.forEach((f,i) => setTimeout(() => _playTone(f, type, duration, vol), i*60));
+}
+
+function playSound(name) {
+  if (!_audioCtx) return;
+  // 정지된 AudioContext 재개
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  switch(name) {
+    case 'click':
+      _playTone(880, 'sine', 0.08, 0.1); break;
+    case 'tab':
+      _playTone(660, 'sine', 0.1, 0.08); break;
+    case 'gacha':
+      _playChord([261, 329, 392, 523], 'triangle', 0.18, 0.1); break;
+    case 'gachaResult':
+      _playChord([523, 659, 784, 1047], 'sine', 0.22, 0.12); break;
+    case 'reward':
+      _playChord([523, 659, 784], 'sine', 0.2, 0.13);
+      setTimeout(() => _playChord([784, 1047], 'sine', 0.3, 0.1), 200); break;
+    case 'notify':
+      _playTone(880, 'sine', 0.12, 0.1);
+      setTimeout(() => _playTone(1047, 'sine', 0.15, 0.1), 100); break;
+    case 'approve':
+      _playChord([523, 659, 784, 1047], 'sine', 0.25, 0.1); break;
+    case 'reject':
+      _playTone(220, 'sawtooth', 0.2, 0.08); break;
+    case 'error':
+      _playTone(180, 'square', 0.15, 0.07); break;
+  }
+}
+
 // ──────────────────────────────────────────────
 //  SUPABASE 초기화
 // ──────────────────────────────────────────────
@@ -721,65 +783,31 @@ let reqFilter = 'all';
 //  앱 시작
 // ──────────────────────────────────────────────
 async function boot() {
-  console.log("boot 실행됨");
-  window.sb = supabase; 
-
-  const hash = window.location.hash;
-  if (hash && hash.includes('access_token=')) {
-    const params = new URLSearchParams(hash.substring(1));
-    const access_token = params.get('access_token');
-    
-    // 카카오/수파베이스에서 넘겨준 에러 처리용 데이터 파싱
-    const rawUser = params.get('user'); 
-    let userId = "";
-    try {
-      // 주소창에 user 데이터가 있으면 파싱하고, 없으면 토큰에서 추출 시도
-      if (rawUser) {
-        userId = JSON.parse(rawUser).id;
-      } else {
-        // 보통 OAuth 리턴 시 주소창에 직접 유저 ID가 안 올 수 있으므로 
-        // JWT 토큰 구조상 sub 필드가 ID 역할을 합니다.
-        const payload = JSON.parse(atob(access_token.split('.')[1]));
-        userId = payload.sub;
-      }
-    } catch(e) { userId = "temp_user"; }
-
-    if (access_token) {
-      const sessionData = {
-        access_token,
-        refresh_token: params.get('refresh_token'),
-        expires_at: Math.floor(Date.now() / 1000) + parseInt(params.get('expires_in') || 3600),
-        user: { id: userId, email: 'kakao_user' } // 여기서 id를 정확히 넣어줘야 에러가 안 납니다!
-      };
-      localStorage.setItem('sb_session', JSON.stringify(sessionData));
-      window.history.replaceState(null, null, window.location.pathname);
-      window.location.reload();
-      return;
-    }
-  }
-
+  // Auth 상태 변경 구독
   sb.auth.onAuthStateChange(async (event, s) => {
     session = s;
-    if (s && s.user) {
+    if (s) {
       await onSignedIn(s);
-    } else if (event === 'SIGNED_OUT') {
+    } else {
       showLoginScreen();
     }
   });
 
+  // 현재 세션 확인
   const { data } = await sb.auth.getSession();
-  if (data && data.session && data.session.user) {
-    await onSignedIn(data.session);
-  } else {
+  if (!data.session) {
     showLoginScreen();
   }
+  // onAuthStateChange가 처리함
 }
 
 function showLoginScreen() {
-  console.log("showLoginScreen 실행됨");
   document.getElementById('loadingScreen').classList.add('hidden');
   document.getElementById('appRoot').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
+  // 마지막 로그인 이메일 자동 입력
+  const saved = localStorage.getItem('dotori_last_email');
+  if (saved) { const el = document.getElementById('loginEmail'); if(el) el.value = saved; }
 }
 
 async function onSignedIn(s) {
@@ -819,42 +847,51 @@ async function onSignedIn(s) {
 // ──────────────────────────────────────────────
 //  실시간 구독
 // ──────────────────────────────────────────────
-function setupRealtime() {
-  // 내 잔액 변경 → 즉시 헤더 업데이트
-  sb.channel('my-balance')
-    .on('postgres_changes', {
-      event: 'UPDATE', schema: 'public', table: 'users',
-      filter: `id=eq.${myProfile.id}`
-    }, payload => {
-      myProfile = { ...myProfile, ...payload.new };
+// Realtime: 폴링 방식 (WebSocket 없이 주기적 동기화)
+let _pollTimer = null;
+let _lastNotifCount = 0;
+let _lastReqCount = 0;
+
+async function _pollSync() {
+  if (!myProfile) return;
+  const token = session?.access_token || SUPABASE_KEY;
+  const h = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token };
+
+  try {
+    // 내 잔액 동기화
+    const ur = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${myProfile.id}&select=acorns`, { headers: h });
+    const ud = await ur.json();
+    if (ud?.[0] && ud[0].acorns !== myProfile.acorns) {
+      myProfile.acorns = ud[0].acorns;
       updateAcornDisplay();
-      if (document.getElementById('utab-mypage') && !document.getElementById('utab-mypage').classList.contains('hidden')) {
-        renderMypage();
-      }
-    })
-    .subscribe();
+      playSound('reward');
+    }
 
-  // 내 알림
-  sb.channel('my-notif')
-    .on('postgres_changes', {
-      event: 'INSERT', schema: 'public', table: 'notifications',
-      filter: `user_id=eq.${myProfile.id}`
-    }, payload => {
+    // 새 알림 확인
+    const nr = await fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${myProfile.id}&select=id&order=created_at.desc`, { headers: h });
+    const nd = await nr.json();
+    if (Array.isArray(nd) && nd.length > _lastNotifCount) {
+      if (_lastNotifCount > 0) { playSound('notify'); }
+      _lastNotifCount = nd.length;
       updateNotifDot();
-    })
-    .subscribe();
+    }
 
-  // 관리자: 신청 변경 구독
-  if (myProfile.is_admin) {
-    sb.channel('admin-requests')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_requests' }, () => {
+    // 관리자: 신청 개수 확인
+    if (myProfile.is_admin) {
+      const rr = await fetch(`${SUPABASE_URL}/rest/v1/product_requests?status=eq.pending&select=id`, { headers: h });
+      const rd = await rr.json();
+      if (Array.isArray(rd) && rd.length !== _lastReqCount) {
+        _lastReqCount = rd.length;
         if (!document.getElementById('atab-requests').classList.contains('hidden')) renderRequestAdmin();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'quest_completion_requests' }, () => {
-        if (!document.getElementById('atab-quests').classList.contains('hidden')) renderQuestAdmin();
-      })
-      .subscribe();
-  }
+      }
+    }
+  } catch(e) {}
+}
+
+function setupRealtime() {
+  // 5초마다 폴링
+  if (_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(_pollSync, 5000);
 }
 
 // ──────────────────────────────────────────────
@@ -930,7 +967,6 @@ function showErr(msg) {
 }
 
 function showSignup() {
-  console.log("showSignup 실행됨");
   showModal(`
     <h2 class="text-lg font-black text-gray-800 mb-4">✨ 회원가입</h2>
     <div class="space-y-3">
@@ -993,7 +1029,7 @@ function aTab(tab, btn) {
 async function renderShop() {
   const grid = document.getElementById('shopGrid');
   grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-4">로딩 중...</p>';
-  const { data: products } = await sb.from('products').select('*').eq('active', true).order('sort_order');
+  const { data: products } = await sb.from('products').select('*').eq('active', true).eq('item_type', 'store').order('sort_order');
   if (!products?.length) { grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-8">상품이 없어요</p>'; return; }
   grid.innerHTML = products.map((p,i) => `
     <div class="clay-card card-hover p-4 flex flex-col bounce-in" style="animation-delay:${i*.06}s">
@@ -1063,18 +1099,40 @@ async function confirmRequest(productId) {
 // ──────────────────────────────────────────────
 //  GACHA
 // ──────────────────────────────────────────────
-let forceRarity = '';
-const RARITY_PROB = [['legend',5],['epic',20],['rare',50],['common',100]];
+// 확률 기반 weighted random 뽑기
+async function loadGachaPool() {
+  const { data } = await sb.from('products')
+    .select('*')
+    .eq('active', true)
+    .eq('item_type', 'gacha');
+  gachaPool = data || [];
+  return gachaPool;
+}
 
-function drawItem(force) {
-  const r = force || (() => { const v=Math.random()*100; return RARITY_PROB.find(([,p])=>v<p)[0]; })();
-  const pool = gachaPool.filter(x => x.rarity === r);
-  return pool.length ? pool[Math.floor(Math.random()*pool.length)] : gachaPool[0];
+function drawItemWeighted(pool) {
+  if (!pool.length) return null;
+  // probability 합계 계산
+  const total = pool.reduce((s, x) => s + (x.probability || 0), 0);
+  if (total <= 0) {
+    // 확률이 설정 안 된 경우 균등 분배
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  let rand = Math.random() * total;
+  for (const item of pool) {
+    rand -= (item.probability || 0);
+    if (rand <= 0) return item;
+  }
+  return pool[pool.length - 1];
 }
 
 async function doGacha(count) {
+  playSound('gacha');
   const cost = GACHA_COST * count;
   if ((myProfile.acorns||0) < cost) { toast('❌', '도토리가 부족해요!'); return; }
+
+  // 뽑기 풀 최신화
+  const pool = await loadGachaPool();
+  if (!pool.length) { toast('❌', '뽑기 상품이 없어요! 관리자에게 문의하세요.'); return; }
 
   // 차감
   const res = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -cost, p_reason: `뽑기 사용 (${count}회)` });
@@ -1084,7 +1142,8 @@ async function doGacha(count) {
 
   const results = [];
   for (let i = 0; i < count; i++) {
-    const item = drawItem('');
+    const item = drawItemWeighted(pool);
+    if (!item) continue;
     results.push(item);
 
     if (item.reward_type === 'AUTO_ACORN' && item.acorn_amt > 0) {
@@ -1098,6 +1157,7 @@ async function doGacha(count) {
       });
       await pushNotif(myProfile.id, 'gachaReward', '뽑기 아이템! 🎲', `${item.icon} ${item.name} 획득! 관리자 승인 후 지급.`);
     }
+    playSound('reward');
   }
   updateAcornDisplay();
 
@@ -1105,6 +1165,7 @@ async function doGacha(count) {
   triggerAutoQuest('gachaPlay');
 
   renderGachaCards(results, 'gachaResult', 'gachaResultItems');
+  setTimeout(() => playSound('gachaResult'), 100);
   const el = document.getElementById('gachaIcon');
   el.style.animation = 'none'; void el.offsetWidth;
   el.textContent = '🎊'; el.style.animation = 'bounceIn .5s';
@@ -1125,8 +1186,30 @@ function renderGachaCards(results, wrapId, itemsId) {
 
 const rcClass = r => ({common:'rc-common',rare:'rc-rare',epic:'rc-epic',legend:'rc-legend'})[r]||'rc-common';
 
+async function renderGachaProbTable() {
+  const el = document.getElementById('gachaProbTable');
+  if (!el) return;
+  const { data: items } = await sb.from('products').select('name,icon,probability,rarity').eq('active', true).eq('item_type', 'gacha').order('probability', { ascending: false });
+  if (!items?.length) { el.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">등록된 뽑기 상품 없음</p>'; return; }
+  const total = items.reduce((s,x) => s+(x.probability||0), 0);
+  el.innerHTML = items.map(x => {
+    const pct = total > 0 ? ((x.probability||0)/total*100).toFixed(1) : (100/items.length).toFixed(1);
+    return `<div class="flex justify-between items-center py-1">
+      <span class="text-sm">${x.icon||'🎁'} ${x.name}</span>
+      <span class="badge ${rcClass(x.rarity||'common')}">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
 function setForce(r) { forceRarity=r; document.getElementById('forceLabel').textContent=({'':'랜덤',common:'⚪ 일반',rare:'🔵 레어',epic:'🟣 에픽',legend:'🔴 전설'})[r]; }
-function doGachaTest(count) { const r=Array.from({length:count},()=>drawItem(forceRarity)); renderGachaCards(r,'gachaTestResult','gachaTestItems'); toast('🧪','테스트 완료! (차감 없음)'); }
+async function doGachaTest(count) {
+  const pool = await loadGachaPool();
+  if (!pool.length) { toast('❌', '뽑기 상품이 없어요!'); return; }
+  const r = Array.from({length:count}, () => drawItemWeighted(pool)).filter(Boolean);
+  renderGachaCards(r,'gachaTestResult','gachaTestItems');
+  playSound('gachaResult');
+  toast('🧪','테스트 완료! (차감 없음)');
+}
 
 // ──────────────────────────────────────────────
 //  QUEST HELPERS
@@ -1199,7 +1282,23 @@ const repClass  = { once:'rep-once', daily:'rep-daily', weekly:'rep-weekly' };
 async function renderQuests() {
   const el = document.getElementById('questList');
   el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
-  const { data: quests } = await sb.from('quests').select('*').eq('active', true).order('sort_order');
+  // 세션 토큰을 명시적으로 포함한 직접 fetch (RLS 우회 방지)
+  let quests = null;
+  try {
+    const token = session?.access_token || SUPABASE_KEY;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/quests?active=eq.true&order=sort_order.asc`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    });
+    quests = await res.json();
+    if (!Array.isArray(quests)) quests = null;
+  } catch(e) {
+    const { data } = await sb.from('quests').select('*').eq('active', true).order('sort_order');
+    quests = data;
+  }
   if (!quests?.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">퀘스트가 없어요</p>'; return; }
 
   const cards = await Promise.all(quests.map(async q => {
@@ -1367,6 +1466,7 @@ async function populateGiveSelect() {
 }
 
 async function giveAcorns() {
+  playSound('click');
   const userId = document.getElementById('giveUser').value;
   const amount = parseInt(document.getElementById('giveAmount').value);
   const memo   = document.getElementById('giveMemo').value.trim() || '관리자 지급';
@@ -1421,6 +1521,8 @@ async function renderProductAdmin() {
           <span class="text-xs text-gray-400">${p.price}🌰</span>
           <span class="${p.reward_type==='AUTO_ACORN'?'rt-auto':'rt-manual'}">${p.reward_type==='AUTO_ACORN'?'⚡ AUTO':'📬 MANUAL'}</span>
           ${p.reward_type==='AUTO_ACORN'?`<span class="text-xs text-green-600 font-bold">+${p.acorn_amt}🌰</span>`:''}
+          <span style="background:${(p.item_type||'store')==='gacha'?'#ede9fe':'#dbeafe'};color:${(p.item_type||'store')==='gacha'?'#7c3aed':'#1d4ed8'};border-radius:8px;padding:1px 7px;font-size:11px;font-weight:800">${(p.item_type||'store')==='gacha'?'🎲 뽑기':'🛍️ 상점'}</span>
+          ${(p.item_type||'store')==='gacha'&&p.probability?`<span class="text-xs text-purple-600 font-bold">${p.probability}%</span>`:''}
         </div>
       </div>
       <button class="btn btn-blue px-3 py-1 text-xs flex-shrink-0" onclick="editProduct('${p.id}')">수정</button>
@@ -1435,10 +1537,12 @@ async function addProduct() {
   const desc       = document.getElementById('np-desc').value || '';
   const rewardType = document.getElementById('np-rewardType').value;
   const acornAmt   = parseInt(document.getElementById('np-acornAmt').value) || 0;
+  const itemType   = document.getElementById('np-itemType').value;
+  const probability = itemType === 'gacha' ? (parseFloat(document.getElementById('np-probability').value) || 0) : 0;
   if (!name || !price) { toast('❌', '이름과 가격을 입력해주세요'); return; }
   const { count } = await sb.from('products').select('*', { count: 'exact', head: true });
-  await sb.from('products').insert({ name, price, icon, description: desc, reward_type: rewardType, acorn_amt: acornAmt, sort_order: (count||0)+1 });
-  ['np-name','np-price','np-icon','np-desc','np-acornAmt'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+  await sb.from('products').insert({ name, price, icon, description: desc, reward_type: rewardType, acorn_amt: acornAmt, item_type: itemType, probability, sort_order: (count||0)+1 });
+  ['np-name','np-price','np-icon','np-desc','np-acornAmt','np-probability'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
   renderProductAdmin(); toast('✅', '상품 추가 완료!');
 }
 
@@ -1450,21 +1554,39 @@ async function deleteProduct(id) {
 
 async function editProduct(id) {
   const { data: p } = await sb.from('products').select('*').eq('id', id).single();
+  const it = p.item_type || 'store';
+  const prob = p.probability || 0;
   showModal(`
     <h2 class="text-lg font-black text-gray-800 mb-4">✏️ 상품 수정</h2>
     <div class="space-y-3">
-      <input class="field" id="ep-name" value="${p.name}">
+      <input class="field" id="ep-name" value="${p.name}" placeholder="상품명">
       <div class="grid grid-cols-2 gap-2">
-        <input class="field" type="number" id="ep-price" value="${p.price}">
-        <input class="field" id="ep-icon" value="${p.icon}">
+        <input class="field" type="number" id="ep-price" value="${p.price}" placeholder="가격">
+        <input class="field" id="ep-icon" value="${p.icon}" placeholder="이모지">
       </div>
-      <input class="field" id="ep-desc" value="${p.description}">
-      <select class="field" id="ep-rt" onchange="toggleEditAcorn()">
-        <option value="MANUAL_ITEM" ${p.reward_type==='MANUAL_ITEM'?'selected':''}>📬 MANUAL_ITEM</option>
-        <option value="AUTO_ACORN" ${p.reward_type==='AUTO_ACORN'?'selected':''}>⚡ AUTO_ACORN</option>
-      </select>
+      <input class="field" id="ep-desc" value="${p.description||''}" placeholder="설명">
+      <div>
+        <label class="text-xs font-bold text-gray-500 mb-1 block">보상 타입</label>
+        <select class="field" id="ep-rt" onchange="toggleEditAcorn()">
+          <option value="MANUAL_ITEM" ${p.reward_type==='MANUAL_ITEM'?'selected':''}>📬 MANUAL — 관리자 승인</option>
+          <option value="AUTO_ACORN" ${p.reward_type==='AUTO_ACORN'?'selected':''}>⚡ AUTO — 즉시 지급</option>
+        </select>
+      </div>
       <div id="ep-acornWrap" class="${p.reward_type==='AUTO_ACORN'?'':'hidden'}">
-        <input class="field" type="number" id="ep-acornAmt" value="${p.acorn_amt}">
+        <label class="text-xs font-bold text-gray-500 mb-1 block">지급 도토리</label>
+        <input class="field" type="number" id="ep-acornAmt" value="${p.acorn_amt||0}" placeholder="도토리 수량">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500 mb-1 block">상품 타입</label>
+        <select class="field" id="ep-itemType" onchange="toggleItemType('ep')">
+          <option value="store" ${it==='store'?'selected':''}>🛍️ 상점 상품</option>
+          <option value="gacha" ${it==='gacha'?'selected':''}>🎲 뽑기 상품</option>
+        </select>
+      </div>
+      <div id="ep-probabilityWrap" class="${it==='gacha'?'':'hidden'}">
+        <label class="text-xs font-bold text-gray-500 mb-1 block">확률 (%)</label>
+        <input class="field" type="number" step="0.1" min="0" id="ep-probability" value="${prob}" placeholder="예: 10 → 10%">
+        <p class="text-xs text-gray-400 mt-1">※ 합이 100이 아니어도 자동 정규화됩니다</p>
       </div>
       <div class="flex gap-3 pt-2">
         <button class="btn btn-gray flex-1 py-3" onclick="closeModal()">취소</button>
@@ -1474,6 +1596,7 @@ async function editProduct(id) {
 }
 function toggleEditAcorn() { const s=document.getElementById('ep-rt'),f=document.getElementById('ep-acornWrap'); if(s&&f)f.classList.toggle('hidden',s.value!=='AUTO_ACORN'); }
 async function saveProduct(id) {
+  const it = document.getElementById('ep-itemType')?.value || 'store';
   await sb.from('products').update({
     name: document.getElementById('ep-name').value,
     price: parseInt(document.getElementById('ep-price').value)||0,
@@ -1481,6 +1604,8 @@ async function saveProduct(id) {
     description: document.getElementById('ep-desc').value,
     reward_type: document.getElementById('ep-rt').value,
     acorn_amt: parseInt(document.getElementById('ep-acornAmt')?.value)||0,
+    item_type: it,
+    probability: it === 'gacha' ? (parseFloat(document.getElementById('ep-probability')?.value)||0) : 0,
   }).eq('id', id);
   closeModal(); renderProductAdmin(); toast('✅', '수정 완료!');
 }
@@ -1764,17 +1889,7 @@ function fmtTs(iso) {
   catch { return iso.slice(0,16).replace('T',' '); }
 }
 
-function showModal(html) { 
-  console.log("showModal 실행됨");
-  const modalEl = document.getElementById('modal');
-  const contentEl = document.getElementById('modalContent');
-  console.log("modal 엘리먼트:", modalEl);
-  console.log("modalContent 엘리먼트:", contentEl);
-  if (!modalEl || !contentEl) { console.error("모달 엘리먼트를 못 찾음!"); return; }
-  contentEl.innerHTML = html; 
-  modalEl.classList.remove('hidden'); 
-  console.log("모달 클래스:", modalEl.className);
-}
+function showModal(html) { document.getElementById('modalContent').innerHTML=html; document.getElementById('modal').classList.remove('hidden'); }
 function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
 let _toastT;
