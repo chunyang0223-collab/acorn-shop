@@ -504,10 +504,23 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
     </div>
     <div id="utab-mypage" class="hidden">
       <div class="clay-card p-6 mb-4" id="mypageHeader"></div>
+
+      <!-- 인벤토리 -->
+      <div class="clay-card p-5 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-black text-gray-700">🎒 인벤토리</p>
+          <span class="text-xs text-gray-400 font-semibold">아이템을 눌러 사용하세요</span>
+        </div>
+        <div id="myInventory" class="grid grid-cols-3 gap-2"></div>
+      </div>
+
+      <!-- 신청 현황 -->
       <div class="clay-card p-5 mb-4">
         <p class="text-sm font-black text-gray-700 mb-3">📦 신청 현황</p>
         <div id="myRequestList" class="space-y-2"></div>
       </div>
+
+      <!-- 도토리 내역 -->
       <div class="clay-card p-5">
         <p class="text-sm font-black text-gray-700 mb-3">📜 도토리 내역 <span class="text-gray-400 text-xs">(최신순)</span></p>
         <div id="myTxList" class="space-y-2"></div>
@@ -1166,11 +1179,26 @@ async function confirmRequest(productId) {
   if (!res.data?.success) { toast('❌', '처리 실패: ' + (res.data?.error || '')); return; }
   myProfile.acorns = res.data.balance;
 
-  // 신청 기록
+  if (p.reward_type === 'MANUAL_ITEM') {
+    // MANUAL_ITEM: 인벤토리에 보관 (바로 신청 안 함)
+    await sb.from('inventory').insert({
+      user_id: myProfile.id,
+      product_snapshot: p,
+      from_gacha: false,
+      status: 'held'
+    });
+    await pushNotif(myProfile.id, 'request', '아이템 획득! 🎁', `${p.icon} ${p.name} 획득! 인벤토리에서 확인하세요.`);
+    playSound('reward');
+    toast('🎒', `${p.icon} ${p.name} 인벤토리에 추가됐어요!`);
+    updateAcornDisplay();
+    return;
+  }
+
+  // AUTO_ACORN: 즉시 처리 (기존 로직)
   await sb.from('product_requests').insert({
     user_id: myProfile.id, product_id: p.id,
     product_snapshot: p, price: p.price,
-    status: p.reward_type === 'AUTO_ACORN' ? 'approved' : 'pending',
+    status: 'approved',
     reward_type: p.reward_type, from_gacha: false
   });
 
@@ -1241,11 +1269,14 @@ async function doGacha(count) {
       myProfile.acorns += item.acorn_amt;
       await pushNotif(myProfile.id, 'gachaReward', '뽑기 보상! 🎲', `${item.icon} ${item.name} 획득! +${item.acorn_amt}🌰`);
     } else if (item.reward_type === 'MANUAL_ITEM') {
-      await sb.from('product_requests').insert({
-        user_id: myProfile.id, product_snapshot: item, price: 0,
-        status: 'pending', reward_type: 'MANUAL_ITEM', from_gacha: true
+      // 인벤토리에 보관 (바로 신청 안 함)
+      await sb.from('inventory').insert({
+        user_id: myProfile.id,
+        product_snapshot: item,
+        from_gacha: true,
+        status: 'held'
       });
-      await pushNotif(myProfile.id, 'gachaReward', '뽑기 아이템! 🎲', `${item.icon} ${item.name} 획득! 관리자 승인 후 지급.`);
+      await pushNotif(myProfile.id, 'gachaReward', '아이템 획득! 🎲', `${item.icon} ${item.name} 획득! 인벤토리에서 확인하세요.`);
     }
     playSound('reward');
   }
@@ -1473,11 +1504,14 @@ async function renderMypage() {
       </div>
     </div>`;
 
-  // 신청 현황 (상품 + 퀘스트)
+  // 인벤토리 렌더링
+  renderInventory();
+
   const [{ data: myReqs }, { data: myQCRs }] = await Promise.all([
-    sb.from('product_requests').select('*').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(5),
+    sb.from('product_requests').select('*').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(10),
     sb.from('quest_completion_requests').select('*, quests(name,icon)').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(5),
   ]);
+
   const rqEl = document.getElementById('myRequestList');
   const reqs = [
     ...(myReqs||[]).map(r => ({ label: r.product_snapshot?.name || '상품', icon: r.product_snapshot?.icon||'🎁', sub: fmtTs(r.created_at)+(r.price?` · ${r.price}🌰`:' · 뽑기')+(r.from_gacha?' 🎲':''), status: r.status })),
@@ -1490,7 +1524,6 @@ async function renderMypage() {
       </div>`).join('')
     : '<p class="text-sm text-gray-400 text-center py-3">신청 내역이 없어요</p>';
 
-  // TX 내역
   const { data: txs } = await sb.from('transactions').select('*').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(30);
   const txEl = document.getElementById('myTxList');
   txEl.innerHTML = txs?.length
@@ -1499,10 +1532,82 @@ async function renderMypage() {
           <p class="text-sm font-bold text-gray-700 truncate">${t.reason}</p>
           <p class="text-xs text-gray-400">${fmtTs(t.created_at)} · 잔액 ${t.balance}🌰</p>
         </div>
-        <span class="font-black text-base flex-shrink-0 ${t.amount>0?'tx-plus':'tx-minus'}">${t.amount>0?'+':''}${t.amount}🌰</span>
+        <span class="font-black text-base shrink-0 ${t.amount>0?'tx-plus':'tx-minus'}">${t.amount>0?'+':''}${t.amount}🌰</span>
       </div>`).join('')
     : '<p class="text-sm text-gray-400 text-center py-3">내역이 없어요</p>';
 }
+
+async function renderInventory() {
+  const el = document.getElementById('myInventory');
+  if (!el) return;
+  el.innerHTML = '<p class="text-xs text-gray-400 col-span-3 text-center py-2">로딩 중...</p>';
+
+  const { data: items } = await sb.from('inventory')
+    .select('*').eq('user_id', myProfile.id).eq('status', 'held')
+    .order('created_at', { ascending: false });
+
+  if (!items?.length) {
+    el.innerHTML = '<p class="text-xs text-gray-400 col-span-3 text-center py-4">아이템이 없어요 🎒</p>';
+    return;
+  }
+
+  el.innerHTML = items.map(item => {
+    const snap = item.product_snapshot || {};
+    return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl bg-amber-50 border-2 border-amber-100 cursor-pointer card-hover"
+        onclick="useInventoryItem('${item.id}')">
+      <div class="text-3xl">${snap.icon || '🎁'}</div>
+      <p class="text-xs font-black text-gray-700 text-center leading-tight">${snap.name || '아이템'}</p>
+      <span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 구매'}</span>
+      <button class="btn btn-primary w-full py-1 text-xs mt-1">사용하기</button>
+    </div>`;
+  }).join('');
+}
+
+async function useInventoryItem(inventoryId) {
+  const { data: item } = await sb.from('inventory').select('*').eq('id', inventoryId).single();
+  if (!item) return;
+  const snap = item.product_snapshot || {};
+  showModal(`
+    <div class="text-center">
+      <div class="text-6xl mb-3">${snap.icon || '🎁'}</div>
+      <h2 class="text-xl font-black text-gray-800 mb-1">${snap.name || '아이템'}</h2>
+      <p class="text-sm text-gray-400 mb-2">${snap.description || ''}</p>
+      <div class="bg-amber-50 rounded-2xl p-3 mb-5 text-left text-sm font-bold text-amber-800">
+        ✋ 사용하면 관리자에게 신청이 전달돼요.<br>승인 후 아이템이 지급됩니다.
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-gray flex-1 py-3" onclick="closeModal()">취소</button>
+        <button class="btn btn-primary flex-1 py-3" onclick="confirmUseItem('${inventoryId}')">사용하기!</button>
+      </div>
+    </div>`);
+}
+
+async function confirmUseItem(inventoryId) {
+  closeModal();
+  const { data: item } = await sb.from('inventory').select('*').eq('id', inventoryId).single();
+  if (!item) { toast('❌', '아이템을 찾을 수 없어요'); return; }
+  const snap = item.product_snapshot || {};
+
+  // 인벤토리에서 '사용됨'으로 변경
+  await sb.from('inventory').update({ status: 'used' }).eq('id', inventoryId);
+
+  // product_requests에 신청 생성
+  await sb.from('product_requests').insert({
+    user_id: myProfile.id,
+    product_snapshot: snap,
+    price: 0,
+    status: 'pending',
+    reward_type: 'MANUAL_ITEM',
+    from_gacha: item.from_gacha || false
+  });
+
+  await pushNotif(myProfile.id, 'request', '신청 완료! ✋', `${snap.icon} ${snap.name} 신청을 보냈어요. 관리자 승인 대기 중이에요.`);
+  playSound('pop');
+  toast('✅', `${snap.name} 신청 완료!`);
+  renderInventory();
+  renderMypage();
+}
+
 
 // ──────────────────────────────────────────────
 //  NOTIFICATIONS
@@ -1528,16 +1633,17 @@ async function showNotifications() {
   updateNotifDot();
   const typeIcon = { reward:'🎁', quest:'📋', admin:'👑', gachaReward:'🎲', request:'📬', quest_approved:'✅', quest_rejected:'❌' };
   showModal(`
-    <h2 class="text-lg font-black text-gray-800 mb-4">🔔 알림</h2>
+    <h2 class="text-lg font-black text-gray-800 mb-3">🔔 알림</h2>
+    <div style="max-height:55dvh;overflow-y:auto;margin:0 -4px;padding:0 4px">
     ${!notifs?.length ? '<p class="text-sm text-gray-400 text-center py-6">알림이 없어요</p>' :
       notifs.map(n => `<div class="p-3 rounded-2xl bg-gray-50 mb-2 flex gap-3">
-        <span class="text-xl">${typeIcon[n.type]||'🔔'}</span>
+        <span class="text-xl shrink-0">${typeIcon[n.type]||'🔔'}</span>
         <div><p class="text-sm font-black text-gray-800">${n.title}</p>
           <p class="text-xs text-gray-400 font-semibold">${n.body}</p>
           <p class="text-xs text-gray-300 mt-1">${fmtTs(n.created_at)}</p>
         </div>
       </div>`).join('')}
-    <button class="btn btn-gray w-full py-3 mt-2" onclick="closeModal()">닫기</button>`);
+    </div>`);
 }
 
 // ──────────────────────────────────────────────
