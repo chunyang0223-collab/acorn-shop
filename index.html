@@ -783,7 +783,7 @@ function _ensureAudio() {
   document.addEventListener(e, _ensureAudio, { once: false, passive: true })
 );
 
-function _playTone(freq, type, duration, vol=0.15) {
+function _playTone(freq, type, duration, vol=0.165) {
   _ensureAudio();
   if (!_audioCtx || _audioCtx.state !== 'running') return;
   try {
@@ -797,7 +797,7 @@ function _playTone(freq, type, duration, vol=0.15) {
   } catch(e) {}
 }
 
-function _playChord(notes, type='sine', duration=0.12, vol=0.12) {
+function _playChord(notes, type='sine', duration=0.12, vol=0.132) {
   notes.forEach((f,i) => setTimeout(() => _playTone(f, type, duration, vol), i*60));
 }
 
@@ -807,25 +807,25 @@ function playSound(name) {
   if (_audioCtx.state === 'suspended') _audioCtx.resume();
   switch(name) {
     case 'click':
-      _playTone(880, 'sine', 0.08, 0.1); break;
+      _playTone(880, 'sine', 0.08, 0.11); break;
     case 'tab':
-      _playTone(660, 'sine', 0.1, 0.08); break;
+      _playTone(660, 'sine', 0.1, 0.088); break;
     case 'gacha':
-      _playChord([261, 329, 392, 523], 'triangle', 0.18, 0.1); break;
+      _playChord([261, 329, 392, 523], 'triangle', 0.18, 0.11); break;
     case 'gachaResult':
-      _playChord([523, 659, 784, 1047], 'sine', 0.22, 0.12); break;
+      _playChord([523, 659, 784, 1047], 'sine', 0.22, 0.132); break;
     case 'reward':
-      _playChord([523, 659, 784], 'sine', 0.2, 0.13);
-      setTimeout(() => _playChord([784, 1047], 'sine', 0.3, 0.1), 200); break;
+      _playChord([523, 659, 784], 'sine', 0.2, 0.143);
+      setTimeout(() => _playChord([784, 1047], 'sine', 0.3, 0.11), 200); break;
     case 'notify':
-      _playTone(880, 'sine', 0.12, 0.1);
-      setTimeout(() => _playTone(1047, 'sine', 0.15, 0.1), 100); break;
+      _playTone(880, 'sine', 0.12, 0.11);
+      setTimeout(() => _playTone(1047, 'sine', 0.15, 0.11), 100); break;
     case 'approve':
-      _playChord([523, 659, 784, 1047], 'sine', 0.25, 0.1); break;
+      _playChord([523, 659, 784, 1047], 'sine', 0.25, 0.11); break;
     case 'reject':
-      _playTone(220, 'sawtooth', 0.2, 0.08); break;
+      _playTone(220, 'sawtooth', 0.2, 0.088); break;
     case 'error':
-      _playTone(180, 'square', 0.15, 0.07); break;
+      _playTone(180, 'square', 0.15, 0.077); break;
   }
 }
 
@@ -1178,7 +1178,7 @@ async function renderShop() {
   }).join('');
 }
 
-async async function requestProduct(id) {
+async function requestProduct(id) {
   const { data: p } = await sb.from('products').select('*').eq('id', id).single();
   if (!p) return;
   const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
