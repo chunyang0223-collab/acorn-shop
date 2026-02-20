@@ -935,15 +935,21 @@ function _kstNow() {
   const now = new Date();
   return new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC+9
 }
-const TODAY         = _kstNow().toISOString().slice(0, 10);
-const NOW_TS        = () => new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-const WEEK_KEY      = (() => {
+// TODAY, WEEK_KEY를 함수로 — 앱을 켜놓아도 자정/월요일 0시에 자동 갱신
+function getToday() {
+  return _kstNow().toISOString().slice(0, 10);
+}
+function getWeekKey() {
   const d = _kstNow();
-  const y = d.getUTCFullYear();
-  const start = new Date(Date.UTC(y, 0, 1));
-  const week  = Math.ceil(((d - start) / 86400000 + start.getUTCDay() + 1) / 7);
-  return `${y}-W${String(week).padStart(2,'0')}`;
-})();
+  const day = d.getUTCDay() || 7;       // 일요일(0) → 7
+  const monday = new Date(d);
+  monday.setUTCDate(d.getUTCDate() - (day - 1));
+  return 'W-' + monday.toISOString().slice(0, 10); // ex) "W-2026-02-16"
+}
+// 하위 호환: 기존 TODAY/WEEK_KEY 변수 참조 코드가 있을 경우를 위한 게터
+Object.defineProperty(window, 'TODAY',    { get: getToday });
+Object.defineProperty(window, 'WEEK_KEY', { get: getWeekKey });
+const NOW_TS = () => new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 
 // ──────────────────────────────────────────────
 //  세션 상태
@@ -1663,12 +1669,13 @@ async function triggerAutoQuest(triggerType, count = 1) {
 
   for (const q of quests) {
     const match =
-      (triggerType === 'attendance'  && (q.name.includes('출석') || q.description.includes('접속') || q.description.includes('로그인'))) ||
-      (triggerType === 'shopVisit'   && (q.name.includes('상점') || q.name.includes('상품') || q.description.includes('상점') || q.description.includes('방문'))) ||
-      (triggerType === 'gachaPlay'   && (q.name.includes('뽑기') || q.description.includes('뽑기'))) ||
-      (triggerType === 'itemBuy'     && (q.name.includes('구매') || q.description.includes('구매') || q.description.includes('상점에서'))) ||
-      (triggerType === 'itemUse'     && (q.name.includes('사용') || q.name.includes('신청') || q.description.includes('아이템') || q.description.includes('사용신청'))) ||
-      (triggerType === 'questSubmit' && (q.name.includes('퀘스트') || q.name.includes('제출') || q.description.includes('퀘스트') || q.description.includes('제출')));
+      (triggerType === 'attendance'    && (q.name.includes('출석') || q.description.includes('접속') || q.description.includes('로그인'))) ||
+      (triggerType === 'shopVisit'     && (q.name.includes('상점') || q.name.includes('상품') || q.description.includes('상점') || q.description.includes('방문'))) ||
+      (triggerType === 'gachaPlay'     && (q.name.includes('뽑기') || q.description.includes('뽑기'))) ||
+      (triggerType === 'itemBuy'       && (q.name.includes('구매') || q.description.includes('구매') || q.description.includes('상점에서'))) ||
+      (triggerType === 'itemUse'       && (q.name.includes('사용') || q.name.includes('신청') || q.description.includes('아이템') || q.description.includes('사용신청'))) ||
+      (triggerType === 'questSubmit'   && (q.name.includes('퀘스트') || q.name.includes('제출') || q.description.includes('퀘스트') || q.description.includes('제출'))) ||
+      (triggerType === 'questComplete' && (q.target_count||1) >= 2 && (q.name.includes('퀘스트') || q.description.includes('퀘스트') || q.description.includes('완료')));
     if (!match) continue;
 
     const done = await isQuestDone(q.id, q.repeat_type, q.target_count || 1);
@@ -1714,6 +1721,11 @@ async function triggerAutoQuest(triggerType, count = 1) {
     if (res.data?.success) { myProfile.acorns = res.data.balance; updateAcornDisplay(); }
     await pushNotif(myProfile.id, 'quest', '퀘스트 완료! 🎉', `${q.icon} ${q.name} 완료! +${q.reward}🌰`);
     setTimeout(() => toast('🎉', `${q.name} 완료! +${q.reward}🌰`), 400);
+
+    // 퀘스트 완료 시 "퀘스트 N회 완료하기" 퀘스트 카운트 (무한루프 방지: questComplete 트리거는 target_count>=2 퀘스트만 매칭)
+    if (triggerType !== 'questComplete') {
+      triggerAutoQuest('questComplete');
+    }
   }
 }
 
@@ -2497,9 +2509,47 @@ async function saveQuest(id) {
 
 async function approveQuestReq(reqId) {
   playSound('approve');
+  // 승인 전 요청 정보 조회 (user_id 확보)
+  const { data: qcr } = await sb.from('quest_completion_requests')
+    .select('user_id').eq('id', reqId).maybeSingle();
+
   const res = await sb.rpc('approve_quest_request', { p_request_id: reqId });
   if (!res.data?.success) { toast('❌', '처리 실패: ' + (res.data?.error||'')); return; }
+
+  // 승인된 유저의 "퀘스트 N회 완료하기" 카운트 업데이트
+  if (qcr?.user_id) await incrementQuestComplete(qcr.user_id);
+
   renderQuestAdmin(); toast('✅', '퀘스트 승인 완료!');
+}
+
+// 특정 유저의 questComplete 카운트를 DB에서 직접 업데이트
+async function incrementQuestComplete(userId) {
+  try {
+    const { data: quests } = await sb.from('quests')
+      .select('*').eq('active', true).eq('completion_type', 'auto');
+    if (!quests) return;
+    for (const q of quests) {
+      const isQC = (q.target_count||1) >= 2 &&
+        (q.name.includes('퀘스트') || q.description.includes('퀘스트') || q.description.includes('완료'));
+      if (!isQC) continue;
+      const key = getPeriodKey(q.repeat_type);
+      const { data: prog } = await sb.from('quest_progress')
+        .select('id, progress_count')
+        .eq('user_id', userId).eq('quest_id', q.id).eq('period_key', key)
+        .maybeSingle();
+      const current = (prog?.progress_count || 0) + 1;
+      if (current < (q.target_count||1)) {
+        if (prog) await sb.from('quest_progress').update({ progress_count: current }).eq('id', prog.id);
+        else await sb.from('quest_progress').insert({ user_id: userId, quest_id: q.id, period_key: key, progress_count: current });
+      } else if (!prog || (prog.progress_count||0) < (q.target_count||1)) {
+        // 목표 달성 → 보상 지급
+        if (prog) await sb.from('quest_progress').update({ progress_count: q.target_count }).eq('id', prog.id);
+        else await sb.from('quest_progress').insert({ user_id: userId, quest_id: q.id, period_key: key, progress_count: q.target_count });
+        await sb.rpc('adjust_acorns', { p_user_id: userId, p_amount: q.reward, p_reason: `퀘스트 자동완료 — ${q.name}` });
+        await pushNotif(userId, 'quest', '퀘스트 완료! 🎉', `${q.icon} ${q.name} 완료! +${q.reward}🌰`);
+      }
+    }
+  } catch(e) {}
 }
 
 async function rejectQuestReq(reqId) {
@@ -2603,7 +2653,7 @@ async function renderUserAdmin() {
 //  ADMIN — DASHBOARD
 // ──────────────────────────────────────────────
 async function renderDashboard() {
-  const todayStart = TODAY + 'T00:00:00.000Z';
+  const todayStart = getToday() + 'T00:00:00+09:00'; // KST 자정 기준
   const [{ data: users }, { data: todayTxs }, { data: recentTxs }] = await Promise.all([
     sb.from('users').select('id', { count: 'exact' }),
     sb.from('transactions').select('amount,reason').gte('created_at', todayStart),
