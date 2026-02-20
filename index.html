@@ -783,22 +783,55 @@ let reqFilter = 'all';
 //  앱 시작
 // ──────────────────────────────────────────────
 async function boot() {
+  // ── OAuth 콜백 처리 (카카오 로그인 후 URL 해시에서 토큰 파싱) ──
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const access_token = params.get('access_token');
+
+    if (access_token) {
+      // JWT payload에서 userId 파싱 (카카오 OAuth는 URL에 user 객체를 안 줌)
+      let userId = '';
+      try {
+        const rawUser = params.get('user');
+        if (rawUser) {
+          userId = JSON.parse(rawUser).id;
+        } else {
+          const payload = JSON.parse(atob(access_token.split('.')[1]));
+          userId = payload.sub;
+        }
+      } catch(e) { userId = 'oauth_user'; }
+
+      const sessionData = {
+        access_token,
+        refresh_token: params.get('refresh_token'),
+        expires_at: Math.floor(Date.now() / 1000) + parseInt(params.get('expires_in') || '3600'),
+        user: { id: userId, email: 'kakao_user' }
+      };
+      localStorage.setItem('sb_session', JSON.stringify(sessionData));
+      window.history.replaceState(null, null, window.location.pathname);
+      window.location.reload(); // 세션 저장 후 새로고침해야 getSession()이 정상 동작
+      return;
+    }
+  }
+
   // Auth 상태 변경 구독
   sb.auth.onAuthStateChange(async (event, s) => {
     session = s;
-    if (s) {
+    if (s && s.user) {
       await onSignedIn(s);
-    } else {
+    } else if (event === 'SIGNED_OUT') {
       showLoginScreen();
     }
   });
 
   // 현재 세션 확인
   const { data } = await sb.auth.getSession();
-  if (!data.session) {
+  if (data && data.session && data.session.user) {
+    await onSignedIn(data.session);
+  } else {
     showLoginScreen();
   }
-  // onAuthStateChange가 처리함
 }
 
 function showLoginScreen() {
