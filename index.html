@@ -499,6 +499,8 @@ body {
   z-index: 500;
   display: flex; align-items: center; justify-content: center;
   animation: fadeIn .2s;
+  overscroll-behavior: none;
+  overflow: hidden;
 }
 .modal-box {
   background: rgba(255,255,255,0.88);
@@ -3075,26 +3077,18 @@ function fmtTs(iso) {
   } catch { return iso.slice(0,16).replace('T',' '); }
 }
 
-let _modalScrollY = 0;
+function _blockScroll(e) {
+  // 모달 내부 스크롤(.modal-box)은 허용, 오버레이 터치는 차단
+  if (!e.target.closest('.modal-box')) e.preventDefault();
+}
 function showModal(html) {
   document.getElementById('modalContent').innerHTML = html;
-  _modalScrollY = window.scrollY;
-  // iOS Safari: 스크롤된 상태일 때만 body fixed 적용 (안 하면 다른 탭에서 레이아웃 흔들림)
-  if (_modalScrollY > 0) {
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${_modalScrollY}px`;
-    document.body.style.width = '100%';
-  }
   document.getElementById('modal').classList.remove('hidden');
+  document.getElementById('modal').addEventListener('touchmove', _blockScroll, { passive: false });
 }
 function closeModal() {
   document.getElementById('modal').classList.add('hidden');
-  if (_modalScrollY > 0) {
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    window.scrollTo(0, _modalScrollY);
-  }
+  document.getElementById('modal').removeEventListener('touchmove', _blockScroll);
 }
 
 let _toastT;
