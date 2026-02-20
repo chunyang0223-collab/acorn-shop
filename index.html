@@ -800,7 +800,7 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
 </div>
 
 <!-- 토스트 -->
-<div id="toast" class="hidden" class="toast-container">
+<div id="toast" class="toast-container hidden">
   <div class="clay-card px-5 py-3 flex items-center gap-2 border-l-4 border-amber-400 bounce-in">
     <span id="toastIcon" class="text-lg"></span>
     <span id="toastMsg" class="font-bold text-gray-800 text-sm"></span>
@@ -2153,7 +2153,7 @@ function _productCard(p, i, listType) {
                ? (p.stock === 0
                  ? '<span class="badge-soldout-sm">품절</span>'
                  : `<span class="badge-stock-sm">재고 ${p.stock}</span>`)
-               : '<span class="badge-unlimited" class="badge-prob-sm">무제한</span>'}`
+               : '<span class="badge-unlimited-sm">무제한</span>'}`
           : `<span class="text-xs text-purple-600 font-bold">${p.probability||0}%</span>`}
           <span class="${p.reward_type==='AUTO_ACORN'?'rt-auto':'rt-manual'} text-xs">${p.reward_type==='AUTO_ACORN'?'⚡':'📬'}</span>
           ${p.reward_type==='AUTO_ACORN'?`<span class="text-xs text-green-600 font-bold">+${p.acorn_amt}🌰</span>`:''}
@@ -2681,7 +2681,7 @@ async function renderDashboard() {
         </tr></thead>
         <tbody>${recentTxs.map(t=>`<tr class="border-b border-gray-50">
           <td class="py-2 pr-2 font-bold text-gray-700 text-xs whitespace-nowrap">${t.users?.display_name||''}</td>
-          <td class="py-2 pr-2 text-gray-400 text-xs" class="text-ellipsis">${t.reason}</td>
+          <td class="py-2 pr-2 text-gray-400 text-xs text-ellipsis">${t.reason}</td>
           <td class="py-2 pr-2 font-black text-sm ${t.amount>0?'tx-plus':'tx-minus'}">${t.amount>0?'+':''}${t.amount}🌰</td>
           <td class="py-2 text-gray-400 text-xs whitespace-nowrap">${fmtTs(t.created_at)}</td>
         </tr>`).join('')}</tbody>
