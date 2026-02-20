@@ -640,6 +640,28 @@ body {
 .badge-prob-sm    { background: rgba(237,233,254,0.9); color: #7c3aed; border-radius: 6px; padding: 1px 5px; font-size: 10px; font-weight: 800; }
 
 
+
+/* ── 페이지네이션 버튼 ── */
+.page-nav-btn {
+  width: 28px; height: 28px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(210,180,240,0.3);
+  color: #9c87b8;
+  font-size: 16px; font-weight: 900;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  line-height: 1;
+}
+.page-nav-btn:hover:not(:disabled) {
+  background: rgba(249,168,212,0.25);
+  color: #be185d;
+  border-color: rgba(249,168,212,0.5);
+}
+.page-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
 </style>
 </head>
 <body>
@@ -770,13 +792,27 @@ body {
 
       <!-- 신청 현황 -->
       <div class="clay-card p-5 mb-4">
-        <p class="text-sm font-black text-gray-700 mb-3">📦 신청 현황</p>
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-black text-gray-700">📦 신청 현황</p>
+          <div class="flex items-center gap-2">
+            <button id="reqPrevBtn" class="page-nav-btn" onclick="moveReqPage(-1)">‹</button>
+            <span id="reqPageLabel" class="text-xs font-bold text-gray-400"></span>
+            <button id="reqNextBtn" class="page-nav-btn" onclick="moveReqPage(1)">›</button>
+          </div>
+        </div>
         <div id="myRequestList" class="space-y-2"></div>
       </div>
 
       <!-- 도토리 내역 -->
       <div class="clay-card p-5">
-        <p class="text-sm font-black text-gray-700 mb-3">📜 도토리 내역 <span class="text-gray-400 text-xs">(최신순)</span></p>
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-black text-gray-700">📜 도토리 내역</p>
+          <div class="flex items-center gap-2">
+            <button id="txPrevBtn" class="page-nav-btn" onclick="moveTxPage(-1)">‹</button>
+            <span id="txPageLabel" class="text-xs font-bold text-gray-400"></span>
+            <button id="txNextBtn" class="page-nav-btn" onclick="moveTxPage(1)">›</button>
+          </div>
+        </div>
         <div id="myTxList" class="space-y-2"></div>
       </div>
     </div>
@@ -1683,27 +1719,57 @@ async function doGacha(count) {
     myProfile.acorns = res.data.balance;
     updateAcornDisplay();
 
-    const results = [];
-    for (let i = 0; i < count; i++) {
-      const item = drawItemWeighted(pool);
-      if (!item) continue;
-      results.push(item);
+    // ── 뽑기 결과 계산 (로컬, 즉시) ──
+    const results = Array.from({ length: count }, () => drawItemWeighted(pool)).filter(Boolean);
 
-      if (item.reward_type === 'AUTO_ACORN' && item.acorn_amt > 0) {
-        await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: item.acorn_amt, p_reason: `뽑기 보상 — ${item.name}` });
-        myProfile.acorns += item.acorn_amt;
-        await pushNotif(myProfile.id, 'gachaReward', '뽑기 보상! 🎲', `${item.icon} ${item.name} 획득! +${item.acorn_amt}🌰`);
-      } else if (item.reward_type === 'MANUAL_ITEM') {
-        await sb.from('inventory').insert({
-          user_id: myProfile.id, product_snapshot: item,
-          from_gacha: true, status: 'held'
-        });
-        await pushNotif(myProfile.id, 'gachaReward', '아이템 획득! 🎲', `${item.icon} ${item.name} 획득! 인벤토리에서 확인하세요.`);
-      }
-      playSound('reward');
+    // ── AUTO_ACORN 보상 합산 → 한 번에 지급 ──
+    const acornItems    = results.filter(r => r.reward_type === 'AUTO_ACORN' && r.acorn_amt > 0);
+    const manualItems   = results.filter(r => r.reward_type === 'MANUAL_ITEM');
+    const totalAcornAmt = acornItems.reduce((s, r) => s + r.acorn_amt, 0);
+
+    // ── DB 작업 병렬 실행 ──
+    const dbTasks = [];
+
+    // 도토리 보상 한 번에
+    if (totalAcornAmt > 0) {
+      dbTasks.push(
+        sb.rpc('adjust_acorns', {
+          p_user_id: myProfile.id,
+          p_amount: totalAcornAmt,
+          p_reason: `뽑기 보상 (${acornItems.map(r=>r.name).join(', ')})`
+        }).then(r => {
+          if (r.data?.success) myProfile.acorns = r.data.balance;
+        })
+      );
     }
+
+    // 인벤토리 삽입 한 번에 (배열로)
+    if (manualItems.length > 0) {
+      dbTasks.push(
+        sb.from('inventory').insert(
+          manualItems.map(item => ({
+            user_id: myProfile.id,
+            product_snapshot: item,
+            from_gacha: true,
+            status: 'held'
+          }))
+        )
+      );
+    }
+
+    // 알림 한 번에 (각 아이템별 알림 → 병렬)
+    for (const item of results) {
+      if (item.reward_type === 'AUTO_ACORN' && item.acorn_amt > 0) {
+        dbTasks.push(pushNotif(myProfile.id, 'gachaReward', '뽑기 보상! 🎲', `${item.icon} ${item.name} 획득! +${item.acorn_amt}🌰`));
+      } else if (item.reward_type === 'MANUAL_ITEM') {
+        dbTasks.push(pushNotif(myProfile.id, 'gachaReward', '아이템 획득! 🎲', `${item.icon} ${item.name} 획득! 인벤토리에서 확인하세요.`));
+      }
+    }
+
+    await Promise.all(dbTasks);
     updateAcornDisplay();
-    triggerAutoQuest('gachaPlay', count); // count = 1 or 5
+    playSound('reward');
+    triggerAutoQuest('gachaPlay', count); // 백그라운드 실행 (await 없음 — 뽑기 UX에 영향 안 줌)
 
     renderGachaCards(results, 'gachaResult', 'gachaResultItems');
     setTimeout(() => playSound('gachaResult'), 100);
@@ -2060,6 +2126,71 @@ async function requestQuestCompletion(questId) {
 // ──────────────────────────────────────────────
 //  MYPAGE
 // ──────────────────────────────────────────────
+async // ── 마이페이지 페이지네이션 상태 ──
+let _reqPage = 0, _reqItems = [];
+let _txPage  = 0, _txItems  = [];
+const PAGE_SIZE = 5;
+
+function _renderReqPage() {
+  const el = document.getElementById('myRequestList');
+  const total = _reqItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const slice = _reqItems.slice(_reqPage * PAGE_SIZE, (_reqPage + 1) * PAGE_SIZE);
+
+  el.innerHTML = slice.length
+    ? slice.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(255,255,255,0.5)">
+        <div class="min-w-0 mr-2">
+          <p class="text-sm font-bold text-gray-800">${r.icon} ${r.label}</p>
+          <p class="text-xs text-gray-400">${r.sub}</p>
+        </div>
+        <span class="badge ${stClass(r.status)} shrink-0">${stLabel(r.status)}</span>
+      </div>`).join('')
+    : '<p class="text-sm text-gray-400 text-center py-3">신청 내역이 없어요</p>';
+
+  const label = document.getElementById('reqPageLabel');
+  const prev  = document.getElementById('reqPrevBtn');
+  const next  = document.getElementById('reqNextBtn');
+  if (label) label.textContent = total ? `${_reqPage+1} / ${totalPages}` : '';
+  if (prev)  prev.disabled  = _reqPage === 0;
+  if (next)  next.disabled  = _reqPage >= totalPages - 1;
+}
+
+function _renderTxPage() {
+  const el = document.getElementById('myTxList');
+  const total = _txItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const slice = _txItems.slice(_txPage * PAGE_SIZE, (_txPage + 1) * PAGE_SIZE);
+
+  el.innerHTML = slice.length
+    ? slice.map(t => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(255,255,255,0.5)">
+        <div class="flex-1 min-w-0 mr-3">
+          <p class="text-sm font-bold text-gray-700 truncate">${t.reason}</p>
+          <p class="text-xs text-gray-400">${fmtTs(t.created_at)} · 잔액 ${t.balance}🌰</p>
+        </div>
+        <span class="font-black text-base shrink-0 ${t.amount>0?'tx-plus':'tx-minus'}">${t.amount>0?'+':''}${t.amount}🌰</span>
+      </div>`).join('')
+    : '<p class="text-sm text-gray-400 text-center py-3">내역이 없어요</p>';
+
+  const label = document.getElementById('txPageLabel');
+  const prev  = document.getElementById('txPrevBtn');
+  const next  = document.getElementById('txNextBtn');
+  if (label) label.textContent = total ? `${_txPage+1} / ${totalPages}` : '';
+  if (prev)  prev.disabled  = _txPage === 0;
+  if (next)  next.disabled  = _txPage >= totalPages - 1;
+}
+
+function moveReqPage(dir) {
+  const totalPages = Math.max(1, Math.ceil(_reqItems.length / PAGE_SIZE));
+  _reqPage = Math.max(0, Math.min(totalPages - 1, _reqPage + dir));
+  _renderReqPage();
+}
+
+function moveTxPage(dir) {
+  const totalPages = Math.max(1, Math.ceil(_txItems.length / PAGE_SIZE));
+  _txPage = Math.max(0, Math.min(totalPages - 1, _txPage + dir));
+  _renderTxPage();
+}
+
 async function renderMypage() {
   document.getElementById('mypageHeader').innerHTML = `
     <div class="flex items-center gap-4">
@@ -2074,37 +2205,48 @@ async function renderMypage() {
       </div>
     </div>`;
 
-  // 인벤토리 렌더링
   renderInventory();
 
-  const [{ data: myReqs }, { data: myQCRs }] = await Promise.all([
-    sb.from('product_requests').select('*').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(10),
-    sb.from('quest_completion_requests').select('*, quests(name,icon)').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(5),
+  // 30일 기준 날짜 (KST)
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [{ data: myReqs }, { data: myQCRs }, { data: txs }] = await Promise.all([
+    sb.from('product_requests').select('*')
+      .eq('user_id', myProfile.id).gte('created_at', cutoff)
+      .order('created_at', { ascending: false }).limit(200),
+    sb.from('quest_completion_requests').select('*, quests(name,icon)')
+      .eq('user_id', myProfile.id).gte('created_at', cutoff)
+      .order('created_at', { ascending: false }).limit(100),
+    sb.from('transactions').select('*')
+      .eq('user_id', myProfile.id).gte('created_at', cutoff)
+      .order('created_at', { ascending: false }).limit(500),
   ]);
 
-  const rqEl = document.getElementById('myRequestList');
-  const reqs = [
-    ...(myReqs||[]).map(r => ({ label: r.product_snapshot?.name || '상품', icon: r.product_snapshot?.icon||'🎁', sub: fmtTs(r.created_at)+(r.price?` · ${r.price}🌰`:' · 뽑기')+(r.from_gacha?' 🎲':''), status: r.status })),
-    ...(myQCRs||[]).map(r => ({ label: r.quests?.name || '퀘스트', icon: r.quests?.icon||'📋', sub: fmtTs(r.created_at)+' · 완료 요청', status: r.status })),
-  ];
-  rqEl.innerHTML = reqs.length
-    ? reqs.map(r => `<div class="flex items-center justify-between p-3 rounded-xl bg-gray-50">
-        <div><p class="text-sm font-bold text-gray-800">${r.icon} ${r.label}</p><p class="text-xs text-gray-400">${r.sub}</p></div>
-        <span class="badge ${stClass(r.status)}">${stLabel(r.status)}</span>
-      </div>`).join('')
-    : '<p class="text-sm text-gray-400 text-center py-3">신청 내역이 없어요</p>';
+  // 신청 현황 데이터 합산 후 날짜순 정렬
+  _reqPage  = 0;
+  _reqItems = [
+    ...(myReqs||[]).map(r => ({
+      label: r.product_snapshot?.name || '상품',
+      icon:  r.product_snapshot?.icon || '🎁',
+      sub:   fmtTs(r.created_at) + (r.price ? ` · ${r.price}🌰` : ' · 뽑기') + (r.from_gacha ? ' 🎲' : ''),
+      status: r.status,
+      created_at: r.created_at,
+    })),
+    ...(myQCRs||[]).map(r => ({
+      label: r.quests?.name || '퀘스트',
+      icon:  r.quests?.icon || '📋',
+      sub:   fmtTs(r.created_at) + ' · 완료 요청',
+      status: r.status,
+      created_at: r.created_at,
+    })),
+  ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  const { data: txs } = await sb.from('transactions').select('*').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(30);
-  const txEl = document.getElementById('myTxList');
-  txEl.innerHTML = txs?.length
-    ? txs.map(t => `<div class="flex items-center justify-between p-3 rounded-xl bg-gray-50">
-        <div class="flex-1 min-w-0 mr-3">
-          <p class="text-sm font-bold text-gray-700 truncate">${t.reason}</p>
-          <p class="text-xs text-gray-400">${fmtTs(t.created_at)} · 잔액 ${t.balance}🌰</p>
-        </div>
-        <span class="font-black text-base shrink-0 ${t.amount>0?'tx-plus':'tx-minus'}">${t.amount>0?'+':''}${t.amount}🌰</span>
-      </div>`).join('')
-    : '<p class="text-sm text-gray-400 text-center py-3">내역이 없어요</p>';
+  _renderReqPage();
+
+  // 도토리 내역
+  _txPage  = 0;
+  _txItems = txs || [];
+  _renderTxPage();
 }
 
 async function renderInventory() {
