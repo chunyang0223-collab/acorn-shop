@@ -418,7 +418,7 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
       <input class="field" type="password" id="loginPw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doEmailLogin()">
       <div id="loginErr" class="hidden text-xs text-red-500 font-bold text-center pt-1"></div>
     </div>
-    <button class="btn btn-primary w-full py-4 text-base mb-3" onclick="doEmailLogin()">이메일로 로그인</button>
+    <button class="btn btn-primary w-full py-4 text-base mb-3" onclick="playSound('click');doEmailLogin()">이메일로 로그인</button>
 
     <!-- 구분선 -->
     <div class="flex items-center gap-3 mb-3">
@@ -428,7 +428,7 @@ body{background:linear-gradient(135deg,#fff8f0 0%,#fef3e2 40%,#fde8d8 100%);min-
     </div>
 
     <!-- 카카오 로그인 -->
-    <button class="btn btn-kakao w-full py-4 text-base mb-4" onclick="doKakaoLogin()">
+    <button class="btn btn-kakao w-full py-4 text-base mb-4" onclick="playSound('click');doKakaoLogin()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0">
         <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.35 3.93 3.39 4.98L4.05 15l3.57-2.43c.45.06.9.09 1.38.09 4.14 0 7.5-2.64 7.5-5.88C16.5 4.14 13.14 1.5 9 1.5z" fill="#191919"/>
       </svg>
@@ -991,6 +991,10 @@ async function _pollSync() {
 
     // 관리자: 신청 개수 확인
     if (myProfile.is_admin) {
+      // 관리자: 브라우저 알림 권한 요청
+      requestNotifPermission().then(granted => {
+        if (granted) console.log('관리자 브라우저 알림 활성화됨');
+      });
       const rr = await fetch(`${SUPABASE_URL}/rest/v1/product_requests?status=eq.pending&select=id`, { headers: h });
       const rd = await rr.json();
       if (Array.isArray(rd) && rd.length !== _lastReqCount) {
@@ -1068,6 +1072,7 @@ async function doKakaoLogin() {
 }
 
 async function doLogout() {
+  playSound('click');
   await sb.auth.signOut();
 }
 
@@ -1117,12 +1122,15 @@ function uTab(tab, btn) {
   document.querySelectorAll('#userMode>.clay-card .tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('utab-'+tab).classList.remove('hidden');
   btn.classList.add('active');
+  playSound('tab');
   if (tab === 'shop')   { renderShop(); triggerAutoQuest('shopVisit'); }
+  if (tab === 'gacha')  renderGachaProbTable();
   if (tab === 'quest')  renderQuests();
   if (tab === 'mypage') renderMypage();
 }
 
 function aTab(tab, btn) {
+  playSound('tab');
   A_TABS.forEach(t => document.getElementById('atab-'+t).classList.add('hidden'));
   document.querySelectorAll('#adminTabBar .tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('atab-'+tab).classList.remove('hidden');
@@ -1631,11 +1639,51 @@ async function confirmUseItem(inventoryId) {
     from_gacha: item.from_gacha || false
   });
 
+  // 사용자 본인 알림
   await pushNotif(myProfile.id, 'request', '신청 완료! ✋', `${snap.icon} ${snap.name} 신청을 보냈어요. 관리자 승인 대기 중이에요.`);
+
+  // 관리자에게 알림 (DB + 브라우저 Push)
+  try {
+    const { data: adminUser } = await sb.from('users').select('id').eq('is_admin', true).single();
+    if (adminUser) {
+      await pushNotif(
+        adminUser.id, 'request',
+        `📬 신청 도착! ${snap.icon} ${snap.name}`,
+        `${myProfile.display_name}님이 아이템 사용을 신청했어요. 확인해주세요!`
+      );
+    }
+  } catch(e) {}
+
+  // 브라우저 Push 알림 (관리자 기기에서 받을 수 있도록)
+  sendBrowserNotif('📬 새 신청이 도착했어요!', `${myProfile.display_name}님: ${snap.icon} ${snap.name} 사용 신청`);
+
   playSound('pop');
   toast('✅', `${snap.name} 신청 완료!`);
   renderInventory();
   renderMypage();
+}
+
+// 브라우저 Push 알림 (Web Notification API)
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+function sendBrowserNotif(title, body, icon = '🌰') {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    new Notification(title, {
+      body,
+      icon: '/acorn-shop/apple-touch-icon.png',
+      badge: '/acorn-shop/apple-touch-icon.png',
+      tag: 'acorn-admin-request',
+      renotify: true
+    });
+  } catch(e) {}
 }
 
 
@@ -2107,6 +2155,7 @@ async function saveQuest(id) {
 }
 
 async function approveQuestReq(reqId) {
+  playSound('approve');
   const res = await sb.rpc('approve_quest_request', { p_request_id: reqId });
   if (!res.data?.success) { toast('❌', '처리 실패: ' + (res.data?.error||'')); return; }
   renderQuestAdmin(); toast('✅', '퀘스트 승인 완료!');
