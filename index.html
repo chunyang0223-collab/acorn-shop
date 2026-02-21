@@ -1743,7 +1743,7 @@ async function requestProduct(id) {
   if (!p) return;
   const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
   if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(); return; }
-  if ((myProfile.acorns || 0) < p.price) { playSound('reject'); toast('❌', '도토리가 부족해요!'); return; }
+  if ((myProfile.acorns || 0) < p.price) { playSound('reject'); toast('❌', '도토리가 부족해요!', 1500); return; }
   showModal(`
     <div class="text-center">
       <div class="text-6xl mb-3">${p.icon}</div>
@@ -1888,7 +1888,7 @@ async function doGacha(count) {
   try {
     const cost = GACHA_COST * count;
     if ((myProfile.acorns||0) < cost) {
-      playSound('reject'); toast('❌', '도토리가 부족해요!'); return;
+      playSound('reject'); toast('❌', '도토리가 부족해요!', 1500); return;
     }
     playSound('gacha');
 
@@ -3284,7 +3284,7 @@ function toggleTheme() {
 
 // ── 별 생성 (다크모드용, 35개 랜덤) ──
 (function() {
-  const COUNT = 35;
+  const COUNT = 23;
   // 별 색상: 흰색, 따뜻한 노랑, 차가운 파랑 계열 섞기
   const COLORS = [
     '#ffffff', '#ffffff', '#ffffff',   // 흰색 (가장 많이)
@@ -3323,7 +3323,7 @@ function closeModal() {
 }
 
 let _toastT;
-function toast(icon, msg) {
+function toast(icon, msg, duration = 3000) {
   clearTimeout(_toastT);
   document.getElementById('toastIcon').textContent = icon;
   document.getElementById('toastMsg').textContent  = msg;
@@ -3331,7 +3331,7 @@ function toast(icon, msg) {
   const inner = document.getElementById('toastInner');
   el.classList.remove('hidden');
   if (inner) { inner.style.animation='none'; void inner.offsetWidth; inner.style.animation='toastIn .25s cubic-bezier(.34,1.56,.64,1) both'; }
-  _toastT = setTimeout(()=>{ el.classList.add('hidden'); el.style.animation=''; }, 3000);
+  _toastT = setTimeout(()=>{ el.classList.add('hidden'); el.style.animation=''; }, duration);
 }
 
 // ──────────────────────────────────────────────
