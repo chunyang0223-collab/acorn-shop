@@ -149,6 +149,7 @@ const supabase = (() => {
           return q;
         },
         eq(col, val)   { _filters.push(col + '=eq.'   + encodeURIComponent(val)); return q; },
+        in(col, vals)  { _filters.push(col + '=in.(' + vals.map(v => encodeURIComponent(v)).join(',') + ')'); return q; },
         neq(col, val)  { _filters.push(col + '=neq.'  + encodeURIComponent(val)); return q; },
         ilike(col, val){ _filters.push(col + '=ilike.' + encodeURIComponent(val)); return q; },
         gte(col, val)  { _filters.push(col + '=gte.'  + encodeURIComponent(val)); return q; },
@@ -4752,10 +4753,12 @@ async function addRecycleItem() {
     toast('❌', '해당 범위에 맞는 상품이 없어요'); return;
   }
 
-  // 이미 등록된 product_id 확인
-  const { data: existList } = await sb.from('recycle_items')
-    .select('product_id').in('product_id', targets.map(t => t.id));
-  const existIds = new Set((existList || []).map(e => e.product_id));
+  // 이미 등록된 product_id 확인 (각각 조회)
+  const existIds = new Set();
+  for (const t of targets) {
+    const { data: ex } = await sb.from('recycle_items').select('id').eq('product_id', t.id).maybeSingle();
+    if (ex) existIds.add(t.id);
+  }
   const newTargets = targets.filter(t => !existIds.has(t.id));
 
   if (newTargets.length === 0) {
