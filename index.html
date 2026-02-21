@@ -4413,11 +4413,19 @@ async function renderRecycleTab() {
         const allSamePrice = grp.every(ri => ri.recycle_price === sample.recycle_price);
 
         if (allSamePrice) {
-          // 가격 동일 → 하나로 합쳐서 표시, 마크 없음
+          // 가격 동일 → 하나로 합쳐서 표시
+          const types = [...new Set(grp.map(ri => ri.products?.item_type || 'store'))];
+          const hasBoth = types.includes('store') && types.includes('gacha');
+          const typeLabel = hasBoth
+            ? '<span class="text-xs font-bold" style="color:#7c6bbf;font-size:10px">🛍️ 상점 + 🎲 뽑기</span>'
+            : types[0] === 'gacha'
+              ? '<span class="it-gacha text-xs" style="font-size:10px">🎲 뽑기</span>'
+              : '<span class="it-store text-xs" style="font-size:10px">🛍️ 상점</span>';
           return `<div class="recycle-item-card">
             <div class="flex items-center gap-3">
               <span style="font-size:2rem">${p.icon || '🎁'}</span>
               <div>
+                <div class="mb-0.5">${typeLabel}</div>
                 <p class="text-sm font-black text-gray-800">${p.name || '아이템'}</p>
                 <p class="text-xs text-gray-500">보유 시 판매 가능</p>
               </div>
@@ -4651,7 +4659,7 @@ async function renderRecycleAdminList() {
   const el = document.getElementById('recycleAdminList');
   if (!el) return;
   const { data: items } = await sb.from('recycle_items')
-    .select('*, products(id,name,icon)')
+    .select('*, products(id,name,icon,item_type)')
     .order('created_at', { ascending: false });
 
   if (!items || items.length === 0) {
