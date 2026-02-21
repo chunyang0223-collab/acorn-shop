@@ -170,7 +170,7 @@ const supabase = (() => {
 
             const h = { ...headers };
             if (_upsert) h['Prefer'] = 'resolution=merge-duplicates,return=representation';
-            else if (_method === 'POST') h['Prefer'] = 'return=representation';
+            else if (_method === 'POST' || _method === 'PATCH') h['Prefer'] = 'return=representation';
             if (_countExact) h['Prefer'] = (h['Prefer'] ? h['Prefer'] + ',' : '') + 'count=exact';
             if (_single || _maybeSingle) h['Accept'] = 'application/vnd.pgrst.object+json';
 
@@ -1241,15 +1241,15 @@ body {
   <div id="adminMode" class="hidden">
     <div id="adminTabBar" class="flex gap-1 mb-5 clay-card p-2">
       <button class="tab-btn active" onclick="aTab('dashboard',this)">📊 대시보드</button>
-      <button class="tab-btn" onclick="aTab('give',this)">🌰 지급</button>
-      <button class="tab-btn" onclick="aTab('gachaTest',this)">🎲 테스트</button>
+      <button class="tab-btn" onclick="aTab('requests',this)">📬 신청목록<span class="req-badge hidden" id="reqBadge"></span></button>
       <button class="tab-btn" onclick="aTab('products',this)">🛍️ 상품</button>
+      <button class="tab-btn" onclick="aTab('gachaTest',this)">🎲 뽑기</button>
       <button class="tab-btn" onclick="aTab('quests',this)">📋 퀘스트</button>
-      <button class="tab-btn" onclick="aTab('requests',this)">📬 신청<span class="req-badge hidden" id="reqBadge"></span></button>
+      <button class="tab-btn" onclick="aTab('recycle',this)">♻️ 재활용센터</button>
+      <button class="tab-btn" onclick="aTab('events',this)">🎉 이벤트</button>
+      <button class="tab-btn" onclick="aTab('give',this)">🌰 지급</button>
       <button class="tab-btn" onclick="aTab('txlog',this)">🗂️ 로그</button>
       <button class="tab-btn" onclick="aTab('users',this)">👥 회원</button>
-      <button class="tab-btn" onclick="aTab('events',this)">🎉 이벤트</button>
-      <button class="tab-btn" onclick="aTab('recycle',this)">♻️ 재활용</button>
     </div>
 
     <!-- 대시보드 -->
@@ -4557,13 +4557,18 @@ async function executeRecycleSell() {
 
     for (const inventoryId of keys) {
       // status='held' 조건 포함해서 업데이트 → 이중 판매 방지
-      const { data: updated } = await sb.from('inventory')
+      // select('id') + Prefer:return=representation 으로 실제 변경된 행 확인
+      const { data: updated, count } = await sb.from('inventory')
         .update({ status: 'resold' })
         .eq('id', inventoryId)
         .eq('user_id', myProfile.id)
         .eq('status', 'held')
         .select('id');
-      if (updated && updated.length > 0) {
+      // data 배열 또는 count로 성공 여부 판단 (커스텀 클라이언트 호환)
+      const didUpdate = (Array.isArray(updated) && updated.length > 0)
+                     || (updated && !Array.isArray(updated) && updated.id)
+                     || (typeof count === 'number' && count > 0);
+      if (didUpdate) {
         successCount++;
         totalEarned += (_recycleSelMap[inventoryId].price || 0);
       }
