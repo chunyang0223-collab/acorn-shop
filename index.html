@@ -413,38 +413,6 @@ body {
   box-shadow: 0 4px 16px rgba(192,132,252,.35);
 }
 
-/* ── 이벤트 요일 버튼 ── */
-.weekday-btn {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  font-weight: 800;
-  font-size: 12px;
-  cursor: pointer;
-  border: 2px solid rgba(200,180,240,0.4);
-  background: rgba(255,255,255,0.7);
-  color: #9ca3af;
-  transition: all .2s;
-  font-family: 'Jua', sans-serif;
-}
-.weekday-btn.selected {
-  background: linear-gradient(135deg, #ff8fab, #c084fc);
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 3px 10px rgba(192,132,252,.4);
-}
-.event-tab-active {
-  background: rgba(255,255,255,0.9);
-  color: #7c3aed;
-  border: none;
-  font-family: 'Jua', sans-serif;
-}
-.event-tab-inactive {
-  background: transparent;
-  color: #9ca3af;
-  border: none;
-  font-family: 'Jua', sans-serif;
-}
-
 /* ── 인풋 필드 ── */
 .field {
   border: 2px solid rgba(210,180,240,0.4);
@@ -525,10 +493,11 @@ body {
 /* ── 모달 ── */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw; height: 100vh;
   background: rgba(80,40,120,.4);
-  z-index: 500;
+  z-index: 9999;
   display: flex; align-items: center; justify-content: center;
   animation: fadeIn .18s ease;
   overscroll-behavior: none;
@@ -687,6 +656,27 @@ body {
 
 .rt-coupon { background: rgba(251,191,36,0.18); color: #92400e; border-radius: 8px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
 [data-theme="dark"] .rt-coupon { background: rgba(251,191,36,0.15) !important; color: #fcd34d !important; }
+/* ── 요일 선택 버튼 (label+checkbox 방식) ── */
+.evt-day-btn { cursor: pointer; }
+.evt-day-btn input { display: none; }
+.evt-day-btn span {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 12px;
+  border: 1.5px solid rgba(200,180,240,0.4);
+  background: rgba(255,255,255,0.6);
+  color: #9c87b8; font-size: 12px; font-weight: 900;
+  font-family: 'Jua','Nunito',sans-serif;
+  transition: all .15s;
+  user-select: none;
+}
+.evt-day-btn span:hover { background: rgba(249,168,212,0.2); color: #be185d; }
+.evt-day-btn input:checked + span {
+  background: linear-gradient(135deg,#f9a8d4,#c084fc);
+  color: #fff; border-color: transparent;
+  box-shadow: 0 3px 8px rgba(192,132,252,0.4);
+}
+[data-theme="dark"] .evt-day-btn span { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.15) !important; color: #9490b8 !important; }
+[data-theme="dark"] .evt-day-btn input:checked + span { background: linear-gradient(135deg,#b05878,#7c6bbf) !important; border-color: transparent !important; }
 
 /* ── 탭 콘텐츠 상단 여백 통일 ── */
 [id^="utab-"] { padding-top: 12px; }
@@ -809,7 +799,7 @@ body {
 [data-theme="dark"] select,
 [data-theme="dark"] option { background: #1e1e2e !important; color: #e2e8f0 !important; }
 [data-theme="dark"] .stat-card { background: rgba(30,30,46,0.92) !important; border-color: rgba(255,255,255,0.08) !important; }
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; width: 100% !important; height: 100% !important; }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; }
 [data-theme="dark"] .login-card { background: rgba(20,20,32,0.95) !important; }
 [data-theme="dark"] .h-px { background: rgba(255,255,255,0.1) !important; }
 [data-theme="dark"] .page-nav-btn { background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important; border-color: rgba(255,255,255,0.1) !important; }
@@ -892,7 +882,7 @@ body {
 [data-theme="dark"] .modal-notice-sub { color: #4ade80 !important; }
 
 /* ── 다크: 모달 오버레이 ── */
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; width: 100% !important; height: 100% !important; }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; }
 [data-theme="dark"] .modal-box {
   background: rgba(34,32,52,0.97) !important;
   border-color: rgba(255,255,255,0.1) !important;
@@ -1360,157 +1350,152 @@ body {
 
     <!-- 이벤트 할인 -->
     <div id="atab-events" class="hidden">
-      <!-- 현재 진행 중인 이벤트 -->
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-4">🎉 이벤트 할인 관리</h2>
-        <div id="activeEventsBanner" class="mb-4"></div>
 
-        <!-- 상점 할인 이벤트 -->
-        <div class="mb-5 p-4 rounded-2xl" style="background:rgba(254,215,170,0.3);border:1.5px solid rgba(251,146,60,0.25)">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">🛍️</span>
-              <p class="font-black text-gray-800">상점 할인 이벤트</p>
+      <!-- 활성 이벤트 상단 배너 -->
+      <div id="activeEventsBanner" class="mb-4"></div>
+
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-lg font-black text-gray-800 mb-3">🎉 이벤트 할인 관리</h2>
+
+        <!-- 탭 전환 -->
+        <div class="flex gap-1 mb-4 p-1 rounded-2xl" style="background:rgba(240,235,255,0.5)">
+          <button id="evtTabOnce" class="tab-btn active flex-1 text-xs py-2" onclick="switchEvtTab('once',this)">⏱️ 기간 이벤트</button>
+          <button id="evtTabRepeat" class="tab-btn flex-1 text-xs py-2" onclick="switchEvtTab('repeat',this)">🔄 요일 반복</button>
+          <button id="evtTabSchedules" class="tab-btn flex-1 text-xs py-2" onclick="switchEvtTab('schedules',this)">📋 목록</button>
+        </div>
+
+        <!-- ── 기간 이벤트 패널 ── -->
+        <div id="evtPane-once">
+          <!-- 상점 -->
+          <div class="mb-4 p-4 rounded-2xl" style="background:rgba(254,215,170,0.3);border:1.5px solid rgba(251,146,60,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🛍️</span><p class="font-black text-gray-800 text-sm">상점 할인</p></div>
+              <div id="storeEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
             </div>
-            <div id="storeEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
-          </div>
-          <div class="space-y-3">
-            <!-- 할인율 -->
-            <div class="flex gap-2 items-center">
-              <input class="field" type="number" id="storeDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:100px;flex-shrink:0">
-              <span class="text-sm font-bold text-gray-600">% 할인</span>
-            </div>
-            <!-- 일회성 / 반복 탭 -->
-            <div class="flex rounded-xl overflow-hidden border border-orange-200" style="background:rgba(255,255,255,0.6)">
-              <button id="storeTab-once" class="flex-1 py-2 text-xs font-black event-tab-active" onclick="switchEventTab('store','once')">📅 일회성</button>
-              <button id="storeTab-recurring" class="flex-1 py-2 text-xs font-black event-tab-inactive" onclick="switchEventTab('store','recurring')">🔁 요일 반복</button>
-            </div>
-            <!-- 일회성 설정 -->
-            <div id="storePane-once" class="space-y-2">
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="storeDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 할인</span>
+              </div>
               <div class="grid grid-cols-2 gap-2">
                 <select class="field text-xs" id="storeEventPreset" onchange="applyEventPreset('store')">
-                  <option value="">⚡ 빠른 설정...</option>
-                  <option value="1h">1시간</option>
-                  <option value="2h">2시간</option>
-                  <option value="4h">4시간</option>
-                  <option value="8h">8시간</option>
-                  <option value="24h">24시간</option>
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">지금부터 1시간</option>
+                  <option value="2h">지금부터 2시간</option>
+                  <option value="4h">지금부터 4시간</option>
+                  <option value="8h">지금부터 8시간</option>
+                  <option value="24h">지금부터 24시간</option>
                 </select>
-                <div></div>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('store')">날짜 초기화</button>
               </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">시작 일시 <span class="font-normal text-gray-400">(비워두면 즉시)</span></label>
-                <input class="field text-xs" type="datetime-local" id="storeEventStart">
-                <label class="text-xs font-bold text-gray-500 mt-1 block">종료 일시 <span class="font-normal text-gray-400">(비워두면 수동 종료)</span></label>
-                <input class="field text-xs" type="datetime-local" id="storeEventEnd">
+              <input class="field text-xs" type="datetime-local" id="storeEventStart">
+              <input class="field text-xs" type="datetime-local" id="storeEventEnd">
+              <p class="text-xs text-gray-400">※ 시작 비워두면 즉시 · 종료 비워두면 수동 종료</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('store')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('store')">⏹ 비활성화</button>
               </div>
             </div>
-            <!-- 요일 반복 설정 -->
-            <div id="storePane-recurring" class="space-y-2 hidden">
-              <label class="text-xs font-bold text-gray-500">반복할 요일 선택</label>
-              <div class="flex gap-1 flex-wrap" id="storeWeekdays">
-                <button data-day="0" class="weekday-btn" onclick="toggleWeekday('store',0)">일</button>
-                <button data-day="1" class="weekday-btn" onclick="toggleWeekday('store',1)">월</button>
-                <button data-day="2" class="weekday-btn" onclick="toggleWeekday('store',2)">화</button>
-                <button data-day="3" class="weekday-btn" onclick="toggleWeekday('store',3)">수</button>
-                <button data-day="4" class="weekday-btn" onclick="toggleWeekday('store',4)">목</button>
-                <button data-day="5" class="weekday-btn" onclick="toggleWeekday('store',5)">금</button>
-                <button data-day="6" class="weekday-btn" onclick="toggleWeekday('store',6)">토</button>
+          </div>
+          <!-- 뽑기 -->
+          <div class="p-4 rounded-2xl" style="background:rgba(196,181,253,0.25);border:1.5px solid rgba(139,92,246,0.2)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🎲</span><p class="font-black text-gray-800 text-sm">뽑기 할인</p></div>
+              <div id="gachaEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="gachaDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 할인</span>
               </div>
               <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="text-xs font-bold text-gray-500">시작 시간</label>
-                  <input class="field text-xs mt-1" type="time" id="storeRecurStart" value="00:00">
-                </div>
-                <div>
-                  <label class="text-xs font-bold text-gray-500">종료 시간</label>
-                  <input class="field text-xs mt-1" type="time" id="storeRecurEnd" value="23:59">
-                </div>
+                <select class="field text-xs" id="gachaEventPreset" onchange="applyEventPreset('gacha')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">지금부터 1시간</option>
+                  <option value="2h">지금부터 2시간</option>
+                  <option value="4h">지금부터 4시간</option>
+                  <option value="8h">지금부터 8시간</option>
+                  <option value="24h">지금부터 24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('gacha')">날짜 초기화</button>
               </div>
-              <p class="text-xs text-orange-500 font-bold">※ 선택한 요일의 해당 시간대에 자동 적용됩니다</p>
-            </div>
-            <div class="flex gap-2 mt-1">
-              <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('store')">✅ 활성화</button>
-              <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('store')">⏹ 비활성화</button>
+              <input class="field text-xs" type="datetime-local" id="gachaEventStart">
+              <input class="field text-xs" type="datetime-local" id="gachaEventEnd">
+              <p class="text-xs text-gray-400">※ 시작 비워두면 즉시 · 종료 비워두면 수동 종료</p>
+              <div class="flex gap-2">
+                <button class="btn btn-purple flex-1 py-2 text-sm" onclick="activateEvent('gacha')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('gacha')">⏹ 비활성화</button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 뽑기 할인 이벤트 -->
-        <div class="p-4 rounded-2xl" style="background:rgba(196,181,253,0.25);border:1.5px solid rgba(139,92,246,0.2)">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">🎲</span>
-              <p class="font-black text-gray-800">뽑기 할인 이벤트</p>
-            </div>
-            <div id="gachaEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+        <!-- ── 요일 반복 패널 ── -->
+        <div id="evtPane-repeat" class="hidden">
+          <div class="p-3 rounded-2xl mb-4" style="background:rgba(219,234,254,0.4);border:1.5px solid rgba(96,165,250,0.3)">
+            <p class="text-xs font-black text-blue-700 mb-1">💡 요일 반복이란?</p>
+            <p class="text-xs text-blue-600 font-semibold leading-relaxed">매주 선택한 요일의 특정 시간대에 자동으로 할인이 적용됩니다.<br>예) 매주 금·토요일 18:00~23:59 상점 20% 할인</p>
           </div>
           <div class="space-y-3">
-            <!-- 할인율 -->
+            <!-- 대상 + 할인율 -->
             <div class="flex gap-2 items-center">
-              <input class="field" type="number" id="gachaDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:100px;flex-shrink:0">
-              <span class="text-sm font-bold text-gray-600">% 할인</span>
+              <select class="field flex-1" id="rpt-target">
+                <option value="store">🛍️ 상점 할인</option>
+                <option value="gacha">🎲 뽑기 할인</option>
+              </select>
+              <input class="field" type="number" id="rpt-pct" placeholder="%" min="1" max="100" style="width:70px;flex-shrink:0">
+              <span class="text-sm font-bold text-gray-500 flex-shrink-0">%</span>
             </div>
-            <!-- 일회성 / 반복 탭 -->
-            <div class="flex rounded-xl overflow-hidden border border-purple-200" style="background:rgba(255,255,255,0.6)">
-              <button id="gachaTab-once" class="flex-1 py-2 text-xs font-black event-tab-active" onclick="switchEventTab('gacha','once')">📅 일회성</button>
-              <button id="gachaTab-recurring" class="flex-1 py-2 text-xs font-black event-tab-inactive" onclick="switchEventTab('gacha','recurring')">🔁 요일 반복</button>
-            </div>
-            <!-- 일회성 설정 -->
-            <div id="gachaPane-once" class="space-y-2">
-              <div class="grid grid-cols-2 gap-2">
-                <select class="field text-xs" id="gachaEventPreset" onchange="applyEventPreset('gacha')">
-                  <option value="">⚡ 빠른 설정...</option>
-                  <option value="1h">1시간</option>
-                  <option value="2h">2시간</option>
-                  <option value="4h">4시간</option>
-                  <option value="8h">8시간</option>
-                  <option value="24h">24시간</option>
-                </select>
-                <div></div>
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">시작 일시 <span class="font-normal text-gray-400">(비워두면 즉시)</span></label>
-                <input class="field text-xs" type="datetime-local" id="gachaEventStart">
-                <label class="text-xs font-bold text-gray-500 mt-1 block">종료 일시 <span class="font-normal text-gray-400">(비워두면 수동 종료)</span></label>
-                <input class="field text-xs" type="datetime-local" id="gachaEventEnd">
+            <!-- 요일 선택 -->
+            <div>
+              <p class="text-xs font-bold text-gray-500 mb-2">반복 요일</p>
+              <div class="flex gap-1.5 flex-wrap" id="rpt-days">
+                <label class="evt-day-btn"><input type="checkbox" value="0" onchange="toggleDayBtn(this)"><span>일</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="1" onchange="toggleDayBtn(this)"><span>월</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="2" onchange="toggleDayBtn(this)"><span>화</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="3" onchange="toggleDayBtn(this)"><span>수</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="4" onchange="toggleDayBtn(this)"><span>목</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="5" onchange="toggleDayBtn(this)"><span>금</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="6" onchange="toggleDayBtn(this)"><span>토</span></label>
               </div>
             </div>
-            <!-- 요일 반복 설정 -->
-            <div id="gachaPane-recurring" class="space-y-2 hidden">
-              <label class="text-xs font-bold text-gray-500">반복할 요일 선택</label>
-              <div class="flex gap-1 flex-wrap" id="gachaWeekdays">
-                <button data-day="0" class="weekday-btn" onclick="toggleWeekday('gacha',0)">일</button>
-                <button data-day="1" class="weekday-btn" onclick="toggleWeekday('gacha',1)">월</button>
-                <button data-day="2" class="weekday-btn" onclick="toggleWeekday('gacha',2)">화</button>
-                <button data-day="3" class="weekday-btn" onclick="toggleWeekday('gacha',3)">수</button>
-                <button data-day="4" class="weekday-btn" onclick="toggleWeekday('gacha',4)">목</button>
-                <button data-day="5" class="weekday-btn" onclick="toggleWeekday('gacha',5)">금</button>
-                <button data-day="6" class="weekday-btn" onclick="toggleWeekday('gacha',6)">토</button>
+            <!-- 시간대 -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">시작 시각</p>
+                <input class="field text-xs" type="time" id="rpt-startTime" value="00:00">
               </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="text-xs font-bold text-gray-500">시작 시간</label>
-                  <input class="field text-xs mt-1" type="time" id="gachaRecurStart" value="00:00">
-                </div>
-                <div>
-                  <label class="text-xs font-bold text-gray-500">종료 시간</label>
-                  <input class="field text-xs mt-1" type="time" id="gachaRecurEnd" value="23:59">
-                </div>
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">종료 시각</p>
+                <input class="field text-xs" type="time" id="rpt-endTime" value="23:59">
               </div>
-              <p class="text-xs text-purple-500 font-bold">※ 선택한 요일의 해당 시간대에 자동 적용됩니다</p>
             </div>
-            <div class="flex gap-2 mt-1">
-              <button class="btn btn-purple flex-1 py-2 text-sm" onclick="activateEvent('gacha')">✅ 활성화</button>
-              <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('gacha')">⏹ 비활성화</button>
+            <!-- 유효기간 (선택) -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">반복 시작일 <span class="font-normal text-gray-400">(비워두면 즉시)</span></p>
+                <input class="field text-xs" type="date" id="rpt-validFrom">
+              </div>
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">반복 종료일 <span class="font-normal text-gray-400">(비워두면 무기한)</span></p>
+                <input class="field text-xs" type="date" id="rpt-validUntil">
+              </div>
             </div>
+            <button class="btn btn-primary w-full py-2.5 text-sm" onclick="addRepeatEvent()">🔄 요일 반복 이벤트 추가</button>
+          </div>
+        </div>
+
+        <!-- ── 등록된 요일반복 목록 ── -->
+        <div id="evtPane-schedules" class="hidden">
+          <div id="scheduleList" class="space-y-2">
+            <p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>
           </div>
         </div>
       </div>
 
       <!-- 이벤트 기록 -->
       <div class="clay-card p-5">
-        <p class="text-sm font-black text-gray-700 mb-3">📜 이벤트 기록</p>
+        <p class="text-sm font-black text-gray-700 mb-3">📜 최근 이벤트 기록</p>
         <div id="eventHistoryList" class="space-y-2"></div>
       </div>
     </div>
@@ -1763,8 +1748,20 @@ async function onSignedIn(s) {
     }
     myProfile = profile;
 
-    // 마지막 접속 시간 기록
-    await sb.from('users').update({ last_seen_at: new Date().toISOString() }).eq('id', s.user.id);
+    // 마지막 접속 시간 기록 — fetch 직접 호출로 확실히 전송
+    try {
+      const _tok = s.access_token || SUPABASE_KEY;
+      await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${s.user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + _tok,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ last_seen_at: new Date().toISOString() })
+      });
+    } catch(e) { /* 접속 기록 실패해도 앱 진행 */ }
 
     // 뽑기 풀 로드
     const { data: gi } = await sb.from('gacha_items').select('*').eq('active', true);
@@ -2851,18 +2848,30 @@ async function renderInventory() {
     return;
   }
 
-  window._invCache = items; // 캐시 저장 → useInventoryItem에서 재쿼리 불필요
+  // 구 아이템 대응: snapshot에 resell_price 없는 경우 DB에서 현재 상품 조회
+  const productIds = [...new Set(items.map(i => i.product_snapshot?.id).filter(Boolean))];
+  let productMap = {};
+  if (productIds.length > 0) {
+    const { data: prods } = await sb.from('products').select('id,resell_price,discount_pct,reward_type');
+    if (prods) prods.forEach(p => { productMap[p.id] = p; });
+  }
+
+  window._invCache = items; // 캐시 저장
   el.innerHTML = items.map(item => {
     const snap = item.product_snapshot || {};
-    const canResell = snap.resell_price && snap.resell_price > 0;
-    const isCoupon = snap.reward_type === 'COUPON';
+    const prod = productMap[snap.id] || {};
+    // snapshot 우선, 없으면 현재 DB 값 사용 (구 아이템 대응)
+    const resellPrice = snap.resell_price || prod.resell_price || 0;
+    const canResell = resellPrice > 0;
+    const isCoupon = (snap.reward_type || prod.reward_type) === 'COUPON';
+    const discountPct = snap.discount_pct || prod.discount_pct || 0;
     return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl border-2 cursor-pointer card-hover ${isCoupon ? 'bg-yellow-50 border-yellow-200' : 'bg-amber-50 border-amber-100'}">
       <div class="text-3xl" onclick="useInventoryItem('${item.id}')">${snap.icon || '🎁'}</div>
       <p class="text-xs font-black text-gray-700 text-center leading-tight">${snap.name || '아이템'}</p>
-      ${isCoupon ? `<span class="text-xs font-black text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5">🎟️ ${snap.discount_pct||0}% 할인</span>` : ''}
+      ${isCoupon ? `<span class="text-xs font-black text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5">🎟️ ${discountPct}% 할인</span>` : ''}
       <span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 구매'}</span>
       <button class="btn btn-primary w-full py-1 text-xs mt-1" onclick="useInventoryItem('${item.id}')">${isCoupon ? '🎟️ 쿠폰 사용' : '사용하기'}</button>
-      ${canResell ? `<button class="btn btn-gray w-full py-1 text-xs" onclick="resellInventoryItem('${item.id}',event)">💰 되팔기 +${snap.resell_price}🌰</button>` : ''}
+      ${canResell ? `<button class="btn btn-gray w-full py-1 text-xs" onclick="resellInventoryItem('${item.id}',event)">💰 되팔기 +${resellPrice}🌰</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -2912,7 +2921,12 @@ async function resellInventoryItem(inventoryId, e) {
   if (e) e.stopPropagation();
   const item = (window._invCache || []).find(i => i.id === inventoryId);
   const snap = item?.product_snapshot || {};
-  const resellPrice = snap.resell_price || 0;
+  // resell_price가 snapshot에 없으면 DB에서 직접 상품 조회 (구 아이템 대응)
+  let resellPrice = snap.resell_price || 0;
+  if (!resellPrice && snap.id) {
+    const { data: prod } = await sb.from('products').select('resell_price').eq('id', snap.id).single();
+    resellPrice = prod?.resell_price || 0;
+  }
   if (!resellPrice) { toast('❌', '이 아이템은 되팔기가 불가해요'); return; }
 
   showModal(`
@@ -2934,15 +2948,30 @@ async function resellInventoryItem(inventoryId, e) {
 async function confirmResellItem(inventoryId) {
   await withLock('resell_'+inventoryId, async () => {
     closeModal();
-    const item = (window._invCache || []).find(i => i.id === inventoryId);
-    if (!item) { const { data } = await sb.from('inventory').select('*').eq('id', inventoryId).single(); if (!data) { toast('❌', '아이템을 찾을 수 없어요'); return; } }
-    const snap = (item || {}).product_snapshot || {};
-    const resellPrice = snap.resell_price || 0;
+    // 인벤토리 최신 상태 DB에서 직접 확인 (캐시 신뢰하지 않음)
+    const { data: item } = await sb.from('inventory').select('*').eq('id', inventoryId).eq('status', 'held').single();
+    if (!item) { toast('❌', '이미 처리된 아이템이에요'); return; }
+
+    const snap = item.product_snapshot || {};
+    // resell_price가 snapshot에 없으면 DB에서 직접 상품 조회 (구 아이템 대응)
+    let resellPrice = snap.resell_price || 0;
+    if (!resellPrice && snap.id) {
+      const { data: prod } = await sb.from('products').select('resell_price').eq('id', snap.id).single();
+      resellPrice = prod?.resell_price || 0;
+    }
     if (!resellPrice) { toast('❌', '이 아이템은 되팔기가 불가해요'); return; }
 
-    // 인벤토리에서 소각
-    await sb.from('inventory').update({ status: 'resold' }).eq('id', inventoryId);
-    // 도토리 지급
+    // status를 'resold'로 변경 — 이미 resold면 실패(0 rows updated)
+    const { data: updated, error: updateErr } = await sb.from('inventory')
+      .update({ status: 'resold' })
+      .eq('id', inventoryId)
+      .eq('status', 'held')
+      .select('id');
+    if (updateErr || !updated || updated.length === 0) {
+      toast('❌', '이미 처리된 아이템이에요 (중복 방지)'); return;
+    }
+
+    // DB update 성공 확인 후 도토리 지급
     const res = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: resellPrice, p_reason: `되팔기 — ${snap.name}` });
     if (res.data?.success) { myProfile.acorns = res.data.balance; updateAcornDisplay(); }
     await pushNotif(myProfile.id, 'reward', '되팔기 완료! 💰', `${snap.icon} ${snap.name} 되팔기로 +${resellPrice}🌰 획득!`);
@@ -3714,162 +3743,135 @@ async function renderUserAdmin() {
 // ──────────────────────────────────────────────
 //  EVENT DISCOUNT SYSTEM
 // ──────────────────────────────────────────────
+// localStorage 구조:
+//   dotori_events_v2  → { store: EventObj, gacha: EventObj }  (기간 이벤트)
+//   dotori_repeats    → [ RepeatObj, ... ]                    (요일반복 목록)
+//   dotori_event_history → [ HistoryObj, ... ]                (기록)
+//
+// EventObj: { active, discountPct, startAt, endAt, createdAt }
+// RepeatObj: { id, type, discountPct, weekDays[], startTime, endTime, validFrom, validUntil, active, createdAt }
 
-// 이벤트 데이터는 localStorage + DB(products 테이블 활용 없이 별도 key-value 방식)
-// 간단히 localStorage로 관리 (실서비스라면 별도 events 테이블 추천)
-// Supabase에 events 테이블이 없을 수 있으므로 localStorage + globalEvents 객체로 관리
+const DOW_KR = ['일','월','화','수','목','금','토'];
 
-let _events = {}; // { store: {...}, gacha: {...} }
-
-// ── 이벤트 탭 UI 상태 ──
-const _eventTabState = { store: 'once', gacha: 'once' };
-const _selectedWeekdays = { store: new Set(), gacha: new Set() };
-
-function switchEventTab(type, tab) {
-  _eventTabState[type] = tab;
-  const oncePane = document.getElementById(`${type}Pane-once`);
-  const recurPane = document.getElementById(`${type}Pane-recurring`);
-  const onceBtn = document.getElementById(`${type}Tab-once`);
-  const recurBtn = document.getElementById(`${type}Tab-recurring`);
-  if (!oncePane || !recurPane) return;
-  if (tab === 'once') {
-    oncePane.classList.remove('hidden');
-    recurPane.classList.add('hidden');
-    onceBtn.className = 'flex-1 py-2 text-xs font-black event-tab-active';
-    recurBtn.className = 'flex-1 py-2 text-xs font-black event-tab-inactive';
-  } else {
-    oncePane.classList.add('hidden');
-    recurPane.classList.remove('hidden');
-    onceBtn.className = 'flex-1 py-2 text-xs font-black event-tab-inactive';
-    recurBtn.className = 'flex-1 py-2 text-xs font-black event-tab-active';
-  }
-}
-
-function toggleWeekday(type, day) {
-  const set = _selectedWeekdays[type];
-  if (set.has(day)) { set.delete(day); } else { set.add(day); }
-  // 버튼 UI 갱신
-  const container = document.getElementById(`${type}Weekdays`);
-  if (!container) return;
-  container.querySelectorAll('.weekday-btn').forEach(btn => {
-    const d = parseInt(btn.dataset.day);
-    btn.classList.toggle('selected', set.has(d));
-  });
-}
+// ── 스토리지 헬퍼 ──────────────────────────────────
+let _events = {};
 
 function _loadEvents() {
-  try {
-    const saved = localStorage.getItem('dotori_events');
-    if (saved) _events = JSON.parse(saved);
-  } catch(e) { _events = {}; }
+  try { const s = localStorage.getItem('dotori_events_v2'); if (s) _events = JSON.parse(s); }
+  catch(e) { _events = {}; }
 }
-
 function _saveEvents() {
-  localStorage.setItem('dotori_events', JSON.stringify(_events));
+  localStorage.setItem('dotori_events_v2', JSON.stringify(_events));
+}
+function _loadRepeats() {
+  try { return JSON.parse(localStorage.getItem('dotori_repeats') || '[]'); }
+  catch(e) { return []; }
+}
+function _saveRepeats(arr) {
+  localStorage.setItem('dotori_repeats', JSON.stringify(arr));
 }
 
+// ── 할인 계산 (기간 + 요일반복 중 최대값) ────────────
 function getActiveEventDiscount(type) {
+  const now = Date.now();
+  let best = 0;
+
+  // 1) 기간 이벤트
   _loadEvents();
   const ev = _events[type];
-  if (!ev || !ev.active) return 0;
-  const now = new Date();
-
-  if (ev.recurring) {
-    // 요일 반복 모드: 현재 요일이 포함되고 현재 시간이 범위 내인지 확인
-    const weekdays = ev.weekdays || [];
-    if (weekdays.length === 0) return 0;
-    const todayDay = now.getDay(); // 0=일,1=월..6=토
-    if (!weekdays.includes(todayDay)) return 0;
-    // 시간 범위 확인
-    const nowHHMM = now.getHours() * 60 + now.getMinutes();
-    if (ev.timeStart) {
-      const [h, m] = ev.timeStart.split(':').map(Number);
-      if (nowHHMM < h * 60 + m) return 0;
+  if (ev && ev.active) {
+    if ((!ev.startAt || now >= ev.startAt) && (!ev.endAt || now <= ev.endAt)) {
+      best = Math.max(best, ev.discountPct || 0);
     }
-    if (ev.timeEnd) {
-      const [h, m] = ev.timeEnd.split(':').map(Number);
-      if (nowHHMM > h * 60 + m) return 0;
-    }
-    return ev.discountPct || 0;
-  } else {
-    // 일회성 모드
-    const ts = now.getTime();
-    if (ev.startAt && ts < ev.startAt) return 0;
-    if (ev.endAt && ts > ev.endAt) return 0;
-    return ev.discountPct || 0;
   }
+
+  // 2) 요일반복 이벤트
+  const kst  = new Date(now + 9 * 3600 * 1000); // KST 변환
+  const dow  = kst.getUTCDay();                   // 0=일…6=토
+  const hhmm = kst.toISOString().slice(11, 16);   // 'HH:MM'
+  const ds   = kst.toISOString().slice(0, 10);    // 'YYYY-MM-DD'
+
+  for (const r of _loadRepeats()) {
+    if (!r.active || r.type !== type) continue;
+    if (!r.weekDays.includes(dow)) continue;
+    if (hhmm < r.startTime || hhmm > r.endTime) continue;
+    if (r.validFrom  && ds < r.validFrom)  continue;
+    if (r.validUntil && ds > r.validUntil) continue;
+    best = Math.max(best, r.discountPct || 0);
+  }
+
+  return best;
 }
 
+// ── 이벤트 탭 전환 ────────────────────────────────
+function switchEvtTab(name, btn) {
+  ['once','repeat','schedules'].forEach(n => {
+    const p = document.getElementById(`evtPane-${n}`);
+    if (p) p.classList.toggle('hidden', n !== name);
+  });
+  document.querySelectorAll('#atab-events .tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (name === 'schedules') renderScheduleList();
+}
+
+// ── 요일 체크박스 시각 피드백 ─────────────────────
+function toggleDayBtn(checkbox) {
+  // CSS의 input:checked + span이 자동 처리하므로 추가 작업 불필요
+}
+
+// ── 날짜 입력 초기화 ──────────────────────────────
+function clearEventDates(type) {
+  const start = document.getElementById(`${type}EventStart`);
+  const end   = document.getElementById(`${type}EventEnd`);
+  const sel   = document.getElementById(`${type}EventPreset`);
+  if (start) start.value = '';
+  if (end)   end.value   = '';
+  if (sel)   sel.value   = '';
+}
+
+// ── 빠른 기간 프리셋 ──────────────────────────────
 function applyEventPreset(type) {
-  const presetId = `${type}EventPreset`;
-  const endId    = `${type}EventEnd`;
-  const val = document.getElementById(presetId)?.value;
+  const val = document.getElementById(`${type}EventPreset`)?.value;
   if (!val) return;
   const hours = { '1h':1, '2h':2, '4h':4, '8h':8, '24h':24 }[val];
   if (!hours) return;
   const endDate = new Date(Date.now() + hours * 3600 * 1000);
   const local = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000).toISOString().slice(0,16);
-  const endEl = document.getElementById(endId);
+  const endEl = document.getElementById(`${type}EventEnd`);
   if (endEl) endEl.value = local;
+  setTimeout(() => { const s = document.getElementById(`${type}EventPreset`); if (s) s.value = ''; }, 50);
 }
 
-async function activateEvent(type) {
+// ── 기간 이벤트 활성화 ────────────────────────────
+function activateEvent(type) {
   const pct = parseInt(document.getElementById(`${type}DiscountPct`)?.value || 0);
   if (!pct || pct < 1 || pct > 100) { toast('❌', '할인율을 1~100 사이로 입력해주세요'); return; }
 
-  const isRecurring = _eventTabState[type] === 'recurring';
-  let evData = { active: true, discountPct: pct, createdAt: Date.now(), recurring: isRecurring };
+  const startVal = document.getElementById(`${type}EventStart`)?.value;
+  const endVal   = document.getElementById(`${type}EventEnd`)?.value;
+  const startAt  = startVal ? new Date(startVal).getTime() : null;
+  const endAt    = endVal   ? new Date(endVal).getTime()   : null;
 
-  if (isRecurring) {
-    // 요일 반복 모드
-    const weekdays = [..._selectedWeekdays[type]].sort();
-    if (weekdays.length === 0) { toast('❌', '반복할 요일을 하나 이상 선택해주세요'); return; }
-    const timeStart = document.getElementById(`${type}RecurStart`)?.value || '00:00';
-    const timeEnd   = document.getElementById(`${type}RecurEnd`)?.value   || '23:59';
-    const [sh, sm] = timeStart.split(':').map(Number);
-    const [eh, em] = timeEnd.split(':').map(Number);
-    if (sh * 60 + sm >= eh * 60 + em) { toast('❌', '시작 시간이 종료 시간보다 앞이어야 해요'); return; }
-    evData = { ...evData, weekdays, timeStart, timeEnd, startAt: null, endAt: null };
-  } else {
-    // 일회성 모드
-    const startVal = document.getElementById(`${type}EventStart`)?.value;
-    const endVal   = document.getElementById(`${type}EventEnd`)?.value;
-    const startAt  = startVal ? new Date(startVal).getTime() : null;
-    const endAt    = endVal   ? new Date(endVal).getTime()   : null;
-    if (endAt && startAt && endAt <= startAt) { toast('❌', '종료 시각이 시작 시각보다 늦어야 해요'); return; }
-    if (endAt && endAt <= Date.now()) { toast('❌', '종료 시각이 이미 지났어요'); return; }
-    evData = { ...evData, startAt, endAt, weekdays: [], timeStart: null, timeEnd: null };
-  }
+  if (endAt && startAt && endAt <= startAt) { toast('❌', '종료 시각이 시작 시각보다 늦어야 해요'); return; }
+  if (endAt && endAt <= Date.now())         { toast('❌', '종료 시각이 이미 지났어요'); return; }
 
   _loadEvents();
-  _events[type] = evData;
+  _events[type] = { active: true, discountPct: pct, startAt, endAt, createdAt: Date.now() };
   _saveEvents();
 
-  const label = type === 'store' ? '상점' : '뽑기';
-  let scheduleStr = '';
-  if (isRecurring) {
-    const dayNames = ['일','월','화','수','목','금','토'];
-    const daysStr = [..._selectedWeekdays[type]].sort().map(d => dayNames[d]).join(', ');
-    scheduleStr = `매주 ${daysStr} ${evData.timeStart}~${evData.timeEnd}`;
-  } else {
-    const startStr = evData.startAt ? new Date(evData.startAt).toLocaleString('ko-KR') : '즉시';
-    const endStr   = evData.endAt   ? new Date(evData.endAt).toLocaleString('ko-KR')   : '수동 종료까지';
-    scheduleStr = `${startStr} ~ ${endStr}`;
-  }
+  const label    = type === 'store' ? '상점' : '뽑기';
+  const startStr = startAt ? new Date(startAt).toLocaleString('ko-KR', { timeZone:'Asia/Seoul' }) : '즉시';
+  const endStr   = endAt   ? new Date(endAt).toLocaleString('ko-KR',   { timeZone:'Asia/Seoul' }) : '수동 종료까지';
+  _addEvtHistory({ type, label, pct, mode:'기간', startStr, endStr });
 
-  // 이벤트 기록 저장
-  const history = JSON.parse(localStorage.getItem('dotori_event_history') || '[]');
-  history.unshift({ type, label, pct, scheduleStr, recurring: isRecurring, ts: Date.now() });
-  if (history.length > 20) history.pop();
-  localStorage.setItem('dotori_event_history', JSON.stringify(history));
-
-  toast('🎉', `${label} 할인 이벤트 ${pct}% 활성화!`);
   playSound('approve');
+  toast('🎉', `${label} ${pct}% 할인 활성화!`);
   renderEventAdmin();
   renderShopEventBanner();
 }
 
-async function deactivateEvent(type) {
+// ── 기간 이벤트 비활성화 ──────────────────────────
+function deactivateEvent(type) {
   _loadEvents();
   if (_events[type]) { _events[type].active = false; }
   _saveEvents();
@@ -3879,74 +3881,189 @@ async function deactivateEvent(type) {
   renderShopEventBanner();
 }
 
+// ── 요일반복 이벤트 추가 ──────────────────────────
+function addRepeatEvent() {
+  const type      = document.getElementById('rpt-target')?.value;
+  const pct       = parseInt(document.getElementById('rpt-pct')?.value || 0);
+  const weekDays  = Array.from(document.querySelectorAll('#rpt-days input:checked')).map(c => parseInt(c.value));
+  const startTime = document.getElementById('rpt-startTime')?.value || '00:00';
+  const endTime   = document.getElementById('rpt-endTime')?.value   || '23:59';
+  const validFrom = document.getElementById('rpt-validFrom')?.value  || null;
+  const validUntil= document.getElementById('rpt-validUntil')?.value || null;
+
+  if (!pct || pct < 1 || pct > 100) { toast('❌', '할인율을 1~100으로 입력하세요'); return; }
+  if (!weekDays.length)  { toast('❌', '요일을 하나 이상 선택해주세요'); return; }
+  if (endTime <= startTime) { toast('❌', '종료 시각이 시작 시각보다 늦어야 해요'); return; }
+  if (validFrom && validUntil && validUntil < validFrom) { toast('❌', '반복 종료일이 시작일보다 빠릅니다'); return; }
+
+  const repeats = _loadRepeats();
+  repeats.push({ id: Date.now().toString(), type, discountPct: pct, weekDays, startTime, endTime, validFrom, validUntil, active: true, createdAt: Date.now() });
+  _saveRepeats(repeats);
+
+  const label   = type === 'store' ? '상점' : '뽑기';
+  const daysStr = weekDays.map(d => DOW_KR[d]).join('/');
+  _addEvtHistory({ type, label, pct, mode:'요일반복', startStr: `${daysStr} ${startTime}~${endTime}`, endStr: validUntil || '무기한' });
+
+  // 폼 초기화
+  if (document.getElementById('rpt-pct'))      document.getElementById('rpt-pct').value = '';
+  document.querySelectorAll('#rpt-days input').forEach(c => c.checked = false);
+  if (document.getElementById('rpt-startTime')) document.getElementById('rpt-startTime').value = '00:00';
+  if (document.getElementById('rpt-endTime'))   document.getElementById('rpt-endTime').value   = '23:59';
+  if (document.getElementById('rpt-validFrom')) document.getElementById('rpt-validFrom').value  = '';
+  if (document.getElementById('rpt-validUntil'))document.getElementById('rpt-validUntil').value = '';
+
+  playSound('approve');
+  toast('🔄', `${label} 요일반복 이벤트 추가!`);
+  renderEventAdmin();
+  renderShopEventBanner();
+  switchEvtTab('schedules', document.getElementById('evtTabSchedules'));
+}
+
+// ── 요일반복 이벤트 삭제/토글 ────────────────────
+function deleteRepeatEvent(id) {
+  _saveRepeats(_loadRepeats().filter(r => r.id !== id));
+  toast('🗑', '삭제되었어요');
+  renderScheduleList();
+  renderEventAdmin();
+  renderShopEventBanner();
+}
+function toggleRepeatEvent(id) {
+  const repeats = _loadRepeats();
+  const r = repeats.find(r => r.id === id);
+  if (r) { r.active = !r.active; _saveRepeats(repeats); }
+  renderScheduleList();
+  renderEventAdmin();
+  renderShopEventBanner();
+}
+
+// ── 요일반복 목록 렌더링 ──────────────────────────
+function renderScheduleList() {
+  const el = document.getElementById('scheduleList');
+  if (!el) return;
+  const repeats = _loadRepeats();
+  if (!repeats.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">등록된 요일반복 이벤트 없음</p>'; return; }
+  const now = Date.now();
+  el.innerHTML = repeats.map(r => {
+    const label    = r.type === 'store' ? '🛍️ 상점' : '🎲 뽑기';
+    const daysStr  = (r.weekDays||[]).map(d => DOW_KR[d]).join(' ');
+    const period   = (r.validFrom||r.validUntil) ? `${r.validFrom||'즉시'} ~ ${r.validUntil||'무기한'}` : '무기한';
+    // 현재 활성인지 계산
+    const kst  = new Date(now + 9*3600000);
+    const dow  = kst.getUTCDay(), hhmm = kst.toISOString().slice(11,16), ds = kst.toISOString().slice(0,10);
+    const isNowOn = r.active && r.weekDays.includes(dow) && hhmm >= r.startTime && hhmm <= r.endTime
+      && (!r.validFrom||ds>=r.validFrom) && (!r.validUntil||ds<=r.validUntil);
+    const badge = isNowOn
+      ? 'background:#dcfce7;color:#166534'
+      : r.active ? 'background:#fef9c3;color:#854d0e' : 'background:#fee2e2;color:#b91c1c';
+    const badgeTxt = isNowOn ? '✅ 지금 활성' : r.active ? '📆 대기 중' : '⏸ 일시중지';
+    return `<div class="p-3 rounded-2xl row-item-bg flex items-start gap-3">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="text-sm font-black text-gray-800">${label} ${r.discountPct}% 할인</span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-black" style="${badge}">${badgeTxt}</span>
+        </div>
+        <p class="text-xs text-gray-500 font-bold">📅 ${daysStr} &nbsp;⏰ ${r.startTime}~${r.endTime}</p>
+        <p class="text-xs text-gray-400">유효기간: ${period}</p>
+      </div>
+      <div class="flex flex-col gap-1 shrink-0">
+        <button class="btn btn-gray text-xs px-3 py-1" onclick="toggleRepeatEvent('${r.id}')">${r.active?'⏸':'▶️'}</button>
+        <button class="btn btn-gray text-xs px-3 py-1" onclick="deleteRepeatEvent('${r.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 이력 추가 ─────────────────────────────────────
+function _addEvtHistory({ type, label, pct, mode, startStr, endStr }) {
+  try {
+    const h = JSON.parse(localStorage.getItem('dotori_event_history') || '[]');
+    h.unshift({ type, label, pct, mode, startStr, endStr, ts: Date.now() });
+    if (h.length > 30) h.pop();
+    localStorage.setItem('dotori_event_history', JSON.stringify(h));
+  } catch(e) {}
+}
+
+// ── 관리자 이벤트 탭 전체 갱신 ───────────────────
 function renderEventAdmin() {
   _loadEvents();
-  const now = new Date();
-  const ts = now.getTime();
+  const now = Date.now();
 
-  ['store', 'gacha'].forEach(type => {
+  ['store','gacha'].forEach(type => {
     const ev = _events[type];
     const statusEl = document.getElementById(`${type}EventStatus`);
     if (!statusEl) return;
 
-    const activeDiscount = getActiveEventDiscount(type); // 이미 모든 조건 체크
-    const isPending = ev && ev.active && !ev.recurring && ev.startAt && ts < ev.startAt;
+    let text = '비활성', bg = '#fee2e2', color = '#b91c1c';
+    let evActive = false;
 
-    if (activeDiscount > 0) {
-      statusEl.textContent = `✅ 활성 ${ev.discountPct}%`;
-      statusEl.style.background = '#dcfce7'; statusEl.style.color = '#166534';
-      if (!ev.recurring && ev.endAt) {
-        const remaining = Math.max(0, ev.endAt - ts);
-        const h = Math.floor(remaining/3600000);
-        const m = Math.floor((remaining%3600000)/60000);
-        statusEl.textContent += ` (${h}시간 ${m}분 남음)`;
-      } else if (ev.recurring) {
-        statusEl.textContent += ' 🔁';
+    // 기간 이벤트 상태
+    if (ev && ev.active) {
+      const started  = !ev.startAt || now >= ev.startAt;
+      const notEnded = !ev.endAt   || now <= ev.endAt;
+      if (started && notEnded) {
+        evActive = true;
+        text = `✅ 활성 ${ev.discountPct}%`;
+        bg = '#dcfce7'; color = '#166534';
+        if (ev.endAt) {
+          const rem = ev.endAt - now;
+          const h = Math.floor(rem/3600000), m = Math.floor((rem%3600000)/60000);
+          text += ` (${h}시간 ${m}분 남음)`;
+        }
+      } else if (ev.startAt && now < ev.startAt) {
+        const diff = ev.startAt - now;
+        const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
+        text = `⏳ 예약 ${ev.discountPct}% (${h}시간 ${m}분 후)`;
+        bg = '#fef9c3'; color = '#854d0e';
       }
-    } else if (isPending) {
-      statusEl.textContent = `⏳ 예약됨 ${ev.discountPct}%`;
-      statusEl.style.background = '#fef9c3'; statusEl.style.color = '#854d0e';
-    } else if (ev && ev.active && ev.recurring) {
-      // 반복 이벤트 활성화 상태이지만 현재 시간 외
-      statusEl.textContent = `🔁 반복 대기 ${ev.discountPct}%`;
-      statusEl.style.background = '#ede9fe'; statusEl.style.color = '#6d28d9';
-    } else {
-      statusEl.textContent = '비활성';
-      statusEl.style.background = '#fee2e2'; statusEl.style.color = '#b91c1c';
     }
+
+    // 기간 이벤트가 비활성이면 요일반복 상태 확인
+    if (!evActive) {
+      const disc = getActiveEventDiscount(type);
+      if (disc > 0) {
+        text = `✅ 요일반복 ${disc}% 활성`; bg = '#dcfce7'; color = '#166534';
+      } else {
+        const hasRepeat = _loadRepeats().some(r => r.active && r.type === type);
+        if (hasRepeat) { text = '📆 요일반복 대기'; bg = '#fef9c3'; color = '#854d0e'; }
+      }
+    }
+
+    statusEl.textContent = text;
+    statusEl.style.background = bg;
+    statusEl.style.color = color;
   });
+
+  // 활성 배너
+  const bannerEl = document.getElementById('activeEventsBanner');
+  if (bannerEl) {
+    const msgs = [];
+    ['store','gacha'].forEach(t => {
+      const d = getActiveEventDiscount(t);
+      if (d > 0) msgs.push(`${t==='store'?'🛍️ 상점':'🎲 뽑기'} ${d}% 할인 중!`);
+    });
+    bannerEl.innerHTML = msgs.length
+      ? `<div class="clay-card p-3 mb-2 text-center font-black text-green-700" style="background:rgba(220,252,231,0.85);border:2px solid rgba(34,197,94,0.3)">🎉 ${msgs.join('&emsp;|&emsp;')}</div>`
+      : '';
+  }
 
   // 이벤트 기록
   const histEl = document.getElementById('eventHistoryList');
   if (histEl) {
     const history = JSON.parse(localStorage.getItem('dotori_event_history') || '[]');
     histEl.innerHTML = history.length
-      ? history.map(h => `<div class="flex items-center justify-between p-3 rounded-xl row-item-bg">
-          <div>
-            <p class="text-sm font-black text-gray-800">${h.label === '상점' ? '🛍️' : '🎲'} ${h.label} ${h.pct}% 할인 ${h.recurring ? '🔁' : ''}</p>
-            <p class="text-xs text-gray-400">${h.scheduleStr || ''}</p>
+      ? history.map(h => `<div class="flex items-center gap-3 p-3 rounded-xl row-item-bg">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-black text-gray-800">${h.label==='상점'?'🛍️':'🎲'} ${h.label} ${h.pct}% <span class="text-xs font-bold text-gray-400">[${h.mode||''}]</span></p>
+            <p class="text-xs text-gray-400 truncate">${h.startStr} ~ ${h.endStr}</p>
           </div>
-          <span class="text-xs text-gray-400">${fmtTs(new Date(h.ts).toISOString())}</span>
+          <span class="text-xs text-gray-400 shrink-0">${fmtTs(new Date(h.ts).toISOString())}</span>
         </div>`).join('')
-      : '<p class="text-sm text-gray-400 text-center py-4">이벤트 기록 없음</p>';
-  }
-
-  // 활성 이벤트 배너
-  const bannerEl = document.getElementById('activeEventsBanner');
-  if (bannerEl) {
-    const activeEvts = [];
-    ['store','gacha'].forEach(t => {
-      const d = getActiveEventDiscount(t);
-      if (d > 0) activeEvts.push(`${t === 'store' ? '🛍️ 상점' : '🎲 뽑기'} ${d}% 할인 진행 중`);
-    });
-    bannerEl.innerHTML = activeEvts.length
-      ? activeEvts.map(m => `<div class="text-sm font-black text-green-700 bg-green-50 rounded-xl px-4 py-2 mb-2">🎉 ${m}</div>`).join('')
-      : '';
+      : '<p class="text-sm text-gray-400 text-center py-4">기록 없음</p>';
   }
 }
 
+// ── 상점 탭 이벤트 배너 ───────────────────────────
 function renderShopEventBanner() {
-  // 상점 탭 상단에 이벤트 배너 표시
   const storeEl = document.getElementById('utab-shop');
   if (!storeEl) return;
   let bannerEl = document.getElementById('shopEventBanner');
@@ -3955,11 +4072,11 @@ function renderShopEventBanner() {
     bannerEl.id = 'shopEventBanner';
     storeEl.insertBefore(bannerEl, storeEl.firstChild);
   }
-  const storeDiscount = getActiveEventDiscount('store');
-  const gachaDiscount = getActiveEventDiscount('gacha');
+  const sd = getActiveEventDiscount('store');
+  const gd = getActiveEventDiscount('gacha');
   const msgs = [];
-  if (storeDiscount > 0) msgs.push(`🛍️ 상점 ${storeDiscount}% 할인 이벤트 진행 중!`);
-  if (gachaDiscount > 0) msgs.push(`🎲 뽑기 ${gachaDiscount}% 할인 이벤트 진행 중!`);
+  if (sd > 0) msgs.push(`🛍️ 상점 ${sd}% 할인 이벤트 진행 중!`);
+  if (gd > 0) msgs.push(`🎲 뽑기 ${gd}% 할인 이벤트 진행 중!`);
   bannerEl.innerHTML = msgs.length
     ? msgs.map(m => `<div class="clay-card p-3 mb-3 text-center font-black text-green-700" style="background:rgba(220,252,231,0.8);border:2px solid rgba(34,197,94,0.3)">🎉 ${m}</div>`).join('')
     : '';
