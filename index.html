@@ -670,88 +670,164 @@ body {
 .page-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 
-/* ── 테마 변수 ── */
-:root {
-  --bg-grad: linear-gradient(-45deg, #ffd6e7, #ffefba, #c3e8ff, #fce4ff);
-  --card-bg:    rgba(255,255,255,0.72);
-  --card-border:rgba(255,255,255,0.85);
-  --card-shadow:rgba(180,140,200,0.13);
-  --text-main:  #3d2b5e;
-  --text-sub:   #6b7280;
-  --text-muted: #9ca3af;
-  --input-bg:   rgba(255,255,255,0.7);
-  --input-border:rgba(210,180,240,0.4);
-  --tab-inactive:#b0a0c0;
-  --tab-bar-bg: rgba(255,255,255,0.72);
-  --row-bg:     rgba(255,255,255,0.5);
-  --acorn-pill-bg: linear-gradient(135deg,#fde68a,#f59e0b);
-  --acorn-pill-color: #78350f;
-  --header-title: #7c2d92;
-  --header-sub:   #f59e0b;
+/* ── 테마: 다크모드 ── */
+[data-theme="dark"] body {
+  background: linear-gradient(-45deg, #0d0b1e, #1a1035, #0b1528, #1e1040, #0a1020, #160d30) !important;
+  background-size: 400% 400% !important;
+  animation: bgShift 24s ease infinite !important;
 }
-[data-theme="dark"] {
-  --bg-grad: linear-gradient(-45deg, #1a0a2e, #0d1a3a, #1a1040, #220a30);
-  --card-bg:    rgba(40,20,70,0.75);
-  --card-border:rgba(255,255,255,0.10);
-  --card-shadow:rgba(0,0,0,0.4);
-  --text-main:  #e8d5ff;
-  --text-sub:   #b0a0c8;
-  --text-muted: #7c6d96;
-  --input-bg:   rgba(255,255,255,0.08);
-  --input-border:rgba(180,140,240,0.25);
-  --tab-inactive:#7060a0;
-  --tab-bar-bg: rgba(30,15,55,0.8);
-  --row-bg:     rgba(255,255,255,0.07);
-  --acorn-pill-bg: linear-gradient(135deg,#78350f,#d97706);
-  --acorn-pill-color: #fde68a;
-  --header-title: #d8b4fe;
-  --header-sub:   #fcd34d;
+/* ── 별 (다크모드 전용) ── */
+.star {
+  position: fixed;
+  border-radius: 50%;
+  background: #fff;
+  pointer-events: none;
+  z-index: 0;
+  animation: starTwinkle var(--dur) ease-in-out var(--delay) infinite;
+  opacity: 0;
+  display: none;
+}
+[data-theme="dark"] .star { display: block; }
+@keyframes starTwinkle {
+  0%   { opacity: 0;           transform: scale(0.6); }
+  40%  { opacity: var(--peak); transform: scale(1); }
+  60%  { opacity: var(--peak); transform: scale(1); }
+  100% { opacity: 0;           transform: scale(0.6); }
+}
+[data-theme="dark"] .clay-card {
+  background: rgba(38,36,58,0.93) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2) !important;
+}
+/* 다크모드 버튼: 채도·밝기 낮춰 형광 제거 */
+[data-theme="dark"] .btn-primary {
+  background: linear-gradient(135deg, #c4607a, #b04d70) !important;
+  box-shadow: 0 4px 14px rgba(180,80,110,0.3) !important;
+}
+[data-theme="dark"] .btn-purple {
+  background: linear-gradient(135deg, #7c6bbf, #6657b0) !important;
+  color: #e8e0ff !important;
+  box-shadow: 0 4px 14px rgba(100,90,170,0.3) !important;
+}
+[data-theme="dark"] .btn-green {
+  background: linear-gradient(135deg, #3a9b6e, #2d7d58) !important;
+  color: #d1fae5 !important;
+  box-shadow: 0 4px 14px rgba(45,125,90,0.3) !important;
+}
+[data-theme="dark"] .btn-pink {
+  background: linear-gradient(135deg, #b06080, #904060) !important;
+  color: #fce4ec !important;
+  box-shadow: 0 4px 12px rgba(144,64,96,0.3) !important;
+}
+[data-theme="dark"] .btn-gray {
+  background: rgba(255,255,255,0.08) !important;
+  color: #a0a0b8 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+[data-theme="dark"] .tab-btn.active {
+  background: linear-gradient(135deg, #b05878, #8050b8) !important;
+}
+[data-theme="dark"] .field {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .field::placeholder { color: #5a5870 !important; }
+[data-theme="dark"] .tab-btn { color: #9490b8 !important; }
+[data-theme="dark"] .tab-btn.active { color: #fff !important; }
+[data-theme="dark"] .acorn-pill {
+  background: linear-gradient(135deg,#92400e,#b45309) !important;
+  color: #fde68a !important;
 }
 
-/* ── 테마 변수 적용 ── */
-body { background: var(--bg-grad) !important; }
-.clay-card {
-  background: var(--card-bg) !important;
-  border-color: var(--card-border) !important;
-  box-shadow: 0 8px 32px var(--card-shadow), 0 2px 8px var(--card-shadow) !important;
-}
-.field {
-  background: var(--input-bg) !important;
-  border-color: var(--input-border) !important;
-  color: var(--text-main) !important;
-}
-.tab-btn { color: var(--tab-inactive) !important; }
-.acorn-pill { background: var(--acorn-pill-bg) !important; color: var(--acorn-pill-color) !important; }
+/* 다크: 텍스트 */
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .font-black.text-gray-800 { color: #d4cfe8 !important; }
+[data-theme="dark"] .text-gray-700 { color: #bbb8cc !important; }
+[data-theme="dark"] .text-gray-600 { color: #a0a0bc !important; }
+[data-theme="dark"] .text-gray-500 { color: #8888a4 !important; }
+[data-theme="dark"] .text-gray-400 { color: #7070a0 !important; }
+[data-theme="dark"] .text-amber-900 { color: #e8c96a !important; }
+[data-theme="dark"] .text-amber-700 { color: #dab84e !important; }
+[data-theme="dark"] .text-amber-600 { color: #cda040 !important; }
+[data-theme="dark"] .text-amber-500 { color: #b88830 !important; }
 
-/* 다크모드 텍스트 색 */
-[data-theme="dark"] .text-gray-800 { color: #e8d5ff !important; }
-[data-theme="dark"] .text-gray-700 { color: #c8b8e8 !important; }
-[data-theme="dark"] .text-gray-400 { color: #8070a8 !important; }
-[data-theme="dark"] .text-gray-300 { color: #6a5a88 !important; }
-[data-theme="dark"] .text-amber-900 { color: #d8b4fe !important; }
-[data-theme="dark"] .text-amber-700 { color: #c4a0f8 !important; }
-[data-theme="dark"] .text-amber-500 { color: #fcd34d !important; }
-[data-theme="dark"] .bg-gray-50 { background: rgba(255,255,255,0.06) !important; }
-[data-theme="dark"] .bg-amber-50 { background: rgba(180,100,255,0.12) !important; }
-[data-theme="dark"] .bg-pink-50  { background: rgba(255,100,180,0.1) !important; }
-[data-theme="dark"] .bg-yellow-100 { background: rgba(255,200,50,0.1) !important; }
-[data-theme="dark"] .bg-green-100  { background: rgba(50,200,100,0.1) !important; }
-[data-theme="dark"] select, [data-theme="dark"] option { background: #1a0a35; color: #e8d5ff; }
+/* 다크: 배경 뱃지/박스 */
+[data-theme="dark"] .bg-gray-50    { background: rgba(255,255,255,0.04) !important; }
+[data-theme="dark"] .bg-amber-50   { background: rgba(245,158,11,0.12) !important; }
+[data-theme="dark"] .bg-pink-50    { background: rgba(236,72,153,0.1) !important; }
+[data-theme="dark"] .bg-yellow-100 { background: rgba(251,191,36,0.1) !important; }
+[data-theme="dark"] .bg-green-100  { background: rgba(34,197,94,0.1) !important; }
+[data-theme="dark"] .bg-white      { background: rgba(30,30,46,0.9) !important; }
+[data-theme="dark"] .divide-gray-50 > * + * { border-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark"] .border-gray-100 { border-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark"] .border-b-2 { border-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark"] select,
+[data-theme="dark"] option { background: #1e1e2e !important; color: #e2e8f0 !important; }
+[data-theme="dark"] .stat-card { background: rgba(30,30,46,0.92) !important; border-color: rgba(255,255,255,0.08) !important; }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; }
+[data-theme="dark"] .modal-box { background: rgba(20,20,32,0.98) !important; border-color: rgba(255,255,255,0.1) !important; }
+[data-theme="dark"] .login-card { background: rgba(20,20,32,0.95) !important; }
+[data-theme="dark"] .h-px { background: rgba(255,255,255,0.1) !important; }
+[data-theme="dark"] .page-nav-btn { background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important; border-color: rgba(255,255,255,0.1) !important; }
 
 /* 테마 토글 버튼 */
-.theme-toggle-btn {
-  width: 36px; height: 36px;
+/* 다크모드에서 도토리 이모지 어둡게 */
+[data-theme="dark"] #headerAcornEmoji {
+  filter: brightness(0.55) sepia(0.3) !important;
+}
+/* 헤더 아이콘 버튼 (종) */
+.header-icon-btn {
+  position: relative;
+  width: 44px; height: 44px;
   border-radius: 50%;
-  border: 1.5px solid var(--card-border);
-  background: var(--card-bg);
+  border: 2px solid rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.75);
   backdrop-filter: blur(8px);
-  font-size: 16px;
   cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
   transition: all .2s;
-  box-shadow: 0 2px 8px var(--card-shadow);
+  box-shadow: 0 2px 10px rgba(180,140,200,0.18);
+  flex-shrink: 0;
 }
-.theme-toggle-btn:hover { transform: scale(1.1); }
+.header-icon-btn:hover { transform: scale(1.07); }
+.header-icon-emoji { font-size: 20px; line-height: 1; }
+[data-theme="dark"] .header-icon-btn {
+  background: rgba(45,45,65,0.9) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+/* 헤더 도토리 pill */
+.acorn-pill-header {
+  background: linear-gradient(135deg,#fde68a,#f59e0b);
+  color: #78350f;
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-weight: 900;
+  font-size: 14px;
+  font-family: 'Jua', 'Nunito', sans-serif;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.25);
+  white-space: nowrap;
+}
+[data-theme="dark"] .acorn-pill-header {
+  background: linear-gradient(135deg,#92400e,#b45309) !important;
+  color: #fde68a !important;
+}
+/* 로그아웃 작은 버튼 */
+.btn-logout-sm {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(120,80,160,0.55);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: color .2s;
+  font-family: 'Nunito', sans-serif;
+}
+.btn-logout-sm:hover { color: rgba(120,80,160,0.9); }
+[data-theme="dark"] .btn-logout-sm { color: rgba(160,150,200,0.45) !important; }
+[data-theme="dark"] .btn-logout-sm:hover { color: rgba(160,150,200,0.8) !important; }
 
 </style>
 </head>
@@ -808,24 +884,31 @@ body { background: var(--bg-grad) !important; }
 <div class="max-w-2xl mx-auto">
 
   <!-- 헤더 -->
-  <div class="flex items-center justify-between mb-5 py-2">
-    <div class="flex items-center gap-3">
-      <div class="text-4xl">🌰</div>
-      <div>
-        <h1 class="text-xl font-black text-amber-900">도토리 상점</h1>
-        <p class="text-xs text-amber-500 font-bold -mt-0.5" id="headerUserLabel">Acorn Shop ✨</p>
-      </div>
+  <div class="mb-5">
+    <!-- 로그아웃: 최상단 우측 -->
+    <div class="flex justify-end mb-1">
+      <button class="btn-logout-sm hidden" id="logoutBtn" onclick="doLogout()">로그아웃</button>
     </div>
-    <div class="flex items-center gap-2">
-      <button class="theme-toggle-btn hidden" id="themeToggleBtn" onclick="toggleTheme()" title="테마 전환">
-        <span id="themeIcon">🌙</span>
-      </button>
-      <button class="relative p-2 rounded-2xl bg-white shadow-sm hidden" onclick="showNotifications()" id="notifBtn">
-        <span class="text-xl">🔔</span>
-        <span class="notif-dot hidden" id="notifDot"></span>
-      </button>
-      <div class="acorn-pill text-sm hidden" id="headerAcorns">🌰 0</div>
-      <button class="btn btn-gray px-3 py-2 text-xs" onclick="doLogout()">로그아웃</button>
+    <!-- 메인 헤더 -->
+    <div class="flex items-center justify-between">
+      <!-- 좌측: 도토리 이모지(테마토글) + 타이틀 -->
+      <div class="flex items-center gap-4">
+        <div id="headerAcornEmoji" onclick="toggleTheme()" title="테마 전환"
+          style="font-size:3.2rem;line-height:1;cursor:pointer;transition:filter .3s,transform .2s;filter:drop-shadow(0 2px 8px rgba(180,100,0,0.25));user-select:none"
+          onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">🌰</div>
+        <div>
+          <h1 class="font-black text-amber-900" style="font-size:1.35rem;line-height:1.2">도토리 상점</h1>
+          <p class="text-xs text-amber-500 font-bold mt-0.5" id="headerUserLabel">Acorn Shop ✨</p>
+        </div>
+      </div>
+      <!-- 우측: 종 + 도토리 개수 -->
+      <div class="flex items-center gap-2">
+        <button class="header-icon-btn hidden" onclick="showNotifications()" id="notifBtn">
+          <span class="header-icon-emoji">🔔</span>
+          <span class="notif-dot hidden" id="notifDot"></span>
+        </button>
+        <div class="acorn-pill-header hidden" id="headerAcorns">🌰 0</div>
+      </div>
     </div>
   </div>
 
@@ -1507,7 +1590,7 @@ function initAppUI() {
     document.getElementById('headerUserLabel').textContent = myProfile.display_name;
     document.getElementById('headerAcorns').classList.remove('hidden');
     document.getElementById('notifBtn').classList.remove('hidden');
-  document.getElementById('themeToggleBtn')?.classList.remove('hidden');
+    document.getElementById('logoutBtn')?.classList.remove('hidden');
     document.getElementById('userMode').classList.remove('hidden');
     document.getElementById('adminMode').classList.add('hidden');
     updateAcornDisplay();
@@ -3183,19 +3266,39 @@ function fmtTs(iso) {
 // ── 테마 관리 ──
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  const icon = document.getElementById('themeIcon');
-  if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+  // 도토리 이모지 다크모드 시 어둡게
+  const emoji = document.getElementById('headerAcornEmoji');
+  if (emoji) emoji.style.filter = theme === 'dark'
+    ? 'brightness(0.5) sepia(0.3) drop-shadow(0 2px 6px rgba(0,0,0,0.5))'
+    : 'drop-shadow(0 2px 8px rgba(180,100,0,0.25))';
   localStorage.setItem('acornTheme', theme);
 }
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'light';
   applyTheme(current === 'dark' ? 'light' : 'dark');
 }
-// 저장된 테마 또는 시스템 다크모드 반영
+// 저장된 테마 반영 (기본값: light)
 (function() {
-  const saved = localStorage.getItem('acornTheme');
-  const preferDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  applyTheme(saved || (preferDark ? 'dark' : 'light'));
+  const saved = localStorage.getItem('acornTheme') || 'light';
+  applyTheme(saved);
+})();
+
+// ── 별 생성 (다크모드용, 18개 랜덤) ──
+(function() {
+  const COUNT = 18;
+  for (let i = 0; i < COUNT; i++) {
+    const el = document.createElement('div');
+    el.className = 'star';
+    const size  = (Math.random() * 2.5 + 1).toFixed(1);
+    const peak  = (Math.random() * 0.28 + 0.08).toFixed(2);
+    const dur   = (Math.random() * 5 + 4).toFixed(1) + 's';
+    const delay = '-' + (Math.random() * 10).toFixed(1) + 's';
+    const top   = (Math.random() * 100).toFixed(1) + 'vh';
+    const left  = (Math.random() * 100).toFixed(1) + 'vw';
+    const blur  = (Math.random() * 1).toFixed(1) + 'px';
+    el.style.cssText = `width:${size}px;height:${size}px;top:${top};left:${left};--peak:${peak};--dur:${dur};--delay:${delay};filter:blur(${blur})`;
+    document.body.appendChild(el);
+  }
 })();
 
 function _blockScroll(e) {
