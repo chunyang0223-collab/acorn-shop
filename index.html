@@ -656,6 +656,83 @@ body {
 
 .rt-coupon { background: rgba(251,191,36,0.18); color: #92400e; border-radius: 8px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
 [data-theme="dark"] .rt-coupon { background: rgba(251,191,36,0.15) !important; color: #fcd34d !important; }
+/* ── 재활용센터 ── */
+.recycle-hero {
+  background: linear-gradient(135deg, rgba(209,250,229,0.9), rgba(167,243,208,0.7));
+  border: 2px solid rgba(52,211,153,0.3);
+}
+.recycle-bg-deco {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: space-around;
+  font-size: 2rem; opacity: 0.12; pointer-events: none;
+  overflow: hidden;
+}
+.recycle-item-card {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-radius: 18px;
+  background: rgba(240,253,244,0.8);
+  border: 2px solid rgba(52,211,153,0.2);
+  cursor: pointer; transition: all .18s;
+  user-select: none; -webkit-user-select: none;
+}
+.recycle-item-card:active { transform: scale(0.97); }
+.recycle-item-card.selected {
+  background: rgba(209,250,229,0.95);
+  border-color: rgba(16,185,129,0.6);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+}
+.recycle-inv-card {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 12px 8px; border-radius: 18px;
+  border: 2.5px solid rgba(200,240,220,0.6);
+  background: rgba(240,253,244,0.7);
+  cursor: pointer; transition: all .18s;
+  user-select: none; -webkit-user-select: none;
+  position: relative;
+}
+.recycle-inv-card:active { transform: scale(0.95); }
+.recycle-inv-card.selected {
+  border-color: rgba(16,185,129,0.7);
+  background: rgba(209,250,229,0.95);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+}
+.recycle-inv-card .check-badge {
+  position: absolute; top: -6px; right: -6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #10b981; color: #fff;
+  font-size: 12px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.4);
+  opacity: 0; transform: scale(0); transition: all .15s;
+}
+.recycle-inv-card.selected .check-badge { opacity: 1; transform: scale(1); }
+.recycle-sell-bar {
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 672px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  padding: 16px 20px 28px;
+  box-shadow: 0 -4px 24px rgba(16,185,129,0.3);
+  z-index: 200;
+}
+.recycle-sell-btn {
+  background: rgba(255,255,255,0.25);
+  color: #fff; font-weight: 900; font-size: 15px;
+  padding: 12px 22px; border-radius: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  cursor: pointer; transition: all .15s;
+  font-family: 'Jua', sans-serif;
+  white-space: nowrap;
+}
+.recycle-sell-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.35); }
+.recycle-badge-active { background: #dcfce7; color: #166534; font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
+.recycle-badge-inactive { background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
+[data-theme="dark"] .recycle-hero { background: linear-gradient(135deg,rgba(6,78,59,0.7),rgba(4,120,87,0.5)) !important; }
+[data-theme="dark"] .recycle-item-card { background: rgba(6,78,59,0.3) !important; border-color: rgba(52,211,153,0.2) !important; }
+[data-theme="dark"] .recycle-item-card.selected { background: rgba(6,78,59,0.6) !important; }
+[data-theme="dark"] .recycle-inv-card { background: rgba(6,78,59,0.25) !important; }
+[data-theme="dark"] .recycle-inv-card.selected { background: rgba(6,78,59,0.5) !important; }
+
 /* ── 요일 선택 버튼 (label+checkbox 방식) ── */
 .evt-day-btn { cursor: pointer; }
 .evt-day-btn input { display: none; }
@@ -1035,6 +1112,7 @@ body {
       <button class="tab-btn active flex-1" onclick="uTab('shop',this)">🛍️ 상점</button>
       <button class="tab-btn flex-1" onclick="uTab('gacha',this)">🎲 뽑기</button>
       <button class="tab-btn flex-1" onclick="uTab('quest',this)">📋 퀘스트</button>
+      <button class="tab-btn flex-1" onclick="uTab('recycle',this)">♻️ 재활용</button>
       <button class="tab-btn flex-1" onclick="uTab('mypage',this)">👤 마이</button>
     </div>
     <div id="utab-shop">
@@ -1072,6 +1150,52 @@ body {
       <p class="text-sm font-bold text-amber-700 mb-3 px-1">📋 퀘스트</p>
       <div id="questList" class="space-y-3"></div>
     </div>
+    <!-- ♻️ 재활용센터 탭 -->
+    <div id="utab-recycle" class="hidden">
+      <!-- 배경 헤더 -->
+      <div class="recycle-hero clay-card mb-4 p-6 text-center relative overflow-hidden">
+        <div class="recycle-bg-deco" aria-hidden="true">
+          <span>🌿</span><span>🍃</span><span>🌱</span><span>♻️</span>
+          <span>🌿</span><span>🍃</span><span>🌱</span><span>♻️</span>
+        </div>
+        <div class="relative z-10">
+          <div style="font-size:3.5rem;line-height:1;margin-bottom:8px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.12))">♻️</div>
+          <h2 class="text-xl font-black text-green-800 mb-1">재활용 센터</h2>
+          <p class="text-sm text-green-600 font-bold">필요없는 아이템을 팔고 도토리를 받아요!</p>
+        </div>
+      </div>
+
+      <!-- 매입 중인 아이템 목록 -->
+      <div class="clay-card p-5 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-black text-gray-700">💰 오늘의 매입 목록</p>
+          <span class="text-xs text-gray-400">아이템 카드를 눌러 판매</span>
+        </div>
+        <div id="recycleShopList" class="space-y-2"></div>
+      </div>
+
+      <!-- 내 판매 가능 아이템 -->
+      <div class="clay-card p-5 mb-28">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-black text-gray-700">🎒 내 판매 가능 아이템</p>
+          <span class="text-xs font-bold text-green-600" id="recycleSelCount"></span>
+        </div>
+        <div id="recycleInventoryList" class="grid grid-cols-3 gap-2"></div>
+        <p id="recycleEmptyMsg" class="text-sm text-gray-400 text-center py-6 hidden">판매 가능한 아이템이 없어요</p>
+      </div>
+
+      <!-- 하단 고정 판매 버튼 -->
+      <div id="recycleSellBar" class="recycle-sell-bar hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-black text-white" id="recycleSellLabel">선택한 아이템 판매</p>
+            <p class="text-xs text-green-100" id="recycleSellSub"></p>
+          </div>
+          <button class="recycle-sell-btn" onclick="confirmRecycleSell()">💰 판매하기</button>
+        </div>
+      </div>
+    </div>
+
     <div id="utab-mypage" class="hidden">
       <div class="clay-card p-6 mb-4" id="mypageHeader"></div>
 
@@ -1079,7 +1203,7 @@ body {
       <div class="clay-card p-5 mb-4">
         <div class="flex items-center justify-between mb-3">
           <p class="text-sm font-black text-gray-700">🎒 인벤토리</p>
-          <span class="text-xs text-gray-400 font-semibold">아이템을 눌러 사용하세요</span>
+          <span class="text-xs text-gray-400 font-semibold">사용 | 판매는 ♻️ 재활용 탭에서</span>
         </div>
         <div id="myInventory" class="grid grid-cols-3 gap-2"></div>
       </div>
@@ -1124,6 +1248,7 @@ body {
       <button class="tab-btn" onclick="aTab('txlog',this)">🗂️ 로그</button>
       <button class="tab-btn" onclick="aTab('users',this)">👥 회원</button>
       <button class="tab-btn" onclick="aTab('events',this)">🎉 이벤트</button>
+      <button class="tab-btn" onclick="aTab('recycle',this)">♻️ 재활용</button>
     </div>
 
     <!-- 대시보드 -->
@@ -1500,6 +1625,33 @@ body {
       </div>
     </div>
   </div>
+
+    <!-- ♻️ 관리자 재활용센터 -->
+    <div id="atab-recycle" class="hidden">
+      <!-- 아이템 등록 -->
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-lg font-black text-gray-800 mb-4">♻️ 재활용 아이템 등록</h2>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-gray-500 mb-1 block">상품 선택</label>
+            <select class="field" id="rc-productSelect">
+              <option value="">상품을 선택하세요...</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-500 mb-1 block">매입 가격 🌰</label>
+            <input class="field" type="number" id="rc-price" placeholder="도토리 수량" min="1">
+          </div>
+          <button class="btn btn-green w-full py-3 font-black" onclick="addRecycleItem()">➕ 등록</button>
+        </div>
+      </div>
+
+      <!-- 등록된 매입 목록 -->
+      <div class="clay-card p-5">
+        <p class="text-sm font-black text-gray-700 mb-3">📋 매입 목록</p>
+        <div id="recycleAdminList" class="space-y-3"></div>
+      </div>
+    </div>
 
 </div></div>
 
@@ -1963,8 +2115,8 @@ async function doSignup() {
 // ──────────────────────────────────────────────
 //  TABS
 // ──────────────────────────────────────────────
-const U_TABS = ['shop','gacha','quest','mypage'];
-const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','txlog','users','events'];
+const U_TABS = ['shop','gacha','quest','recycle','mypage'];
+const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','txlog','users','events','recycle'];
 
 function uTab(tab, btn) {
   U_TABS.forEach(t => document.getElementById('utab-'+t).classList.add('hidden'));
@@ -1976,6 +2128,7 @@ function uTab(tab, btn) {
   if (tab === 'gacha')  renderGachaProbTable();
   if (tab === 'quest')  renderQuests();
   if (tab === 'mypage') renderMypage();
+  if (tab === 'recycle') renderRecycleTab();
 }
 
 function aTab(tab, btn) {
@@ -1994,6 +2147,7 @@ function aTab(tab, btn) {
   if (tab === 'give')       renderGiveHistory();
   if (tab === 'users')      renderUserAdmin();
   if (tab === 'events')     renderEventAdmin();
+  if (tab === 'recycle')    renderRecycleAdmin();
 }
 
 // ──────────────────────────────────────────────
@@ -2871,7 +3025,7 @@ async function renderInventory() {
       ${isCoupon ? `<span class="text-xs font-black text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5">🎟️ ${discountPct}% 할인</span>` : ''}
       <span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 구매'}</span>
       <button class="btn btn-primary w-full py-1 text-xs mt-1" onclick="useInventoryItem('${item.id}')">${isCoupon ? '🎟️ 쿠폰 사용' : '사용하기'}</button>
-      ${canResell ? `<button class="btn btn-gray w-full py-1 text-xs" onclick="resellInventoryItem('${item.id}',event)">💰 되팔기 +${resellPrice}🌰</button>` : ''}
+
     </div>`;
   }).join('');
 }
@@ -4235,6 +4389,289 @@ function installPWA() {
     if (r.outcome === 'accepted') document.getElementById('installBanner').classList.add('hidden');
     _deferredInstall = null;
   });
+}
+
+// ──────────────────────────────────────────────
+//  재활용센터
+// ──────────────────────────────────────────────
+let _recycleItems = [];        // 매입 목록 (DB)
+let _recycleSelMap = {};       // { inventoryId: { item, recycleItem } }
+
+// ── 사용자: 재활용센터 탭 렌더 ──
+async function renderRecycleTab() {
+  // 매입 목록 로드
+  const { data: rItems } = await sb.from('recycle_items')
+    .select('*, products(id,name,icon,reward_type)')
+    .eq('active', true);
+  _recycleItems = rItems || [];
+
+  // 매입 목록 UI
+  const shopEl = document.getElementById('recycleShopList');
+  if (shopEl) {
+    if (_recycleItems.length === 0) {
+      shopEl.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">현재 매입 중인 아이템이 없어요</p>';
+    } else {
+      shopEl.innerHTML = _recycleItems.map(ri => {
+        const p = ri.products || {};
+        return `<div class="recycle-item-card">
+          <div class="flex items-center gap-3">
+            <span style="font-size:2rem">${p.icon || '🎁'}</span>
+            <div>
+              <p class="text-sm font-black text-gray-800">${p.name || '아이템'}</p>
+              <p class="text-xs text-gray-500">보유 시 판매 가능</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-lg font-black text-amber-600">+${ri.recycle_price}🌰</p>
+            <p class="text-xs text-green-600 font-bold">매입 중</p>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // 내 인벤토리 중 판매 가능한 아이템 로드
+  _recycleSelMap = {};
+  updateRecycleSellBar();
+  await renderRecycleInventory();
+}
+
+async function renderRecycleInventory() {
+  const el = document.getElementById('recycleInventoryList');
+  const emptyEl = document.getElementById('recycleEmptyMsg');
+  if (!el) return;
+
+  // 판매 가능한 product_id 목록
+  const recyclableIds = new Set(_recycleItems.map(ri => ri.product_id));
+  if (recyclableIds.size === 0) {
+    el.innerHTML = '';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+
+  // 내 인벤토리에서 held 상태 아이템 로드
+  const { data: items } = await sb.from('inventory')
+    .select('*').eq('user_id', myProfile.id).eq('status', 'held')
+    .order('created_at', { ascending: false });
+
+  // 재활용센터에서 매입하는 상품과 매칭
+  const sellable = (items || []).filter(item => {
+    const snapId = item.product_snapshot?.id;
+    return snapId && recyclableIds.has(snapId);
+  });
+
+  if (sellable.length === 0) {
+    el.innerHTML = '';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  el.innerHTML = sellable.map(item => {
+    const snap = item.product_snapshot || {};
+    const ri = _recycleItems.find(r => r.product_id === snap.id);
+    const price = ri?.recycle_price || 0;
+    const isSelected = !!_recycleSelMap[item.id];
+    return `<div class="recycle-inv-card ${isSelected ? 'selected' : ''}" onclick="toggleRecycleSel('${item.id}')" data-inv-id="${item.id}">
+      <div class="check-badge">✓</div>
+      <span style="font-size:2rem">${snap.icon || '🎁'}</span>
+      <p class="text-xs font-black text-gray-700 text-center leading-tight">${snap.name || '아이템'}</p>
+      <span class="text-xs font-black text-amber-600">+${price}🌰</span>
+      <span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲' : '🛍️'}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleRecycleSel(inventoryId) {
+  // 인벤토리 카드에서 직접 데이터 찾기
+  const cardEl = document.querySelector(`.recycle-inv-card[data-inv-id="${inventoryId}"]`);
+  if (!cardEl) return;
+
+  if (_recycleSelMap[inventoryId]) {
+    delete _recycleSelMap[inventoryId];
+    cardEl.classList.remove('selected');
+  } else {
+    // _recycleItems에서 가격 찾기 (renderRecycleInventory 시 DOM에서 읽기)
+    const priceText = cardEl.querySelector('.text-amber-600')?.textContent || '+0🌰';
+    const price = parseInt(priceText.replace(/[^0-9]/g,'')) || 0;
+    _recycleSelMap[inventoryId] = { price };
+    cardEl.classList.add('selected');
+  }
+  updateRecycleSellBar();
+}
+
+function updateRecycleSellBar() {
+  const bar = document.getElementById('recycleSellBar');
+  const label = document.getElementById('recycleSellLabel');
+  const sub = document.getElementById('recycleSellSub');
+  const cntEl = document.getElementById('recycleSelCount');
+  const keys = Object.keys(_recycleSelMap);
+  const total = keys.reduce((s, id) => s + (_recycleSelMap[id].price || 0), 0);
+
+  if (keys.length === 0) {
+    if (bar) bar.classList.add('hidden');
+    if (cntEl) cntEl.textContent = '';
+    return;
+  }
+  if (bar) bar.classList.remove('hidden');
+  if (label) label.textContent = `${keys.length}개 아이템 선택됨`;
+  if (sub) sub.textContent = `총 +${total}🌰 받을 수 있어요`;
+  if (cntEl) cntEl.textContent = `${keys.length}개 선택`;
+}
+
+async function confirmRecycleSell() {
+  const keys = Object.keys(_recycleSelMap);
+  if (keys.length === 0) return;
+  const total = keys.reduce((s, id) => s + (_recycleSelMap[id].price || 0), 0);
+
+  showModal(`
+    <div class="text-center">
+      <div style="font-size:3rem;margin-bottom:8px">♻️</div>
+      <h2 class="text-lg font-black text-gray-800 mb-1">아이템 판매</h2>
+      <p class="text-sm text-gray-500 mb-3">${keys.length}개 아이템을 판매해요</p>
+      <div class="text-3xl font-black text-amber-600 my-3">+${total} 🌰</div>
+      <div class="modal-notice-box" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25)">
+        판매한 아이템은 <span class="font-black">복구되지 않아요!</span>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+        <button class="btn btn-green flex-1 py-2" onclick="executeRecycleSell()">💰 판매!</button>
+      </div>
+    </div>`);
+}
+
+async function executeRecycleSell() {
+  const keys = Object.keys(_recycleSelMap);
+  if (keys.length === 0) return;
+  closeModal();
+
+  await withLock('recycleSell', async () => {
+    let successCount = 0;
+    let totalEarned = 0;
+
+    for (const inventoryId of keys) {
+      // status='held' 조건 포함해서 업데이트 → 이중 판매 방지
+      const { data: updated } = await sb.from('inventory')
+        .update({ status: 'resold' })
+        .eq('id', inventoryId)
+        .eq('user_id', myProfile.id)
+        .eq('status', 'held')
+        .select('id');
+      if (updated && updated.length > 0) {
+        successCount++;
+        totalEarned += (_recycleSelMap[inventoryId].price || 0);
+      }
+    }
+
+    if (totalEarned > 0) {
+      const res = await sb.rpc('adjust_acorns', {
+        p_user_id: myProfile.id,
+        p_amount: totalEarned,
+        p_reason: `재활용센터 판매 ${successCount}개`
+      });
+      if (res.data?.success) { myProfile.acorns = res.data.balance; updateAcornDisplay(); }
+      await pushNotif(myProfile.id, 'reward', '판매 완료! ♻️', `${successCount}개 아이템 판매 → +${totalEarned}🌰 획득!`);
+    }
+
+    _recycleSelMap = {};
+    playSound('reward');
+    toast('♻️', `${successCount}개 판매 완료! +${totalEarned}🌰`);
+    await renderRecycleInventory();
+    updateRecycleSellBar();
+  });
+}
+
+// ── 관리자: 재활용센터 관리 ──
+async function renderRecycleAdmin() {
+  // 상품 드롭다운 채우기
+  const sel = document.getElementById('rc-productSelect');
+  if (sel && sel.options.length <= 1) {
+    const { data: prods } = await sb.from('products').select('id,name,icon').order('sort_order');
+    if (prods) {
+      prods.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.icon || '🎁'} ${p.name}`;
+        sel.appendChild(opt);
+      });
+    }
+  }
+  // 매입 목록 렌더
+  await renderRecycleAdminList();
+}
+
+async function renderRecycleAdminList() {
+  const el = document.getElementById('recycleAdminList');
+  if (!el) return;
+  const { data: items } = await sb.from('recycle_items')
+    .select('*, products(id,name,icon)')
+    .order('created_at', { ascending: false });
+
+  if (!items || items.length === 0) {
+    el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">등록된 아이템이 없어요</p>';
+    return;
+  }
+
+  el.innerHTML = items.map(ri => {
+    const p = ri.products || {};
+    return `<div class="flex items-center justify-between p-4 rounded-2xl row-item-bg">
+      <div class="flex items-center gap-3">
+        <span style="font-size:1.8rem">${p.icon || '🎁'}</span>
+        <div>
+          <p class="text-sm font-black text-gray-800">${p.name || '알 수 없음'}</p>
+          <p class="text-base font-black text-amber-600">+${ri.recycle_price}🌰</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="${ri.active ? 'recycle-badge-active' : 'recycle-badge-inactive'}">${ri.active ? '활성' : '비활성'}</span>
+        <button class="btn btn-gray py-1 px-3 text-xs" onclick="toggleRecycleActive('${ri.id}',${ri.active})">${ri.active ? '비활성화' : '활성화'}</button>
+        <button class="btn py-1 px-3 text-xs" style="background:#fee2e2;color:#b91c1c" onclick="deleteRecycleItem('${ri.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addRecycleItem() {
+  const productId = document.getElementById('rc-productSelect')?.value;
+  const price = parseInt(document.getElementById('rc-price')?.value || 0);
+  if (!productId) { toast('❌', '상품을 선택해주세요'); return; }
+  if (!price || price < 1) { toast('❌', '매입 가격을 입력해주세요'); return; }
+
+  // 중복 체크
+  const { data: exist } = await sb.from('recycle_items').select('id').eq('product_id', productId).maybeSingle();
+  if (exist) { toast('❌', '이미 등록된 상품이에요'); return; }
+
+  const { error } = await sb.from('recycle_items').insert({ product_id: productId, recycle_price: price, active: true });
+  if (error) { toast('❌', '등록 실패: ' + error.message); return; }
+
+  document.getElementById('rc-productSelect').value = '';
+  document.getElementById('rc-price').value = '';
+  toast('✅', '등록 완료!');
+  await renderRecycleAdminList();
+}
+
+async function toggleRecycleActive(id, current) {
+  await sb.from('recycle_items').update({ active: !current }).eq('id', id);
+  await renderRecycleAdminList();
+}
+
+async function deleteRecycleItem(id) {
+  showModal(`<div class="text-center">
+    <div style="font-size:2.5rem;margin-bottom:8px">🗑️</div>
+    <h2 class="text-lg font-black text-gray-800 mb-2">매입 항목 삭제</h2>
+    <p class="text-sm text-gray-500 mb-4">삭제하면 사용자가 해당 아이템을 재활용센터에서 판매할 수 없어요.</p>
+    <div class="flex gap-2">
+      <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+      <button class="btn flex-1 py-2 font-black" style="background:#fee2e2;color:#b91c1c" onclick="confirmDeleteRecycle('${id}')">삭제</button>
+    </div>
+  </div>`);
+}
+
+async function confirmDeleteRecycle(id) {
+  closeModal();
+  await sb.from('recycle_items').delete().eq('id', id);
+  toast('🗑️', '삭제 완료');
+  await renderRecycleAdminList();
 }
 
 // ──────────────────────────────────────────────
