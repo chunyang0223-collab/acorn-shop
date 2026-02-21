@@ -680,19 +680,18 @@ body {
 .star {
   position: fixed;
   border-radius: 50%;
-  background: #fff;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   animation: starTwinkle var(--dur) ease-in-out var(--delay) infinite;
   opacity: 0;
   display: none;
 }
 [data-theme="dark"] .star { display: block; }
 @keyframes starTwinkle {
-  0%   { opacity: 0;           transform: scale(0.6); }
+  0%   { opacity: 0;           transform: scale(0.7); }
   40%  { opacity: var(--peak); transform: scale(1); }
   60%  { opacity: var(--peak); transform: scale(1); }
-  100% { opacity: 0;           transform: scale(0.6); }
+  100% { opacity: 0;           transform: scale(0.7); }
 }
 [data-theme="dark"] .clay-card {
   background: rgba(38,36,58,0.93) !important;
@@ -880,7 +879,7 @@ body {
 </div>
 
 <!-- ── 앱 루트 ── -->
-<div id="appRoot" class="hidden min-h-screen p-4">
+<div id="appRoot" class="hidden min-h-screen p-4" style="position:relative;z-index:0">
 <div class="max-w-2xl mx-auto">
 
   <!-- 헤더 -->
@@ -3283,20 +3282,28 @@ function toggleTheme() {
   applyTheme(saved);
 })();
 
-// ── 별 생성 (다크모드용, 18개 랜덤) ──
+// ── 별 생성 (다크모드용, 35개 랜덤) ──
 (function() {
-  const COUNT = 18;
+  const COUNT = 35;
+  // 별 색상: 흰색, 따뜻한 노랑, 차가운 파랑 계열 섞기
+  const COLORS = [
+    '#ffffff', '#ffffff', '#ffffff',   // 흰색 (가장 많이)
+    '#fffbe8', '#fff5cc', '#ffeea0',   // 노란빛 별
+    '#ddeeff', '#cce4ff', '#b8d8ff',   // 파란빛 별
+    '#ffe8d0',                          // 주황빛 별 (드물게)
+  ];
   for (let i = 0; i < COUNT; i++) {
     const el = document.createElement('div');
     el.className = 'star';
-    const size  = (Math.random() * 2.5 + 1).toFixed(1);
-    const peak  = (Math.random() * 0.28 + 0.08).toFixed(2);
-    const dur   = (Math.random() * 5 + 4).toFixed(1) + 's';
-    const delay = '-' + (Math.random() * 10).toFixed(1) + 's';
+    const size  = (Math.random() * 2.5 + 2).toFixed(1);          // 2~4.5px
+    const peak  = (Math.random() * 0.30 + 0.10).toFixed(2);      // 0.10~0.40
+    const dur   = (Math.random() * 6 + 4).toFixed(1) + 's';      // 4~10초
+    const delay = '-' + (Math.random() * 12).toFixed(1) + 's';   // 0~12초 오프셋
     const top   = (Math.random() * 100).toFixed(1) + 'vh';
     const left  = (Math.random() * 100).toFixed(1) + 'vw';
-    const blur  = (Math.random() * 1).toFixed(1) + 'px';
-    el.style.cssText = `width:${size}px;height:${size}px;top:${top};left:${left};--peak:${peak};--dur:${dur};--delay:${delay};filter:blur(${blur})`;
+    const blur  = (Math.random() * 0.8).toFixed(1) + 'px';       // 0~0.8px 번짐
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    el.style.cssText = `width:${size}px;height:${size}px;top:${top};left:${left};--peak:${peak};--dur:${dur};--delay:${delay};filter:blur(${blur});background:${color}`;
     document.body.appendChild(el);
   }
 })();
