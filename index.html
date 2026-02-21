@@ -507,8 +507,8 @@ body {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1.5px solid rgba(255,255,255,0.9);
-  border-radius: 32px;
-  padding: 28px;
+  border-radius: 28px;
+  padding: 24px 24px 28px;
   width: 92%; max-width: min(440px, calc(100vw - 32px));
   animation: slideUp .25s cubic-bezier(.34,1.56,.64,1);
   box-shadow: 0 24px 80px rgba(140,100,200,.25);
@@ -769,6 +769,90 @@ body {
 [data-theme="dark"] .login-card { background: rgba(20,20,32,0.95) !important; }
 [data-theme="dark"] .h-px { background: rgba(255,255,255,0.1) !important; }
 [data-theme="dark"] .page-nav-btn { background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important; border-color: rgba(255,255,255,0.1) !important; }
+
+/* ── 다크: 누락 텍스트 색상 ── */
+[data-theme="dark"] .text-amber-800  { color: #d4a843 !important; }
+[data-theme="dark"] .text-gray-300   { color: #5a5870 !important; }
+[data-theme="dark"] .text-green-700  { color: #4ade80 !important; }
+[data-theme="dark"] .text-green-600  { color: #34d399 !important; }
+[data-theme="dark"] .text-red-600    { color: #f87171 !important; }
+[data-theme="dark"] .text-red-500    { color: #fca5a5 !important; }
+[data-theme="dark"] .text-red-400    { color: #fecaca !important; }
+[data-theme="dark"] .text-purple-600 { color: #c084fc !important; }
+[data-theme="dark"] .text-blue-700   { color: #60a5fa !important; }
+[data-theme="dark"] .text-orange-700 { color: #fb923c !important; }
+[data-theme="dark"] .text-orange-500 { color: #fdba74 !important; }
+
+/* ── 다크: 누락 배경 색상 ── */
+[data-theme="dark"] .bg-amber-100  { background: rgba(245,158,11,0.15) !important; }
+[data-theme="dark"] .bg-gray-100   { background: rgba(255,255,255,0.06) !important; }
+[data-theme="dark"] .bg-gray-200   { background: rgba(255,255,255,0.09) !important; }
+[data-theme="dark"] .bg-red-50     { background: rgba(239,68,68,0.08) !important; }
+[data-theme="dark"] .bg-red-100    { background: rgba(239,68,68,0.13) !important; }
+[data-theme="dark"] .bg-blue-100   { background: rgba(96,165,250,0.12) !important; }
+[data-theme="dark"] .bg-purple-100 { background: rgba(192,132,252,0.12) !important; }
+[data-theme="dark"] .bg-pink-100   { background: rgba(236,72,153,0.1) !important; }
+
+/* ── 다크: 커스텀 배지 ── */
+[data-theme="dark"] .qs-done       { background: rgba(34,197,94,0.15) !important; color: #4ade80 !important; }
+[data-theme="dark"] .qs-pending    { background: rgba(245,158,11,0.15) !important; color: #fcd34d !important; }
+[data-theme="dark"] .qs-inprogress { background: rgba(139,92,246,0.15) !important; color: #c084fc !important; }
+[data-theme="dark"] .ct-auto       { background: rgba(245,158,11,0.15) !important; color: #fcd34d !important; }
+[data-theme="dark"] .ct-approval   { background: rgba(236,72,153,0.13) !important; color: #f9a8d4 !important; }
+[data-theme="dark"] .tx-plus       { color: #4ade80 !important; }
+[data-theme="dark"] .tx-minus      { color: #f87171 !important; }
+[data-theme="dark"] .badge-soldout    { background: rgba(239,68,68,0.15) !important; color: #fca5a5 !important; }
+[data-theme="dark"] .badge-stock      { background: rgba(139,92,246,0.15) !important; color: #c084fc !important; }
+[data-theme="dark"] .badge-unlimited  { background: rgba(34,197,94,0.13) !important; color: #4ade80 !important; }
+[data-theme="dark"] .badge-gacha-pct  { background: rgba(139,92,246,0.15) !important; color: #c084fc !important; }
+[data-theme="dark"] .badge-prob       { background: rgba(139,92,246,0.15) !important; color: #c084fc !important; }
+
+/* ── 다크: stat-card ── */
+[data-theme="dark"] .sc-orange { background: rgba(251,146,60,0.12) !important; border-color: rgba(251,146,60,0.2) !important; }
+[data-theme="dark"] .sc-blue   { background: rgba(96,165,250,0.12) !important; border-color: rgba(96,165,250,0.2) !important; }
+[data-theme="dark"] .sc-green  { background: rgba(34,197,94,0.12) !important; border-color: rgba(34,197,94,0.2) !important; }
+[data-theme="dark"] .sc-purple { background: rgba(192,132,252,0.12) !important; border-color: rgba(192,132,252,0.2) !important; }
+[data-theme="dark"] .text-orange-700 { color: #fb923c !important; }
+[data-theme="dark"] .text-blue-700   { color: #60a5fa !important; }
+[data-theme="dark"] .text-green-700  { color: #4ade80 !important; }
+[data-theme="dark"] .text-purple-700 { color: #c084fc !important; }
+[data-theme="dark"] .text-orange-500 { color: #fdba74 !important; }
+[data-theme="dark"] .text-blue-500   { color: #93c5fd !important; }
+[data-theme="dark"] .text-green-500  { color: #6ee7b7 !important; }
+[data-theme="dark"] .text-purple-500 { color: #d8b4fe !important; }
+
+/* ── 다크: row-item-bg (인라인 bg 대체) ── */
+.row-item-bg { background: rgba(255,255,255,0.5); border-radius: 12px; }
+[data-theme="dark"] .row-item-bg { background: rgba(255,255,255,0.05) !important; }
+
+/* ── 다크: 모달 안내박스 ── */
+.modal-notice-box {
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  color: #92400e;
+  line-height: 1.6;
+}
+[data-theme="dark"] .modal-notice-box {
+  background: rgba(245,158,11,0.1) !important;
+  border-color: rgba(245,158,11,0.2) !important;
+  color: #fcd34d !important;
+}
+.modal-notice-text { font-size: 14px; font-weight: 700; color: inherit; }
+.modal-notice-sub  { font-size: 12px; font-weight: 700; color: #059669; margin-top: 4px; }
+[data-theme="dark"] .modal-notice-sub { color: #4ade80 !important; }
+
+/* ── 다크: 모달 오버레이 ── */
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.65) !important; }
+[data-theme="dark"] .modal-box {
+  background: rgba(34,32,52,0.97) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
 
 /* 테마 토글 버튼 */
 /* 다크모드에서 도토리 이모지 어둡게 */
@@ -1746,14 +1830,14 @@ async function requestProduct(id) {
   if ((myProfile.acorns || 0) < p.price) { playSound('reject'); toast('❌', '도토리가 부족해요!', 1500); return; }
   showModal(`
     <div class="text-center">
-      <div class="text-6xl mb-3">${p.icon}</div>
-      <h2 class="text-xl font-black text-gray-800 mb-1">${p.name}</h2>
-      <p class="text-sm text-gray-400 mb-3">${p.description}</p>
-      <div class="bg-amber-50 rounded-2xl p-3 mb-5 text-left">
-        <p class="text-sm font-bold text-amber-800">🌰 ${p.price} 도토리 차감</p>
-        ${p.reward_type==='AUTO_ACORN'?`<p class="text-xs text-green-700 font-bold mt-1">✨ 즉시 +${p.acorn_amt} 도토리!</p>`:''}
+      <div style="font-size:3rem;margin-bottom:8px">${p.icon}</div>
+      <h2 class="text-xl font-black text-gray-800" style="margin-bottom:6px">${p.name}</h2>
+      <p class="text-sm text-gray-400" style="margin-bottom:14px">${p.description}</p>
+      <div class="modal-notice-box">
+        <p class="modal-notice-text">🌰 ${p.price} 도토리 차감</p>
+        ${p.reward_type==='AUTO_ACORN'?`<p class="modal-notice-sub">✨ 즉시 +${p.acorn_amt} 도토리!</p>`:''}
       </div>
-      <div class="flex gap-3">
+      <div class="flex gap-3" style="margin-top:4px">
         <button class="btn btn-gray flex-1 py-3" onclick="closeModal()">취소</button>
         <button class="btn btn-primary flex-1 py-3" onclick="confirmRequest('${p.id}')">구매하기!</button>
       </div>
@@ -2325,7 +2409,7 @@ function _renderReqPage() {
   const slice = _reqItems.slice(_reqPage * PAGE_SIZE, (_reqPage + 1) * PAGE_SIZE);
 
   el.innerHTML = slice.length
-    ? slice.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(255,255,255,0.5)">
+    ? slice.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" class="row-item-bg">
         <div class="min-w-0 mr-2">
           <p class="text-sm font-bold text-gray-800">${r.icon} ${r.label}</p>
           <p class="text-xs text-gray-400">${r.sub}</p>
@@ -2349,7 +2433,7 @@ function _renderTxPage() {
   const slice = _txItems.slice(_txPage * PAGE_SIZE, (_txPage + 1) * PAGE_SIZE);
 
   el.innerHTML = slice.length
-    ? slice.map(t => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(255,255,255,0.5)">
+    ? slice.map(t => `<div class="flex items-center justify-between p-3 rounded-xl" class="row-item-bg">
         <div class="flex-1 min-w-0 mr-3">
           <p class="text-sm font-bold text-gray-700 truncate">${t.reason}</p>
           <p class="text-xs text-gray-400">${fmtTs(t.created_at)} · 잔액 ${t.balance}🌰</p>
@@ -2468,13 +2552,13 @@ async function useInventoryItem(inventoryId) {
   const snap = item.product_snapshot || {};
   showModal(`
     <div class="text-center">
-      <div class="text-6xl mb-3">${snap.icon || '🎁'}</div>
-      <h2 class="text-xl font-black text-gray-800 mb-1">${snap.name || '아이템'}</h2>
-      <p class="text-sm text-gray-400 mb-2">${snap.description || ''}</p>
-      <div class="bg-amber-50 rounded-2xl p-3 mb-5 text-left text-sm font-bold text-amber-800">
+      <div style="font-size:3rem;margin-bottom:8px">${snap.icon || '🎁'}</div>
+      <h2 class="text-xl font-black text-gray-800" style="margin-bottom:6px">${snap.name || '아이템'}</h2>
+      <p class="text-sm text-gray-400" style="margin-bottom:14px">${snap.description || ''}</p>
+      <div class="modal-notice-box">
         ✋ 사용하면 관리자에게 신청이 전달돼요.<br>승인 후 아이템이 지급됩니다.
       </div>
-      <div class="flex gap-3">
+      <div class="flex gap-3" style="margin-top:4px">
         <button class="btn btn-gray flex-1 py-3" onclick="closeModal()">취소</button>
         <button class="btn btn-primary flex-1 py-3" onclick="confirmUseItem('${inventoryId}')">사용하기!</button>
       </div>
@@ -2595,11 +2679,11 @@ async function showNotifications() {
     <h2 class="text-lg font-black text-gray-800 mb-3">🔔 알림</h2>
     <div class="notif-scroll">
     ${!notifs?.length ? '<p class="text-sm text-gray-400 text-center py-6">알림이 없어요</p>' :
-      notifs.map(n => `<div class="p-3 rounded-2xl bg-gray-50 mb-2 flex gap-3">
+      notifs.map(n => `<div class="row-item-bg p-3 rounded-2xl mb-2 flex gap-3">
         <span class="text-xl shrink-0">${typeIcon[n.type]||'🔔'}</span>
         <div><p class="text-sm font-black text-gray-800">${n.title}</p>
-          <p class="text-xs text-gray-400 font-semibold" style="word-break:break-word">${n.body}</p>
-          <p class="text-xs text-gray-300 mt-1">${fmtTs(n.created_at)}</p>
+          <p class="text-xs text-gray-500 font-semibold" style="word-break:break-word">${n.body}</p>
+          <p class="text-xs text-gray-400 mt-1">${fmtTs(n.created_at)}</p>
         </div>
       </div>`).join('')}
     </div>`);
@@ -3188,7 +3272,7 @@ async function renderUserAdmin() {
   const { data: users } = await sb.from('users').select('*').order('acorns', { ascending: false });
   const el = document.getElementById('userAdminList');
   el.innerHTML = users?.length
-    ? users.map(u => `<div class="flex items-center gap-3 p-3 rounded-2xl" style="background:rgba(255,255,255,0.5)">
+    ? users.map(u => `<div class="flex items-center gap-3 p-3 rounded-2xl" class="row-item-bg">
         <div class="text-2xl">${u.avatar_emoji||'🐿️'}</div>
         <div class="flex-1 min-w-0">
           <p class="font-black text-gray-800 text-sm">${u.display_name}${u.is_admin?' 👑':''}</p>
