@@ -493,26 +493,35 @@ body {
 /* ── 모달 ── */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(100,60,140,.35);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(80,40,120,.4);
   z-index: 500;
   display: flex; align-items: center; justify-content: center;
-  animation: fadeIn .2s;
+  animation: fadeIn .18s ease;
   overscroll-behavior: none;
   overflow: hidden;
+  will-change: opacity;
 }
 .modal-box {
-  background: rgba(255,255,255,0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1.5px solid rgba(255,255,255,0.9);
   border-radius: 28px;
   padding: 24px 24px 28px;
   width: 92%; max-width: min(440px, calc(100vw - 32px));
-  animation: slideUp .25s cubic-bezier(.34,1.56,.64,1);
-  box-shadow: 0 24px 80px rgba(140,100,200,.25);
-  max-height: 90dvh; overflow-y: auto;
+  animation: slideUp .22s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 16px 60px rgba(140,100,200,.2);
+  max-height: 88dvh; overflow-y: auto;
+  will-change: transform;
+  transform: translateZ(0);
+}
+@media (max-width: 480px) {
+  .modal-box {
+    padding: 20px 18px 24px;
+    border-radius: 24px;
+    width: 94%;
+    max-height: 82dvh;
+  }
 }
 
 /* ── 로그인 ── */
@@ -685,6 +694,8 @@ body {
   animation: starTwinkle var(--dur) ease-in-out var(--delay) infinite;
   opacity: 0;
   display: none;
+  will-change: opacity, transform;
+  transform: translateZ(0);
 }
 [data-theme="dark"] .star { display: block; }
 @keyframes starTwinkle {
@@ -765,7 +776,6 @@ body {
 [data-theme="dark"] option { background: #1e1e2e !important; color: #e2e8f0 !important; }
 [data-theme="dark"] .stat-card { background: rgba(30,30,46,0.92) !important; border-color: rgba(255,255,255,0.08) !important; }
 [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; }
-[data-theme="dark"] .modal-box { background: rgba(20,20,32,0.98) !important; border-color: rgba(255,255,255,0.1) !important; }
 [data-theme="dark"] .login-card { background: rgba(20,20,32,0.95) !important; }
 [data-theme="dark"] .h-px { background: rgba(255,255,255,0.1) !important; }
 [data-theme="dark"] .page-nav-btn { background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important; border-color: rgba(255,255,255,0.1) !important; }
@@ -848,7 +858,7 @@ body {
 [data-theme="dark"] .modal-notice-sub { color: #4ade80 !important; }
 
 /* ── 다크: 모달 오버레이 ── */
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.65) !important; }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; }
 [data-theme="dark"] .modal-box {
   background: rgba(34,32,52,0.97) !important;
   border-color: rgba(255,255,255,0.1) !important;
@@ -1474,6 +1484,7 @@ let allUsers  = [];     // 관리자용 전체 유저 캐시
 let allTxs    = [];     // 관리자용 전체 TX 캐시
 let gachaPool = [];     // gacha_items 캐시
 let reqFilter = 'all';
+let storeProducts = []; // 상점 상품 캐시 (모달 즉시 오픈용)
 
 // ──────────────────────────────────────────────
 //  앱 시작
@@ -1796,6 +1807,7 @@ async function renderShop() {
   const grid = document.getElementById('shopGrid');
   grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-4">로딩 중...</p>';
   const { data: products } = await sb.from('products').select('*').eq('active', true).eq('item_type', 'store').order('sort_order');
+  storeProducts = products || [];
   if (!products?.length) { grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-8">상품이 없어요</p>'; return; }
   grid.innerHTML = products.map((p,i) => {
     const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
@@ -1823,8 +1835,9 @@ async function renderShop() {
   }).join('');
 }
 
-async function requestProduct(id) {
-  const { data: p } = await sb.from('products').select('*').eq('id', id).single();
+function requestProduct(id) {
+  // storeProducts 캐시에서 즉시 조회 → DB 쿼리 없이 모달 즉시 오픈
+  const p = storeProducts.find(x => x.id === id);
   if (!p) return;
   const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
   if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(); return; }
@@ -2535,6 +2548,7 @@ async function renderInventory() {
     return;
   }
 
+  window._invCache = items; // 캐시 저장 → useInventoryItem에서 재쿼리 불필요
   el.innerHTML = items.map(item => {
     const snap = item.product_snapshot || {};
     return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl bg-amber-50 border-2 border-amber-100 cursor-pointer card-hover"
@@ -2548,9 +2562,9 @@ async function renderInventory() {
 }
 
 async function useInventoryItem(inventoryId) {
-  const { data: item } = await sb.from('inventory').select('*').eq('id', inventoryId).single();
-  if (!item) return;
-  const snap = item.product_snapshot || {};
+  // 캐시에서 즉시 조회 → DB 재쿼리 없이 모달 즉시 오픈
+  const item = (window._invCache || []).find(i => i.id === inventoryId);
+  const snap = item?.product_snapshot || {};
   showModal(`
     <div class="text-center">
       <div style="font-size:3rem;margin-bottom:8px">${snap.icon || '🎁'}</div>
@@ -2670,24 +2684,31 @@ async function updateNotifDot() {
 }
 
 async function showNotifications() {
-  const { data: notifs } = await sb.from('notifications').select('*')
-    .eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(20);
-  // 읽음 처리
-  await sb.from('notifications').update({ is_read: true }).eq('user_id', myProfile.id).eq('is_read', false);
-  updateNotifDot();
-  const typeIcon = { reward:'🎁', quest:'📋', admin:'👑', gachaReward:'🎲', request:'📬', quest_approved:'✅', quest_rejected:'❌' };
+  // 모달 즉시 열기 → 로딩 느낌 없애기
   showModal(`
     <h2 class="text-lg font-black text-gray-800 mb-3">🔔 알림</h2>
-    <div class="notif-scroll">
-    ${!notifs?.length ? '<p class="text-sm text-gray-400 text-center py-6">알림이 없어요</p>' :
-      notifs.map(n => `<div class="row-item-bg p-3 rounded-2xl mb-2 flex gap-3">
+    <div class="notif-scroll" id="notifContent">
+      <p class="text-sm text-gray-400 text-center py-6">불러오는 중...</p>
+    </div>`);
+
+  const typeIcon = { reward:'🎁', quest:'📋', admin:'👑', gachaReward:'🎲', request:'📬', quest_approved:'✅', quest_rejected:'❌' };
+  const [{ data: notifs }] = await Promise.all([
+    sb.from('notifications').select('*').eq('user_id', myProfile.id).order('created_at', { ascending: false }).limit(20),
+    sb.from('notifications').update({ is_read: true }).eq('user_id', myProfile.id).eq('is_read', false)
+  ]);
+  updateNotifDot();
+
+  const el = document.getElementById('notifContent');
+  if (!el) return;
+  el.innerHTML = !notifs?.length
+    ? '<p class="text-sm text-gray-400 text-center py-6">알림이 없어요</p>'
+    : notifs.map(n => `<div class="row-item-bg p-3 rounded-2xl mb-2 flex gap-3">
         <span class="text-xl shrink-0">${typeIcon[n.type]||'🔔'}</span>
         <div><p class="text-sm font-black text-gray-800">${n.title}</p>
           <p class="text-xs text-gray-500 font-semibold" style="word-break:break-word">${n.body}</p>
           <p class="text-xs text-gray-400 mt-1">${fmtTs(n.created_at)}</p>
         </div>
-      </div>`).join('')}
-    </div>`);
+      </div>`).join('');
 }
 
 // ──────────────────────────────────────────────
