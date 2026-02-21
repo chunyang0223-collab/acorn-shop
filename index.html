@@ -1319,11 +1319,6 @@ body {
 
 </div></div>
 
-<!-- 모달 -->
-<div id="modal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box" onclick="event.stopPropagation()"><div id="modalContent"></div></div>
-</div>
-
 <!-- 토스트 -->
 <div id="toast" class="toast-container hidden">
   <div id="toastInner" style="text-align:center;animation:toastIn .25s cubic-bezier(.34,1.56,.64,1) both;background:rgba(245,210,255,0.42);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1.5px solid rgba(255,255,255,0.6);border-radius:20px;padding:14px 24px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 8px 32px rgba(120,80,180,0.2)">
@@ -3423,22 +3418,10 @@ function showModal(html) {
   document.getElementById('modalContent').innerHTML = html;
   document.getElementById('modal').classList.remove('hidden');
   document.getElementById('modal').addEventListener('touchmove', _blockScroll, { passive: false });
-  // iOS/모바일: 배경 페이지 고정 (뷰포트 튀는 현상 방지)
-  const scrollY = window.scrollY;
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${scrollY}px`;
-  document.body.style.width = '100%';
-  document.body.dataset.scrollY = scrollY;
 }
 function closeModal() {
   document.getElementById('modal').classList.add('hidden');
   document.getElementById('modal').removeEventListener('touchmove', _blockScroll);
-  // 배경 고정 해제 + 스크롤 위치 복원
-  const scrollY = parseInt(document.body.dataset.scrollY || '0');
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.width = '';
-  window.scrollTo(0, scrollY);
 }
 
 let _toastT;
@@ -3481,5 +3464,12 @@ function installPWA() {
 // ──────────────────────────────────────────────
 boot();
 </script>
+
+<!-- 모달 (body 직속 — position:fixed 뷰포트 기준 보장) -->
+<!-- 모달 -->
+<div id="modal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()"><div id="modalContent"></div></div>
+</div>
+
 </body>
 </html>
