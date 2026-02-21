@@ -2049,7 +2049,7 @@ function initAppUI() {
     document.getElementById('adminMode').classList.add('hidden');
     updateAcornDisplay();
     updateNotifDot();
-    _loadEvents(); // 이벤트 데이터 로드
+    await _loadEventsFromDB(); // 이벤트 데이터 DB에서 로드
     renderShop();
     renderShopEventBanner(); // 이벤트 배너
     // 출석 자동 퀘스트
@@ -2166,7 +2166,7 @@ function aTab(tab, btn) {
   if (tab === 'txlog')      renderTxLog();
   if (tab === 'give')       renderGiveHistory();
   if (tab === 'users')      renderUserAdmin();
-  if (tab === 'events')     renderEventAdmin();
+  if (tab === 'events')     { _loadEventsFromDB().then(() => { renderEventAdmin(); renderScheduleList(); }); return; }
   if (tab === 'recycle')    renderRecycleAdmin();
 }
 
@@ -3906,31 +3906,60 @@ async function renderUserAdmin() {
 
 const DOW_KR = ['일','월','화','수','목','금','토'];
 
-// ── 스토리지 헬퍼 ──────────────────────────────────
-let _events = {};
+// ── 이벤트 DB 캐시 (앱 로드 시 한 번 로드, 변경 시 갱신) ──
+let _events = {};       // { store: {...}, gacha: {...} }
+let _repeats = [];      // 요일반복 이벤트 배열
 
-function _loadEvents() {
-  try { const s = localStorage.getItem('dotori_events_v2'); if (s) _events = JSON.parse(s); }
-  catch(e) { _events = {}; }
-}
-function _saveEvents() {
-  localStorage.setItem('dotori_events_v2', JSON.stringify(_events));
-}
-function _loadRepeats() {
-  try { return JSON.parse(localStorage.getItem('dotori_repeats') || '[]'); }
-  catch(e) { return []; }
-}
-function _saveRepeats(arr) {
-  localStorage.setItem('dotori_repeats', JSON.stringify(arr));
+// DB에서 이벤트 전체 로드 → 캐시 갱신
+async function _loadEventsFromDB() {
+  const [{ data: evRows }, { data: repRows }] = await Promise.all([
+    sb.from('events').select('*'),
+    sb.from('repeat_events').select('*').order('created_at', { ascending: false })
+  ]);
+  _events = {};
+  if (evRows) evRows.forEach(r => {
+    _events[r.id] = {
+      active: r.active,
+      discountPct: r.discount_pct,
+      startAt: r.start_at ? new Date(r.start_at).getTime() : null,
+      endAt:   r.end_at   ? new Date(r.end_at).getTime()   : null,
+    };
+  });
+  _repeats = (repRows || []).map(r => ({
+    id: r.id,
+    type: r.type,
+    active: r.active,
+    discountPct: r.discount_pct,
+    weekDays: r.week_days || [],
+    startTime: r.start_time,
+    endTime: r.end_time,
+    validFrom: r.valid_from,
+    validUntil: r.valid_until,
+    createdAt: new Date(r.created_at).getTime()
+  }));
 }
 
-// ── 할인 계산 (기간 + 요일반복 중 최대값) ────────────
+// 하위 호환 동기 래퍼 (캐시에서 읽기)
+function _loadEvents() { /* 캐시 사용 — _loadEventsFromDB() 후 자동 갱신 */ }
+function _loadRepeats() { return _repeats; }
+
+// DB 저장
+async function _saveEventToDB(type, data) {
+  await sb.from('events').update({
+    active: data.active,
+    discount_pct: data.discountPct || 0,
+    start_at: data.startAt ? new Date(data.startAt).toISOString() : null,
+    end_at:   data.endAt   ? new Date(data.endAt).toISOString()   : null,
+    updated_at: new Date().toISOString()
+  }).eq('id', type);
+}
+
+// ── 할인 계산 (캐시 기반 동기 함수 — 앱 로드 시 캐시 갱신됨) ──
 function getActiveEventDiscount(type) {
   const now = Date.now();
   let best = 0;
 
   // 1) 기간 이벤트
-  _loadEvents();
   const ev = _events[type];
   if (ev && ev.active) {
     if ((!ev.startAt || now >= ev.startAt) && (!ev.endAt || now <= ev.endAt)) {
@@ -3939,12 +3968,12 @@ function getActiveEventDiscount(type) {
   }
 
   // 2) 요일반복 이벤트
-  const kst  = new Date(now + 9 * 3600 * 1000); // KST 변환
-  const dow  = kst.getUTCDay();                   // 0=일…6=토
-  const hhmm = kst.toISOString().slice(11, 16);   // 'HH:MM'
-  const ds   = kst.toISOString().slice(0, 10);    // 'YYYY-MM-DD'
+  const kst  = new Date(now + 9 * 3600 * 1000);
+  const dow  = kst.getUTCDay();
+  const hhmm = kst.toISOString().slice(11, 16);
+  const ds   = kst.toISOString().slice(0, 10);
 
-  for (const r of _loadRepeats()) {
+  for (const r of _repeats) {
     if (!r.active || r.type !== type) continue;
     if (!r.weekDays.includes(dow)) continue;
     if (hhmm < r.startTime || hhmm > r.endTime) continue;
@@ -3996,7 +4025,7 @@ function applyEventPreset(type) {
 }
 
 // ── 기간 이벤트 활성화 ────────────────────────────
-function activateEvent(type) {
+async function activateEvent(type) {
   const pct = parseInt(document.getElementById(`${type}DiscountPct`)?.value || 0);
   if (!pct || pct < 1 || pct > 100) { toast('❌', '할인율을 1~100 사이로 입력해주세요'); return; }
 
@@ -4008,9 +4037,9 @@ function activateEvent(type) {
   if (endAt && startAt && endAt <= startAt) { toast('❌', '종료 시각이 시작 시각보다 늦어야 해요'); return; }
   if (endAt && endAt <= Date.now())         { toast('❌', '종료 시각이 이미 지났어요'); return; }
 
-  _loadEvents();
-  _events[type] = { active: true, discountPct: pct, startAt, endAt, createdAt: Date.now() };
-  _saveEvents();
+  const evData = { active: true, discountPct: pct, startAt, endAt };
+  await _saveEventToDB(type, evData);
+  _events[type] = evData; // 캐시 즉시 갱신
 
   const label    = type === 'store' ? '상점' : '뽑기';
   const startStr = startAt ? new Date(startAt).toLocaleString('ko-KR', { timeZone:'Asia/Seoul' }) : '즉시';
@@ -4024,10 +4053,10 @@ function activateEvent(type) {
 }
 
 // ── 기간 이벤트 비활성화 ──────────────────────────
-function deactivateEvent(type) {
-  _loadEvents();
-  if (_events[type]) { _events[type].active = false; }
-  _saveEvents();
+async function deactivateEvent(type) {
+  if (_events[type]) _events[type].active = false;
+  else _events[type] = { active: false, discountPct: 0, startAt: null, endAt: null };
+  await _saveEventToDB(type, _events[type]);
   const label = type === 'store' ? '상점' : '뽑기';
   toast('⏹', `${label} 이벤트 비활성화`);
   renderEventAdmin();
@@ -4035,7 +4064,7 @@ function deactivateEvent(type) {
 }
 
 // ── 요일반복 이벤트 추가 ──────────────────────────
-function addRepeatEvent() {
+async function addRepeatEvent() {
   const type      = document.getElementById('rpt-target')?.value;
   const pct       = parseInt(document.getElementById('rpt-pct')?.value || 0);
   const weekDays  = Array.from(document.querySelectorAll('#rpt-days input:checked')).map(c => parseInt(c.value));
@@ -4049,9 +4078,24 @@ function addRepeatEvent() {
   if (endTime <= startTime) { toast('❌', '종료 시각이 시작 시각보다 늦어야 해요'); return; }
   if (validFrom && validUntil && validUntil < validFrom) { toast('❌', '반복 종료일이 시작일보다 빠릅니다'); return; }
 
-  const repeats = _loadRepeats();
-  repeats.push({ id: Date.now().toString(), type, discountPct: pct, weekDays, startTime, endTime, validFrom, validUntil, active: true, createdAt: Date.now() });
-  _saveRepeats(repeats);
+  const { data: newRow, error } = await sb.from('repeat_events').insert({
+    type, active: true,
+    discount_pct: pct,
+    week_days: weekDays,
+    start_time: startTime,
+    end_time: endTime,
+    valid_from: validFrom || null,
+    valid_until: validUntil || null
+  }).select('*').single();
+
+  if (error) { toast('❌', '저장 실패: ' + error.message); return; }
+
+  // 캐시 즉시 갱신
+  _repeats.unshift({
+    id: newRow.id, type, active: true, discountPct: pct,
+    weekDays, startTime, endTime, validFrom, validUntil,
+    createdAt: Date.now()
+  });
 
   const label   = type === 'store' ? '상점' : '뽑기';
   const daysStr = weekDays.map(d => DOW_KR[d]).join('/');
@@ -4073,17 +4117,19 @@ function addRepeatEvent() {
 }
 
 // ── 요일반복 이벤트 삭제/토글 ────────────────────
-function deleteRepeatEvent(id) {
-  _saveRepeats(_loadRepeats().filter(r => r.id !== id));
+async function deleteRepeatEvent(id) {
+  await sb.from('repeat_events').delete().eq('id', id);
+  _repeats = _repeats.filter(r => r.id !== id);
   toast('🗑', '삭제되었어요');
   renderScheduleList();
   renderEventAdmin();
   renderShopEventBanner();
 }
-function toggleRepeatEvent(id) {
-  const repeats = _loadRepeats();
-  const r = repeats.find(r => r.id === id);
-  if (r) { r.active = !r.active; _saveRepeats(repeats); }
+async function toggleRepeatEvent(id) {
+  const r = _repeats.find(r => r.id === id);
+  if (!r) return;
+  r.active = !r.active;
+  await sb.from('repeat_events').update({ active: r.active }).eq('id', id);
   renderScheduleList();
   renderEventAdmin();
   renderShopEventBanner();
@@ -4093,7 +4139,7 @@ function toggleRepeatEvent(id) {
 function renderScheduleList() {
   const el = document.getElementById('scheduleList');
   if (!el) return;
-  const repeats = _loadRepeats();
+  const repeats = _repeats;
   if (!repeats.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">등록된 요일반복 이벤트 없음</p>'; return; }
   const now = Date.now();
   el.innerHTML = repeats.map(r => {
@@ -4138,7 +4184,6 @@ function _addEvtHistory({ type, label, pct, mode, startStr, endStr }) {
 
 // ── 관리자 이벤트 탭 전체 갱신 ───────────────────
 function renderEventAdmin() {
-  _loadEvents();
   const now = Date.now();
 
   ['store','gacha'].forEach(type => {
@@ -4176,7 +4221,7 @@ function renderEventAdmin() {
       if (disc > 0) {
         text = `✅ 요일반복 ${disc}% 활성`; bg = '#dcfce7'; color = '#166534';
       } else {
-        const hasRepeat = _loadRepeats().some(r => r.active && r.type === type);
+        const hasRepeat = _repeats.some(r => r.active && r.type === type);
         if (hasRepeat) { text = '📆 요일반복 대기'; bg = '#fef9c3'; color = '#854d0e'; }
       }
     }
@@ -4753,11 +4798,11 @@ async function addRecycleItem() {
     toast('❌', '해당 범위에 맞는 상품이 없어요'); return;
   }
 
-  // 이미 등록된 product_id 확인 (각각 조회)
+  // 이미 등록된 product_id 확인 (limit(1)으로 406 방지)
   const existIds = new Set();
   for (const t of targets) {
-    const { data: ex } = await sb.from('recycle_items').select('id').eq('product_id', t.id).maybeSingle();
-    if (ex) existIds.add(t.id);
+    const { data: ex } = await sb.from('recycle_items').select('id').eq('product_id', t.id).limit(1);
+    if (Array.isArray(ex) && ex.length > 0) existIds.add(t.id);
   }
   const newTargets = targets.filter(t => !existIds.has(t.id));
 
