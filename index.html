@@ -563,8 +563,9 @@ body {
 }
 
 /* ── 스크롤바 ── */
-#adminTabBar { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+#adminTabBar { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; cursor: grab; }
 #adminTabBar::-webkit-scrollbar { display: none; }
+#userTabBar::-webkit-scrollbar { display: none; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: rgba(200,180,230,0.4); border-radius: 99px; }
 
@@ -1108,12 +1109,12 @@ body {
 
   <!-- ── 사용자 모드 ── -->
   <div id="userMode" class="hidden">
-    <div class="flex gap-1 mb-5 clay-card p-2">
-      <button class="tab-btn active flex-1" onclick="uTab('shop',this)">🛍️ 상점</button>
-      <button class="tab-btn flex-1" onclick="uTab('gacha',this)">🎲 뽑기</button>
-      <button class="tab-btn flex-1" onclick="uTab('quest',this)">📋 퀘스트</button>
-      <button class="tab-btn flex-1" onclick="uTab('recycle',this)">♻️ 재활용</button>
-      <button class="tab-btn flex-1" onclick="uTab('mypage',this)">👤 마이</button>
+    <div id="userTabBar" class="flex gap-1 mb-5 clay-card p-2" style="overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;cursor:grab">
+      <button class="tab-btn active" onclick="uTab('shop',this)" style="flex-shrink:0">🛍️ 상점</button>
+      <button class="tab-btn" onclick="uTab('gacha',this)" style="flex-shrink:0">🎲 뽑기</button>
+      <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0">📋 퀘스트</button>
+      <button class="tab-btn" onclick="uTab('recycle',this)" style="flex-shrink:0">♻️ 재활용</button>
+      <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0">👤 마이</button>
     </div>
     <div id="utab-shop">
       <p class="text-sm font-bold text-amber-700 mb-3 px-1">🛒 구매 가능한 상품</p>
@@ -2040,6 +2041,11 @@ function initAppUI() {
     // 출석 자동 퀘스트
     setTimeout(() => triggerAutoQuest('attendance'), 500);
   }
+  // 탭바 드래그 스크롤 초기화 (PC 웹 대응)
+  setTimeout(() => {
+    initTabBarDragScroll(document.getElementById('userTabBar'));
+    initTabBarDragScroll(document.getElementById('adminTabBar'));
+  }, 300);
 }
 
 function updateAcornDisplay() {
@@ -2120,7 +2126,7 @@ const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','t
 
 function uTab(tab, btn) {
   U_TABS.forEach(t => document.getElementById('utab-'+t).classList.add('hidden'));
-  document.querySelectorAll('#userMode>.clay-card .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#userTabBar .tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('utab-'+tab).classList.remove('hidden');
   btn.classList.add('active');
   playSound('tab');
@@ -4642,7 +4648,15 @@ async function addRecycleItem() {
   if (exist) { toast('❌', '이미 등록된 상품이에요'); return; }
 
   const { error } = await sb.from('recycle_items').insert({ product_id: productId, recycle_price: price, active: true });
-  if (error) { toast('❌', '등록 실패: ' + error.message); return; }
+  if (error) {
+    const msg = error.message || '';
+    if (msg.includes('RLS') || msg.includes('policy') || msg.includes('permission') || msg.includes('denied')) {
+      toast('❌', 'DB 권한 오류 — Supabase RLS 정책 설정 필요');
+    } else {
+      toast('❌', '등록 실패: ' + msg);
+    }
+    return;
+  }
 
   document.getElementById('rc-productSelect').value = '';
   document.getElementById('rc-price').value = '';
@@ -4672,6 +4686,28 @@ async function confirmDeleteRecycle(id) {
   await sb.from('recycle_items').delete().eq('id', id);
   toast('🗑️', '삭제 완료');
   await renderRecycleAdminList();
+}
+
+// ──────────────────────────────────────────────
+//  탭바 드래그 스크롤 (PC 웹 대응)
+// ──────────────────────────────────────────────
+function initTabBarDragScroll(el) {
+  if (!el) return;
+  let isDown = false, startX = 0, scrollLeft = 0;
+  el.addEventListener('mousedown', e => {
+    isDown = true;
+    el.style.cursor = 'grabbing';
+    startX = e.pageX - el.offsetLeft;
+    scrollLeft = el.scrollLeft;
+  });
+  el.addEventListener('mouseleave', () => { isDown = false; el.style.cursor = 'grab'; });
+  el.addEventListener('mouseup',    () => { isDown = false; el.style.cursor = 'grab'; });
+  el.addEventListener('mousemove',  e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - el.offsetLeft;
+    el.scrollLeft = scrollLeft - (x - startX) * 1.2;
+  });
 }
 
 // ──────────────────────────────────────────────
