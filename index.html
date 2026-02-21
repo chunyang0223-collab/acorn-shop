@@ -4386,31 +4386,70 @@ let _recycleSelMap = {};       // { inventoryId: { item, recycleItem } }
 async function renderRecycleTab() {
   // 매입 목록 로드
   const { data: rItems } = await sb.from('recycle_items')
-    .select('*, products(id,name,icon,reward_type)')
+    .select('*, products(id,name,icon,item_type)')
     .eq('active', true);
   _recycleItems = rItems || [];
 
-  // 매입 목록 UI
+  // ── 매입 목록 UI: 이름 기준 그룹핑 ──
+  // 같은 이름이면서 가격도 같으면 → 하나로 합쳐 표시 (마크 없음)
+  // 같은 이름이지만 가격이 다르면 → 각각 표시 + 🛍️/🎲 마크
   const shopEl = document.getElementById('recycleShopList');
   if (shopEl) {
     if (_recycleItems.length === 0) {
       shopEl.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">현재 매입 중인 아이템이 없어요</p>';
     } else {
-      shopEl.innerHTML = _recycleItems.map(ri => {
-        const p = ri.products || {};
-        return `<div class="recycle-item-card">
-          <div class="flex items-center gap-3">
-            <span style="font-size:2rem">${p.icon || '🎁'}</span>
-            <div>
-              <p class="text-sm font-black text-gray-800">${p.name || '아이템'}</p>
-              <p class="text-xs text-gray-500">보유 시 판매 가능</p>
+      // 이름별로 그룹핑
+      const groups = {};
+      _recycleItems.forEach(ri => {
+        const name = ri.products?.name || '아이템';
+        if (!groups[name]) groups[name] = [];
+        groups[name].push(ri);
+      });
+
+      shopEl.innerHTML = Object.values(groups).map(grp => {
+        const sample = grp[0];
+        const p = sample.products || {};
+        // 그룹 내 가격이 모두 동일한지 확인
+        const allSamePrice = grp.every(ri => ri.recycle_price === sample.recycle_price);
+
+        if (allSamePrice) {
+          // 가격 동일 → 하나로 합쳐서 표시, 마크 없음
+          return `<div class="recycle-item-card">
+            <div class="flex items-center gap-3">
+              <span style="font-size:2rem">${p.icon || '🎁'}</span>
+              <div>
+                <p class="text-sm font-black text-gray-800">${p.name || '아이템'}</p>
+                <p class="text-xs text-gray-500">보유 시 판매 가능</p>
+              </div>
             </div>
-          </div>
-          <div class="text-right">
-            <p class="text-lg font-black text-amber-600">+${ri.recycle_price}🌰</p>
-            <p class="text-xs text-green-600 font-bold">매입 중</p>
-          </div>
-        </div>`;
+            <div class="text-right">
+              <p class="text-lg font-black text-amber-600">+${sample.recycle_price}🌰</p>
+              <p class="text-xs text-green-600 font-bold">매입 중</p>
+            </div>
+          </div>`;
+        } else {
+          // 가격 다름 → 각각 표시 + 출처 마크
+          return grp.map(ri => {
+            const rp = ri.products || {};
+            const typeLabel = rp.item_type === 'gacha'
+              ? '<span class="it-gacha text-xs" style="font-size:10px">🎲 뽑기</span>'
+              : '<span class="it-store text-xs" style="font-size:10px">🛍️ 상점</span>';
+            return `<div class="recycle-item-card">
+              <div class="flex items-center gap-3">
+                <span style="font-size:2rem">${rp.icon || '🎁'}</span>
+                <div>
+                  <div class="flex items-center gap-1 mb-0.5">${typeLabel}</div>
+                  <p class="text-sm font-black text-gray-800">${rp.name || '아이템'}</p>
+                  <p class="text-xs text-gray-500">보유 시 판매 가능</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-black text-amber-600">+${ri.recycle_price}🌰</p>
+                <p class="text-xs text-green-600 font-bold">매입 중</p>
+              </div>
+            </div>`;
+          }).join('');
+        }
       }).join('');
     }
   }
@@ -4464,7 +4503,7 @@ async function renderRecycleInventory() {
       <span style="font-size:2rem">${p.icon || '🎁'}</span>
       <p class="text-xs font-black text-gray-700 text-center leading-tight">${p.name || '아이템'}</p>
       <span class="text-xs font-black text-amber-600">+${price}🌰</span>
-      <span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲' : '🛍️'}</span>
+      <span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 상점'}</span>
     </div>`;
   }).join('');
 }
