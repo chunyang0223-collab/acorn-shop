@@ -1663,6 +1663,7 @@ function initAppUI() {
     document.getElementById('headerUserLabel').textContent = '👑 관리자 모드';
     document.getElementById('headerAcorns').classList.add('hidden');
     document.getElementById('notifBtn').classList.add('hidden');
+    document.getElementById('logoutBtn')?.classList.remove('hidden');
     document.getElementById('adminMode').classList.remove('hidden');
     document.getElementById('userMode').classList.add('hidden');
     renderDashboard();
