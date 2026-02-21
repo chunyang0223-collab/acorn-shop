@@ -727,6 +727,10 @@ body {
 }
 .recycle-sell-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.35); }
 .recycle-badge-active { background: #dcfce7; color: #166534; font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
+.rc-scope-btn { background: rgba(255,255,255,0.5); border: 2px solid rgba(200,180,240,0.3); color: #9c87b8; cursor: pointer; transition: all .15s; font-family: 'Jua',sans-serif; }
+.rc-scope-btn.active { background: linear-gradient(135deg,#c084fc,#818cf8); border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(192,132,252,.35); }
+[data-theme="dark"] .rc-scope-btn { background: rgba(255,255,255,0.07) !important; border-color: rgba(255,255,255,0.12) !important; color: #9490b8 !important; }
+[data-theme="dark"] .rc-scope-btn.active { background: linear-gradient(135deg,#7c3aed,#4f46e5) !important; border-color: transparent !important; color: #fff !important; }
 .recycle-badge-inactive { background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
 [data-theme="dark"] .recycle-hero { background: linear-gradient(135deg,rgba(6,78,59,0.7),rgba(4,120,87,0.5)) !important; }
 [data-theme="dark"] .recycle-item-card { background: rgba(6,78,59,0.3) !important; border-color: rgba(52,211,153,0.2) !important; }
@@ -1638,6 +1642,15 @@ body {
             <select class="field" id="rc-productSelect">
               <option value="">상품을 선택하세요...</option>
             </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-500 mb-1 block">매입 범위</label>
+            <div class="flex gap-2" id="rc-scopeBtns">
+              <button type="button" class="rc-scope-btn active flex-1 py-2 rounded-2xl text-sm font-black" data-scope="all" onclick="setRecycleScope('all')">🛍️+🎲 모두</button>
+              <button type="button" class="rc-scope-btn flex-1 py-2 rounded-2xl text-sm font-black" data-scope="store" onclick="setRecycleScope('store')">🛍️ 상점만</button>
+              <button type="button" class="rc-scope-btn flex-1 py-2 rounded-2xl text-sm font-black" data-scope="gacha" onclick="setRecycleScope('gacha')">🎲 뽑기만</button>
+            </div>
+            <input type="hidden" id="rc-scope" value="all">
           </div>
           <div>
             <label class="text-xs font-bold text-gray-500 mb-1 block">매입 가격 🌰</label>
@@ -4618,41 +4631,37 @@ async function executeRecycleSell() {
 
 // ── 관리자: 재활용센터 관리 ──
 async function renderRecycleAdmin() {
-  // 상품 드롭다운 채우기 (매번 새로고침하여 최신 상품 반영)
+  // 상품 드롭다운: 이름 기준 중복 제거 단일 목록 (상점/뽑기 구분 없이)
   const sel = document.getElementById('rc-productSelect');
   if (sel) {
     sel.innerHTML = '<option value="">상품을 선택하세요...</option>';
-    const { data: prods } = await sb.from('products').select('id,name,icon,item_type').order('item_type').order('sort_order');
+    const { data: prods } = await sb.from('products').select('id,name,icon,item_type').order('sort_order');
     if (prods) {
-      // store / gacha 그룹으로 분리
-      const storeProds = prods.filter(p => p.item_type === 'store');
-      const gachaProds = prods.filter(p => p.item_type === 'gacha');
-      if (storeProds.length > 0) {
-        const og = document.createElement('optgroup');
-        og.label = '🛍️ 상점 상품';
-        storeProds.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = `${p.icon || '🎁'} ${p.name}`;
-          og.appendChild(opt);
-        });
-        sel.appendChild(og);
-      }
-      if (gachaProds.length > 0) {
-        const og = document.createElement('optgroup');
-        og.label = '🎲 뽑기 상품';
-        gachaProds.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = `${p.icon || '🎁'} ${p.name}`;
-          og.appendChild(opt);
-        });
-        sel.appendChild(og);
-      }
+      // 이름 기준 중복 제거 (store 우선, 없으면 gacha)
+      const seen = {};
+      prods.forEach(p => {
+        if (!seen[p.name]) seen[p.name] = p;
+        else if (seen[p.name].item_type !== 'store' && p.item_type === 'store') seen[p.name] = p;
+      });
+      Object.values(seen).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.name; // name을 key로 사용 (scope 처리 시 name으로 검색)
+        opt.textContent = `${p.icon || '🎁'} ${p.name}`;
+        sel.appendChild(opt);
+      });
     }
   }
+  // 범위 버튼 초기화
+  setRecycleScope('all');
   // 매입 목록 렌더
   await renderRecycleAdminList();
+}
+
+function setRecycleScope(scope) {
+  document.getElementById('rc-scope').value = scope;
+  document.querySelectorAll('.rc-scope-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.scope === scope);
+  });
 }
 
 async function renderRecycleAdminList() {
@@ -4667,53 +4676,108 @@ async function renderRecycleAdminList() {
     return;
   }
 
-  el.innerHTML = items.map(ri => {
-    const p = ri.products || {};
-    const typeLabel = p.item_type === 'gacha' ? '<span class="it-gacha text-xs">🎲 뽑기</span>' : '<span class="it-store text-xs">🛍️ 상점</span>';
+  // 이름별 그룹핑해서 같은 이름 항목은 묶어서 표시
+  const adminGroups = {};
+  items.forEach(ri => {
+    const name = ri.products?.name || '알 수 없음';
+    if (!adminGroups[name]) adminGroups[name] = [];
+    adminGroups[name].push(ri);
+  });
+
+  el.innerHTML = Object.values(adminGroups).map(grp => {
+    const sample = grp[0];
+    const p = sample.products || {};
+    const allSamePrice = grp.every(ri => ri.recycle_price === sample.recycle_price);
+    const allActive = grp.every(ri => ri.active);
+    const anyActive = grp.some(ri => ri.active);
+
+    // 범위 표시
+    const types = grp.map(ri => ri.products?.item_type || 'store');
+    const hasStore = types.includes('store');
+    const hasGacha = types.includes('gacha');
+    const scopeLabel = (hasStore && hasGacha)
+      ? '<span class="text-xs font-bold" style="background:rgba(192,132,252,0.15);color:#7c3aed;padding:2px 8px;border-radius:12px">🛍️+🎲 모두</span>'
+      : hasGacha
+        ? '<span class="it-gacha text-xs">🎲 뽑기</span>'
+        : '<span class="it-store text-xs">🛍️ 상점</span>';
+
+    const priceDisplay = allSamePrice
+      ? `<p class="text-base font-black text-amber-600">+${sample.recycle_price}🌰</p>`
+      : grp.map(ri => {
+          const t = ri.products?.item_type === 'gacha' ? '🎲' : '🛍️';
+          return `<span class="text-sm font-black text-amber-600">${t} +${ri.recycle_price}🌰</span>`;
+        }).join(' · ');
+
+    // 활성 상태 (그룹 전체 기준)
+    const activeStatus = allActive ? 'recycle-badge-active' : anyActive ? 'recycle-badge-inactive' : 'recycle-badge-inactive';
+    const activeText = allActive ? '활성' : anyActive ? '일부활성' : '비활성';
+
+    // 버튼: 그룹 전체 토글 / 개별 삭제
+    const ids = grp.map(ri => ri.id);
     return `<div class="p-4 rounded-2xl row-item-bg space-y-2">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <span style="font-size:1.8rem">${p.icon || '🎁'}</span>
           <div>
-            <div class="flex items-center gap-2">${typeLabel}<p class="text-sm font-black text-gray-800">${p.name || '알 수 없음'}</p></div>
-            <p class="text-base font-black text-amber-600">+${ri.recycle_price}🌰</p>
+            <div class="flex items-center gap-2 mb-0.5">${scopeLabel}</div>
+            <p class="text-sm font-black text-gray-800">${p.name || '알 수 없음'}</p>
+            <div class="flex items-center gap-1 mt-0.5">${priceDisplay}</div>
           </div>
         </div>
-        <span class="${ri.active ? 'recycle-badge-active' : 'recycle-badge-inactive'}">${ri.active ? '활성' : '비활성'}</span>
+        <span class="${activeStatus}">${activeText}</span>
       </div>
       <div class="flex gap-2">
-        <button class="btn btn-primary flex-1 py-1 text-xs" onclick="editRecycleItem('${ri.id}',${ri.recycle_price})">✏️ 가격 수정</button>
-        <button class="btn btn-gray flex-1 py-1 text-xs" onclick="toggleRecycleActive('${ri.id}',${ri.active})">${ri.active ? '⏹ 비활성화' : '✅ 활성화'}</button>
-        <button class="btn py-1 px-3 text-xs" style="background:#fee2e2;color:#b91c1c" onclick="deleteRecycleItem('${ri.id}')">🗑️</button>
+        <button class="btn btn-primary flex-1 py-1 text-xs" onclick="editRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')},${sample.recycle_price})">✏️ 가격 수정</button>
+        <button class="btn btn-gray flex-1 py-1 text-xs" onclick="toggleRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')},${allActive})">${allActive ? '⏹ 비활성화' : '✅ 활성화'}</button>
+        <button class="btn py-1 px-3 text-xs" style="background:#fee2e2;color:#b91c1c" onclick="deleteRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')})">🗑️</button>
       </div>
     </div>`;
   }).join('');
 }
 
 async function addRecycleItem() {
-  const productId = document.getElementById('rc-productSelect')?.value;
+  const productName = document.getElementById('rc-productSelect')?.value;
+  const scope = document.getElementById('rc-scope')?.value || 'all';
   const price = parseInt(document.getElementById('rc-price')?.value || 0);
-  if (!productId) { toast('❌', '상품을 선택해주세요'); return; }
+  if (!productName) { toast('❌', '상품을 선택해주세요'); return; }
   if (!price || price < 1) { toast('❌', '매입 가격을 입력해주세요'); return; }
 
-  // 중복 체크
-  const { data: exist } = await sb.from('recycle_items').select('id').eq('product_id', productId).maybeSingle();
-  if (exist) { toast('❌', '이미 등록된 상품이에요'); return; }
+  // 선택한 이름 + scope에 해당하는 product들 조회
+  let query = sb.from('products').select('id,name,icon,item_type').eq('name', productName);
+  if (scope === 'store') query = query.eq('item_type', 'store');
+  else if (scope === 'gacha') query = query.eq('item_type', 'gacha');
+  const { data: targets } = await query;
 
-  const { error } = await sb.from('recycle_items').insert({ product_id: productId, recycle_price: price, active: true });
-  if (error) {
-    const msg = error.message || '';
-    if (msg.includes('RLS') || msg.includes('policy') || msg.includes('permission') || msg.includes('denied')) {
-      toast('❌', 'DB 권한 오류 — Supabase RLS 정책 설정 필요');
-    } else {
-      toast('❌', '등록 실패: ' + msg);
-    }
-    return;
+  if (!targets || targets.length === 0) {
+    toast('❌', '해당 범위에 맞는 상품이 없어요'); return;
   }
 
+  // 이미 등록된 product_id 확인
+  const { data: existList } = await sb.from('recycle_items')
+    .select('product_id').in('product_id', targets.map(t => t.id));
+  const existIds = new Set((existList || []).map(e => e.product_id));
+  const newTargets = targets.filter(t => !existIds.has(t.id));
+
+  if (newTargets.length === 0) {
+    toast('❌', '선택한 범위의 상품이 이미 모두 등록되어 있어요'); return;
+  }
+
+  // 등록
+  const rows = newTargets.map(t => ({
+    product_id: t.id,
+    recycle_price: price,
+    scope: scope === 'all' ? t.item_type : scope, // 실제 item_type 저장
+    active: true
+  }));
+  const { error } = await sb.from('recycle_items').insert(rows);
+  if (error) {
+    toast('❌', '등록 실패: ' + (error.message || '')); return;
+  }
+
+  const scopeLabel = scope === 'all' ? '상점+뽑기 모두' : scope === 'store' ? '상점' : '뽑기';
   document.getElementById('rc-productSelect').value = '';
   document.getElementById('rc-price').value = '';
-  toast('✅', '등록 완료!');
+  toast('✅', `${productName} (${scopeLabel}) 등록 완료!`);
   await renderRecycleAdminList();
 }
 
@@ -4722,7 +4786,16 @@ async function toggleRecycleActive(id, current) {
   await renderRecycleAdminList();
 }
 
-async function editRecycleItem(id, currentPrice) {
+// 그룹 일괄 토글
+async function toggleRecycleGroup(ids, allActive) {
+  for (const id of ids) {
+    await sb.from('recycle_items').update({ active: !allActive }).eq('id', id);
+  }
+  await renderRecycleAdminList();
+}
+
+// 그룹 가격 수정
+async function editRecycleGroup(ids, currentPrice) {
   showModal(`
     <div class="text-center">
       <div style="font-size:2.5rem;margin-bottom:8px">✏️</div>
@@ -4733,40 +4806,48 @@ async function editRecycleItem(id, currentPrice) {
       </div>
       <div class="flex gap-2">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
-        <button class="btn btn-green flex-1 py-2 font-black" onclick="confirmEditRecycle('${id}')">✅ 저장</button>
+        <button class="btn btn-green flex-1 py-2 font-black" onclick="confirmEditRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')})">✅ 저장</button>
       </div>
     </div>`);
   setTimeout(() => document.getElementById('editRecyclePrice')?.focus(), 100);
 }
 
-async function confirmEditRecycle(id) {
+async function confirmEditRecycleGroup(ids) {
   const price = parseInt(document.getElementById('editRecyclePrice')?.value || 0);
   if (!price || price < 1) { toast('❌', '가격을 1 이상으로 입력해주세요'); return; }
   closeModal();
-  const { error } = await sb.from('recycle_items').update({ recycle_price: price }).eq('id', id);
-  if (error) { toast('❌', '수정 실패: ' + error.message); return; }
+  for (const id of ids) {
+    await sb.from('recycle_items').update({ recycle_price: price }).eq('id', id);
+  }
   toast('✅', `매입 가격 ${price}🌰로 수정!`);
   await renderRecycleAdminList();
 }
 
-async function deleteRecycleItem(id) {
+// 그룹 삭제
+async function deleteRecycleGroup(ids) {
   showModal(`<div class="text-center">
     <div style="font-size:2.5rem;margin-bottom:8px">🗑️</div>
     <h2 class="text-lg font-black text-gray-800 mb-2">매입 항목 삭제</h2>
     <p class="text-sm text-gray-500 mb-4">삭제하면 사용자가 해당 아이템을 재활용센터에서 판매할 수 없어요.</p>
     <div class="flex gap-2">
       <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
-      <button class="btn flex-1 py-2 font-black" style="background:#fee2e2;color:#b91c1c" onclick="confirmDeleteRecycle('${id}')">삭제</button>
+      <button class="btn flex-1 py-2 font-black" style="background:#fee2e2;color:#b91c1c" onclick="confirmDeleteRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')})">삭제</button>
     </div>
   </div>`);
 }
 
-async function confirmDeleteRecycle(id) {
+async function confirmDeleteRecycleGroup(ids) {
   closeModal();
-  await sb.from('recycle_items').delete().eq('id', id);
+  for (const id of ids) {
+    await sb.from('recycle_items').delete().eq('id', id);
+  }
   toast('🗑️', '삭제 완료');
   await renderRecycleAdminList();
 }
+
+// 하위 호환용 단일 함수 유지
+async function deleteRecycleItem(id) { deleteRecycleGroup([id]); }
+async function confirmDeleteRecycle(id) { confirmDeleteRecycleGroup([id]); }
 
 // ──────────────────────────────────────────────
 //  탭바 드래그 스크롤 (PC 웹 대응)
