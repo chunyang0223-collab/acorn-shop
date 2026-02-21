@@ -517,11 +517,12 @@ body {
 }
 @media (max-width: 480px) {
   .modal-box {
-    padding: 20px 18px 24px;
-    border-radius: 24px;
-    width: 94%;
-    max-height: 82dvh;
+    padding: 18px 16px 22px;
+    border-radius: 22px;
+    width: 88%;
+    max-height: 75dvh;
   }
+  .notif-scroll { max-height: 44dvh !important; }
 }
 
 /* ── 로그인 ── */
@@ -839,14 +840,14 @@ body {
 .modal-notice-box {
   background: rgba(245,158,11,0.12);
   border: 1px solid rgba(245,158,11,0.25);
-  border-radius: 16px;
-  padding: 12px 14px;
-  margin-bottom: 20px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
   text-align: left;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #92400e;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 [data-theme="dark"] .modal-notice-box {
   background: rgba(245,158,11,0.1) !important;
@@ -2567,15 +2568,15 @@ async function useInventoryItem(inventoryId) {
   const snap = item?.product_snapshot || {};
   showModal(`
     <div class="text-center">
-      <div style="font-size:3rem;margin-bottom:8px">${snap.icon || '🎁'}</div>
-      <h2 class="text-xl font-black text-gray-800" style="margin-bottom:6px">${snap.name || '아이템'}</h2>
-      <p class="text-sm text-gray-400" style="margin-bottom:14px">${snap.description || ''}</p>
+      <div style="font-size:2.6rem;line-height:1;margin-bottom:8px">${snap.icon || '🎁'}</div>
+      <h2 class="text-lg font-black text-gray-800" style="margin-bottom:4px">${snap.name || '아이템'}</h2>
+      <p class="text-sm text-gray-400" style="margin-bottom:12px">${snap.description || ''}</p>
       <div class="modal-notice-box">
         ✋ 사용하면 관리자에게 신청이 전달돼요.<br>승인 후 아이템이 지급됩니다.
       </div>
-      <div class="flex gap-3" style="margin-top:4px">
-        <button class="btn btn-gray flex-1 py-3" onclick="closeModal()">취소</button>
-        <button class="btn btn-primary flex-1 py-3" onclick="confirmUseItem('${inventoryId}')">사용하기!</button>
+      <div class="flex gap-2" style="margin-top:4px">
+        <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+        <button class="btn btn-primary flex-1 py-2" onclick="confirmUseItem('${inventoryId}')">사용하기!</button>
       </div>
     </div>`);
 }
@@ -3422,10 +3423,22 @@ function showModal(html) {
   document.getElementById('modalContent').innerHTML = html;
   document.getElementById('modal').classList.remove('hidden');
   document.getElementById('modal').addEventListener('touchmove', _blockScroll, { passive: false });
+  // iOS/모바일: 배경 페이지 고정 (뷰포트 튀는 현상 방지)
+  const scrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.width = '100%';
+  document.body.dataset.scrollY = scrollY;
 }
 function closeModal() {
   document.getElementById('modal').classList.add('hidden');
   document.getElementById('modal').removeEventListener('touchmove', _blockScroll);
+  // 배경 고정 해제 + 스크롤 위치 복원
+  const scrollY = parseInt(document.body.dataset.scrollY || '0');
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  window.scrollTo(0, scrollY);
 }
 
 let _toastT;
