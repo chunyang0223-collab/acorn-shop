@@ -308,12 +308,18 @@ h1, h2, h3, .tab-btn, .btn, .acorn-pill,
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
 body {
   background: linear-gradient(-45deg, #ffd6e7, #ffefba, #c3e8ff, #fce4ff);
   background-size: 400% 400%;
   animation: bgShift 18s ease infinite;
   min-height: 100dvh;
   padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* ── 글라스 카드 ── */
@@ -493,14 +499,16 @@ body {
 /* ── 모달 ── */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw; height: 100dvh;
   background: rgba(80,40,120,.4);
   z-index: 500;
   display: flex; align-items: center; justify-content: center;
   animation: fadeIn .18s ease;
   overscroll-behavior: none;
   overflow: hidden;
+  transform: translate3d(0,0,0);
 }
 .modal-box {
   background: rgba(255,255,255,0.92);
@@ -527,6 +535,7 @@ body {
 /* ── 로그인 ── */
 .login-screen {
   position: fixed; inset: 0; z-index: 300;
+  width: 100vw; height: 100dvh;
   background: linear-gradient(-45deg, #ffd6e7, #ffefba, #c3e8ff, #fce4ff);
   background-size: 400% 400%;
   animation: bgShift 18s ease infinite;
@@ -546,6 +555,7 @@ body {
 /* ── 로딩 ── */
 .loading-screen {
   position: fixed; inset: 0; z-index: 400;
+  width: 100vw; height: 100dvh;
   background: linear-gradient(-45deg, #ffd6e7, #ffefba, #c3e8ff, #fce4ff);
   background-size: 400% 400%;
   animation: bgShift 18s ease infinite;
@@ -774,7 +784,7 @@ body {
 [data-theme="dark"] select,
 [data-theme="dark"] option { background: #1e1e2e !important; color: #e2e8f0 !important; }
 [data-theme="dark"] .stat-card { background: rgba(30,30,46,0.92) !important; border-color: rgba(255,255,255,0.08) !important; }
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; width: 100% !important; height: 100% !important; }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; width: 100vw !important; height: 100dvh !important; }
 [data-theme="dark"] .login-card { background: rgba(20,20,32,0.95) !important; }
 [data-theme="dark"] .h-px { background: rgba(255,255,255,0.1) !important; }
 [data-theme="dark"] .page-nav-btn { background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important; border-color: rgba(255,255,255,0.1) !important; }
@@ -857,7 +867,7 @@ body {
 [data-theme="dark"] .modal-notice-sub { color: #4ade80 !important; }
 
 /* ── 다크: 모달 오버레이 ── */
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; width: 100% !important; height: 100% !important; }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; width: 100vw !important; height: 100dvh !important; }
 [data-theme="dark"] .modal-box {
   background: rgba(34,32,52,0.97) !important;
   border-color: rgba(255,255,255,0.1) !important;
