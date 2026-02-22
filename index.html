@@ -2811,9 +2811,8 @@ async function isQuestDone(questId, repeatType, targetCount = 1) {
     .eq('user_id', myProfile.id).eq('quest_id', questId).eq('period_key', key)
     .maybeSingle();
   if (!data) return false;
-  // target_count > 1 이면 누적 횟수 기준
-  if (targetCount > 1) return (data.progress_count || 0) >= targetCount;
-  return true;
+  // 모든 퀘스트 progress_count >= targetCount 기준으로 완료 판단
+  return (data.progress_count || 0) >= targetCount;
 }
 
 async function hasPendingQCR(questId, repeatType) {
@@ -2826,25 +2825,28 @@ async function hasPendingQCR(questId, repeatType) {
 
 // quest_progress upsert 전용 헬퍼
 async function upsertQuestProgress(userId, questId, periodKey, progressCount) {
-  // 먼저 기존 행 조회
-  const { data: existing } = await sb.from('quest_progress')
-    .select('id')
-    .eq('user_id', userId).eq('quest_id', questId).eq('period_key', periodKey)
-    .limit(1);
-  if (existing && existing.length > 0) {
-    // 행 있음 → update
-    await sb.from('quest_progress')
-      .update({ progress_count: progressCount })
-      .eq('user_id', userId).eq('quest_id', questId).eq('period_key', periodKey);
-  } else {
-    // 행 없음 → insert
-    await sb.from('quest_progress')
+  // update 시도 (RLS: 본인 수정 정책 필요)
+  const { data: updated } = await sb.from('quest_progress')
+    .update({ progress_count: progressCount })
+    .eq('user_id', userId).eq('quest_id', questId).eq('period_key', periodKey);
+
+  // update 결과가 없으면(행 없음) insert 시도
+  const updatedCount = Array.isArray(updated) ? updated.length : (updated ? 1 : 0);
+  if (updatedCount === 0) {
+    const { error } = await sb.from('quest_progress')
       .insert({ user_id: userId, quest_id: questId, period_key: periodKey, progress_count: progressCount });
+    // insert도 실패(중복)하면 update 재시도
+    if (error) {
+      await sb.from('quest_progress')
+        .update({ progress_count: progressCount })
+        .eq('user_id', userId).eq('quest_id', questId).eq('period_key', periodKey);
+    }
   }
 }
 
 async function markQuestDone(questId, repeatType) {
   const key = getPeriodKey(repeatType);
+  // 1회성 퀘스트: progress_count를 target(1)으로 설정
   await upsertQuestProgress(myProfile.id, questId, key, 1);
 }
 
