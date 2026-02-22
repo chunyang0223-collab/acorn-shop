@@ -2145,9 +2145,9 @@ async function updateTicketDisplay() {
     el.textContent = `🎫 ${window._gachaTicketCount}`;
     return;
   }
-  // gacha_tickets 테이블에서 직접 조회
+  // gacha_tickets 테이블에서 직접 조회 (count는 예약어라 id,count 로 명시)
   const { data } = await sb.from('gacha_tickets')
-    .select('count').eq('user_id', myProfile.id).maybeSingle();
+    .select('id,count').eq('user_id', myProfile.id).maybeSingle();
   window._gachaTicketCount = data?.count ?? 0;
   el.textContent = `🎫 ${window._gachaTicketCount}`;
 }
@@ -2505,7 +2505,7 @@ async function checkFreeGacha() {
       .eq('user_id', myProfile.id).eq('gacha_type', 'daily').eq('period_key', TODAY).limit(1),
     sb.from('free_gacha_usage').select('id')
       .eq('user_id', myProfile.id).eq('gacha_type', 'weekly').eq('period_key', WEEK_KEY).limit(1),
-    sb.from('gacha_tickets').select('count')
+    sb.from('gacha_tickets').select('id,count')
       .eq('user_id', myProfile.id).maybeSingle()
   ]);
 
