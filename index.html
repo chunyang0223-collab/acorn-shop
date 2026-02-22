@@ -1465,8 +1465,8 @@ body {
           <button class="btn btn-primary w-full py-3" onclick="addQuest()">📋 퀘스트 추가</button>
         </div>
       </div>
+      <div class="clay-card p-5 mb-4" id="questApprovalCard"><p class="text-sm font-black text-gray-700 mb-3" id="questApprovalTitle">✋ 완료 승인 요청</p><div id="questApprovalList" class="space-y-3"></div></div>
       <div class="clay-card p-5 mb-4"><p class="text-sm font-black text-gray-700 mb-3">📋 퀘스트 목록</p><div id="questAdminList" class="space-y-3"></div></div>
-      <div class="clay-card p-5"><p class="text-sm font-black text-gray-700 mb-3">✋ 완료 승인 요청</p><div id="questApprovalList" class="space-y-3"></div></div>
     </div>
 
     <!-- 신청 -->
@@ -3886,6 +3886,18 @@ async function renderQuestAdmin() {
     : '<p class="text-sm text-gray-400 text-center py-4">퀘스트가 없어요</p>';
 
   const apEl = document.getElementById('questApprovalList');
+  const apCard = document.getElementById('questApprovalCard');
+  const apTitle = document.getElementById('questApprovalTitle');
+  const pendingCount = qcrs?.length || 0;
+  // 대기 건수에 따라 카드 강조
+  if (apCard) {
+    apCard.style.border = pendingCount > 0 ? '2px solid rgba(236,72,153,0.5)' : '';
+    apCard.style.background = pendingCount > 0 ? 'rgba(253,242,248,0.8)' : '';
+  }
+  if (apTitle) {
+    apTitle.textContent = pendingCount > 0 ? `✋ 완료 승인 요청 (${pendingCount}건 대기중)` : '✋ 완료 승인 요청';
+    apTitle.style.color = pendingCount > 0 ? '#be185d' : '';
+  }
   apEl.innerHTML = qcrs?.length
     ? qcrs.map(r => `<div class="p-4 rounded-2xl bg-pink-50 border border-pink-100 flex flex-col gap-2">
         <div class="flex items-start justify-between gap-2">
