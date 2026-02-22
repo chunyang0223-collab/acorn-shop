@@ -3581,8 +3581,9 @@ async function renderInventory() {
     return;
   }
 
-  // pending 상태인 inventory_id 집합
+  // pending 상태인 inventory_id 집합 (DB + 로컬 캐시 합산)
   const pendingIds = new Set((pendingReqs||[]).map(r => r.inventory_id).filter(Boolean));
+  if (window._pendingInvIds) window._pendingInvIds.forEach(id => pendingIds.add(id));
 
   window._invCache = items;
   el.innerHTML = items.map(item => {
@@ -3791,7 +3792,7 @@ async function _confirmUseItemInner(inventoryId) {
   // UI에서 버튼만 "승인 대기중"으로 변경
 
   // product_requests에 신청 생성 (product_id + snapshot + inventory_id 저장)
-  await sb.from('product_requests').insert({
+  const { error: reqErr } = await sb.from('product_requests').insert({
     user_id: myProfile.id,
     product_id: item.product_id,
     product_snapshot: item.product_snapshot,
@@ -3801,6 +3802,11 @@ async function _confirmUseItemInner(inventoryId) {
     from_gacha: item.from_gacha || false,
     inventory_id: inventoryId
   });
+  if (reqErr) { toast('❌', '신청 실패: ' + reqErr.message); return; }
+
+  // 즉시 pending 캐시에 추가 → renderInventory 호출 시 버튼 즉시 변경
+  if (!window._pendingInvIds) window._pendingInvIds = new Set();
+  window._pendingInvIds.add(inventoryId);
 
   // 사용자 본인 알림
   await pushNotif(myProfile.id, 'request', '신청 완료! ✋', `${p.icon} ${p.name} 신청을 보냈어요. 관리자 승인 대기 중이에요.`);
@@ -4080,7 +4086,7 @@ async function addStoreProduct() {
     stock: stock,
     active: true, sort_order: (all?.length||0)+1
   });
-  if (error) { toast('❌', '추가 실패: ' + error.message); return; }
+  if (error) { toast('❌', '추가 실패: ' + (error.message || error.details || JSON.stringify(error))); console.error('product insert error:', error); return; }
   ['ns-name','ns-icon','ns-price','ns-desc','ns-acornAmt','ns-stock'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
   document.getElementById('ns-stockType').value = 'unlimited';
   toggleStockField();
@@ -4505,6 +4511,8 @@ async function updateReq(id, status) {
     await sb.from('inventory').update({
       status: status === 'approved' ? 'used' : 'held'
     }).eq('id', r.inventory_id);
+    // 로컬 pending 캐시에서도 제거
+    if (window._pendingInvIds) window._pendingInvIds.delete(r.inventory_id);
   }
 
   if (r) await pushNotif(r.user_id, status==='approved'?'approved':'rejected',
