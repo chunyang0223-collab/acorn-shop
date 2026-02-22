@@ -1526,7 +1526,7 @@ body {
     <!-- TX 로그 -->
     <div id="atab-txlog" class="hidden">
       <div class="clay-card p-5">
-        <h2 class="text-lg font-black text-gray-800 mb-3">🗂️ 도토리 로그</h2>
+        <h2 class="text-lg font-black text-gray-800 mb-3">🗂️ 활동 로그</h2>
         <div class="flex gap-2 mb-4"><select class="field" id="logUserFilter" onchange="renderTxLog()"><option value="all">전체 사용자</option></select></div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm" style="min-width:420px">
@@ -3876,16 +3876,34 @@ async function useInventoryItem(inventoryId) {
 
   // 선물 도토리 확인 모달
   if (p.reward_type === 'GIFT_ACORN') {
-    const giftQty = p.gift_qty || 0;
-    showModal(`<div class="text-center">
-      <div style="font-size:2.5rem">🎁</div>
-      <h2 class="text-lg font-black text-gray-800 mt-2 mb-1">${p.name}</h2>
-      <div class="text-2xl font-black text-amber-600 my-3">🌰 +${giftQty}</div>
-      <p class="text-sm text-gray-500 mb-4">사용하면 도토리 ${giftQty}개가 즉시 지급됩니다.</p>
-      <div class="flex gap-2">
+    const giftQty = p.gift_qty || item.product_snapshot?.gift_qty || 0;
+    const memo = p.memo || item.product_snapshot?.memo || '';
+    showModal(`<div style="text-align:center;font-family:'Nunito',sans-serif">
+      <div style="position:relative;display:inline-block;margin-bottom:4px">
+        <span style="position:absolute;top:2px;right:-2px;font-size:13px;animation:sparkle 2s ease-in-out infinite">✨</span>
+        <span style="position:absolute;top:18px;left:-6px;font-size:10px;animation:sparkle 2s ease-in-out infinite;animation-delay:.6s">⭐</span>
+        <span style="font-size:3rem;display:block;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 6px 12px rgba(52,211,153,0.25))">🎁</span>
+      </div>
+      <h2 style="font-family:'Jua',sans-serif;font-size:1.1rem;color:#374151;margin:8px 0 4px">도토리 선물</h2>
+      <div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid rgba(52,211,153,0.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#065f46;margin-bottom:14px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0"></span>
+        관리자가 보낸 선물
+      </div>
+      <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid rgba(52,211,153,0.25);border-radius:20px;padding:14px 20px;margin-bottom:14px">
+        <div style="font-family:'Jua',sans-serif;font-size:2rem;color:#065f46;line-height:1;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span style="font-size:1.1rem;color:#34d399">+</span>🌰 ${giftQty}
+        </div>
+        <div style="font-size:11px;color:#6ee7b7;margin-top:3px;font-weight:700">즉시 지급</div>
+      </div>
+      ${memo ? `<div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;background:rgba(249,250,251,0.8);border:1.5px solid rgba(210,180,240,0.3);border-radius:14px;padding:10px 14px;margin-bottom:18px">
+        <span style="font-size:15px;line-height:1;flex-shrink:0">💬</span>
+        <span style="font-size:12px;font-weight:700;color:#6b7280;line-height:1">${memo}</span>
+      </div>` : '<div style="margin-bottom:18px"></div>'}
+      <div style="display:flex;gap:8px">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
         <button class="btn btn-green flex-1 py-2" onclick="closeModal();confirmUseItem('${inventoryId}')">🌰 받기</button>
-      </div></div>`);
+      </div>
+    </div>`);
     return;
   }
 
@@ -4849,18 +4867,74 @@ async function populateLogFilter() {
 
 async function renderTxLog() {
   const filter = document.getElementById('logUserFilter')?.value || 'all';
-  let query = sb.from('transactions').select('*, users(display_name)').order('created_at', { ascending: false }).limit(100);
-  if (filter !== 'all') query = query.eq('user_id', filter);
-  const { data: list } = await query;
+
+  // 도토리 거래 내역
+  let txQuery = sb.from('transactions').select('*, users(display_name)').order('created_at', { ascending: false }).limit(100);
+  if (filter !== 'all') txQuery = txQuery.eq('user_id', filter);
+
+  // 아이템 획득 내역 (인벤토리)
+  let invQuery = sb.from('inventory').select('*, users(display_name)').order('created_at', { ascending: false }).limit(100);
+  if (filter !== 'all') invQuery = invQuery.eq('user_id', filter);
+
+  const [{ data: txList }, { data: invList }] = await Promise.all([txQuery, invQuery]);
+
+  // 통합 후 시간 내림차순 정렬
+  const txRows = (txList || []).map(t => ({
+    type: 'acorn',
+    user: t.users?.display_name || '',
+    amount: t.amount,
+    balance: t.balance,
+    reason: t.reason,
+    created_at: t.created_at
+  }));
+
+  const invRows = (invList || []).map(i => {
+    const p = i.product_snapshot || {};
+    const src = i.from_gacha ? '🎲 뽑기' : '🛍️ 구매';
+    const rtype = p.reward_type || '';
+    let label = '';
+    if (rtype === 'GIFT_ACORN')        label = '🎁 도토리 선물 수령';
+    else if (rtype === 'GIFT_GACHA_TICKET') label = '🎁 티켓 선물 수령';
+    else                               label = `${src} — ${p.icon||''}${p.name||'아이템'}`;
+    return {
+      type: 'item',
+      user: i.users?.display_name || '',
+      icon: p.icon || '📦',
+      name: p.name || '아이템',
+      label,
+      status: i.status,
+      created_at: i.created_at
+    };
+  });
+
+  const merged = [...txRows, ...invRows].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 150);
+
   const tbody = document.getElementById('txLogTable');
-  tbody.innerHTML = list?.length
-    ? list.map(t => `<tr class="hover:bg-gray-50">
-        <td class="py-2.5 pr-2 font-bold text-gray-700 text-xs">${t.users?.display_name||''}</td>
-        <td class="py-2.5 pr-2 font-black text-sm ${t.amount>0?'tx-plus':'tx-minus'}">${t.amount>0?'+':''}${t.amount}🌰</td>
-        <td class="py-2.5 pr-2 text-xs text-gray-500 font-semibold">${t.balance}🌰</td>
-        <td class="py-2.5 pr-2 text-xs text-gray-500">${t.reason}</td>
-        <td class="py-2.5 text-xs text-gray-400 whitespace-nowrap">${fmtTs(t.created_at)}</td>
-      </tr>`).join('')
+  tbody.innerHTML = merged.length
+    ? merged.map(r => {
+        if (r.type === 'acorn') {
+          return `<tr class="hover:bg-gray-50">
+            <td class="py-2.5 pr-2 font-bold text-gray-700 text-xs">${r.user}</td>
+            <td class="py-2.5 pr-2 font-black text-sm ${r.amount>0?'tx-plus':'tx-minus'}">${r.amount>0?'+':''}${r.amount}🌰</td>
+            <td class="py-2.5 pr-2 text-xs text-gray-500 font-semibold">${r.balance}🌰</td>
+            <td class="py-2.5 pr-2 text-xs text-gray-500">${r.reason}</td>
+            <td class="py-2.5 text-xs text-gray-400 whitespace-nowrap">${fmtTs(r.created_at)}</td>
+          </tr>`;
+        } else {
+          const statusBadge = r.status === 'used'
+            ? `<span style="color:#6ee7b7;font-weight:800">✅ 사용됨</span>`
+            : r.status === 'pending'
+            ? `<span style="color:#fbbf24;font-weight:800">⏳ 대기중</span>`
+            : `<span style="color:#a78bfa;font-weight:800">📦 보관중</span>`;
+          return `<tr class="hover:bg-purple-50/30">
+            <td class="py-2.5 pr-2 font-bold text-gray-700 text-xs">${r.user}</td>
+            <td class="py-2.5 pr-2 text-lg">${r.icon}</td>
+            <td class="py-2.5 pr-2 text-xs text-gray-500 font-semibold">${statusBadge}</td>
+            <td class="py-2.5 pr-2 text-xs text-gray-500">${r.label}</td>
+            <td class="py-2.5 text-xs text-gray-400 whitespace-nowrap">${fmtTs(r.created_at)}</td>
+          </tr>`;
+        }
+      }).join('')
     : '<tr><td colspan="5" class="text-center text-gray-400 py-8 text-sm">내역 없음</td></tr>';
 }
 
