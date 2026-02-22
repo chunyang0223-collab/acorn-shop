@@ -2889,7 +2889,7 @@ async function doGacha(count) {
 
     // ── AUTO_ACORN 보상 합산 → 한 번에 지급 ──
     const acornItems    = results.filter(r => r.reward_type === 'AUTO_ACORN' && r.acorn_amt > 0);
-    const ticketItems   = results.filter(r => r.reward_type === 'GACHA_TICKET');
+    const ticketItems   = results.filter(r => r.reward_type === 'GACHA_TICKET');  // 인벤토리 X → 카운터
     const manualItems   = results.filter(r => r.reward_type === 'MANUAL_ITEM' || r.reward_type === 'COUPON' || r.reward_type === 'ACORN_TICKET');
     const totalAcornAmt = acornItems.reduce((s, r) => s + r.acorn_amt, 0);
 
@@ -3787,30 +3787,51 @@ async function renderInventory() {
 
   window._invCache = items;
   el.innerHTML = items.map(item => {
-    const p = item.products || item.product_snapshot || {};
-    const isCoupon      = p.reward_type === 'COUPON';
-    const isAcornTicket = p.reward_type === 'ACORN_TICKET';
-    const isGachaTicket = p.reward_type === 'GACHA_TICKET';
+    // snapshot 우선 (선물 아이템은 product_id=null이라 JOIN 없음)
+    const p = item.product_snapshot || item.products || {};
+    const isCoupon       = p.reward_type === 'COUPON';
+    const isAcornTicket  = p.reward_type === 'ACORN_TICKET';
+    const isGachaTicket  = p.reward_type === 'GACHA_TICKET';
+    const isGiftTicket   = p.reward_type === 'GIFT_GACHA_TICKET';
+    const isGiftAcorn    = p.reward_type === 'GIFT_ACORN';
+    const isInstant      = isGiftTicket || isGiftAcorn || isAcornTicket;
     const isPending = pendingIds.has(item.id);
+
     let btnLabel = '사용하기';
     if (isCoupon)      btnLabel = '🎟️ 쿠폰 사용';
     if (isAcornTicket) btnLabel = `🌰 +${p.acorn_amt||0} 받기`;
     if (isGachaTicket) btnLabel = '🎫 뽑기 1회';
+    if (isGiftTicket)  btnLabel = `🎫 티켓 ${p.gift_qty||1}장 받기`;
+    if (isGiftAcorn)   btnLabel = `🌰 도토리 ${p.gift_qty||0} 받기`;
+
+    const btnColor = isGiftTicket||isGachaTicket ? 'btn-purple'
+      : isGiftAcorn||isAcornTicket ? 'btn-green' : 'btn-primary';
     const btnHtml = isPending
       ? `<button class="btn w-full py-1 text-xs mt-1" disabled style="background:#fef3c7;color:#92400e;border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`
-      : `<button class="btn ${isAcornTicket?'btn-green':isGachaTicket?'btn-purple':'btn-primary'} w-full py-1 text-xs mt-1" onclick="useInventoryItem('${item.id}')">${btnLabel}</button>`;
+      : `<button class="btn ${btnColor} w-full py-1 text-xs mt-1" onclick="useInventoryItem('${item.id}')">${btnLabel}</button>`;
+
     const bgClass = isPending ? 'bg-gray-50 border-gray-200 opacity-70'
-      : isCoupon ? 'bg-yellow-50 border-yellow-200 cursor-pointer card-hover'
-      : isAcornTicket ? 'bg-green-50 border-green-200 cursor-pointer card-hover'
-      : isGachaTicket ? 'bg-purple-50 border-purple-200 cursor-pointer card-hover'
+      : isCoupon                    ? 'bg-yellow-50 border-yellow-200 cursor-pointer card-hover'
+      : isAcornTicket||isGiftAcorn  ? 'bg-green-50 border-green-200 cursor-pointer card-hover'
+      : isGachaTicket||isGiftTicket ? 'bg-purple-50 border-purple-200 cursor-pointer card-hover'
       : 'bg-amber-50 border-amber-100 cursor-pointer card-hover';
+
+    const badge = isCoupon      ? `<span class="text-xs font-black text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5">🎟️ ${p.discount_pct||0}% 할인</span>`
+      : isAcornTicket            ? `<span class="text-xs font-black text-green-700 bg-green-100 rounded-full px-2 py-0.5">🌰 ${p.acorn_amt||0} 도토리</span>`
+      : isGachaTicket            ? `<span class="text-xs font-black text-purple-700 bg-purple-100 rounded-full px-2 py-0.5">🎫 뽑기권</span>`
+      : isGiftTicket             ? `<span class="text-xs font-black text-purple-700 bg-purple-100 rounded-full px-2 py-0.5">🎫 티켓 ${p.gift_qty||1}장</span>`
+      : isGiftAcorn              ? `<span class="text-xs font-black text-green-700 bg-green-100 rounded-full px-2 py-0.5">🌰 ${p.gift_qty||0} 도토리</span>`
+      : '';
+
+    const sourceTag = isGiftTicket||isGiftAcorn
+      ? `<span class="text-xs it-store">🎁 선물</span>`
+      : `<span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 구매'}</span>`;
+
     return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl border-2 ${bgClass}">
       <div class="text-3xl" ${isPending ? '' : `onclick="useInventoryItem('${item.id}')"`}>${p.icon || '🎁'}</div>
       <p class="text-xs font-black text-gray-700 text-center leading-tight">${p.name || '아이템'}</p>
-      ${isCoupon      ? `<span class="text-xs font-black text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5">🎟️ ${p.discount_pct||0}% 할인</span>` : ''}
-      ${isAcornTicket ? `<span class="text-xs font-black text-green-700 bg-green-100 rounded-full px-2 py-0.5">🌰 ${p.acorn_amt||0} 도토리</span>` : ''}
-      ${isGachaTicket ? `<span class="text-xs font-black text-purple-700 bg-purple-100 rounded-full px-2 py-0.5">🎫 뽑기권</span>` : ''}
-      <span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 구매'}</span>
+      ${badge}
+      ${sourceTag}
       ${btnHtml}
     </div>`;
   }).join('');
@@ -3830,6 +3851,36 @@ async function useInventoryItem(inventoryId) {
       <div class="flex gap-2">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
         <button class="btn btn-green flex-1 py-2" onclick="closeModal();confirmUseItem('${inventoryId}')">🌰 사용하기</button>
+      </div></div>`);
+    return;
+  }
+
+  // 선물 뽑기 티켓 확인 모달
+  if (p.reward_type === 'GIFT_GACHA_TICKET') {
+    const giftQty = p.gift_qty || 1;
+    showModal(`<div class="text-center">
+      <div style="font-size:2.5rem">🎁</div>
+      <h2 class="text-lg font-black text-gray-800 mt-2 mb-1">${p.name}</h2>
+      <div class="text-2xl font-black text-purple-600 my-3">🎫 +${giftQty}장</div>
+      <p class="text-sm text-gray-500 mb-4">사용하면 뽑기 티켓 ${giftQty}장이 즉시 추가됩니다.</p>
+      <div class="flex gap-2">
+        <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+        <button class="btn btn-purple flex-1 py-2" onclick="closeModal();confirmUseItem('${inventoryId}')">🎫 받기</button>
+      </div></div>`);
+    return;
+  }
+
+  // 선물 도토리 확인 모달
+  if (p.reward_type === 'GIFT_ACORN') {
+    const giftQty = p.gift_qty || 0;
+    showModal(`<div class="text-center">
+      <div style="font-size:2.5rem">🎁</div>
+      <h2 class="text-lg font-black text-gray-800 mt-2 mb-1">${p.name}</h2>
+      <div class="text-2xl font-black text-amber-600 my-3">🌰 +${giftQty}</div>
+      <p class="text-sm text-gray-500 mb-4">사용하면 도토리 ${giftQty}개가 즉시 지급됩니다.</p>
+      <div class="flex gap-2">
+        <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+        <button class="btn btn-green flex-1 py-2" onclick="closeModal();confirmUseItem('${inventoryId}')">🌰 받기</button>
       </div></div>`);
     return;
   }
@@ -4881,7 +4932,7 @@ async function confirmGiftItem(userId, userName) {
     };
     const { error } = await sb.from('inventory').insert({
       user_id: userId,
-      product_id: p.id,
+      product_id: null,       // null → JOIN 없이 snapshot만 사용
       product_snapshot: snapshot,
       from_gacha: false,
       status: 'held'
