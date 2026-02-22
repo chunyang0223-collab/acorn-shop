@@ -2221,7 +2221,8 @@ function requestProduct(id) {
   if (!p) return;
   const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
   if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(); return; }
-  if ((myProfile.acorns || 0) < p.price) { playSound('reject'); toast('❌', '도토리가 부족해요!', 1500); return; }
+  // 도토리 부족 체크는 confirmRequest에서 최종 할인가 기준으로 처리
+  // (쿠폰/이벤트 할인 적용 후 구매 가능할 수 있으므로 여기서 차단하지 않음)
 
   // 이벤트 할인 계산
   const evtDiscount = getActiveEventDiscount('store');
@@ -2243,6 +2244,12 @@ function requestProduct(id) {
     ? `<div class="text-xs font-black text-green-700 bg-green-50 rounded-lg px-3 py-1.5 mb-2">🎉 이벤트 할인 ${evtDiscount}% 적용 중!</div>`
     : '';
 
+  const myAcorns = myProfile.acorns || 0;
+  const canAffordNow = myAcorns >= evtDiscountedPrice;
+  const acornStatusHtml = `<p class="text-xs font-bold mt-2" style="color:${canAffordNow ? '#6b7280' : '#dc2626'}">
+    보유 도토리: 🌰 ${myAcorns}${!canAffordNow ? ' (쿠폰 할인 후 구매 가능할 수 있어요)' : ''}
+  </p>`;
+
   showModal(`
     <div class="text-center">
       <div style="font-size:3rem;margin-bottom:8px">${p.icon}</div>
@@ -2254,6 +2261,7 @@ function requestProduct(id) {
           ${evtDiscount > 0 ? `→ <span style="color:#16a34a;font-weight:900">${evtDiscountedPrice}</span> (이벤트 ${evtDiscount}% 할인)` : ''}
         </p>
         <p class="text-xs font-bold mt-1" id="finalPriceLabel" style="color:#059669">최종 결제: 🌰 ${evtDiscountedPrice}</p>
+        ${acornStatusHtml}
         ${p.reward_type==='AUTO_ACORN'?`<p class="modal-notice-sub">✨ 즉시 +${p.acorn_amt} 도토리!</p>`:''}
       </div>
       ${couponOptions}
@@ -2273,8 +2281,17 @@ function updatePurchasePrice(originalPrice, evtDiscountedBase) {
   const pct = sel ? parseInt(sel.options[sel.selectedIndex]?.dataset?.pct || 0) : 0;
   const finalPrice = pct > 0 ? Math.floor(evtDiscountedBase * (1 - pct/100)) : evtDiscountedBase;
   const label = document.getElementById('finalPriceLabel');
+  const myAcorns = myProfile?.acorns || 0;
+  const canAfford = myAcorns >= finalPrice;
   if (label) {
     label.textContent = `최종 결제: 🌰 ${finalPrice}${pct > 0 ? ` (쿠폰 ${pct}% 추가 할인)` : ''}`;
+    label.style.color = canAfford ? '#059669' : '#dc2626';
+  }
+  // 보유 도토리 상태 텍스트 업데이트
+  const acornStatus = label?.nextElementSibling;
+  if (acornStatus && acornStatus.tagName === 'P') {
+    acornStatus.textContent = `보유 도토리: 🌰 ${myAcorns}`;
+    acornStatus.style.color = canAfford ? '#6b7280' : '#dc2626';
   }
   window._purchaseBasePrice = finalPrice;
   window._selectedCouponId = (sel && sel.value) ? sel.value : null;
