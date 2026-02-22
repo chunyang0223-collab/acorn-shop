@@ -3597,7 +3597,7 @@ async function renderInventory() {
     if (isAcornTicket) btnLabel = `🌰 +${p.acorn_amt||0} 받기`;
     if (isGachaTicket) btnLabel = '🎫 뽑기 1회';
     const btnHtml = isPending
-      ? `<button class="btn w-full py-1 text-xs mt-1" disabled style="background:#e5e7eb;color:#9ca3af;cursor:not-allowed">⏳ 승인 대기중</button>`
+      ? `<button class="btn w-full py-1 text-xs mt-1" disabled style="background:#fef3c7;color:#92400e;border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`
       : `<button class="btn ${isAcornTicket?'btn-green':isGachaTicket?'btn-purple':'btn-primary'} w-full py-1 text-xs mt-1" onclick="useInventoryItem('${item.id}')">${btnLabel}</button>`;
     const bgClass = isPending ? 'bg-gray-50 border-gray-200 opacity-70'
       : isCoupon ? 'bg-yellow-50 border-yellow-200 cursor-pointer card-hover'
@@ -3716,6 +3716,13 @@ async function confirmResellItem(inventoryId) {
     const p = item.products || item.product_snapshot || {};
     const resellPrice = p.resell_price || 0;
     if (!resellPrice) { toast('❌', '이 아이템은 되팔기가 불가해요'); return; }
+
+    // pending 신청이 있으면 되팔기 차단
+    const { data: pendingReq } = await sb.from('product_requests')
+      .select('id').eq('inventory_id', inventoryId).eq('status', 'pending').limit(1);
+    if (pendingReq && pendingReq.length > 0) {
+      toast('❌', '승인 대기 중인 신청이 있어요. 취소 후 되팔기 해주세요.'); return;
+    }
 
     const { data: updated, error: updateErr } = await sb.from('inventory')
       .update({ status: 'resold' })
@@ -5383,13 +5390,23 @@ async function renderRecycleInventory() {
   }
 
   // 내 인벤토리에서 held 상태 아이템 로드 (products JOIN)
-  const { data: items } = await sb.from('inventory')
-    .select('*, products(id,name,icon,reward_type)')
-    .eq('user_id', myProfile.id).eq('status', 'held')
-    .order('created_at', { ascending: false });
+  const [{ data: items }, { data: pendingReqs }] = await Promise.all([
+    sb.from('inventory')
+      .select('*, products(id,name,icon,reward_type)')
+      .eq('user_id', myProfile.id).eq('status', 'held')
+      .order('created_at', { ascending: false }),
+    sb.from('product_requests')
+      .select('inventory_id')
+      .eq('user_id', myProfile.id).eq('status', 'pending')
+  ]);
 
-  // product_id로 매칭 (구 아이템은 snapshot.id fallback)
+  // pending 신청 중인 inventory_id 집합 (로컬 캐시 포함)
+  const pendingInvIds = new Set((pendingReqs||[]).map(r => r.inventory_id).filter(Boolean));
+  if (window._pendingInvIds) window._pendingInvIds.forEach(id => pendingInvIds.add(id));
+
+  // product_id로 매칭 + pending 아이템 제외
   const sellable = (items || []).filter(item => {
+    if (pendingInvIds.has(item.id)) return false;  // 승인 대기중 제외
     const pid = item.product_id || item.product_snapshot?.id;
     return pid && recyclableIds.has(pid);
   });
