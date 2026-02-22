@@ -4535,14 +4535,10 @@ function renderEventAdmin() {
         text = `✅ 활성 ${ev.discountPct}%`;
         bg = '#dcfce7'; color = '#166534';
         if (ev.endAt) {
-          const rem = ev.endAt - now;
-          const h = Math.floor(rem/3600000), m = Math.floor((rem%3600000)/60000);
-          text += ` (${h}시간 ${m}분 남음)`;
+          text += ` (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.endAt - now)}</span> 남음)`;
         }
       } else if (ev.startAt && now < ev.startAt) {
-        const diff = ev.startAt - now;
-        const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
-        text = `⏳ 예약 ${ev.discountPct}% (${h}시간 ${m}분 후)`;
+        text = `⏳ 예약 ${ev.discountPct}% (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.startAt - now)}</span> 후 시작)`;
         bg = '#fef9c3'; color = '#854d0e';
       }
     }
@@ -4576,6 +4572,26 @@ function renderEventAdmin() {
       : '';
   }
 
+  // 관리자 이벤트 카운트다운 타이머
+  _clearAdminEvtTimer();
+  const adminTimerNeeded = ['store','gacha'].some(type => {
+    const ev = _events[type];
+    return ev && ev.active && (ev.endAt || ev.startAt);
+  });
+  if (adminTimerNeeded) {
+    window._adminEvtTimer = setInterval(() => {
+      const n = Date.now();
+      ['store','gacha'].forEach(type => {
+        const ev = _events[type];
+        const el = document.getElementById(`adminEvtTimer-${type}`);
+        if (!el || !ev) return;
+        const started = !ev.startAt || n >= ev.startAt;
+        const target = started ? ev.endAt : ev.startAt;
+        if (target) el.textContent = _fmtRemaining(target - n);
+      });
+    }, 1000);
+  }
+
   // 이벤트 기록
   const histEl = document.getElementById('eventHistoryList');
   if (histEl) {
@@ -4593,6 +4609,49 @@ function renderEventAdmin() {
 }
 
 // ── 상점 탭 이벤트 배너 ───────────────────────────
+function _fmtRemaining(ms) {
+  if (ms <= 0) return '곧 종료';
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  const ss = s % 60;
+  const mm = m % 60;
+  const hh = h % 24;
+  if (d > 0)  return `${d}일 ${hh}시간 ${mm}분 남음`;
+  if (h > 0)  return `${h}시간 ${mm}분 ${ss}초 남음`;
+  if (m > 0)  return `${mm}분 ${ss}초 남음`;
+  return `${s}초 남음`;
+}
+
+function _getEventEndAt(type) {
+  const now = Date.now();
+  const ev = _events[type];
+  if (ev && ev.active && ev.endAt && (!ev.startAt || now >= ev.startAt) && now <= ev.endAt) {
+    return ev.endAt;
+  }
+  // 요일 반복 이벤트는 당일 endTime 기준
+  const kst  = new Date(now + 9 * 3600 * 1000);
+  const dow  = kst.getUTCDay();
+  const hhmm = kst.toISOString().slice(11, 16);
+  const ds   = kst.toISOString().slice(0, 10);
+  for (const r of _repeats) {
+    if (!r.active || r.type !== type) continue;
+    if (!r.weekDays.includes(dow)) continue;
+    if (r.startTime && hhmm < r.startTime) continue;
+    if (r.endTime   && hhmm > r.endTime)   continue;
+    if (r.validFrom  && ds < r.validFrom)  continue;
+    if (r.validUntil && ds > r.validUntil) continue;
+    if (r.endTime) {
+      const [eh, em] = r.endTime.split(':').map(Number);
+      const end = new Date(kst);
+      end.setUTCHours(eh - 9, em, 0, 0);
+      return end.getTime();
+    }
+  }
+  return null;
+}
+
 function renderShopEventBanner() {
   const storeEl = document.getElementById('utab-shop');
   if (!storeEl) return;
@@ -4604,12 +4663,50 @@ function renderShopEventBanner() {
   }
   const sd = getActiveEventDiscount('store');
   const gd = getActiveEventDiscount('gacha');
-  const msgs = [];
-  if (sd > 0) msgs.push(`🛍️ 상점 ${sd}% 할인 이벤트 진행 중!`);
-  if (gd > 0) msgs.push(`🎲 뽑기 ${gd}% 할인 이벤트 진행 중!`);
-  bannerEl.innerHTML = msgs.length
-    ? msgs.map(m => `<div class="clay-card p-3 mb-3 text-center font-black text-green-700" style="background:rgba(220,252,231,0.8);border:2px solid rgba(34,197,94,0.3)">🎉 ${m}</div>`).join('')
-    : '';
+
+  if (!sd && !gd) { bannerEl.innerHTML = ''; _clearBannerTimer(); return; }
+
+  const now = Date.now();
+  const banners = [];
+  if (sd > 0) {
+    const endAt = _getEventEndAt('store');
+    const timeStr = endAt ? `<span id="evtTimer-store" style="font-size:11px;opacity:0.8;display:block;margin-top:2px">⏱️ ${_fmtRemaining(endAt - now)}</span>` : '';
+    banners.push({ html: `<div class="clay-card p-3 mb-3 text-center font-black text-green-700" style="background:rgba(220,252,231,0.8);border:2px solid rgba(34,197,94,0.3)">🎉 🛍️ 상점 ${sd}% 할인 이벤트 진행 중!${timeStr}</div>`, endAt, timerEl: 'evtTimer-store' });
+  }
+  if (gd > 0) {
+    const endAt = _getEventEndAt('gacha');
+    const timeStr = endAt ? `<span id="evtTimer-gacha" style="font-size:11px;opacity:0.8;display:block;margin-top:2px">⏱️ ${_fmtRemaining(endAt - now)}</span>` : '';
+    banners.push({ html: `<div class="clay-card p-3 mb-3 text-center font-black text-green-700" style="background:rgba(220,252,231,0.8);border:2px solid rgba(34,197,94,0.3)">🎉 🎲 뽑기 ${gd}% 할인 이벤트 진행 중!${timeStr}</div>`, endAt, timerEl: 'evtTimer-gacha' });
+  }
+
+  bannerEl.innerHTML = banners.map(b => b.html).join('');
+
+  // 카운트다운 타이머
+  _clearBannerTimer();
+  const hasTimer = banners.some(b => b.endAt);
+  if (hasTimer) {
+    window._bannerTimer = setInterval(() => {
+      const now2 = Date.now();
+      let allExpired = true;
+      banners.forEach(b => {
+        if (!b.endAt) return;
+        const el = document.getElementById(b.timerEl);
+        if (el) {
+          const rem = b.endAt - now2;
+          if (rem > 0) { el.textContent = '⏱️ ' + _fmtRemaining(rem); allExpired = false; }
+          else { el.textContent = '⏱️ 곧 종료'; }
+        }
+      });
+      if (allExpired) { _clearBannerTimer(); renderShopEventBanner(); }
+    }, 1000);
+  }
+}
+
+function _clearBannerTimer() {
+  if (window._bannerTimer) { clearInterval(window._bannerTimer); window._bannerTimer = null; }
+}
+function _clearAdminEvtTimer() {
+  if (window._adminEvtTimer) { clearInterval(window._adminEvtTimer); window._adminEvtTimer = null; }
 }
 
 // ──────────────────────────────────────────────
