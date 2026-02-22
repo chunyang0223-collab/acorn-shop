@@ -2527,6 +2527,8 @@ async function doGacha(count) {
       const sm = document.getElementById('gachaSpinMsg'); if (sm) sm.style.animation = '';
     }
     btns.forEach(btnUnlock);
+    // btnUnlock이 텍스트를 복원한 뒤 무료 상태 반영 (순서 중요)
+    checkFreeGacha();
   }
 
   try {
@@ -2548,7 +2550,6 @@ async function doGacha(count) {
         // 이미 사용 → 유료로 전환
         window._dailyFreeUsed  = freeType === 'daily'  ? true : window._dailyFreeUsed;
         window._weeklyFreeUsed = freeType === 'weekly' ? true : window._weeklyFreeUsed;
-        checkFreeGacha();
         toast('⚠️', '무료 뽑기를 이미 사용했어요. 유료로 진행합니다.');
       }
     }
@@ -2578,11 +2579,10 @@ async function doGacha(count) {
       updateAcornDisplay();
     }
 
-    // 무료 사용 후 버튼 갱신
+    // 무료 사용 후 캐시 갱신 (버튼 텍스트는 _cleanupGacha에서 처리)
     if (isFree) {
       if (isFreeDaily)  window._dailyFreeUsed  = true;
       if (isFreeWeekly) window._weeklyFreeUsed = true;
-      checkFreeGacha();
     }
 
     // ── 뽑기 결과 계산 (로컬, 즉시) ──
