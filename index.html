@@ -978,41 +978,49 @@ body {
   filter: brightness(0.55) sepia(0.3) !important;
 }
 /* 헤더 아이콘 버튼 (종) */
+/* 헤더 종 버튼 */
 .header-icon-btn {
   position: relative;
-  width: 44px; height: 44px;
+  width: 46px; height: 46px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.7);
+  border: 2px solid rgba(200,180,240,0.5);
   background: rgba(255,255,255,0.75);
   backdrop-filter: blur(8px);
   cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: all .2s;
-  box-shadow: 0 2px 10px rgba(180,140,200,0.18);
+  box-shadow: 0 2px 10px rgba(160,100,220,0.15);
   flex-shrink: 0;
+  padding: 0;
 }
 .header-icon-btn:hover { transform: scale(1.07); }
-.header-icon-emoji { font-size: 20px; line-height: 1; }
+.header-icon-emoji {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  font-size: 22px; line-height: 1;
+}
 [data-theme="dark"] .header-icon-btn {
-  background: rgba(45,45,65,0.9) !important;
-  border-color: rgba(255,255,255,0.12) !important;
+  background: rgba(45,40,70,0.9) !important;
+  border-color: rgba(255,255,255,0.1) !important;
 }
-/* 헤더 도토리 pill */
-.acorn-pill-header {
-  background: linear-gradient(135deg,#fde68a,#f59e0b);
-  color: #78350f;
-  border-radius: 99px;
-  padding: 6px 14px;
-  font-weight: 900;
-  font-size: 14px;
+/* 헤더 도토리/티켓 텍스트 */
+.header-stats {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+}
+.header-stat-ticket {
   font-family: 'Jua', 'Nunito', sans-serif;
-  box-shadow: 0 2px 8px rgba(245,158,11,0.25);
-  white-space: nowrap;
+  font-size: 14px; font-weight: 900;
+  color: #6d28d9; letter-spacing: -0.3px;
 }
-[data-theme="dark"] .acorn-pill-header {
-  background: linear-gradient(135deg,#92400e,#b45309) !important;
-  color: #fde68a !important;
+.header-stat-acorn {
+  font-family: 'Jua', 'Nunito', sans-serif;
+  font-size: 14px; font-weight: 900;
+  color: #78350f; letter-spacing: -0.3px;
 }
+[data-theme="dark"] .header-stat-acorn { color: #fde68a; }
+[data-theme="dark"] .header-stat-ticket { color: #c4b5fd; }
+/* 하위호환 (acorn-pill-header id는 유지) */
+.acorn-pill-header { display: none; }
 /* 로그아웃 작은 버튼 */
 .btn-logout-sm {
   font-size: 11px;
@@ -1102,13 +1110,16 @@ body {
           <p class="text-xs text-amber-500 font-bold mt-0.5" id="headerUserLabel">Acorn Shop ✨</p>
         </div>
       </div>
-      <!-- 우측: 종 + 도토리 개수 -->
-      <div class="flex items-center gap-2">
-        <button class="header-icon-btn hidden" onclick="showNotifications()" id="notifBtn">
+      <!-- 우측: 도토리 + 티켓 + 종 -->
+      <div class="flex items-center gap-3" id="headerRight" style="display:none!important">
+        <div class="header-stats">
+          <span class="header-stat-ticket" id="headerTickets">🎫 0</span>
+          <span class="header-stat-acorn" id="headerAcorns">🌰 0</span>
+        </div>
+        <button class="header-icon-btn" onclick="showNotifications()" id="notifBtn">
           <span class="header-icon-emoji">🔔</span>
           <span class="notif-dot hidden" id="notifDot"></span>
         </button>
-        <div class="acorn-pill-header hidden" id="headerAcorns">🌰 0</div>
       </div>
     </div>
   </div>
@@ -2089,8 +2100,7 @@ async function initAppUI() {
 
   if (myProfile.is_admin) {
     document.getElementById('headerUserLabel').textContent = '👑 관리자 모드';
-    document.getElementById('headerAcorns').classList.add('hidden');
-    document.getElementById('notifBtn').classList.add('hidden');
+    document.getElementById('headerRight').style.display = 'none';
     document.getElementById('logoutBtn')?.classList.remove('hidden');
     document.getElementById('adminMode').classList.remove('hidden');
     document.getElementById('userMode').classList.add('hidden');
@@ -2100,8 +2110,7 @@ async function initAppUI() {
     updateReqBadge();
   } else {
     document.getElementById('headerUserLabel').textContent = myProfile.display_name;
-    document.getElementById('headerAcorns').classList.remove('hidden');
-    document.getElementById('notifBtn').classList.remove('hidden');
+    document.getElementById('headerRight').style.display = 'flex';
     document.getElementById('logoutBtn')?.classList.remove('hidden');
     document.getElementById('userMode').classList.remove('hidden');
     document.getElementById('adminMode').classList.add('hidden');
@@ -2123,8 +2132,25 @@ async function initAppUI() {
 
 function updateAcornDisplay() {
   document.getElementById('headerAcorns').textContent = `🌰 ${myProfile.acorns || 0}`;
+  updateTicketDisplay();
   const el = document.getElementById('myAcornVal');
   if (el) el.textContent = myProfile.acorns || 0;
+}
+
+async function updateTicketDisplay() {
+  const el = document.getElementById('headerTickets');
+  if (!el || !myProfile?.id) return;
+  // GACHA_TICKET 상품 ID 목록 먼저 조회
+  const { data: ticketProducts } = await sb.from('products')
+    .select('id').eq('reward_type', 'GACHA_TICKET').eq('active', true);
+  const ticketProductIds = (ticketProducts || []).map(p => p.id);
+  if (!ticketProductIds.length) { el.textContent = '🎫 0'; return; }
+  // 보유 수량 조회
+  const { data } = await sb.from('inventory')
+    .select('id', { count: 'exact' })
+    .eq('user_id', myProfile.id).eq('status', 'held')
+    .in('product_id', ticketProductIds);
+  el.textContent = `🎫 ${data?.length || 0}`;
 }
 
 // ──────────────────────────────────────────────
