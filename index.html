@@ -2824,20 +2824,23 @@ async function hasPendingQCR(questId, repeatType) {
   return !!data;
 }
 
-// quest_progress upsert 전용 헬퍼 (커스텀 클라이언트 우회)
+// quest_progress upsert 전용 헬퍼
 async function upsertQuestProgress(userId, questId, periodKey, progressCount) {
-  const url = `${SUPABASE_URL}/rest/v1/quest_progress?on_conflict=user_id,quest_id,period_key`;
-  const token = session?.access_token || SUPABASE_KEY;
-  await fetch(url, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + token,
-      'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates,return=minimal'
-    },
-    body: JSON.stringify({ user_id: userId, quest_id: questId, period_key: periodKey, progress_count: progressCount })
-  });
+  // 먼저 기존 행 조회
+  const { data: existing } = await sb.from('quest_progress')
+    .select('id')
+    .eq('user_id', userId).eq('quest_id', questId).eq('period_key', periodKey)
+    .limit(1);
+  if (existing && existing.length > 0) {
+    // 행 있음 → update
+    await sb.from('quest_progress')
+      .update({ progress_count: progressCount })
+      .eq('user_id', userId).eq('quest_id', questId).eq('period_key', periodKey);
+  } else {
+    // 행 없음 → insert
+    await sb.from('quest_progress')
+      .insert({ user_id: userId, quest_id: questId, period_key: periodKey, progress_count: progressCount });
+  }
 }
 
 async function markQuestDone(questId, repeatType) {
