@@ -2540,14 +2540,20 @@ async function checkFreeGacha() {
     }
   }
 
-  // ── 5회 버튼: 무료주간 > 유료 ──
+  // ── 5회 버튼: 무료주간 > 티켓 5장+ > 유료 ──
   if (btn5) {
     if (!weeklyUsed) {
       btn5.innerHTML = '🎁 5회 무료!';
       btn5.style.background = 'linear-gradient(135deg,#a855f7,#7c3aed)';
+      btn5.style.color = '#fff';
+    } else if (ticketCount >= 5) {
+      btn5.innerHTML = `🎫 티켓으로 5회 뽑기 <span style="font-size:10px;opacity:0.8">(${ticketCount}장)</span>`;
+      btn5.style.background = 'linear-gradient(135deg,#6d28d9,#4c1d95)';
+      btn5.style.color = '#fff';
     } else {
       btn5.innerHTML = '5회 뽑기 <span style="font-size:10px;opacity:0.7">(🌰 50)</span>';
       btn5.style.background = '';
+      btn5.style.color = '';
     }
   }
 
@@ -2555,7 +2561,7 @@ async function checkFreeGacha() {
   const notices = [];
   if (!dailyUsed)      notices.push('🎁 오늘 무료 1회 뽑기 남아있어요!');
   if (!weeklyUsed)     notices.push('🎁 이번 주 무료 5회 뽑기 남아있어요!');
-  if (ticketCount > 0) notices.push(`🎫 뽑기 티켓 ${ticketCount}장 보유 중`);
+  // 티켓 보유 중 안내는 버튼에 이미 표시되므로 생략
   if (notice) {
     notice.textContent = notices.join('  ·  ');
     notice.classList.toggle('hidden', notices.length === 0);
@@ -4878,10 +4884,8 @@ async function showGiftItemModal(userId, userName) {
     .order('name');
   if (!products?.length) { toast('❌', '선물할 상품이 없어요'); return; }
 
-  // GACHA_TICKET, AUTO_ACORN 제외 (도토리=지급메뉴에서, 티켓=별도관리)
-  const giftable = (products || []).filter(p =>
-    p.reward_type !== 'GACHA_TICKET' && p.reward_type !== 'AUTO_ACORN'
-  );
+  // AUTO_ACORN 제외 (도토리=지급메뉴에서 처리), GACHA_TICKET은 허용
+  const giftable = (products || []).filter(p => p.reward_type !== 'AUTO_ACORN');
   if (!giftable.length) { toast('❌', '선물 가능한 상품이 없어요'); return; }
 
   const typeLabel = p => {
@@ -4918,6 +4922,18 @@ async function confirmGiftItem(userId, userName) {
   if (!p) { toast('❌', '상품을 찾을 수 없어요'); return; }
 
   closeModal();
+
+  // 뽑기 티켓: gacha_tickets 카운터에 직접 추가
+  if (p.reward_type === 'GACHA_TICKET') {
+    const { data: tr, error: trErr } = await sb.rpc('adjust_gacha_tickets', {
+      p_user_id: userId, p_amount: qty
+    });
+    if (trErr) { toast('❌', '선물 실패: ' + trErr.message); return; }
+    await pushNotif(userId, 'reward', '선물 도착! 🎁', `관리자가 🎫 뽑기 티켓 ${qty}장을 선물했어요!`);
+    toast('🎁', `${userName}님께 🎫 뽑기 티켓 ${qty}장 선물했어요!`);
+    playSound('approve');
+    return;
+  }
 
   // 일반 아이템: 수량만큼 인벤토리에 추가
   const rows = Array.from({ length: qty }, () => ({
