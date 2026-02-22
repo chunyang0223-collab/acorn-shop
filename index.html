@@ -2689,7 +2689,7 @@ async function renderGachaProbTable() {
       const evtDiscount = getActiveEventDiscount('gacha');
       if (evtDiscount > 0) {
         const endAt = _getEventEndAt('gacha');
-        const timeStr = endAt ? ` <span id="gachaEvtTimer" style="font-size:11px;opacity:0.8">⏱️ ${_fmtRemaining(endAt - Date.now())} 남음</span>` : '';
+        const timeStr = endAt ? `<span id="gachaEvtTimer" style="font-size:11px;opacity:0.8;display:block;margin-top:2px">⏱️ ${_fmtRemaining(endAt - Date.now())} 남음</span>` : '';
         banner.innerHTML = `🎉 뽑기 이벤트! 10🌰 → ${Math.floor(10*(1-evtDiscount/100))}🌰 (${evtDiscount}% 할인 중)${timeStr}`;
         banner.style.display = '';
         // 카운트다운
