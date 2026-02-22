@@ -2673,20 +2673,38 @@ async function renderGachaProbTable() {
   const el = document.getElementById('gachaProbTable');
   if (!el) return;
 
-  // 뽑기 이벤트 배너
-  const gachaBanner = document.getElementById('gachaEventBanner');
-  if (!gachaBanner) {
+  // 뽑기 이벤트 배너 (매번 갱신)
+  {
     const gachaTab = document.getElementById('utab-gacha');
     const gachaCard = gachaTab?.querySelector('.clay-card');
     if (gachaCard) {
-      const evtDiscount = getActiveEventDiscount('gacha');
-      if (evtDiscount > 0) {
-        const banner = document.createElement('div');
+      let banner = document.getElementById('gachaEventBanner');
+      if (!banner) {
+        banner = document.createElement('div');
         banner.id = 'gachaEventBanner';
         banner.className = 'text-sm font-black text-green-700 text-center mb-2';
         banner.style.cssText = 'background:rgba(220,252,231,0.8);border-radius:12px;padding:8px 12px;border:2px solid rgba(34,197,94,0.3)';
-        banner.textContent = `🎉 뽑기 이벤트! 10🌰 → ${Math.floor(10 * (1 - evtDiscount/100))}🌰 (${evtDiscount}% 할인 중)`;
         gachaCard.insertBefore(banner, gachaCard.firstChild);
+      }
+      const evtDiscount = getActiveEventDiscount('gacha');
+      if (evtDiscount > 0) {
+        const endAt = _getEventEndAt('gacha');
+        const timeStr = endAt ? ` <span id="gachaEvtTimer" style="font-size:11px;opacity:0.8">⏱️ ${_fmtRemaining(endAt - Date.now())} 남음</span>` : '';
+        banner.innerHTML = `🎉 뽑기 이벤트! 10🌰 → ${Math.floor(10*(1-evtDiscount/100))}🌰 (${evtDiscount}% 할인 중)${timeStr}`;
+        banner.style.display = '';
+        // 카운트다운
+        if (endAt) {
+          if (window._gachaEvtTimer) clearInterval(window._gachaEvtTimer);
+          window._gachaEvtTimer = setInterval(() => {
+            const el = document.getElementById('gachaEvtTimer');
+            if (!el) { clearInterval(window._gachaEvtTimer); return; }
+            const rem = endAt - Date.now();
+            if (rem > 0) el.textContent = '⏱️ ' + _fmtRemaining(rem) + ' 남음';
+            else { el.textContent = '⏱️ 곧 종료'; clearInterval(window._gachaEvtTimer); }
+          }, 1000);
+        }
+      } else {
+        banner.style.display = 'none';
       }
     }
   }
@@ -4554,7 +4572,7 @@ function renderEventAdmin() {
       }
     }
 
-    statusEl.textContent = text;
+    statusEl.innerHTML = text;
     statusEl.style.background = bg;
     statusEl.style.color = color;
   });
@@ -4565,7 +4583,11 @@ function renderEventAdmin() {
     const msgs = [];
     ['store','gacha'].forEach(t => {
       const d = getActiveEventDiscount(t);
-      if (d > 0) msgs.push(`${t==='store'?'🛍️ 상점':'🎲 뽑기'} ${d}% 할인 중!`);
+      if (d > 0) {
+        const endAt = _getEventEndAt(t);
+        const timeStr = endAt ? ` <span id="adminTopTimer-${t}" style="font-size:11px;font-weight:700;opacity:0.8">⏱️ ${_fmtRemaining(endAt - Date.now())} 남음</span>` : '';
+        msgs.push(`${t==='store'?'🛍️ 상점':'🎲 뽑기'} ${d}% 할인 중!${timeStr}`);
+      }
     });
     bannerEl.innerHTML = msgs.length
       ? `<div class="clay-card p-3 mb-2 text-center font-black text-green-700" style="background:rgba(220,252,231,0.85);border:2px solid rgba(34,197,94,0.3)">🎉 ${msgs.join('&emsp;|&emsp;')}</div>`
@@ -4583,11 +4605,19 @@ function renderEventAdmin() {
       const n = Date.now();
       ['store','gacha'].forEach(type => {
         const ev = _events[type];
+        // 상태 카드 타이머
         const el = document.getElementById(`adminEvtTimer-${type}`);
-        if (!el || !ev) return;
-        const started = !ev.startAt || n >= ev.startAt;
-        const target = started ? ev.endAt : ev.startAt;
-        if (target) el.textContent = _fmtRemaining(target - n);
+        if (el && ev) {
+          const started = !ev.startAt || n >= ev.startAt;
+          const target = started ? ev.endAt : ev.startAt;
+          if (target) el.textContent = _fmtRemaining(target - n);
+        }
+        // 상단 배너 타이머
+        const topEl = document.getElementById(`adminTopTimer-${type}`);
+        if (topEl) {
+          const endAt = _getEventEndAt(type);
+          if (endAt) topEl.textContent = '⏱️ ' + _fmtRemaining(endAt - n) + ' 남음';
+        }
       });
     }, 1000);
   }
