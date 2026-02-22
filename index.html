@@ -1311,6 +1311,34 @@ body {
           <p class="text-xs text-gray-400 text-center py-2">로딩 중...</p>
         </div>
       </div>
+
+      <!-- 확률 시뮬레이터 -->
+      <div class="clay-card p-5 mb-4">
+        <p class="text-sm font-black text-gray-700 mb-3">🧪 확률 시뮬레이터</p>
+        <p class="text-xs text-gray-400 mb-3">실제 뽑기 로직으로 대량 시뮬레이션 — 설계 확률과 실제 결과를 비교합니다.</p>
+        <div class="flex gap-2 mb-3">
+          <div class="flex-1">
+            <label class="text-xs font-bold text-gray-500 mb-1 block">뽑기 횟수</label>
+            <select class="field text-sm" id="simCount">
+              <option value="1">1회씩</option>
+              <option value="5" selected>5회씩</option>
+              <option value="10">10회씩</option>
+            </select>
+          </div>
+          <div class="flex-1">
+            <label class="text-xs font-bold text-gray-500 mb-1 block">반복 횟수</label>
+            <select class="field text-sm" id="simRounds">
+              <option value="100">100번</option>
+              <option value="500">500번</option>
+              <option value="1000" selected>1,000번</option>
+              <option value="5000">5,000번</option>
+              <option value="10000">10,000번</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-purple w-full py-3 font-black mb-4" onclick="runGachaSimulator()">▶ 시뮬레이션 실행</button>
+        <div id="simResult" class="hidden"></div>
+      </div>
     </div>
 
     <!-- 상품 -->
@@ -2636,6 +2664,111 @@ async function doAdminGacha(count) {
     if (spinIcon) spinIcon.textContent = '🎁';
     btns.forEach(btnUnlock);
   }
+}
+
+// ── 확률 시뮬레이터 ──────────────────────────────
+async function runGachaSimulator() {
+  const drawCount  = parseInt(document.getElementById('simCount')?.value  || 5);
+  const rounds     = parseInt(document.getElementById('simRounds')?.value || 1000);
+  const resultEl   = document.getElementById('simResult');
+  if (!resultEl) return;
+
+  resultEl.classList.remove('hidden');
+  resultEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-3">⏳ 시뮬레이션 중... (${drawCount}회 × ${rounds.toLocaleString()}번)</p>`;
+
+  // 비동기로 UI 업데이트 후 계산 시작
+  await new Promise(r => setTimeout(r, 30));
+
+  const pool = await loadGachaPool();
+  if (!pool.length) { resultEl.innerHTML = '<p class="text-xs text-red-400 text-center py-2">뽑기 상품이 없어요</p>'; return; }
+
+  const total = pool.reduce((s, x) => s + (x.probability || 0), 0);
+  const totalDraws = drawCount * rounds;
+
+  // 카운터 초기화
+  const counts = {};
+  pool.forEach(item => { counts[item.id] = 0; });
+
+  // 시뮬레이션 실행
+  for (let r = 0; r < rounds; r++) {
+    for (let d = 0; d < drawCount; d++) {
+      const item = drawItemWeighted(pool);
+      if (item) counts[item.id] = (counts[item.id] || 0) + 1;
+    }
+  }
+
+  // 결과 렌더
+  const sorted = [...pool].sort((a, b) => (b.probability || 0) - (a.probability || 0));
+  const totalProbability = total > 0 ? total : pool.length;
+
+  // 설계 확률과 실제 결과 차이 최대값 계산 (경고용)
+  let maxDiff = 0;
+  sorted.forEach(item => {
+    const designed = total > 0 ? (item.probability || 0) / total * 100 : 100 / pool.length;
+    const actual   = (counts[item.id] || 0) / totalDraws * 100;
+    maxDiff = Math.max(maxDiff, Math.abs(actual - designed));
+  });
+
+  const totalWarning = Math.abs(total - 100) > 0.5
+    ? `<div class="text-xs font-black text-amber-700 bg-amber-50 rounded-xl p-3 mb-3">
+        ⚠️ 설계 확률 합계: <span class="text-lg">${total.toFixed(1)}%</span>
+        ${total > 100 ? '— 100% 초과! 각 아이템 실제 확률이 설계값보다 낮아요.' : '— 100% 미달! 각 아이템 실제 확률이 설계값보다 높아요.'}
+       </div>`
+    : `<div class="text-xs font-bold text-green-700 bg-green-50 rounded-xl p-2 mb-3">✅ 설계 확률 합계: ${total.toFixed(1)}% — 정상</div>`;
+
+  const rows = sorted.map(item => {
+    const cnt      = counts[item.id] || 0;
+    const designed = total > 0 ? (item.probability || 0) / total * 100 : 100 / pool.length;
+    const actual   = cnt / totalDraws * 100;
+    const diff     = actual - designed;
+    const diffAbs  = Math.abs(diff);
+    // 통계적 허용 오차: sqrt(p*(1-p)/n) * 3 (3시그마)
+    const pDec     = designed / 100;
+    const stdErr   = Math.sqrt(pDec * (1 - pDec) / totalDraws) * 100;
+    const sigma3   = stdErr * 3;
+    const isOdd    = diffAbs > sigma3 && diffAbs > 0.5; // 통계적으로 이상한 경우
+
+    const diffColor = diffAbs < 0.5 ? '#6b7280'
+                    : diff > 0 ? '#dc2626' : '#2563eb';
+    const diffSign  = diff > 0 ? '+' : '';
+    const oddMark   = isOdd ? ' ⚠️' : '';
+
+    // 막대 그래프 (설계 vs 실제)
+    const barMax    = Math.max(designed, actual, 1);
+    const designedW = (designed / barMax * 100).toFixed(1);
+    const actualW   = (actual   / barMax * 100).toFixed(1);
+
+    return `<div class="py-3 border-b border-gray-100 last:border-0">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-sm font-black text-gray-800">${item.icon||'🎁'} ${item.name}${oddMark}</span>
+        <span class="text-xs font-bold text-gray-400">${cnt.toLocaleString()}회</span>
+      </div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs text-gray-400 w-16 shrink-0">설계</span>
+        <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+          <div class="h-full rounded-full" style="width:${designedW}%;background:#93c5fd"></div>
+        </div>
+        <span class="text-xs font-black text-blue-600 w-14 text-right">${designed.toFixed(2)}%</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-gray-400 w-16 shrink-0">실제</span>
+        <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+          <div class="h-full rounded-full" style="width:${actualW}%;background:#86efac"></div>
+        </div>
+        <span class="text-xs font-black w-14 text-right" style="color:${diffColor}">${actual.toFixed(2)}% <span style="font-size:10px">(${diffSign}${diff.toFixed(2)}%)</span></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  resultEl.innerHTML = `
+    <div class="text-xs text-gray-500 font-bold text-center mb-3">
+      📊 ${drawCount}회 × ${rounds.toLocaleString()}번 = 총 <span class="font-black text-gray-800">${totalDraws.toLocaleString()}회</span> 뽑기 결과
+    </div>
+    ${totalWarning}
+    <div class="space-y-0">${rows}</div>
+    <p class="text-xs text-gray-400 text-center mt-3">
+      💡 오차 ±0.5% 이하는 정상 범위 · ⚠️ 는 통계적으로 주의가 필요한 경우
+    </p>`;
 }
 
 // 관리자 뽑기 탭 진입 시 확률 테이블 렌더
