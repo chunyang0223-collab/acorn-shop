@@ -3072,7 +3072,13 @@ async function claimQuestReward(questId) {
     .limit(1);
   if (comp && comp.length > 0) { toast('⏳', '이미 보상을 받았어요!'); return; }
 
-  // 보상 지급
+  // 완료 기록 먼저 저장 (중복 수령 원천 차단 — unique 제약으로 실패 시 중단)
+  const { error: insertErr } = await sb.from('quest_completions').insert({
+    user_id: myProfile.id, quest_id: questId, period_key: key
+  });
+  if (insertErr) { toast('⏳', '이미 보상을 받았어요!'); return; }
+
+  // 완료 기록 성공 후 보상 지급
   const res = await sb.rpc('adjust_acorns', {
     p_user_id: myProfile.id, p_amount: q.reward,
     p_reason: `퀘스트 완료 — ${q.name}`
@@ -3080,11 +3086,6 @@ async function claimQuestReward(questId) {
   if (!res.data?.success) { toast('❌', '처리 실패: ' + (res.data?.error || '')); return; }
   myProfile.acorns = res.data.balance;
   updateAcornDisplay();
-
-  // 완료 기록 저장
-  await sb.from('quest_completions').insert({
-    user_id: myProfile.id, quest_id: questId, period_key: key
-  });
 
   // 알림 + 효과
   await pushNotif(myProfile.id, 'quest', '퀘스트 완료! 🎉', `${q.icon} ${q.name} 완료! +${q.reward}🌰`);
