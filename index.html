@@ -1231,7 +1231,14 @@ body {
 
       <!-- 퀘스트 신청 현황 -->
       <div class="clay-card p-5 mb-4">
-        <p class="text-sm font-black text-gray-700 mb-3">📋 퀘스트 신청 현황</p>
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-black text-gray-700">📋 퀘스트 신청 현황</p>
+          <div class="flex items-center gap-2">
+            <button id="qcrPrevBtn" class="page-nav-btn" onclick="moveQcrPage(-1)">‹</button>
+            <span id="qcrPageLabel" class="text-xs font-bold text-gray-400"></span>
+            <button id="qcrNextBtn" class="page-nav-btn" onclick="moveQcrPage(1)">›</button>
+          </div>
+        </div>
         <div id="myQuestReqList" class="space-y-2"></div>
       </div>
 
@@ -3345,7 +3352,11 @@ async function requestQuestCompletion(questId) {
 let _reqPage = 0, _reqItems = [];
 let _txPage  = 0, _txItems  = [];
 let _glogPage = 0, _glogItems = [];
-const PAGE_SIZE = 5;
+const PAGE_SIZE_REQ  = 3;  // 상품 신청 현황
+const PAGE_SIZE_QCR  = 2;  // 퀘스트 신청 현황
+const PAGE_SIZE_TX   = 3;  // 도토리 내역
+const PAGE_SIZE_GLOG = 5;  // 뽑기 기록 (session 단위)
+const PAGE_SIZE = 5;       // 하위호환
 
 function _renderGlogPage() {
   const el = document.getElementById('myGachaLogList');
@@ -3401,8 +3412,8 @@ function moveGlogPage(dir) {
 function _renderReqPage() {
   const el = document.getElementById('myRequestList');
   const total = _reqItems.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const slice = _reqItems.slice(_reqPage * PAGE_SIZE, (_reqPage + 1) * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE_REQ));
+  const slice = _reqItems.slice(_reqPage * PAGE_SIZE_REQ, (_reqPage + 1) * PAGE_SIZE_REQ);
 
   el.innerHTML = slice.length
     ? slice.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" class="row-item-bg">
@@ -3422,11 +3433,40 @@ function _renderReqPage() {
   if (next)  next.disabled  = _reqPage >= totalPages - 1;
 }
 
+function _renderQcrPage(qcrs) {
+  const el = document.getElementById('myQuestReqList');
+  if (!el) return;
+  const total = qcrs.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE_QCR));
+  const slice = qcrs.slice(window._qcrPage * PAGE_SIZE_QCR, (window._qcrPage + 1) * PAGE_SIZE_QCR);
+  el.innerHTML = slice.length
+    ? slice.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:#f9fafb">
+        <div class="min-w-0 mr-2">
+          <p class="text-sm font-bold text-gray-800">${r.quests?.icon||'📋'} ${r.quests?.name||'퀘스트'}</p>
+          <p class="text-xs text-gray-400">${fmtTs(r.created_at)} · 완료 요청</p>
+        </div>
+        <span class="badge ${stClass(r.status)} shrink-0">${stLabel(r.status)}</span>
+      </div>`).join('')
+    : '<p class="text-sm text-gray-400 text-center py-3">퀘스트 신청 내역이 없어요</p>';
+  const label = document.getElementById('qcrPageLabel');
+  const prev  = document.getElementById('qcrPrevBtn');
+  const next  = document.getElementById('qcrNextBtn');
+  if (label) label.textContent = total ? `${window._qcrPage+1} / ${totalPages}` : '';
+  if (prev)  prev.disabled  = window._qcrPage === 0;
+  if (next)  next.disabled  = window._qcrPage >= totalPages - 1;
+}
+function moveQcrPage(dir) {
+  if (!window._qcrCache) return;
+  const totalPages = Math.max(1, Math.ceil(window._qcrCache.length / PAGE_SIZE_QCR));
+  window._qcrPage = Math.max(0, Math.min(totalPages - 1, (window._qcrPage||0) + dir));
+  _renderQcrPage(window._qcrCache);
+}
+
 function _renderTxPage() {
   const el = document.getElementById('myTxList');
   const total = _txItems.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const slice = _txItems.slice(_txPage * PAGE_SIZE, (_txPage + 1) * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE_TX));
+  const slice = _txItems.slice(_txPage * PAGE_SIZE_TX, (_txPage + 1) * PAGE_SIZE_TX);
 
   el.innerHTML = slice.length
     ? slice.map(t => `<div class="flex items-center justify-between p-3 rounded-xl" class="row-item-bg">
@@ -3447,13 +3487,13 @@ function _renderTxPage() {
 }
 
 function moveReqPage(dir) {
-  const totalPages = Math.max(1, Math.ceil(_reqItems.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(_reqItems.length / PAGE_SIZE_REQ));
   _reqPage = Math.max(0, Math.min(totalPages - 1, _reqPage + dir));
   _renderReqPage();
 }
 
 function moveTxPage(dir) {
-  const totalPages = Math.max(1, Math.ceil(_txItems.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(_txItems.length / PAGE_SIZE_TX));
   _txPage = Math.max(0, Math.min(totalPages - 1, _txPage + dir));
   _renderTxPage();
 }
@@ -3504,20 +3544,10 @@ async function renderMypage() {
 
   _renderReqPage();
 
-  // 퀘스트 신청 현황 별도 렌더링
-  const qcrEl = document.getElementById('myQuestReqList');
-  if (qcrEl) {
-    const qcrs = myQCRs || [];
-    qcrEl.innerHTML = qcrs.length
-      ? qcrs.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:#f9fafb">
-          <div class="min-w-0 mr-2">
-            <p class="text-sm font-bold text-gray-800">${r.quests?.icon||'📋'} ${r.quests?.name||'퀘스트'}</p>
-            <p class="text-xs text-gray-400">${fmtTs(r.created_at)} · 완료 요청</p>
-          </div>
-          <span class="badge ${stClass(r.status)} shrink-0">${stLabel(r.status)}</span>
-        </div>`).join('')
-      : '<p class="text-sm text-gray-400 text-center py-3">퀘스트 신청 내역이 없어요</p>';
-  }
+  // 퀘스트 신청 현황 (페이지네이션)
+  window._qcrPage = 0;
+  window._qcrCache = myQCRs || [];
+  _renderQcrPage(window._qcrCache);
 
   // 뽑기 기록
   _glogPage  = 0;
@@ -3757,8 +3787,8 @@ async function _confirmUseItemInner(inventoryId) {
     return;
   }
 
-  // 인벤토리에서 '사용됨'으로 변경
-  await sb.from('inventory').update({ status: 'used' }).eq('id', inventoryId);
+  // 인벤토리는 pending 상태 유지 (관리자 승인 시 'used'로 변경)
+  // UI에서 버튼만 "승인 대기중"으로 변경
 
   // product_requests에 신청 생성 (product_id + snapshot + inventory_id 저장)
   await sb.from('product_requests').insert({
@@ -3791,9 +3821,9 @@ async function _confirmUseItemInner(inventoryId) {
   sendBrowserNotif('📬 새 신청이 도착했어요!', `${myProfile.display_name}님: ${snap.icon} ${snap.name} 사용 신청`);
 
   playSound('pop');
-  toast('✅', `${snap.name} 신청 완료!`);
+  toast('✅', `${p.name || snap?.name} 신청 완료! 관리자 승인을 기다려주세요.`);
   triggerAutoQuest('itemUse');
-  renderInventory();
+  await renderInventory();  // 버튼이 "승인 대기중"으로 즉시 반영
   renderMypage();
 }
 
@@ -3949,7 +3979,7 @@ async function renderGiveHistory() {
 function toggleAcornField(prefix) {
   const sel = document.getElementById(prefix+'-rewardType');
   const fld = document.getElementById(prefix+'-acornWrap');
-  if (sel && fld) fld.classList.toggle('hidden', sel.value !== 'AUTO_ACORN');
+  if (sel && fld) fld.classList.toggle('hidden', sel.value !== 'AUTO_ACORN' && sel.value !== 'ACORN_TICKET');
 }
 
 function toggleCouponField(prefix) {
@@ -4070,6 +4100,7 @@ async function addGachaProduct() {
   if (!name) { toast('❌', '아이템명을 입력해주세요'); return; }
   if (!probability) { toast('❌', '확률을 입력해주세요 (예: 10)'); return; }
   if (rewardType === 'COUPON' && (!discountPct || discountPct < 1 || discountPct > 100)) { toast('❌', '할인율을 1~100 사이로 입력해주세요'); return; }
+  if (rewardType === 'ACORN_TICKET' && !acornAmt) { toast('❌', '지급할 도토리량을 입력해주세요'); return; }
   const { data: all } = await sb.from('products').select('id');
   const { error } = await sb.from('products').insert({
     name, price: 0, icon, description: desc,
@@ -4468,6 +4499,14 @@ async function updateReq(id, status) {
   playSound(status === 'approved' ? 'approve' : 'reject');
   const { data: r } = await sb.from('product_requests').select('*, users(display_name)').eq('id', id).single();
   await sb.from('product_requests').update({ status }).eq('id', id);
+
+  // 인벤토리 아이템 사용신청인 경우 → 승인 시 'used', 거절 시 'held'로 복구
+  if (r?.inventory_id) {
+    await sb.from('inventory').update({
+      status: status === 'approved' ? 'used' : 'held'
+    }).eq('id', r.inventory_id);
+  }
+
   if (r) await pushNotif(r.user_id, status==='approved'?'approved':'rejected',
     status==='approved'?'신청 승인! ✅':'신청 거절 ❌',
     status==='approved'?`${r.product_snapshot?.name||'상품'} 신청이 승인되었어요!`:`${r.product_snapshot?.name||'상품'} 신청이 거절되었어요.`);
