@@ -2824,12 +2824,25 @@ async function hasPendingQCR(questId, repeatType) {
   return !!data;
 }
 
+// quest_progress upsert 전용 헬퍼 (커스텀 클라이언트 우회)
+async function upsertQuestProgress(userId, questId, periodKey, progressCount) {
+  const url = `${SUPABASE_URL}/rest/v1/quest_progress?on_conflict=user_id,quest_id,period_key`;
+  const token = session?.access_token || SUPABASE_KEY;
+  await fetch(url, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
+    },
+    body: JSON.stringify({ user_id: userId, quest_id: questId, period_key: periodKey, progress_count: progressCount })
+  });
+}
+
 async function markQuestDone(questId, repeatType) {
   const key = getPeriodKey(repeatType);
-  await sb.from('quest_progress').upsert(
-    { user_id: myProfile.id, quest_id: questId, period_key: key },
-    { onConflict: 'user_id,quest_id,period_key', ignoreDuplicates: true }
-  );
+  await upsertQuestProgress(myProfile.id, questId, key, 1);
 }
 
 // ──────────────────────────────────────────────
@@ -2887,18 +2900,14 @@ async function triggerAutoQuest(triggerType, count = 1) {
       const current = (prog?.progress_count || 0) + count;
       if (current < target) {
         // 아직 목표 미달 → upsert로 안전하게 카운트 업데이트
-        await sb.from('quest_progress').upsert({
-          user_id: myProfile.id, quest_id: q.id, period_key: key, progress_count: current
-        });
+        await upsertQuestProgress(myProfile.id, q.id, key, current);
         toast('📋', `${q.name} (${current}/${target})`);
         // 퀘스트 탭이 열려 있으면 즉시 갱신
         if (!document.getElementById('utab-quest')?.classList.contains('hidden')) renderQuests();
         continue;
       }
       // 목표 달성 → upsert로 완료 처리
-      await sb.from('quest_progress').upsert({
-        user_id: myProfile.id, quest_id: q.id, period_key: key, progress_count: target
-      });
+      await upsertQuestProgress(myProfile.id, q.id, key, target);
     } else {
       // 1회 완료 퀘스트
       await markQuestDone(q.id, q.repeat_type);
@@ -3929,12 +3938,10 @@ async function incrementQuestComplete(userId) {
         .maybeSingle();
       const current = (prog?.progress_count || 0) + 1;
       if (current < (q.target_count||1)) {
-        if (prog) await sb.from('quest_progress').update({ progress_count: current }).eq('id', prog.id);
-        else await sb.from('quest_progress').insert({ user_id: userId, quest_id: q.id, period_key: key, progress_count: current });
+        await upsertQuestProgress(userId, q.id, key, current);
       } else if (!prog || (prog.progress_count||0) < (q.target_count||1)) {
         // 목표 달성 → 보상 지급
-        if (prog) await sb.from('quest_progress').update({ progress_count: q.target_count }).eq('id', prog.id);
-        else await sb.from('quest_progress').insert({ user_id: userId, quest_id: q.id, period_key: key, progress_count: q.target_count });
+        await upsertQuestProgress(userId, q.id, key, q.target_count);
         await sb.rpc('adjust_acorns', { p_user_id: userId, p_amount: q.reward, p_reason: `퀘스트 자동완료 — ${q.name}` });
         await pushNotif(userId, 'quest', '퀘스트 완료! 🎉', `${q.icon} ${q.name} 완료! +${q.reward}🌰`);
       }
