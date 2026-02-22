@@ -2911,24 +2911,18 @@ async function triggerAutoQuest(triggerType, count = 1) {
         if (!document.getElementById('utab-quest')?.classList.contains('hidden')) renderQuests();
         continue;
       }
-      // 목표 달성 → upsert로 완료 처리
+      // 목표 달성 → "수령 가능" 상태로 저장 (보상은 사용자가 직접 수령)
       await upsertQuestProgress(myProfile.id, q.id, key, target);
     } else {
-      // 1회 완료 퀘스트
+      // 1회 완료 퀘스트 → "수령 가능" 상태로 저장
       await markQuestDone(q.id, q.repeat_type);
     }
 
-    const res = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: q.reward, p_reason: `퀘스트 자동완료 — ${q.name}` });
-    if (res.data?.success) { myProfile.acorns = res.data.balance; updateAcornDisplay(); }
-    await pushNotif(myProfile.id, 'quest', '퀘스트 완료! 🎉', `${q.icon} ${q.name} 완료! +${q.reward}🌰`);
-    setTimeout(() => toast('🎉', `${q.name} 완료! +${q.reward}🌰`), 400);
+    // 보상 수령 대기 알림 (자동 지급 X)
+    await pushNotif(myProfile.id, 'quest', '퀘스트 달성! 🎉', `${q.icon} ${q.name} 달성! 퀘스트 탭에서 보상을 받으세요.`);
+    setTimeout(() => toast('🎁', `${q.name} 달성! 퀘스트에서 보상 받기 버튼을 눌러주세요`, 3000), 400);
     // 퀘스트 탭이 열려 있으면 즉시 갱신
     if (!document.getElementById('utab-quest')?.classList.contains('hidden')) renderQuests();
-
-    // 퀘스트 완료 시 "퀘스트 N회 완료하기" 퀘스트 카운트 (무한루프 방지: questComplete 트리거는 target_count>=2 퀘스트만 매칭)
-    if (triggerType !== 'questComplete') {
-      triggerAutoQuest('questComplete');
-    }
   }
 }
 
@@ -2976,28 +2970,58 @@ async function renderQuests() {
     }
 
     if (ct === 'auto') {
-      return { done: _done, html: `<div class="clay-card p-4 flex items-center gap-3" style="${done?'opacity:0.45;filter:grayscale(0.4)':''}">
-        <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${done?'bg-green-100':'bg-amber-50'}">
-          <span class="text-xl">${done?'✅':'⚡'}</span>
+      // "달성(보상 수령 가능)" 상태: progress_count >= target 이지만 아직 reward 미지급
+      // "완료됨" 상태: quest_completions 테이블에 행 존재
+      const key2 = getPeriodKey(q.repeat_type);
+      const { data: comp } = await sb.from('quest_completions')
+        .select('id').eq('user_id', myProfile.id).eq('quest_id', q.id).eq('period_key', key2)
+        .limit(1);
+      const claimed = comp && comp.length > 0;
+      const claimable = done && !claimed; // 달성했지만 보상 미수령
+
+      const target2 = q.target_count || 1;
+      const displayCount = Math.min(progCount, target2);
+
+      let iconBg, iconEmoji, cardStyle, nameClass, statusEl;
+      if (claimed) {
+        iconBg = 'bg-green-100'; iconEmoji = '✅';
+        cardStyle = 'opacity:0.45;filter:grayscale(0.4)';
+        nameClass = 'line-through text-gray-400';
+        statusEl = '<span class="qs-done">완료됨</span>';
+      } else if (claimable) {
+        iconBg = 'bg-amber-100'; iconEmoji = '🎁';
+        cardStyle = 'border:2px solid #f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.15)';
+        nameClass = 'text-gray-800';
+        statusEl = `<button class="btn btn-primary px-3 py-1.5 text-xs font-black" style="background:linear-gradient(135deg,#f59e0b,#ef4444);border:none" onclick="claimQuestReward('${q.id}')">🎁 보상 받기</button>`;
+      } else {
+        iconBg = 'bg-amber-50'; iconEmoji = '⚡';
+        cardStyle = '';
+        nameClass = 'text-gray-800';
+        statusEl = '<span class="qs-inprogress">진행중</span>';
+      }
+
+      return { done: claimed, claimable, html: `<div class="clay-card p-4 flex items-center gap-3" style="${cardStyle}">
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}">
+          <span class="text-xl">${iconEmoji}</span>
         </div>
         <div class="text-2xl flex-shrink-0">${q.icon}</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-0.5 flex-wrap">
-            <p class="font-black text-sm ${done?'line-through text-gray-400':'text-gray-800'}">${q.name}</p>
+            <p class="font-black text-sm ${nameClass}">${q.name}</p>
             <span class="rep-badge ${repClass[q.repeat_type]}">${repLabel[q.repeat_type]}</span>
             <span class="ct-auto">⚡ 자동</span>
           </div>
           <p class="text-xs text-gray-400 font-semibold">${q.description}</p>
-          ${(q.target_count||1) > 1 ? `<div class="mt-1.5">
+          ${target2 > 1 ? `<div class="mt-1.5">
             <div style="background:#f3f4f6;border-radius:999px;height:6px;overflow:hidden">
-              <div style="background:#f59e0b;height:100%;width:${done?100:Math.min(100,Math.round((progCount/(q.target_count||1))*100))}%;transition:width .3s;border-radius:999px"></div>
+              <div style="background:${claimable?'#f59e0b':claimed?'#22c55e':'#f59e0b'};height:100%;width:${claimed||claimable?100:Math.min(100,Math.round((displayCount/target2)*100))}%;transition:width .3s;border-radius:999px"></div>
             </div>
-            <p class="text-xs text-gray-400 mt-0.5 font-bold">${done?q.target_count:progCount} / ${q.target_count}회</p>
+            <p class="text-xs text-gray-400 mt-0.5 font-bold">${claimed||claimable?target2:displayCount} / ${target2}회</p>
           </div>` : ''}
         </div>
         <div class="text-right flex-shrink-0">
           <div class="font-black text-amber-600 text-sm">+${q.reward}🌰</div>
-          <span class="${done?'qs-done':'qs-inprogress'}">${done?'완료됨':'진행중'}</span>
+          ${statusEl}
         </div>
       </div>` };
     } else {
@@ -3024,8 +3048,52 @@ async function renderQuests() {
     }
   }));
   // 미완료 먼저, 완료 나중
-  cards.sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
+  cards.sort((a, b) => {
+    // 수령 가능 → 진행중 → 완료됨 순서
+    const rank = x => x.claimable ? 0 : x.done ? 2 : 1;
+    return rank(a) - rank(b);
+  });
   el.innerHTML = cards.map(c => c.html).join('');
+}
+
+// ── 자동 퀘스트 보상 수령 ────────────────────────
+async function claimQuestReward(questId) {
+  const { data: q } = await sb.from('quests').select('*').eq('id', questId).maybeSingle();
+  if (!q) return;
+
+  // 달성 여부 재확인
+  const done = await isQuestDone(questId, q.repeat_type, q.target_count || 1);
+  if (!done) { toast('❌', '아직 퀘스트 조건을 달성하지 못했어요!'); return; }
+
+  // 이미 수령했는지 확인
+  const key = getPeriodKey(q.repeat_type);
+  const { data: comp } = await sb.from('quest_completions')
+    .select('id').eq('user_id', myProfile.id).eq('quest_id', questId).eq('period_key', key)
+    .limit(1);
+  if (comp && comp.length > 0) { toast('⏳', '이미 보상을 받았어요!'); return; }
+
+  // 보상 지급
+  const res = await sb.rpc('adjust_acorns', {
+    p_user_id: myProfile.id, p_amount: q.reward,
+    p_reason: `퀘스트 완료 — ${q.name}`
+  });
+  if (!res.data?.success) { toast('❌', '처리 실패: ' + (res.data?.error || '')); return; }
+  myProfile.acorns = res.data.balance;
+  updateAcornDisplay();
+
+  // 완료 기록 저장
+  await sb.from('quest_completions').insert({
+    user_id: myProfile.id, quest_id: questId, period_key: key
+  });
+
+  // 알림 + 효과
+  await pushNotif(myProfile.id, 'quest', '퀘스트 완료! 🎉', `${q.icon} ${q.name} 완료! +${q.reward}🌰`);
+  playSound('reward');
+  toast('🎉', `${q.name} 완료! +${q.reward}🌰`);
+  renderQuests();
+
+  // "퀘스트 N회 완료하기" 퀘스트 카운트
+  triggerAutoQuest('questComplete');
 }
 
 async function requestQuestCompletion(questId) {
