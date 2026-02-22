@@ -139,6 +139,7 @@ const supabase = (() => {
       let _single = false;
       let _maybeSingle = false;
       let _upsert = false;
+      let _upsertConflict = null;
       let _countExact = false;
 
       const q = {
@@ -158,7 +159,7 @@ const supabase = (() => {
         single()       { _single = true; return q; },
         maybeSingle()  { _maybeSingle = true; return q; },
         insert(data)   { _method = 'POST'; _body = JSON.stringify(data); return q; },
-        upsert(data)   { _method = 'POST'; _body = JSON.stringify(data); _upsert = true; return q; },
+        upsert(data, opts) { _method = 'POST'; _body = JSON.stringify(data); _upsert = true; if (opts?.onConflict) _upsertConflict = opts.onConflict; return q; },
         update(data)   { _method = 'PATCH'; _body = JSON.stringify(data); return q; },
         delete()       { _method = 'DELETE'; return q; },
 
@@ -170,7 +171,7 @@ const supabase = (() => {
             if (_order) finalUrl += '&order=' + _order;
 
             const h = { ...headers };
-            if (_upsert) h['Prefer'] = 'resolution=merge-duplicates,return=representation';
+            if (_upsert) { h['Prefer'] = 'resolution=merge-duplicates,return=representation'; if (_upsertConflict) { const u = new URL(finalUrl); u.searchParams.set('on_conflict', _upsertConflict); finalUrl = u.toString(); } }
             else if (_method === 'POST' || _method === 'PATCH') h['Prefer'] = 'return=representation';
             if (_countExact) h['Prefer'] = (h['Prefer'] ? h['Prefer'] + ',' : '') + 'count=exact';
             if (_single || _maybeSingle) h['Accept'] = 'application/vnd.pgrst.object+json';
@@ -2553,7 +2554,7 @@ async function doGacha(count) {
     await Promise.all(dbTasks);
     updateAcornDisplay();
     playSound('reward');
-    triggerAutoQuest('gachaPlay', count); // 백그라운드 실행 (await 없음 — 뽑기 UX에 영향 안 줌)
+    triggerAutoQuest('gachaPlay', count); // 백그라운드 실행 (완료 후 renderQuests가 내부에서 호출됨)
 
     renderGachaCards(results, 'gachaResult', 'gachaResultItems');
     setTimeout(() => playSound('gachaResult'), 100);
@@ -2885,25 +2886,19 @@ async function triggerAutoQuest(triggerType, count = 1) {
 
       const current = (prog?.progress_count || 0) + count;
       if (current < target) {
-        // 아직 목표 미달 → 카운트만 업데이트
-        if (prog) {
-          await sb.from('quest_progress').update({ progress_count: current }).eq('id', prog.id);
-        } else {
-          await sb.from('quest_progress').insert({
-            user_id: myProfile.id, quest_id: q.id, period_key: key, progress_count: current
-          });
-        }
+        // 아직 목표 미달 → upsert로 안전하게 카운트 업데이트
+        await sb.from('quest_progress').upsert({
+          user_id: myProfile.id, quest_id: q.id, period_key: key, progress_count: current
+        });
         toast('📋', `${q.name} (${current}/${target})`);
+        // 퀘스트 탭이 열려 있으면 즉시 갱신
+        if (!document.getElementById('utab-quest')?.classList.contains('hidden')) renderQuests();
         continue;
       }
-      // 목표 달성 → 완료 처리
-      if (prog) {
-        await sb.from('quest_progress').update({ progress_count: target }).eq('id', prog.id);
-      } else {
-        await sb.from('quest_progress').insert({
-          user_id: myProfile.id, quest_id: q.id, period_key: key, progress_count: target
-        });
-      }
+      // 목표 달성 → upsert로 완료 처리
+      await sb.from('quest_progress').upsert({
+        user_id: myProfile.id, quest_id: q.id, period_key: key, progress_count: target
+      });
     } else {
       // 1회 완료 퀘스트
       await markQuestDone(q.id, q.repeat_type);
@@ -2913,6 +2908,8 @@ async function triggerAutoQuest(triggerType, count = 1) {
     if (res.data?.success) { myProfile.acorns = res.data.balance; updateAcornDisplay(); }
     await pushNotif(myProfile.id, 'quest', '퀘스트 완료! 🎉', `${q.icon} ${q.name} 완료! +${q.reward}🌰`);
     setTimeout(() => toast('🎉', `${q.name} 완료! +${q.reward}🌰`), 400);
+    // 퀘스트 탭이 열려 있으면 즉시 갱신
+    if (!document.getElementById('utab-quest')?.classList.contains('hidden')) renderQuests();
 
     // 퀘스트 완료 시 "퀘스트 N회 완료하기" 퀘스트 카운트 (무한루프 방지: questComplete 트리거는 target_count>=2 퀘스트만 매칭)
     if (triggerType !== 'questComplete') {
