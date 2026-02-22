@@ -2140,17 +2140,23 @@ function updateAcornDisplay() {
 async function updateTicketDisplay() {
   const el = document.getElementById('headerTickets');
   if (!el || !myProfile?.id) return;
-  // GACHA_TICKET 상품 ID 목록 먼저 조회
+  // checkFreeGacha가 이미 캐시를 갖고 있으면 재사용
+  if (window._gachaTicketCount !== undefined) {
+    el.textContent = `🎫 ${window._gachaTicketCount}`;
+    return;
+  }
+  // 없으면 DB 조회
   const { data: ticketProducts } = await sb.from('products')
     .select('id').eq('reward_type', 'GACHA_TICKET').eq('active', true);
   const ticketProductIds = (ticketProducts || []).map(p => p.id);
   if (!ticketProductIds.length) { el.textContent = '🎫 0'; return; }
-  // 보유 수량 조회
   const { data } = await sb.from('inventory')
-    .select('id', { count: 'exact' })
+    .select('id')
     .eq('user_id', myProfile.id).eq('status', 'held')
     .in('product_id', ticketProductIds);
-  el.textContent = `🎫 ${data?.length || 0}`;
+  window._gachaTicketCount = data?.length || 0;
+  window._gachaTicketIds   = (data || []).map(t => t.id);
+  el.textContent = `🎫 ${window._gachaTicketCount}`;
 }
 
 // ──────────────────────────────────────────────
@@ -2531,15 +2537,15 @@ async function checkFreeGacha() {
   const btn5   = document.getElementById('btn-gacha5');
   const notice = document.getElementById('freeGachaNotice');
 
-  // ── 1회 버튼: 티켓 > 무료일 > 유료 순 우선순위 ──
+  // ── 1회 버튼: 무료일 > 티켓 > 유료 순 우선순위 ──
   if (btn1) {
-    if (ticketCount > 0) {
-      btn1.innerHTML = `🎫 티켓으로 뽑기 <span style="font-size:10px;opacity:0.8">(${ticketCount}장)</span>`;
-      btn1.style.background = 'linear-gradient(135deg,#7c3aed,#5b21b6)';
-      btn1.style.color = '#fff';
-    } else if (!dailyUsed) {
+    if (!dailyUsed) {
       btn1.innerHTML = '🎁 1회 무료!';
       btn1.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+      btn1.style.color = '#fff';
+    } else if (ticketCount > 0) {
+      btn1.innerHTML = `🎫 티켓으로 뽑기 <span style="font-size:10px;opacity:0.8">(${ticketCount}장)</span>`;
+      btn1.style.background = 'linear-gradient(135deg,#7c3aed,#5b21b6)';
       btn1.style.color = '#fff';
     } else {
       btn1.innerHTML = '1회 뽑기 <span style="font-size:10px;opacity:0.7">(🌰 10)</span>';
@@ -2561,9 +2567,9 @@ async function checkFreeGacha() {
 
   // 안내 문구
   const notices = [];
-  if (ticketCount > 0) notices.push(`🎫 뽑기 티켓 ${ticketCount}장 보유 중!`);
   if (!dailyUsed)      notices.push('🎁 오늘 무료 1회 뽑기 남아있어요!');
   if (!weeklyUsed)     notices.push('🎁 이번 주 무료 5회 뽑기 남아있어요!');
+  if (ticketCount > 0) notices.push(`🎫 뽑기 티켓 ${ticketCount}장 보유 중`);
   if (notice) {
     notice.textContent = notices.join('  ·  ');
     notice.classList.toggle('hidden', notices.length === 0);
@@ -2592,8 +2598,8 @@ function drawItemWeighted(pool) {
 
 // 뽑기 티켓 1장 소모 후 1회 뽑기
 async function _useGachaTicketAndPull() {
-  const ticketIds = window._gachaTicketIds || [];
-  if (!ticketIds.length) { toast('❌', '티켓이 없어요!'); return; }
+  const ticketCount = window._gachaTicketCount || 0;
+  if (ticketCount < 1) { toast('❌', '티켓이 없어요!'); checkFreeGacha(); return; }
 
   const pool = await loadGachaPool();
   if (!pool.length) { toast('❌', '뽑기 상품이 없어요!'); return; }
@@ -2601,16 +2607,18 @@ async function _useGachaTicketAndPull() {
   const btns = document.querySelectorAll('#utab-gacha button');
   btns.forEach(b => btnLock(b, '뽑는 중...'));
 
-  // 티켓 1장 소모 (가장 오래된 것부터)
-  const useTicketId = ticketIds[0];
-  const { error: ticketErr } = await sb.from('inventory')
-    .update({ status: 'used' }).eq('id', useTicketId).eq('status', 'held');
-  if (ticketErr) {
+  // 티켓 1장 차감 (gacha_tickets 카운터)
+  const { data: ticketRes, error: ticketErr } = await sb.rpc('adjust_gacha_tickets', {
+    p_user_id: myProfile.id, p_amount: -1
+  });
+  if (ticketErr || !ticketRes?.success) {
     btns.forEach(btnUnlock);
-    toast('❌', '티켓 사용 실패: ' + ticketErr.message);
+    toast('❌', '티켓 사용 실패');
+    window._gachaTicketCount = undefined;
     checkFreeGacha();
     return;
   }
+  window._gachaTicketCount = ticketRes.count;
 
   playSound('gacha');
   const spinner = document.getElementById('gachaSpinner');
@@ -2675,15 +2683,113 @@ async function _useGachaTicketAndPull() {
   checkFreeGacha();  // 남은 티켓 수 반영
 }
 
-// 구버전 호환 (인벤토리에서 사용하기로 실행 시)
+// 구버전 호환
 async function doGachaTicket() {
   await _useGachaTicketAndPull();
 }
 
+// 티켓 5장으로 5회 뽑기
+async function _useGachaTicketsPull5() {
+  const tc = window._gachaTicketCount || 0;
+  if (tc < 5) { toast('❌', '티켓이 5장 이상 필요해요!'); checkFreeGacha(); return; }
+
+  const pool = await loadGachaPool();
+  if (!pool.length) { toast('❌', '뽑기 상품이 없어요!'); return; }
+
+  const btns = document.querySelectorAll('#utab-gacha button');
+  btns.forEach(b => btnLock(b, '뽑는 중...'));
+
+  // 티켓 5장 차감
+  const { data: ticketRes, error: ticketErr } = await sb.rpc('adjust_gacha_tickets', {
+    p_user_id: myProfile.id, p_amount: -5
+  });
+  if (ticketErr || !ticketRes?.success) {
+    btns.forEach(btnUnlock);
+    toast('❌', '티켓 사용 실패');
+    window._gachaTicketCount = undefined;
+    checkFreeGacha();
+    return;
+  }
+  window._gachaTicketCount = ticketRes.count;
+
+  playSound('gacha');
+  const spinner = document.getElementById('gachaSpinner');
+  const gachaResultEl = document.getElementById('gachaResult');
+  if (spinner) {
+    if (gachaResultEl) gachaResultEl.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    spinner.classList.add('active');
+    const spinEmojis = ['🎁','🌰','✨','🎲','🎊','⭐','🎀'];
+    let spinIdx = 0;
+    window._spinInterval = setInterval(() => {
+      const si = document.getElementById('gachaSpinIcon');
+      if (si) si.textContent = spinEmojis[spinIdx++ % spinEmojis.length];
+    }, 120);
+  }
+
+  await new Promise(r => setTimeout(r, 1500));
+
+  if (window._spinInterval) clearInterval(window._spinInterval);
+  if (spinner) {
+    spinner.classList.remove('active');
+    spinner.classList.add('hidden');
+    const si = document.getElementById('gachaSpinIcon');
+    if (si) { si.classList.remove('gacha-spinning'); si.textContent = '🎁'; }
+  }
+
+  const results = Array.from({ length: 5 }, () => drawItemWeighted(pool)).filter(Boolean);
+  const sessionId = crypto.randomUUID();
+
+  const acornItems  = results.filter(r => r.reward_type === 'AUTO_ACORN' && r.acorn_amt > 0);
+  const ticketItems = results.filter(r => r.reward_type === 'GACHA_TICKET');
+  const manualItems = results.filter(r => r.reward_type === 'MANUAL_ITEM' || r.reward_type === 'COUPON' || r.reward_type === 'ACORN_TICKET');
+  const totalAcorn  = acornItems.reduce((s, r) => s + r.acorn_amt, 0);
+
+  const tasks = [];
+  if (totalAcorn > 0) {
+    tasks.push(sb.rpc('adjust_acorns', {
+      p_user_id: myProfile.id, p_amount: totalAcorn,
+      p_reason: `티켓 5회 뽑기 보상`
+    }).then(r => { if (r.data?.success) myProfile.acorns = r.data.balance; }));
+  }
+  if (ticketItems.length > 0) {
+    tasks.push(sb.rpc('adjust_gacha_tickets', {
+      p_user_id: myProfile.id, p_amount: ticketItems.length
+    }).then(r => { if (r.data?.success) window._gachaTicketCount = r.data.count; }));
+  }
+  if (manualItems.length) {
+    tasks.push(sb.from('inventory').insert(manualItems.map(item => ({
+      user_id: myProfile.id, product_id: item.id,
+      product_snapshot: item, from_gacha: true, status: 'held'
+    }))));
+  }
+  tasks.push(sb.from('gacha_logs').insert(results.map(item => ({
+    user_id: myProfile.id, session_id: sessionId,
+    item_name: item.name, item_icon: item.icon,
+    rarity: item.rarity || 'common', reward_type: item.reward_type,
+    acorn_amt: item.acorn_amt || 0, is_free: true
+  }))));
+
+  await Promise.all(tasks);
+  updateAcornDisplay();
+  playSound('reward');
+  triggerAutoQuest('gachaPlay', 5);
+  renderGachaCards(results, 'gachaResult', 'gachaResultItems');
+  setTimeout(() => playSound('gachaResult'), 100);
+  btns.forEach(btnUnlock);
+  checkFreeGacha();
+}
+
 async function doGacha(count) {
-  // 1회 뽑기이고 티켓 보유 시 → 티켓 사용
-  if (count === 1 && (window._gachaTicketCount || 0) > 0) {
+  const tc = window._gachaTicketCount || 0;
+  // 1회: 무료일 소진 + 티켓 보유 → 티켓으로
+  if (count === 1 && window._dailyFreeUsed && tc >= 1) {
     await _useGachaTicketAndPull();
+    return;
+  }
+  // 5회: 무료주간 소진 + 티켓 5장 이상 → 티켓 5장으로
+  if (count === 5 && window._weeklyFreeUsed && tc >= 5) {
+    await _useGachaTicketsPull5();
     return;
   }
   const btns = document.querySelectorAll('#utab-gacha button');
@@ -2783,7 +2889,8 @@ async function doGacha(count) {
 
     // ── AUTO_ACORN 보상 합산 → 한 번에 지급 ──
     const acornItems    = results.filter(r => r.reward_type === 'AUTO_ACORN' && r.acorn_amt > 0);
-    const manualItems   = results.filter(r => r.reward_type === 'MANUAL_ITEM' || r.reward_type === 'COUPON');
+    const ticketItems   = results.filter(r => r.reward_type === 'GACHA_TICKET');
+    const manualItems   = results.filter(r => r.reward_type === 'MANUAL_ITEM' || r.reward_type === 'COUPON' || r.reward_type === 'ACORN_TICKET');
     const totalAcornAmt = acornItems.reduce((s, r) => s + r.acorn_amt, 0);
 
     // ── DB 작업 병렬 실행 ──
@@ -2798,6 +2905,17 @@ async function doGacha(count) {
           p_reason: `뽑기 보상 (${acornItems.map(r=>r.name).join(', ')})`
         }).then(r => {
           if (r.data?.success) myProfile.acorns = r.data.balance;
+        })
+      );
+    }
+
+    // 뽑기 티켓 결과 → 카운터에 즉시 추가 (인벤토리 X)
+    if (ticketItems.length > 0) {
+      dbTasks.push(
+        sb.rpc('adjust_gacha_tickets', {
+          p_user_id: myProfile.id, p_amount: ticketItems.length
+        }).then(r => {
+          if (r.data?.success) window._gachaTicketCount = r.data.count;
         })
       );
     }
@@ -3644,6 +3762,8 @@ async function renderInventory() {
   const el = document.getElementById('myInventory');
   if (!el) return;
   el.innerHTML = '<p class="text-xs text-gray-400 col-span-3 text-center py-2">로딩 중...</p>';
+  // 헤더 티켓 수 갱신
+  updateTicketDisplay().catch(()=>{});
 
   // products JOIN으로 항상 최신 상품 정보 사용
   const [{ data: items }, { data: pendingReqs }] = await Promise.all([
@@ -3840,6 +3960,43 @@ async function _confirmUseItemInner(inventoryId) {
     }
   }
 
+  // ── 선물 뽑기 티켓: 즉시 카운터 추가 ──
+  if (p.reward_type === 'GIFT_GACHA_TICKET') {
+    const giftQty = p.gift_qty || item.product_snapshot?.gift_qty || 1;
+    await sb.from('inventory').update({ status: 'used' }).eq('id', inventoryId);
+    const { data: tr } = await sb.rpc('adjust_gacha_tickets', {
+      p_user_id: myProfile.id, p_amount: giftQty
+    });
+    if (tr?.success) window._gachaTicketCount = tr.count;
+    playSound('reward');
+    toast('🎫', `뽑기 티켓 ${giftQty}장 획득!`);
+    triggerAutoQuest('itemUse');
+    window._gachaTicketCount = undefined; // 캐시 무효화
+    renderInventory();
+    renderMypage();
+    return;
+  }
+
+  // ── 선물 도토리: 즉시 지급 ──
+  if (p.reward_type === 'GIFT_ACORN') {
+    const giftQty = p.gift_qty || item.product_snapshot?.gift_qty || 0;
+    await sb.from('inventory').update({ status: 'used' }).eq('id', inventoryId);
+    if (giftQty > 0) {
+      const res = await sb.rpc('adjust_acorns', {
+        p_user_id: myProfile.id, p_amount: giftQty,
+        p_reason: `도토리 선물 사용 — ${giftQty}🌰`
+      });
+      if (res.data?.success) myProfile.acorns = res.data.balance;
+    }
+    playSound('reward');
+    toast('🌰', `도토리 +${giftQty}🌰 획득!`);
+    triggerAutoQuest('itemUse');
+    updateAcornDisplay();
+    renderInventory();
+    renderMypage();
+    return;
+  }
+
   // ── 도토리 티켓: 즉시 지급 ──
   if (p.reward_type === 'ACORN_TICKET') {
     await sb.from('inventory').update({ status: 'used' }).eq('id', inventoryId);
@@ -3894,29 +4051,23 @@ async function _confirmUseItemInner(inventoryId) {
   if (!window._pendingInvIds) window._pendingInvIds = new Set();
   window._pendingInvIds.add(inventoryId);
 
-  // 사용자 본인 알림
-  await pushNotif(myProfile.id, 'request', '신청 완료! ✋', `${p.icon} ${p.name} 신청을 보냈어요. 관리자 승인 대기 중이에요.`);
-
-  // 관리자에게 알림 (DB + 브라우저 Push)
-  try {
-    const { data: adminUser } = await sb.from('users').select('id').eq('is_admin', true).maybeSingle();
-    if (adminUser) {
-      await pushNotif(
-        adminUser.id, 'request',
-        `📬 신청 도착! ${snap.icon} ${snap.name}`,
-        `${myProfile.display_name}님이 아이템 사용을 신청했어요. 확인해주세요!`
-      );
-    }
-  } catch(e) {}
-
-  // 브라우저 Push 알림 (관리자 기기에서 받을 수 있도록)
-  sendBrowserNotif('📬 새 신청이 도착했어요!', `${myProfile.display_name}님: ${snap.icon} ${snap.name} 사용 신청`);
-
   playSound('pop');
   toast('✅', `${p.name || snap?.name} 신청 완료! 관리자 승인을 기다려주세요.`);
   triggerAutoQuest('itemUse');
-  await renderInventory();  // 버튼이 "승인 대기중"으로 즉시 반영
+
+  // 렌더링 먼저 — 버튼 즉시 변경
+  await renderInventory();
   renderMypage();
+
+  // 알림은 백그라운드 (UI 블로킹 없음)
+  pushNotif(myProfile.id, 'request', '신청 완료! ✋', `${p.icon||snap?.icon} ${p.name||snap?.name} 신청을 보냈어요. 관리자 승인 대기 중이에요.`).catch(()=>{});
+  sb.from('users').select('id').eq('is_admin', true).maybeSingle().then(({ data: adminUser }) => {
+    if (adminUser) {
+      pushNotif(adminUser.id, 'request', `📬 신청 도착! ${snap?.icon} ${snap?.name}`,
+        `${myProfile.display_name}님이 아이템 사용을 신청했어요.`).catch(()=>{});
+    }
+  }).catch(()=>{});
+  sendBrowserNotif('📬 새 신청이 도착했어요!', `${myProfile.display_name}님: ${snap?.icon} ${snap?.name} 사용 신청`);
 }
 
 // 브라우저 Push 알림 (Web Notification API)
@@ -4663,27 +4814,48 @@ async function renderUserAdmin() {
 
 async function showGiftItemModal(userId, userName) {
   const { data: products } = await sb.from('products')
-    .select('id,name,icon,reward_type').eq('active', true)
+    .select('id,name,icon,reward_type,acorn_amt').eq('active', true)
     .order('name');
   if (!products?.length) { toast('❌', '선물할 상품이 없어요'); return; }
+
+  const typeLabel = p => {
+    if (p.reward_type === 'GACHA_TICKET') return '🎫 뽑기티켓';
+    if (p.reward_type === 'AUTO_ACORN')   return '⚡ 도토리';
+    if (p.reward_type === 'ACORN_TICKET') return '🌰 도토리티켓';
+    if (p.reward_type === 'COUPON')       return '🎟️ 쿠폰';
+    return '📬 아이템';
+  };
 
   showModal(`
     <div>
       <div class="text-center mb-4">
         <div style="font-size:2rem">🎁</div>
         <h2 class="text-lg font-black text-gray-800">${userName}님께 선물</h2>
-        <p class="text-xs text-gray-400 mt-1">인벤토리에 바로 추가됩니다</p>
       </div>
-      <select id="giftProductId" class="field w-full mb-3">
+      <select id="giftProductId" class="field w-full mb-3" onchange="updateGiftQtyLabel()">
         <option value="">상품 선택</option>
-        ${products.map(p => `<option value="${p.id}">${p.icon} ${p.name} (${p.reward_type==='AUTO_ACORN'?'도토리':p.reward_type==='COUPON'?'쿠폰':'아이템'})</option>`).join('')}
+        ${products.map(p => `<option value="${p.id}" data-type="${p.reward_type}" data-acorn="${p.acorn_amt||0}">${p.icon} ${p.name} (${typeLabel(p)})</option>`).join('')}
       </select>
-      <input type="number" id="giftQty" class="field w-full mb-4" placeholder="수량 (기본 1)" min="1" max="99" value="1">
+      <div id="giftQtyWrap">
+        <p id="giftQtyLabel" class="text-xs text-gray-400 mb-1">수량</p>
+        <input type="number" id="giftQty" class="field w-full mb-4" placeholder="수량" min="1" max="9999" value="1">
+      </div>
       <div class="flex gap-2">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
         <button class="btn btn-purple flex-1 py-2" onclick="confirmGiftItem('${userId}','${userName}')">🎁 선물하기</button>
       </div>
     </div>`);
+}
+
+function updateGiftQtyLabel() {
+  const sel = document.getElementById('giftProductId');
+  const opt = sel?.options[sel.selectedIndex];
+  const type = opt?.dataset?.type || '';
+  const label = document.getElementById('giftQtyLabel');
+  if (!label) return;
+  if (type === 'GACHA_TICKET') label.textContent = '티켓 수량 (인벤토리에 🎁 1개로 묶여서 전달)';
+  else if (type === 'AUTO_ACORN') label.textContent = '도토리 수량 (인벤토리에 🎁 1개로 묶여서 전달)';
+  else label.textContent = '수량';
 }
 
 async function confirmGiftItem(userId, userName) {
@@ -4696,7 +4868,35 @@ async function confirmGiftItem(userId, userName) {
 
   closeModal();
 
-  // 수량만큼 인벤토리에 추가
+  // ── 뽑기 티켓 / 도토리: 인벤토리에 🎁 묶음 1개로 선물 ──
+  if (p.reward_type === 'GACHA_TICKET' || p.reward_type === 'AUTO_ACORN') {
+    const snapshot = {
+      ...p,
+      gift_qty: qty,                          // 선물 수량 스냅샷에 저장
+      name: p.reward_type === 'GACHA_TICKET'
+        ? `뽑기 티켓 선물 (${qty}장)`
+        : `도토리 선물 (+${qty}🌰)`,
+      icon: '🎁',
+      reward_type: p.reward_type === 'GACHA_TICKET' ? 'GIFT_GACHA_TICKET' : 'GIFT_ACORN',
+    };
+    const { error } = await sb.from('inventory').insert({
+      user_id: userId,
+      product_id: p.id,
+      product_snapshot: snapshot,
+      from_gacha: false,
+      status: 'held'
+    });
+    if (error) { toast('❌', '선물 실패: ' + error.message); return; }
+    const msg = p.reward_type === 'GACHA_TICKET'
+      ? `뽑기 티켓 ${qty}장을 선물받았어요! 🎫`
+      : `도토리 ${qty}🌰를 선물받았어요!`;
+    await pushNotif(userId, 'reward', '선물 도착! 🎁', `관리자가 ${msg} 인벤토리를 확인하세요.`);
+    toast('🎁', `${userName}님께 ${p.reward_type === 'GACHA_TICKET' ? `🎫 티켓 ${qty}장` : `🌰 도토리 ${qty}`} 선물했어요!`);
+    playSound('approve');
+    return;
+  }
+
+  // ── 일반 아이템: 기존 방식 (수량만큼 각각 인벤토리에 추가) ──
   const rows = Array.from({ length: qty }, () => ({
     user_id: userId,
     product_id: p.id,
