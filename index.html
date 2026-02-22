@@ -1131,9 +1131,10 @@ body {
         <div class="text-6xl mb-3" id="gachaIcon">🎁</div>
         <h2 class="text-xl font-black text-gray-800 mb-1">도토리 뽑기</h2>
         <p class="text-sm text-gray-400 font-semibold mb-4">1회 = <span class="text-amber-600 font-black">🌰 10</span> &nbsp;|&nbsp; 5회 = <span class="text-amber-600 font-black">🌰 50</span></p>
+        <div id="freeGachaNotice" class="hidden text-xs font-bold rounded-2xl px-3 py-2 mb-3" style="background:rgba(220,252,231,0.8);color:#166534;border:1.5px solid rgba(34,197,94,0.3)"></div>
         <div class="flex justify-center gap-3">
-          <button class="btn btn-primary px-8 py-3 text-base" onclick="doGacha(1)">1회 뽑기</button>
-          <button class="btn btn-purple px-8 py-3 text-base" onclick="doGacha(5)">5회 뽑기</button>
+          <button class="btn btn-primary px-8 py-3 text-base" id="btn-gacha1" onclick="doGacha(1)">1회 뽑기</button>
+          <button class="btn btn-purple px-8 py-3 text-base" id="btn-gacha5" onclick="doGacha(5)">5회 뽑기</button>
         </div>
       </div>
       <!-- 뽑기 연출 스피너 -->
@@ -2079,6 +2080,7 @@ async function initAppUI() {
     updateAcornDisplay();
     updateNotifDot();
     await _loadEventsFromDB(); // 이벤트 데이터 DB에서 로드
+    checkFreeGacha(); // 무료 뽑기 상태 초기화
     renderShop();
     renderShopEventBanner(); // 이벤트 배너
     // 출석 자동 퀘스트
@@ -2174,7 +2176,7 @@ function uTab(tab, btn) {
   btn.classList.add('active');
   playSound('tab');
   if (tab === 'shop')   { renderShop(); triggerAutoQuest('shopVisit'); }
-  if (tab === 'gacha')  renderGachaProbTable();
+  if (tab === 'gacha')  { renderGachaProbTable(); checkFreeGacha(); }
   if (tab === 'quest')  renderQuests();
   if (tab === 'mypage') renderMypage();
   if (tab === 'recycle') renderRecycleTab();
@@ -2426,6 +2428,54 @@ async function loadGachaPool() {
   return gachaPool;
 }
 
+// ── 무료 뽑기 상태 확인 및 버튼 업데이트 ────────────
+async function checkFreeGacha() {
+  if (!myProfile || myProfile.is_admin) return;
+
+  const [{ data: daily }, { data: weekly }] = await Promise.all([
+    sb.from('free_gacha_usage').select('id')
+      .eq('user_id', myProfile.id).eq('gacha_type', 'daily').eq('period_key', TODAY).limit(1),
+    sb.from('free_gacha_usage').select('id')
+      .eq('user_id', myProfile.id).eq('gacha_type', 'weekly').eq('period_key', WEEK_KEY).limit(1)
+  ]);
+
+  const dailyUsed  = daily  && daily.length  > 0;
+  const weeklyUsed = weekly && weekly.length > 0;
+
+  const btn1   = document.getElementById('btn-gacha1');
+  const btn5   = document.getElementById('btn-gacha5');
+  const notice = document.getElementById('freeGachaNotice');
+
+  // 버튼 텍스트 업데이트
+  if (btn1) btn1.innerHTML = dailyUsed
+    ? '1회 뽑기 <span style="font-size:10px;opacity:0.7">(🌰 10)</span>'
+    : '🎁 1회 무료!';
+  if (btn5) btn5.innerHTML = weeklyUsed
+    ? '5회 뽑기 <span style="font-size:10px;opacity:0.7">(🌰 50)</span>'
+    : '🎁 5회 무료!';
+
+  // 버튼 스타일 강조
+  if (btn1) btn1.style.background = dailyUsed ? '' : 'linear-gradient(135deg,#22c55e,#16a34a)';
+  if (btn5) btn5.style.background = weeklyUsed ? '' : 'linear-gradient(135deg,#a855f7,#7c3aed)';
+
+  // 안내 문구
+  const notices = [];
+  if (!dailyUsed)  notices.push('🎁 오늘 무료 1회 뽑기 남아있어요!');
+  if (!weeklyUsed) notices.push('🎁 이번 주 무료 5회 뽑기 남아있어요!');
+  if (notice) {
+    if (notices.length > 0) {
+      notice.textContent = notices.join('  ·  ');
+      notice.classList.remove('hidden');
+    } else {
+      notice.classList.add('hidden');
+    }
+  }
+
+  // 전역 캐시
+  window._dailyFreeUsed  = dailyUsed;
+  window._weeklyFreeUsed = weeklyUsed;
+}
+
 function drawItemWeighted(pool) {
   if (!pool.length) return null;
   // probability 합계 계산
@@ -2481,12 +2531,37 @@ async function doGacha(count) {
 
   try {
     const gachaEvtDiscount = getActiveEventDiscount('gacha');
+
+    // ── 무료 뽑기 여부 판단 ──
+    const isFreeDaily  = count === 1 && !window._dailyFreeUsed;
+    const isFreeWeekly = count === 5 && !window._weeklyFreeUsed;
+    const isFree = isFreeDaily || isFreeWeekly;
+    const freeType = isFreeDaily ? 'daily' : 'weekly';
+    const freePeriod = isFreeDaily ? TODAY : WEEK_KEY;
+
+    // 무료인 경우: DB에 먼저 기록 시도 (중복 방지)
+    if (isFree) {
+      const { error: freeErr } = await sb.from('free_gacha_usage').insert({
+        user_id: myProfile.id, gacha_type: freeType, period_key: freePeriod
+      });
+      if (freeErr) {
+        // 이미 사용 → 유료로 전환
+        window._dailyFreeUsed  = freeType === 'daily'  ? true : window._dailyFreeUsed;
+        window._weeklyFreeUsed = freeType === 'weekly' ? true : window._weeklyFreeUsed;
+        checkFreeGacha();
+        toast('⚠️', '무료 뽑기를 이미 사용했어요. 유료로 진행합니다.');
+      }
+    }
+
     const baseCost = GACHA_COST * count;
-    const cost = gachaEvtDiscount > 0 ? Math.floor(baseCost * (1 - gachaEvtDiscount/100)) : baseCost;
-    if ((myProfile.acorns||0) < cost) {
+    const cost = isFree ? 0 : gachaEvtDiscount > 0 ? Math.floor(baseCost * (1 - gachaEvtDiscount/100)) : baseCost;
+
+    if (!isFree && (myProfile.acorns||0) < cost) {
       playSound('reject'); toast('❌', '도토리가 부족해요!', 1500); return;
     }
-    if (gachaEvtDiscount > 0) toast('🎉', `뽑기 이벤트 ${gachaEvtDiscount}% 할인! (${baseCost}🌰 → ${cost}🌰)`, 2000);
+
+    if (isFree) toast('🎁', `무료 뽑기!`, 1500);
+    else if (gachaEvtDiscount > 0) toast('🎉', `뽑기 이벤트 ${gachaEvtDiscount}% 할인! (${baseCost}🌰 → ${cost}🌰)`, 2000);
     playSound('gacha');
 
     // 뽑기 풀 최신화
@@ -2495,11 +2570,20 @@ async function doGacha(count) {
       toast('❌', '뽑기 상품이 없어요! 관리자에게 문의하세요.'); return;
     }
 
-    // 차감
-    const res = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -cost, p_reason: `뽑기 사용 (${count}회)${gachaEvtDiscount > 0 ? ' - 이벤트 ' + gachaEvtDiscount + '% 할인' : ''}` });
-    if (!res.data?.success) { toast('❌', '처리 실패'); return; }
-    myProfile.acorns = res.data.balance;
-    updateAcornDisplay();
+    // 도토리 차감 (무료면 0원)
+    if (cost > 0) {
+      const res = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -cost, p_reason: `뽑기 사용 (${count}회)${gachaEvtDiscount > 0 ? ' - 이벤트 ' + gachaEvtDiscount + '% 할인' : ''}` });
+      if (!res.data?.success) { toast('❌', '처리 실패'); return; }
+      myProfile.acorns = res.data.balance;
+      updateAcornDisplay();
+    }
+
+    // 무료 사용 후 버튼 갱신
+    if (isFree) {
+      if (isFreeDaily)  window._dailyFreeUsed  = true;
+      if (isFreeWeekly) window._weeklyFreeUsed = true;
+      checkFreeGacha();
+    }
 
     // ── 뽑기 결과 계산 (로컬, 즉시) ──
     const results = Array.from({ length: count }, () => drawItemWeighted(pool)).filter(Boolean);
