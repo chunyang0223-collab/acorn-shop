@@ -479,6 +479,22 @@ body {
 
 /* ── 통계 카드 ── */
 .stat-card { border-radius: 20px; padding: 18px; }
+/* ── 점검 토글 스위치 ── */
+.maint-btn {
+  position: relative; width: 44px; height: 24px;
+  border-radius: 12px; border: none; cursor: pointer;
+  background: linear-gradient(135deg,#86efb5,#34d399);
+  transition: background .25s;
+  flex-shrink: 0;
+}
+.maint-btn::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  transition: transform .25s;
+}
+.maint-btn.on { background: linear-gradient(135deg,#fca5a5,#f87171); }
+.maint-btn.on::after { transform: translateX(20px); }
 .sc-orange { background: rgba(255,237,213,0.8); border: 1.5px solid rgba(254,215,170,0.6); backdrop-filter: blur(10px); }
 .sc-blue   { background: rgba(219,234,254,0.8); border: 1.5px solid rgba(191,219,254,0.6); backdrop-filter: blur(10px); }
 .sc-green  { background: rgba(209,250,229,0.8); border: 1.5px solid rgba(187,247,208,0.6); backdrop-filter: blur(10px); }
@@ -1298,13 +1314,57 @@ body {
 
     <!-- 대시보드 -->
     <div id="atab-dashboard">
-      <p class="text-xs font-black text-amber-600 uppercase tracking-wider mb-3 px-1">오늘 현황</p>
-      <div class="grid grid-cols-2 gap-3 mb-5">
-        <div class="stat-card sc-orange bounce-in"><div class="text-2xl mb-1">👥</div><div class="text-2xl font-black text-orange-700" id="ds-users">—</div><div class="text-xs font-bold text-orange-500 mt-1">전체 사용자</div></div>
-        <div class="stat-card sc-blue bounce-in" style="animation-delay:.05s"><div class="text-2xl mb-1">🎲</div><div class="text-2xl font-black text-blue-700" id="ds-todayGacha">—</div><div class="text-xs font-bold text-blue-500 mt-1">오늘 뽑기</div></div>
-        <div class="stat-card sc-green bounce-in" style="animation-delay:.1s"><div class="text-2xl mb-1">⬆️</div><div class="text-2xl font-black text-green-700" id="ds-todayGiven">—</div><div class="text-xs font-bold text-green-500 mt-1">오늘 지급</div></div>
-        <div class="stat-card sc-purple bounce-in" style="animation-delay:.15s"><div class="text-2xl mb-1">⬇️</div><div class="text-2xl font-black text-purple-700" id="ds-todayUsed">—</div><div class="text-xs font-bold text-purple-500 mt-1">오늘 사용</div></div>
+      <!-- 상단: 현황(좌) + 메뉴 점검(우) -->
+      <div class="flex gap-3 mb-5 items-stretch">
+        <!-- 좌: 오늘 현황 4개 소형 -->
+        <div class="flex flex-col gap-2" style="flex:0 0 auto;min-width:130px">
+          <p class="text-xs font-black text-amber-600 uppercase tracking-wider px-1">오늘 현황</p>
+          <div class="clay-card p-3 flex items-center gap-2 bounce-in">
+            <span class="text-lg">👥</span>
+            <div><div class="text-base font-black text-orange-700 leading-none" id="ds-users">—</div><div class="text-xs text-orange-400 font-bold">전체 사용자</div></div>
+          </div>
+          <div class="clay-card p-3 flex items-center gap-2 bounce-in" style="animation-delay:.05s">
+            <span class="text-lg">🎲</span>
+            <div><div class="text-base font-black text-blue-700 leading-none" id="ds-todayGacha">—</div><div class="text-xs text-blue-400 font-bold">오늘 뽑기</div></div>
+          </div>
+          <div class="clay-card p-3 flex items-center gap-2 bounce-in" style="animation-delay:.1s">
+            <span class="text-lg">⬆️</span>
+            <div><div class="text-base font-black text-green-700 leading-none" id="ds-todayGiven">—</div><div class="text-xs text-green-400 font-bold">오늘 지급</div></div>
+          </div>
+          <div class="clay-card p-3 flex items-center gap-2 bounce-in" style="animation-delay:.15s">
+            <span class="text-lg">⬇️</span>
+            <div><div class="text-base font-black text-purple-700 leading-none" id="ds-todayUsed">—</div><div class="text-xs text-purple-400 font-bold">오늘 사용</div></div>
+          </div>
+        </div>
+
+        <!-- 우: 메뉴 점검 토글 -->
+        <div class="clay-card p-4 flex-1 flex flex-col">
+          <p class="text-xs font-black text-amber-600 uppercase tracking-wider mb-3 px-1">메뉴 점검 관리</p>
+          <div class="flex flex-col gap-2 flex-1 justify-around">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-black text-gray-700">🛍️ 상점</span>
+              <button id="maint-shop" onclick="toggleMaintenance('shop')" class="maint-btn"></button>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-black text-gray-700">🎲 뽑기</span>
+              <button id="maint-gacha" onclick="toggleMaintenance('gacha')" class="maint-btn"></button>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-black text-gray-700">📋 퀘스트</span>
+              <button id="maint-quest" onclick="toggleMaintenance('quest')" class="maint-btn"></button>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-black text-gray-700">♻️ 재활용</span>
+              <button id="maint-recycle" onclick="toggleMaintenance('recycle')" class="maint-btn"></button>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-black text-gray-700">👤 마이</span>
+              <button id="maint-mypage" onclick="toggleMaintenance('mypage')" class="maint-btn"></button>
+            </div>
+          </div>
+        </div>
       </div>
+
       <p class="text-xs font-black text-amber-600 uppercase tracking-wider mb-3 px-1">최근 활동</p>
       <div class="clay-card p-4"><div id="ds-activityLog"></div></div>
     </div>
@@ -2105,6 +2165,7 @@ async function initAppUI() {
     document.getElementById('adminMode').classList.remove('hidden');
     document.getElementById('userMode').classList.add('hidden');
     renderDashboard();
+    renderMaintenanceBtns();
     populateGiveSelect();
     populateLogFilter();
     updateReqBadge();
@@ -2228,11 +2289,56 @@ function uTab(tab, btn) {
   document.getElementById('utab-'+tab).classList.remove('hidden');
   btn.classList.add('active');
   playSound('tab');
+
+  // 점검 중 확인
+  const maint = JSON.parse(localStorage.getItem('dotori_maintenance') || '{}');
+  const tabEl = document.getElementById('utab-'+tab);
+  const maintId = 'maint-overlay-'+tab;
+  // 기존 오버레이 제거
+  document.getElementById(maintId)?.remove();
+  if (maint[tab]) {
+    const overlay = document.createElement('div');
+    overlay.id = maintId;
+    overlay.innerHTML = `
+      <div class="clay-card p-8 text-center mt-4">
+        <div style="font-size:3rem;margin-bottom:12px">🔧</div>
+        <p class="text-lg font-black text-gray-700 mb-2">점검 중입니다</p>
+        <p class="text-sm text-gray-400">잠시 후 다시 이용해주세요</p>
+      </div>`;
+    tabEl.prepend(overlay);
+    return;
+  }
+
   if (tab === 'shop')   { renderShop(); triggerAutoQuest('shopVisit'); }
   if (tab === 'gacha')  { renderGachaProbTable(); checkFreeGacha(); }
   if (tab === 'quest')  renderQuests();
   if (tab === 'mypage') renderMypage();
   if (tab === 'recycle') renderRecycleTab();
+}
+
+// ── 메뉴 점검 관리 ──
+const MAINT_TABS = ['shop','gacha','quest','recycle','mypage'];
+
+function toggleMaintenance(tab) {
+  const maint = JSON.parse(localStorage.getItem('dotori_maintenance') || '{}');
+  maint[tab] = !maint[tab];
+  localStorage.setItem('dotori_maintenance', JSON.stringify(maint));
+  renderMaintenanceBtns();
+}
+
+function renderMaintenanceBtns() {
+  const maint = JSON.parse(localStorage.getItem('dotori_maintenance') || '{}');
+  MAINT_TABS.forEach(tab => {
+    const btn = document.getElementById('maint-'+tab);
+    if (!btn) return;
+    if (maint[tab]) {
+      btn.classList.add('on');
+      btn.title = '점검 중 (클릭하여 해제)';
+    } else {
+      btn.classList.remove('on');
+      btn.title = '정상 운영 중 (클릭하여 점검 전환)';
+    }
+  });
 }
 
 function aTab(tab, btn) {
@@ -2242,7 +2348,7 @@ function aTab(tab, btn) {
   const tabEl = document.getElementById('atab-'+tab);
   if (tabEl) tabEl.classList.remove('hidden');
   btn.classList.add('active');
-  if (tab === 'dashboard')  renderDashboard();
+  if (tab === 'dashboard')  { renderDashboard(); renderMaintenanceBtns(); }
   if (tab === 'gachaTest')  renderAdminGachaProbTable();
   if (tab === 'products')   renderProductAdmin();
   if (tab === 'quests')     renderQuestAdmin();
