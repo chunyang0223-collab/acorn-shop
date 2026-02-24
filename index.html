@@ -2165,7 +2165,7 @@ async function initAppUI() {
     document.getElementById('adminMode').classList.remove('hidden');
     document.getElementById('userMode').classList.add('hidden');
     renderDashboard();
-    renderMaintenanceBtns();
+    loadMaintenanceSettings().then(renderMaintenanceBtns);
     populateGiveSelect();
     populateLogFilter();
     updateReqBadge();
@@ -2178,6 +2178,7 @@ async function initAppUI() {
     updateAcornDisplay();
     updateNotifDot();
     await _loadEventsFromDB(); // 이벤트 데이터 DB에서 로드
+    loadMaintenanceSettings(); // 점검 설정 로드
     checkFreeGacha(); // 무료 뽑기 상태 초기화
     renderShop();
     renderShopEventBanner(); // 이벤트 배너
@@ -2291,7 +2292,7 @@ function uTab(tab, btn) {
   playSound('tab');
 
   // 점검 중 확인
-  const maint = JSON.parse(localStorage.getItem('dotori_maintenance') || '{}');
+  const maint = window._maintSettings || {};
   const tabEl = document.getElementById('utab-'+tab);
   const maintId = 'maint-overlay-'+tab;
   // 기존 오버레이 제거
@@ -2319,15 +2320,29 @@ function uTab(tab, btn) {
 // ── 메뉴 점검 관리 ──
 const MAINT_TABS = ['shop','gacha','quest','recycle','mypage'];
 
-function toggleMaintenance(tab) {
-  const maint = JSON.parse(localStorage.getItem('dotori_maintenance') || '{}');
+async function toggleMaintenance(tab) {
+  // 현재 DB 값 읽기
+  const { data } = await sb.from('app_settings').select('value').eq('key', 'maintenance').single();
+  const maint = data?.value || {};
   maint[tab] = !maint[tab];
-  localStorage.setItem('dotori_maintenance', JSON.stringify(maint));
+
+  // DB 업데이트
+  await sb.from('app_settings').update({ value: maint, updated_at: new Date().toISOString() }).eq('key', 'maintenance');
+
+  // 전역 캐시 갱신
+  window._maintSettings = maint;
   renderMaintenanceBtns();
+  toast(maint[tab] ? '🔧' : '✅', `${tab} ${maint[tab] ? '점검 중으로 전환' : '정상 운영으로 전환'}`);
+}
+
+async function loadMaintenanceSettings() {
+  const { data } = await sb.from('app_settings').select('value').eq('key', 'maintenance').single();
+  window._maintSettings = data?.value || {};
+  return window._maintSettings;
 }
 
 function renderMaintenanceBtns() {
-  const maint = JSON.parse(localStorage.getItem('dotori_maintenance') || '{}');
+  const maint = window._maintSettings || {};
   MAINT_TABS.forEach(tab => {
     const btn = document.getElementById('maint-'+tab);
     if (!btn) return;
@@ -2348,7 +2363,7 @@ function aTab(tab, btn) {
   const tabEl = document.getElementById('atab-'+tab);
   if (tabEl) tabEl.classList.remove('hidden');
   btn.classList.add('active');
-  if (tab === 'dashboard')  { renderDashboard(); renderMaintenanceBtns(); }
+  if (tab === 'dashboard')  { renderDashboard(); loadMaintenanceSettings().then(renderMaintenanceBtns); }
   if (tab === 'gachaTest')  renderAdminGachaProbTable();
   if (tab === 'products')   renderProductAdmin();
   if (tab === 'quests')     renderQuestAdmin();
