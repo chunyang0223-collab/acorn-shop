@@ -2178,11 +2178,30 @@ async function initAppUI() {
     updateAcornDisplay();
     updateNotifDot();
     await _loadEventsFromDB(); // 이벤트 데이터 DB에서 로드
-    loadMaintenanceSettings(); // 점검 설정 로드
+    await loadMaintenanceSettings(); // 점검 설정 먼저 로드 완료 후
     checkFreeGacha(); // 무료 뽑기 상태 초기화
-    renderShop();
-    renderShopEventBanner(); // 이벤트 배너
-    // 출석 자동 퀘스트
+
+    // 첫 탭(상점)이 점검 중이면 점검 안내 표시, 아니면 정상 렌더
+    const maint = window._maintSettings || {};
+    if (maint['shop']) {
+      const tabEl = document.getElementById('utab-shop');
+      Array.from(tabEl.children).forEach(el => {
+        el.style.display = 'none';
+        el.setAttribute('data-maint-hidden', '1');
+      });
+      const overlay = document.createElement('div');
+      overlay.id = 'maint-overlay-shop';
+      overlay.innerHTML = `
+        <div class="clay-card p-8 text-center mt-4">
+          <div style="font-size:3rem;margin-bottom:12px">🔧</div>
+          <p class="text-lg font-black text-gray-700 mb-2">점검 중입니다</p>
+          <p class="text-sm text-gray-400">잠시 후 다시 이용해주세요</p>
+        </div>`;
+      tabEl.prepend(overlay);
+    } else {
+      renderShop();
+      renderShopEventBanner(); // 이벤트 배너
+    }
     setTimeout(() => triggerAutoQuest('attendance'), 500);
   }
   // 탭바 드래그 스크롤 초기화 (PC 웹 대응)
