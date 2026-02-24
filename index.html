@@ -2295,9 +2295,24 @@ function uTab(tab, btn) {
   const maint = window._maintSettings || {};
   const tabEl = document.getElementById('utab-'+tab);
   const maintId = 'maint-overlay-'+tab;
-  // 기존 오버레이 제거
-  document.getElementById(maintId)?.remove();
+
+  // 기존 오버레이 제거 + 숨겼던 콘텐츠 복원
+  const prevOverlay = document.getElementById(maintId);
+  if (prevOverlay) {
+    prevOverlay.remove();
+    tabEl.querySelectorAll('[data-maint-hidden]').forEach(el => {
+      el.style.display = '';
+      el.removeAttribute('data-maint-hidden');
+    });
+  }
+
   if (maint[tab]) {
+    // 기존 자식 요소 전부 숨기기
+    Array.from(tabEl.children).forEach(el => {
+      el.style.display = 'none';
+      el.setAttribute('data-maint-hidden', '1');
+    });
+    // 점검 안내 박스 삽입
     const overlay = document.createElement('div');
     overlay.id = maintId;
     overlay.innerHTML = `
