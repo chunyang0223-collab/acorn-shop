@@ -4467,7 +4467,7 @@ async function _giveAcornsInner() {
       await pushNotif(userId, 'admin', '도토리 차감 🌰',
         `관리자가 ${absAmt} 도토리를 차감했어요. ${memo ? '(' + memo + ')' : ''}`);
     } else {
-      // 지급: 선물상자만 생성 (즉시 도토리 지급 X, 사용자가 사용 시 지급됨)
+      // 지급: 선물상자를 인벤토리에 생성, 사용자가 수령 시 도토리 증가
       const { error: invErr } = await sb.from('inventory').insert({
         user_id: userId,
         product_id: null,
@@ -5082,7 +5082,8 @@ async function renderTxLog() {
   el.innerHTML = '<p class="text-center text-gray-400 text-sm py-8">불러오는 중...</p>';
 
   // 전체 사용자 목록
-  const { data: users } = await sb.from('users').select('id, display_name, acorns, emoji').order('display_name');
+  const { data: users, error: uErr } = await sb.from('users').select('id, display_name, acorns, avatar_emoji').order('display_name');
+  if (uErr) { el.innerHTML = `<p class="text-center text-gray-400 text-sm py-8">로드 실패: ${uErr.message}</p>`; return; }
   if (!users?.length) { el.innerHTML = '<p class="text-center text-gray-400 text-sm py-8">사용자 없음</p>'; return; }
 
   // 각 사용자별 카드 렌더
@@ -5129,7 +5130,7 @@ async function renderUserStatusCard(u, card) {
   const curIdx = Math.min(_statusPage[uid], dates.length - 1);
 
   // 헤더
-  const avatarEmoji = u.emoji || '🐿️';
+  const avatarEmoji = u.avatar_emoji || '🐿️';
   let html = `<div class="status-card-header">
     <span class="sc-avatar">${avatarEmoji}</span>
     <div>
@@ -5275,7 +5276,7 @@ function changeStatusDate(uid, delta) {
   const card = document.getElementById('sc-' + uid);
   if (!card) return;
   // 사용자 정보 재조회 없이 카드만 리렌더
-  sb.from('users').select('id,display_name,acorns,emoji').eq('id', uid).single()
+  sb.from('users').select('id,display_name,acorns,avatar_emoji').eq('id', uid).single()
     .then(({ data: u }) => { if (u) renderUserStatusCard(u, card); });
 }
 
