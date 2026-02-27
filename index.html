@@ -5138,13 +5138,13 @@ async function renderUserStatusCard(u, card) {
     .order('created_at', { ascending: false })
     .limit(200);
 
-  // 뽑기로 얻은 도토리 거래 내역 (transactions에서 뽑기 관련만)
-  const { data: gachaTx } = await sb.from('transactions')
+  // 뽑기로 얻은 도토리 거래 내역 (JS에서 필터링)
+  const { data: allTx } = await sb.from('transactions')
     .select('*')
     .eq('user_id', u.id)
-    .like('reason', '%뽑기%')
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(300);
+  const gachaTx = (allTx || []).filter(tx => tx.amount > 0 && tx.reason && tx.reason.includes('뽑기'));
 
   // 일반 인벤토리 (보관중/대기중인 것)
   const { data: heldInv } = await sb.from('inventory')
