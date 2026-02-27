@@ -5130,21 +5130,12 @@ function selectLogUser(uid) {
 }
 
 async function renderUserStatusCard(u, card) {
-  // 뽑기 인벤토리 (from_gacha = true) - 아이템 결과
-  const { data: gachaInv } = await sb.from('inventory')
-    .select('*, product_snapshot')
-    .eq('user_id', u.id)
-    .eq('from_gacha', true)
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  // 뽑기로 얻은 도토리 거래 내역 (JS에서 필터링)
-  const { data: allTx } = await sb.from('transactions')
+  // gacha_logs에서 뽑기 결과 직접 조회 (session_id로 회차 구분)
+  const { data: gachaLogs } = await sb.from('gacha_logs')
     .select('*')
     .eq('user_id', u.id)
     .order('created_at', { ascending: false })
-    .limit(300);
-  const gachaTx = (allTx || []).filter(tx => tx.amount > 0 && tx.reason && tx.reason.includes('뽑기'));
+    .limit(500);
 
   // 일반 인벤토리 (보관중/대기중인 것)
   const { data: heldInv } = await sb.from('inventory')
@@ -5153,8 +5144,8 @@ async function renderUserStatusCard(u, card) {
     .in('status', ['held', 'pending'])
     .order('created_at', { ascending: false });
 
-  // 뽑기 결과를 날짜별로 그룹화 (아이템 + 도토리 거래 합산)
-  const sessions = buildGachaSessions(gachaInv || [], gachaTx || []);
+  // gacha_logs를 session_id 기준으로 회차 묶기
+  const sessions = buildGachaSessions(gachaLogs || []);
   // 날짜별 그룹
   const byDate = {};
   sessions.forEach(s => {
@@ -5224,17 +5215,15 @@ async function renderUserStatusCard(u, card) {
           <span class="gsc-arrow ${isLatest ? 'open' : ''}" id="arr-${sessionId}">▼</span>
         </div>
         <div class="gsc-body ${isLatest ? '' : 'closed'}" id="${sessionId}">
-          ${session.items.map(item => {
-            const p = item.product_snapshot || {};
-            const rtype = p.reward_type || '';
-            const isAcorn  = rtype === 'AUTO_ACORN' || rtype === 'GIFT_ACORN';
-            const isTicket = rtype === 'GIFT_GACHA_TICKET' || (p.name||'').includes('티켓');
-            const amt = isAcorn ? `<span class="g-chip-amt a">+${p.acorn_amt||0}🌰</span>`
+          ${session.items.map(log => {
+            const isAcorn  = log.reward_type === 'AUTO_ACORN' || log.reward_type === 'GIFT_ACORN';
+            const isTicket = log.reward_type === 'GACHA_TICKET' || log.reward_type === 'GIFT_GACHA_TICKET';
+            const amt = isAcorn ? `<span class="g-chip-amt a">+${log.acorn_amt||0}🌰</span>`
                       : isTicket ? `<span class="g-chip-amt t">+1장</span>`
                       : `<span class="g-chip-amt">아이템</span>`;
             return `<div class="g-chip ${isAcorn?'acorn':isTicket?'ticket':''}">
-              <span class="g-chip-icon">${p.icon||'📦'}</span>
-              <span class="g-chip-name">${p.name||'아이템'}</span>
+              <span class="g-chip-icon">${log.item_icon||'📦'}</span>
+              <span class="g-chip-name">${log.item_name||'아이템'}</span>
               ${amt}
             </div>`;
           }).join('')}
@@ -5269,54 +5258,37 @@ async function renderUserStatusCard(u, card) {
   card.innerHTML = html;
 }
 
-function buildGachaSessions(invList, txList) {
-  // 인벤토리(아이템)와 transactions(도토리)를 합쳐 시간순 회차 묶기 (5분 이내 = 같은 회차)
-  txList = txList || [];
+function buildGachaSessions(logs) {
+  // gacha_logs를 session_id 기준으로 회차 묶기
+  if (!logs.length) return [];
 
-  // transactions를 인벤토리와 같은 형태로 변환
-  const txAsItems = txList.map(tx => ({
-    id: 'tx-' + tx.id,
-    created_at: tx.created_at,
-    _isTx: true,
-    _amount: tx.amount,
-    _reason: tx.reason,
-    product_snapshot: {
-      icon: '🌰',
-      name: tx.reason || '도토리',
-      reward_type: 'AUTO_ACORN',
-      acorn_amt: tx.amount
-    }
-  }));
+  const sessionMap = {};
+  const sessionOrder = [];
 
-  const all = [...invList, ...txAsItems].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-  if (!all.length) return [];
-
-  const sessions = [];
-  let cur = null;
-
-  all.forEach(item => {
-    const t = new Date(item.created_at);
-    const p = item.product_snapshot || {};
-    const acornAmt = item._isTx ? (item._amount || 0) : 0;
-
-    if (!cur || (new Date(cur.firstTime) - t) > 5 * 60 * 1000) {
-      const d = toDateStr(t);
-      cur = {
-        date: d,
-        firstTime: item.created_at,
-        timeLabel: fmtTime(item.created_at),
-        items: [item],
-        cost: 0,
-        acornGain: acornAmt
+  logs.forEach(log => {
+    const sid = log.session_id;
+    if (!sessionMap[sid]) {
+      const t = new Date(log.created_at);
+      sessionMap[sid] = {
+        session_id: sid,
+        date: toDateStr(t),
+        firstTime: log.created_at,
+        timeLabel: fmtTime(log.created_at),
+        items: [],
+        acornGain: 0
       };
-      sessions.push(cur);
-    } else {
-      cur.items.push(item);
-      cur.acornGain += acornAmt;
+      sessionOrder.push(sid);
+    }
+    sessionMap[sid].items.push(log);
+    if (log.reward_type === 'AUTO_ACORN') {
+      sessionMap[sid].acornGain += (log.acorn_amt || 0);
     }
   });
 
-  return sessions;
+  // 시간 내림차순 정렬
+  return sessionOrder
+    .map(sid => sessionMap[sid])
+    .sort((a, b) => new Date(b.firstTime) - new Date(a.firstTime));
 }
 
 function toggleGscBody(id) {
@@ -5345,7 +5317,7 @@ function yesterdayStr() {
   return toDateStr(d);
 }
 function toDateStr(d) {
-  return d.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' }).replace(/\. /g,'-').replace('.','');
+  return d.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' }).replace(/\. /g,'-').replace(/\.$/,'');
 }
 function formatDateShort(dateStr) {
   // "2025-02-27" → "2/27"
