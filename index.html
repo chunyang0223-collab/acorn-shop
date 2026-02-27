@@ -1079,17 +1079,20 @@ body {
 .date-summary { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
 .ds-pill { font-family:'Jua',sans-serif; font-size:11px; padding:3px 10px; border-radius:10px; }
 
-/* 회차 */
-.gacha-session-card { border-radius:16px; border:1.5px solid rgba(210,180,240,0.2); background:rgba(255,255,255,0.5); margin-bottom:7px; overflow:hidden; }
-.gacha-session-card.sc-latest { border-color:rgba(52,211,153,0.35); background:rgba(52,211,153,0.04); }
-.gsc-header { display:flex; align-items:center; gap:7px; padding:10px 12px; cursor:pointer; user-select:none; }
-.gsc-badge { font-family:'Jua',sans-serif; font-size:11px; padding:3px 9px; border-radius:10px; white-space:nowrap; }
-.gsc-cost { font-size:11px; font-weight:800; color:#dc2626; white-space:nowrap; }
-.gsc-gain { font-size:11px; font-weight:800; color:#059669; white-space:nowrap; }
-.gsc-time { font-size:10px; color:#c4b5fd; margin-left:auto; white-space:nowrap; }
-.gsc-arrow { font-size:11px; color:#c4b5fd; transition:transform .2s; flex-shrink:0; }
-.gsc-arrow.open { transform:rotate(180deg); }
-.gsc-body { padding:0 10px 10px; display:flex; gap:6px; overflow-x:auto; }
+/* ── 통합 이벤트 카드 ── */
+.ev-card { background:rgba(255,255,255,0.6); border:1.5px solid rgba(210,180,240,0.25); border-radius:16px; margin-bottom:7px; overflow:hidden; }
+.ev-row { display:flex; align-items:center; gap:10px; padding:11px 13px; cursor:pointer; user-select:none; }
+.ev-row.no-click { cursor:default; }
+.ev-icon { font-size:1.2rem; flex-shrink:0; width:24px; text-align:center; }
+.ev-body { flex:1; min-width:0; }
+.ev-title { font-family:'Jua',sans-serif; font-size:13px; color:#3b1f5e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ev-sub { font-size:10px; color:#a78bfa; margin-top:2px; }
+.ev-right { display:flex; align-items:center; gap:7px; flex-shrink:0; }
+.ev-amt { font-family:'Jua',sans-serif; font-size:13px; }
+.ev-time { font-size:10px; color:#c4b5fd; white-space:nowrap; }
+.ev-arrow { font-size:11px; color:#c4b5fd; transition:transform .2s; }
+.ev-arrow.open { transform:rotate(180deg); }
+.gsc-body { padding:0 12px 10px; display:flex; gap:6px; overflow-x:auto; }
 .gsc-body::-webkit-scrollbar { display:none; }
 .gsc-body.closed { display:none; }
 
@@ -2462,11 +2465,17 @@ function aTab(tab, btn) {
 // ──────────────────────────────────────────────
 //  SHOP
 // ──────────────────────────────────────────────
-async function renderShop() {
+async function renderShop(force = false) {
   const grid = document.getElementById('shopGrid');
-  grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-4">로딩 중...</p>';
-  const { data: products } = await sb.from('products').select('*').eq('active', true).eq('item_type', 'store').order('sort_order');
-  storeProducts = products || [];
+  if (!force && window._shopCache) {
+    storeProducts = window._shopCache;
+  } else {
+    grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-4">로딩 중...</p>';
+    const { data: products } = await sb.from('products').select('*').eq('active', true).eq('item_type', 'store').order('sort_order');
+    storeProducts = products || [];
+    window._shopCache = storeProducts;
+  }
+  const products = storeProducts;
   const evtStoreDiscount = getActiveEventDiscount('store');
   if (!products?.length) { grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-8">상품이 없어요</p>'; renderShopEventBanner(); return; }
   grid.innerHTML = products.map((p,i) => {
@@ -2513,7 +2522,7 @@ function requestProduct(id) {
   const p = storeProducts.find(x => x.id === id);
   if (!p) return;
   const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
-  if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(); return; }
+  if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(true); return; }
   // 도토리 부족 체크는 confirmRequest에서 최종 할인가 기준으로 처리
   // (쿠폰/이벤트 할인 적용 후 구매 가능할 수 있으므로 여기서 차단하지 않음)
 
@@ -2616,7 +2625,7 @@ async function _confirmRequestInner(productId) {
     if ((myProfile.acorns || 0) < finalPrice) { toast('❌', '도토리 부족!'); return; }
 
     const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
-    if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(); return; }
+    if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(true); return; }
 
     // 이미 pending 신청이 있으면 중복 방지 (상점 구매 신청끼리만 체크 — 인벤토리 사용신청과 구분)
     if (p.reward_type !== 'AUTO_ACORN') {
@@ -2659,7 +2668,7 @@ async function _confirmRequestInner(productId) {
       playSound('reward');
       toast('🎒', `${p.icon} ${p.name} 인벤토리에 추가됐어요!`);
       updateAcornDisplay();
-      renderShop();
+      renderShop(true);
       return;
     }
 
@@ -2680,7 +2689,7 @@ async function _confirmRequestInner(productId) {
     }
     playSound('reward');
     updateAcornDisplay();
-    renderShop();
+    renderShop(true);
     triggerAutoQuest('itemBuy');
   } finally {
     window._buyLock = false;
@@ -2691,14 +2700,21 @@ async function _confirmRequestInner(productId) {
 //  GACHA
 // ──────────────────────────────────────────────
 // 확률 기반 weighted random 뽑기
-async function loadGachaPool() {
+async function loadGachaPool(force = false) {
+  if (!force && window._gachaPoolCache && window._gachaPoolCache.length > 0) {
+    gachaPool = window._gachaPoolCache;
+    return gachaPool;
+  }
   const { data } = await sb.from('products')
     .select('*')
     .eq('active', true)
     .eq('item_type', 'gacha');
   gachaPool = data || [];
+  window._gachaPoolCache = gachaPool;
   return gachaPool;
 }
+// 관리자가 뽑기 상품 수정 시 캐시 무효화
+function invalidateGachaPoolCache() { window._gachaPoolCache = null; }
 
 // ── 무료 뽑기 + 티켓 상태 확인 및 버튼 업데이트 ────────────
 async function checkFreeGacha() {
@@ -3563,25 +3579,30 @@ async function triggerAutoQuest(triggerType, count = 1) {
 const repLabel = { once:'1회성', daily:'일일', weekly:'주간' };
 const repClass  = { once:'rep-once', daily:'rep-daily', weekly:'rep-weekly' };
 
-async function renderQuests() {
+async function renderQuests(force = false) {
   const el = document.getElementById('questList');
-  el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
-  // 세션 토큰을 명시적으로 포함한 직접 fetch (RLS 우회 방지)
+  // 퀘스트 목록은 캐시, progress/completion은 항상 최신
   let quests = null;
-  try {
-    const token = session?.access_token || SUPABASE_KEY;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/quests?active=eq.true&order=sort_order.asc`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      }
-    });
-    quests = await res.json();
-    if (!Array.isArray(quests)) quests = null;
-  } catch(e) {
-    const { data } = await sb.from('quests').select('*').eq('active', true).order('sort_order');
-    quests = data;
+  if (!force && window._questListCache) {
+    quests = window._questListCache;
+  } else {
+    el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
+    try {
+      const token = session?.access_token || SUPABASE_KEY;
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/quests?active=eq.true&order=sort_order.asc`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
+      quests = await res.json();
+      if (!Array.isArray(quests)) quests = null;
+    } catch(e) {
+      const { data } = await sb.from('quests').select('*').eq('active', true).order('sort_order');
+      quests = data;
+    }
+    window._questListCache = quests;
   }
   if (!quests?.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">퀘스트가 없어요</p>'; return; }
 
@@ -4764,7 +4785,7 @@ async function saveProduct(id) {
     resell_price: it === 'gacha' ? (parseInt(document.getElementById('ep-resellPrice')?.value)||0) : 0,
     discount_pct: rt === 'COUPON' ? (parseInt(document.getElementById('ep-discountPct')?.value)||0) : 0,
   }).eq('id', id);
-  closeModal(); renderProductAdmin(); renderShop(); toast('✅', '수정 완료!');
+  closeModal(); renderProductAdmin(); invalidateGachaPoolCache(); window._shopCache = null; renderShop(true); toast('✅', '수정 완료!');
 }
 
 // ──────────────────────────────────────────────
@@ -5087,6 +5108,9 @@ async function renderTxLog() {
   const el = document.getElementById('userStatusList');
   btnList.innerHTML = '<p class="text-sm text-gray-400">불러오는 중...</p>';
   el.innerHTML = '';
+  // 탭 재진입 시 캐시 초기화 (최신 데이터 반영)
+  window._userLogCache = {};
+  _statusPage && Object.keys(_statusPage).forEach(k => delete _statusPage[k]);
 
   const { data: users, error: uErr } = await sb.from('users').select('id, display_name, acorns, avatar_emoji').order('display_name');
   if (uErr) { btnList.innerHTML = `<p class="text-sm text-red-400">로드 실패: ${uErr.message}</p>`; return; }
@@ -5117,7 +5141,8 @@ function selectLogUser(uid) {
     activeBtn.style.color = '#fff';
   }
 
-  // 카드 렌더
+  // 카드 렌더 (날짜 인덱스 리셋, 캐시는 유지)
+  _statusPage[uid] = 0;
   const el = document.getElementById('userStatusList');
   el.innerHTML = '';
   const u = (window._logUsers || []).find(x => x.id === uid);
@@ -5130,50 +5155,43 @@ function selectLogUser(uid) {
 }
 
 async function renderUserStatusCard(u, card) {
-  // gacha_logs: 뽑기 결과
-  const { data: gachaLogs } = await sb.from('gacha_logs')
-    .select('*').eq('user_id', u.id)
-    .order('created_at', { ascending: false }).limit(500);
-
-  // transactions: 도토리 증감 전체 (뽑기 차감 포함)
-  const { data: txLogs } = await sb.from('transactions')
-    .select('*').eq('user_id', u.id)
-    .order('created_at', { ascending: false }).limit(500);
-
-  // 인벤토리: 보관중/대기중
-  const { data: heldInv } = await sb.from('inventory')
-    .select('*, product_snapshot').eq('user_id', u.id)
-    .in('status', ['held', 'pending'])
-    .order('created_at', { ascending: false });
-
-  // gacha_logs → session_id로 묶기
-  const gachaSessions = buildGachaSessions(gachaLogs || []);
-
-  // 날짜별 이벤트 통합
-  // 각 이벤트: { type: 'gacha'|'tx', date, time_ts, ... }
-  const eventsByDate = {};
-
-  // 뽑기 회차 이벤트
-  gachaSessions.forEach(s => {
-    if (!eventsByDate[s.date]) eventsByDate[s.date] = [];
-    eventsByDate[s.date].push({ type: 'gacha', time_ts: new Date(s.firstTime).getTime(), session: s });
-  });
-
-  // 거래 이벤트 (뽑기 차감 포함 전부)
-  (txLogs || []).forEach(tx => {
-    const d = toDateStr(new Date(tx.created_at));
-    if (!eventsByDate[d]) eventsByDate[d] = [];
-    eventsByDate[d].push({ type: 'tx', time_ts: new Date(tx.created_at).getTime(), tx });
-  });
-
-  // 각 날짜 내부를 시간 내림차순 정렬
-  Object.keys(eventsByDate).forEach(d => {
-    eventsByDate[d].sort((a, b) => b.time_ts - a.time_ts);
-  });
-
-  const dates = Object.keys(eventsByDate).sort((a, b) => b.localeCompare(a));
-
   const uid = u.id;
+
+  // ── 캐시 확인: 같은 사용자 데이터는 탭 내에서 재사용 ──
+  if (!window._userLogCache) window._userLogCache = {};
+  if (!window._userLogCache[uid]) {
+    const [
+      { data: gachaLogs },
+      { data: txLogs },
+      { data: heldInv }
+    ] = await Promise.all([
+      sb.from('gacha_logs').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(500),
+      sb.from('transactions').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(500),
+      sb.from('inventory').select('*, product_snapshot').eq('user_id', uid).in('status', ['held', 'pending']).order('created_at', { ascending: false })
+    ]);
+
+    const gachaSessions = buildGachaSessions(gachaLogs || []);
+    const eventsByDate = {};
+    gachaSessions.forEach(s => {
+      if (!eventsByDate[s.date]) eventsByDate[s.date] = [];
+      eventsByDate[s.date].push({ type: 'gacha', time_ts: new Date(s.firstTime).getTime(), session: s });
+    });
+    (txLogs || []).forEach(tx => {
+      const d = toDateStr(new Date(tx.created_at));
+      if (!eventsByDate[d]) eventsByDate[d] = [];
+      eventsByDate[d].push({ type: 'tx', time_ts: new Date(tx.created_at).getTime(), tx });
+    });
+    Object.keys(eventsByDate).forEach(d => {
+      eventsByDate[d].sort((a, b) => b.time_ts - a.time_ts);
+    });
+    window._userLogCache[uid] = {
+      eventsByDate,
+      dates: Object.keys(eventsByDate).sort((a, b) => b.localeCompare(a)),
+      heldInv: heldInv || []
+    };
+  }
+
+  const { eventsByDate, dates, heldInv } = window._userLogCache[uid];
   if (!_statusPage[uid]) _statusPage[uid] = 0;
   const curIdx = Math.min(_statusPage[uid], Math.max(0, dates.length - 1));
 
@@ -5203,27 +5221,37 @@ async function renderUserStatusCard(u, card) {
       <button class="date-arrow" onclick="changeStatusDate('${uid}',-1)" ${curIdx <= 0 ? 'disabled' : ''}>▶</button>
     </div>`;
 
-    // 이벤트 목록
     events.forEach((ev, ei) => {
       if (ev.type === 'gacha') {
-        // 뽑기 회차
         const s = ev.session;
         const sessionId = `gs-${uid}-${curIdx}-${ei}`;
-        const isFirst = ei === 0;
-        html += `<div class="gacha-session-card ${isFirst ? 'sc-latest' : ''}">
-          <div class="gsc-header" onclick="toggleGscBody('${sessionId}')">
-            <span class="gsc-badge" style="background:#d1fae5;color:#065f46">${s.items.length}회 뽑기</span>
-            ${s.acornGain > 0 ? `<span class="gsc-gain">+${s.acornGain}🌰</span>` : ''}
-            <span class="gsc-time">${s.timeLabel}</span>
-            <span class="gsc-arrow ${isFirst ? 'open' : ''}" id="arr-${sessionId}">▼</span>
+        const hasItems  = s.items.some(l => l.reward_type !== 'AUTO_ACORN' && l.reward_type !== 'GIFT_ACORN' && l.reward_type !== 'GACHA_TICKET' && l.reward_type !== 'GIFT_GACHA_TICKET');
+        const hasTicket = s.items.some(l => l.reward_type === 'GACHA_TICKET' || l.reward_type === 'GIFT_GACHA_TICKET');
+        const subParts  = [];
+        if (s.acornGain > 0) subParts.push(`획득 +${s.acornGain}🌰`);
+        if (hasItems)  subParts.push('아이템 획득');
+        if (hasTicket) subParts.push('티켓 획득');
+        const subText = subParts.length ? subParts.join(' · ') : '획득 없음';
+
+        html += `<div class="ev-card">
+          <div class="ev-row" onclick="toggleEvBody('${sessionId}')">
+            <span class="ev-icon">🎲</span>
+            <div class="ev-body">
+              <div class="ev-title">${s.items.length}회 뽑기</div>
+              <div class="ev-sub">${subText}</div>
+            </div>
+            <div class="ev-right">
+              <span class="ev-time">${s.timeLabel}</span>
+              <span class="ev-arrow" id="arr-${sessionId}">▼</span>
+            </div>
           </div>
-          <div class="gsc-body ${isFirst ? '' : 'closed'}" id="${sessionId}">
+          <div class="gsc-body closed" id="${sessionId}">
             ${s.items.map(log => {
               const isAcorn  = log.reward_type === 'AUTO_ACORN' || log.reward_type === 'GIFT_ACORN';
               const isTicket = log.reward_type === 'GACHA_TICKET' || log.reward_type === 'GIFT_GACHA_TICKET';
               const amt = isAcorn  ? `<span class="g-chip-amt a">+${log.acorn_amt||0}🌰</span>`
                         : isTicket ? `<span class="g-chip-amt t">+1장</span>`
-                        : `<span class="g-chip-amt">아이템</span>`;
+                        : `<span class="g-chip-amt i">아이템</span>`;
               return `<div class="g-chip ${isAcorn?'acorn':isTicket?'ticket':''}">
                 <span class="g-chip-icon">${log.item_icon||'📦'}</span>
                 <span class="g-chip-name">${log.item_name||'아이템'}</span>
@@ -5233,30 +5261,35 @@ async function renderUserStatusCard(u, card) {
           </div>
         </div>`;
       } else {
-        // 거래 내역 (도토리 증감)
-        const tx = ev.tx;
+        const tx   = ev.tx;
         const isPlus = tx.amount > 0;
-        const dot = isPlus ? 'rgba(52,211,153,0.12)' : 'rgba(251,113,133,0.12)';
-        const amtColor = isPlus ? '#059669' : '#dc2626';
         const amtText = `${isPlus?'+':''}${tx.amount}🌰`;
-        html += `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(210,180,240,0.1)">
-          <div style="width:34px;height:34px;border-radius:10px;background:${dot};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
-            ${isPlus ? '🌰' : '🌰'}
+        const icon = tx.reason?.includes('퀘스트') ? '📋'
+                   : tx.reason?.includes('관리자') ? '👑'
+                   : tx.reason?.includes('선물')   ? '🎁'
+                   : tx.reason?.includes('뽑기')   ? '🎲'
+                   : tx.reason?.includes('구매')   ? '🛍️'
+                   : tx.reason?.includes('되팔기') ? '♻️'
+                   : '🌰';
+        html += `<div class="ev-card">
+          <div class="ev-row no-click">
+            <span class="ev-icon">${icon}</span>
+            <div class="ev-body">
+              <div class="ev-title">${tx.reason||'도토리 변동'}</div>
+            </div>
+            <div class="ev-right">
+              <span class="ev-amt ${isPlus?'tx-plus':'tx-minus'}">${amtText}</span>
+              <span class="ev-time">${fmtTime(tx.created_at)}</span>
+            </div>
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:800;color:#3b1f5e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.reason||'도토리 변동'}</div>
-            <div style="font-size:10px;color:#a78bfa;margin-top:1px">${fmtTime(tx.created_at)}</div>
-          </div>
-          <div style="font-family:'Jua',sans-serif;font-size:13px;color:${amtColor};flex-shrink:0">${amtText}</div>
         </div>`;
       }
     });
   }
 
-  // ── 인벤토리 ──
   html += `<div class="sc-divider"></div>
-  <span class="sc-label">인벤토리 (${(heldInv||[]).length}개)</span>`;
-  if (!heldInv?.length) {
+  <span class="sc-label">인벤토리 (${heldInv.length}개)</span>`;
+  if (!heldInv.length) {
     html += `<div class="inv-grid2"><span class="inv-empty2">보유 아이템 없음</span></div>`;
   } else {
     html += `<div class="inv-grid2">`;
@@ -5273,9 +5306,16 @@ async function renderUserStatusCard(u, card) {
     });
     html += `</div>`;
   }
-
   html += `</div>`;
   card.innerHTML = html;
+}
+
+function toggleEvBody(id) {
+  const body  = document.getElementById(id);
+  const arrow = document.getElementById('arr-' + id);
+  if (!body || !arrow) return;
+  body.classList.toggle('closed');
+  arrow.classList.toggle('open');
 }
 
 function buildGachaSessions(logs) {
@@ -5324,9 +5364,9 @@ function changeStatusDate(uid, delta) {
   _statusPage[uid] = (_statusPage[uid] || 0) + delta;
   const card = document.getElementById('sc-' + uid);
   if (!card) return;
-  // 사용자 정보 재조회 없이 카드만 리렌더
-  sb.from('users').select('id,display_name,acorns,avatar_emoji').eq('id', uid).single()
-    .then(({ data: u }) => { if (u) renderUserStatusCard(u, card); });
+  // 캐시된 사용자 정보로 바로 렌더 (DB 재조회 없음)
+  const u = (window._logUsers || []).find(x => x.id === uid);
+  if (u) renderUserStatusCard(u, card);
 }
 
 function todayStr() {
