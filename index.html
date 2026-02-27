@@ -5130,112 +5130,132 @@ function selectLogUser(uid) {
 }
 
 async function renderUserStatusCard(u, card) {
-  // gacha_logs에서 뽑기 결과 직접 조회 (session_id로 회차 구분)
+  // gacha_logs: 뽑기 결과
   const { data: gachaLogs } = await sb.from('gacha_logs')
-    .select('*')
-    .eq('user_id', u.id)
-    .order('created_at', { ascending: false })
-    .limit(500);
+    .select('*').eq('user_id', u.id)
+    .order('created_at', { ascending: false }).limit(500);
 
-  // 일반 인벤토리 (보관중/대기중인 것)
+  // transactions: 도토리 증감 전체 (뽑기 차감 포함)
+  const { data: txLogs } = await sb.from('transactions')
+    .select('*').eq('user_id', u.id)
+    .order('created_at', { ascending: false }).limit(500);
+
+  // 인벤토리: 보관중/대기중
   const { data: heldInv } = await sb.from('inventory')
-    .select('*, product_snapshot')
-    .eq('user_id', u.id)
+    .select('*, product_snapshot').eq('user_id', u.id)
     .in('status', ['held', 'pending'])
     .order('created_at', { ascending: false });
 
-  // gacha_logs를 session_id 기준으로 회차 묶기
-  const sessions = buildGachaSessions(gachaLogs || []);
-  // 날짜별 그룹
-  const byDate = {};
-  sessions.forEach(s => {
-    const d = s.date;
-    if (!byDate[d]) byDate[d] = [];
-    byDate[d].push(s);
+  // gacha_logs → session_id로 묶기
+  const gachaSessions = buildGachaSessions(gachaLogs || []);
+
+  // 날짜별 이벤트 통합
+  // 각 이벤트: { type: 'gacha'|'tx', date, time_ts, ... }
+  const eventsByDate = {};
+
+  // 뽑기 회차 이벤트
+  gachaSessions.forEach(s => {
+    if (!eventsByDate[s.date]) eventsByDate[s.date] = [];
+    eventsByDate[s.date].push({ type: 'gacha', time_ts: new Date(s.firstTime).getTime(), session: s });
   });
-  const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+
+  // 거래 이벤트 (뽑기 차감 포함 전부)
+  (txLogs || []).forEach(tx => {
+    const d = toDateStr(new Date(tx.created_at));
+    if (!eventsByDate[d]) eventsByDate[d] = [];
+    eventsByDate[d].push({ type: 'tx', time_ts: new Date(tx.created_at).getTime(), tx });
+  });
+
+  // 각 날짜 내부를 시간 내림차순 정렬
+  Object.keys(eventsByDate).forEach(d => {
+    eventsByDate[d].sort((a, b) => b.time_ts - a.time_ts);
+  });
+
+  const dates = Object.keys(eventsByDate).sort((a, b) => b.localeCompare(a));
 
   const uid = u.id;
   if (!_statusPage[uid]) _statusPage[uid] = 0;
-  const curIdx = Math.min(_statusPage[uid], dates.length - 1);
+  const curIdx = Math.min(_statusPage[uid], Math.max(0, dates.length - 1));
 
-  // 헤더
   const avatarEmoji = u.avatar_emoji || '🐿️';
   let html = `<div class="status-card-header">
     <span class="sc-avatar">${avatarEmoji}</span>
-    <div>
-      <div class="sc-name">${u.display_name}</div>
-    </div>
+    <div><div class="sc-name">${u.display_name}</div></div>
     <span class="sc-acorn">🌰 ${u.acorns || 0}</span>
   </div>
   <div class="sc-body">`;
 
-  // ── 뽑기 기록 (날짜별) ──
-  html += `<span class="sc-label">뽑기 기록</span>`;
-
   if (dates.length === 0) {
-    html += `<p style="font-size:11px;color:#d1d5db;font-weight:700;text-align:center;padding:10px 0">뽑기 기록 없음</p>`;
+    html += `<p style="font-size:11px;color:#d1d5db;font-weight:700;text-align:center;padding:16px 0">활동 내역 없음</p>`;
   } else {
     const curDate = dates[curIdx];
-    const todaySessions = byDate[curDate];
-    const totalCost = todaySessions.reduce((s,x) => s + x.cost, 0);
-    const totalGain = todaySessions.reduce((s,x) => s + x.acornGain, 0);
-
-    // 날짜 네비
-    const isToday = curDate === todayStr();
+    const events  = eventsByDate[curDate];
+    const isToday     = curDate === todayStr();
     const isYesterday = curDate === yesterdayStr();
-    const dateLabel = isToday ? `오늘 (${formatDateShort(curDate)})` : isYesterday ? `어제 (${formatDateShort(curDate)})` : formatDateShort(curDate);
+    const dateLabel   = isToday ? `오늘 (${formatDateShort(curDate)})` : isYesterday ? `어제 (${formatDateShort(curDate)})` : formatDateShort(curDate);
 
     html += `<div class="date-nav">
       <button class="date-arrow" onclick="changeStatusDate('${uid}',1)" ${curIdx >= dates.length-1 ? 'disabled' : ''}>◀</button>
       <div class="date-center">
         <div class="date-center-label">${dateLabel}</div>
-        <span class="date-center-sub">${todaySessions.length}회차 뽑기</span>
+        <span class="date-center-sub">${events.length}건의 활동</span>
       </div>
       <button class="date-arrow" onclick="changeStatusDate('${uid}',-1)" ${curIdx <= 0 ? 'disabled' : ''}>▶</button>
     </div>`;
 
-    // 날짜 요약
-    html += `<div class="date-summary">
-      <span class="ds-pill" style="background:#d1fae5;color:#065f46">총 ${todaySessions.length}회차</span>
-      ${totalCost > 0 ? `<span class="ds-pill" style="background:rgba(220,38,38,0.08);color:#dc2626">-${totalCost}🌰 사용</span>` : ''}
-      ${totalGain > 0 ? `<span class="ds-pill" style="background:rgba(5,150,105,0.08);color:#059669">+${totalGain}🌰 획득</span>` : ''}
-    </div>`;
-
-    // 회차 카드들
-    todaySessions.forEach((session, si) => {
-      const isLatest = si === 0 && curIdx === 0;
-      const sessionId = `gs-${uid}-${curIdx}-${si}`;
-      html += `<div class="gacha-session-card ${isLatest ? 'sc-latest' : ''}">
-        <div class="gsc-header" onclick="toggleGscBody('${sessionId}')">
-          <span class="gsc-badge" style="background:#d1fae5;color:#065f46">${session.items.length}회 뽑기</span>
-          ${session.cost > 0 ? `<span class="gsc-cost">-${session.cost}🌰</span>` : ''}
-          ${session.acornGain > 0 ? `<span class="gsc-gain">+${session.acornGain}🌰</span>` : ''}
-          <span class="gsc-time">${session.timeLabel}</span>
-          <span class="gsc-arrow ${isLatest ? 'open' : ''}" id="arr-${sessionId}">▼</span>
-        </div>
-        <div class="gsc-body ${isLatest ? '' : 'closed'}" id="${sessionId}">
-          ${session.items.map(log => {
-            const isAcorn  = log.reward_type === 'AUTO_ACORN' || log.reward_type === 'GIFT_ACORN';
-            const isTicket = log.reward_type === 'GACHA_TICKET' || log.reward_type === 'GIFT_GACHA_TICKET';
-            const amt = isAcorn ? `<span class="g-chip-amt a">+${log.acorn_amt||0}🌰</span>`
-                      : isTicket ? `<span class="g-chip-amt t">+1장</span>`
-                      : `<span class="g-chip-amt">아이템</span>`;
-            return `<div class="g-chip ${isAcorn?'acorn':isTicket?'ticket':''}">
-              <span class="g-chip-icon">${log.item_icon||'📦'}</span>
-              <span class="g-chip-name">${log.item_name||'아이템'}</span>
-              ${amt}
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
+    // 이벤트 목록
+    events.forEach((ev, ei) => {
+      if (ev.type === 'gacha') {
+        // 뽑기 회차
+        const s = ev.session;
+        const sessionId = `gs-${uid}-${curIdx}-${ei}`;
+        const isFirst = ei === 0;
+        html += `<div class="gacha-session-card ${isFirst ? 'sc-latest' : ''}">
+          <div class="gsc-header" onclick="toggleGscBody('${sessionId}')">
+            <span class="gsc-badge" style="background:#d1fae5;color:#065f46">${s.items.length}회 뽑기</span>
+            ${s.acornGain > 0 ? `<span class="gsc-gain">+${s.acornGain}🌰</span>` : ''}
+            <span class="gsc-time">${s.timeLabel}</span>
+            <span class="gsc-arrow ${isFirst ? 'open' : ''}" id="arr-${sessionId}">▼</span>
+          </div>
+          <div class="gsc-body ${isFirst ? '' : 'closed'}" id="${sessionId}">
+            ${s.items.map(log => {
+              const isAcorn  = log.reward_type === 'AUTO_ACORN' || log.reward_type === 'GIFT_ACORN';
+              const isTicket = log.reward_type === 'GACHA_TICKET' || log.reward_type === 'GIFT_GACHA_TICKET';
+              const amt = isAcorn  ? `<span class="g-chip-amt a">+${log.acorn_amt||0}🌰</span>`
+                        : isTicket ? `<span class="g-chip-amt t">+1장</span>`
+                        : `<span class="g-chip-amt">아이템</span>`;
+              return `<div class="g-chip ${isAcorn?'acorn':isTicket?'ticket':''}">
+                <span class="g-chip-icon">${log.item_icon||'📦'}</span>
+                <span class="g-chip-name">${log.item_name||'아이템'}</span>
+                ${amt}
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      } else {
+        // 거래 내역 (도토리 증감)
+        const tx = ev.tx;
+        const isPlus = tx.amount > 0;
+        const dot = isPlus ? 'rgba(52,211,153,0.12)' : 'rgba(251,113,133,0.12)';
+        const amtColor = isPlus ? '#059669' : '#dc2626';
+        const amtText = `${isPlus?'+':''}${tx.amount}🌰`;
+        html += `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(210,180,240,0.1)">
+          <div style="width:34px;height:34px;border-radius:10px;background:${dot};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
+            ${isPlus ? '🌰' : '🌰'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:800;color:#3b1f5e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.reason||'도토리 변동'}</div>
+            <div style="font-size:10px;color:#a78bfa;margin-top:1px">${fmtTime(tx.created_at)}</div>
+          </div>
+          <div style="font-family:'Jua',sans-serif;font-size:13px;color:${amtColor};flex-shrink:0">${amtText}</div>
+        </div>`;
+      }
     });
   }
 
   // ── 인벤토리 ──
   html += `<div class="sc-divider"></div>
   <span class="sc-label">인벤토리 (${(heldInv||[]).length}개)</span>`;
-
   if (!heldInv?.length) {
     html += `<div class="inv-grid2"><span class="inv-empty2">보유 아이템 없음</span></div>`;
   } else {
@@ -5243,18 +5263,18 @@ async function renderUserStatusCard(u, card) {
     heldInv.forEach(item => {
       const p = item.product_snapshot || {};
       const isPending = item.status === 'pending';
-      html += `<div class="inv-chip2 ${isPending ? 'pending' : ''}">
+      html += `<div class="inv-chip2 ${isPending?'pending':''}">
         <span class="ic2-icon">${p.icon||'📦'}</span>
         <div>
           <div class="ic2-name">${p.name||'아이템'}</div>
-          <div class="ic2-status ${isPending ? 'ic2-pending' : 'ic2-held'}">${isPending ? '⏳ 대기중' : '📦 보관중'}</div>
+          <div class="ic2-status ${isPending?'ic2-pending':'ic2-held'}">${isPending?'⏳ 대기중':'📦 보관중'}</div>
         </div>
       </div>`;
     });
     html += `</div>`;
   }
 
-  html += `</div>`; // sc-body 닫기
+  html += `</div>`;
   card.innerHTML = html;
 }
 
