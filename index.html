@@ -5142,8 +5142,7 @@ async function renderUserStatusCard(u, card) {
   const { data: gachaTx } = await sb.from('transactions')
     .select('*')
     .eq('user_id', u.id)
-    .gt('amount', 0)
-    .ilike('reason', '%뽑기%')
+    .like('reason', '%뽑기%')
     .order('created_at', { ascending: false })
     .limit(200);
 
