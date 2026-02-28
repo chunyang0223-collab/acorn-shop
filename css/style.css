@@ -916,20 +916,20 @@ body {
 .shop-card-soldout .btn { border: 2px dashed #d1d5db !important; background: transparent !important; color: #9ca3af !important; box-shadow: none !important; }
 .soldout-ribbon {
   position: absolute;
-  top: 16px; right: -34px;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  top: 16px; right: -30px;
+  background: linear-gradient(135deg, #fca5a5, #f87171);
   color: #fff;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 800;
   font-family: 'Jua', sans-serif;
-  padding: 4px 40px;
-  transform: rotate(45deg);
+  padding: 4px 36px;
+  transform: rotate(35deg);
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(220,38,38,0.3);
-  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(248,113,113,0.3);
+  letter-spacing: 0.5px;
 }
 [data-theme="dark"] .soldout-ribbon {
-  background: linear-gradient(135deg, #991b1b, #7f1d1d) !important;
+  background: linear-gradient(135deg, #b05060, #904050) !important;
 }
 
 /* ══════════════════════════════════════════════
