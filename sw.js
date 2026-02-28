@@ -1,8 +1,27 @@
 /* =====================================================
-   🌰 도토리 상점 v4 — Service Worker
+   🌰 도토리 상점 v5 — Service Worker
    ===================================================== */
-const CACHE_NAME = 'acorn-shop-v4';
-const CACHE_URLS = ['./index.html', './manifest.json'];
+const CACHE_NAME = 'acorn-shop-v5';
+const CACHE_URLS = [
+  './index.html',
+  './manifest.json',
+  './css/style.css',
+  './js/supabase-client.js',
+  './js/state.js',
+  './js/utils.js',
+  './js/helpers.js',
+  './js/ui.js',
+  './js/auth.js',
+  './js/shop.js',
+  './js/gacha.js',
+  './js/quest.js',
+  './js/mypage.js',
+  './js/notification.js',
+  './js/event.js',
+  './js/recycle.js',
+  './js/admin.js',
+  './js/app.js'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(CACHE_URLS)).then(() => self.skipWaiting()));
