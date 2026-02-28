@@ -29,7 +29,8 @@ async function renderShop(force = false) {
          </div>`
       : `<div class="text-center font-black text-amber-600 mb-2">🌰 ${p.price}</div>`;
     return `
-    <div class="clay-card p-4 flex flex-col bounce-in ${soldOut?'opacity-60':''}" style="animation-delay:${i*.06}s">
+    <div class="clay-card p-4 flex flex-col bounce-in ${soldOut?'shop-card-soldout':''}" style="animation-delay:${i*.06}s;position:relative;overflow:hidden">
+      ${soldOut ? '<div class="soldout-ribbon">SOLD OUT</div>' : ''}
       <div class="text-4xl text-center mb-2">${p.icon}</div>
       <h3 class="font-black text-gray-800 text-center text-sm mb-1">${p.name}</h3>
       <p class="text-xs text-gray-400 font-semibold text-center mb-2">${p.description||''}</p>
