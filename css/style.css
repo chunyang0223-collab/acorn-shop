@@ -978,3 +978,342 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ══════════════════════════════════════════════
+   미니게임 — 허브 (게임 선택 카드)
+   ══════════════════════════════════════════════ */
+.mg-card {
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.mg-card.card-hover:active {
+  transform: scale(0.97);
+}
+.mg-card-preview {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.mg-card-icon {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+  animation: mgIconFloat 2s ease-in-out infinite;
+}
+@keyframes mgIconFloat {
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+.mg-coming-soon {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Jua', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.mg-tag {
+  font-family: 'Jua', sans-serif;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: rgba(251,191,36,0.15);
+  color: #92400e;
+  font-weight: 800;
+}
+[data-theme="dark"] .mg-card-preview { filter: brightness(0.85); }
+[data-theme="dark"] .mg-coming-soon { background: rgba(0,0,0,0.55); }
+[data-theme="dark"] .mg-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
+
+/* ══════════════════════════════════════════════
+   도토리 캐치 — 게임 컨테이너
+   ══════════════════════════════════════════════ */
+.catch-container {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── HUD ── */
+.catch-hud {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.catch-hud-item {
+  flex: 1;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 8px 14px;
+  text-align: center;
+  border: 1.5px solid rgba(255,255,255,0.85);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: background 0.3s;
+}
+.catch-hud-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.catch-hud-value {
+  display: block;
+  font-family: 'Jua', sans-serif;
+  font-size: 22px;
+  color: #78350f;
+  line-height: 1.2;
+}
+.catch-hud-timer .catch-hud-value {
+  color: #059669;
+}
+.catch-hud-danger {
+  background: rgba(254,202,202,0.6) !important;
+  border-color: rgba(239,68,68,0.3) !important;
+}
+.catch-hud-danger .catch-hud-value {
+  color: #dc2626 !important;
+  animation: catchTimerPulse 0.5s ease infinite;
+}
+@keyframes catchTimerPulse {
+  0%,100%{transform:scale(1)}50%{transform:scale(1.15)}
+}
+.catch-exit-btn {
+  position: absolute;
+  top: 4px;
+  right: -4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.08);
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  z-index: 20;
+}
+.catch-exit-btn:active { background: rgba(0,0,0,0.15); }
+
+/* ── 게임 필드 ── */
+.catch-field {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(180deg, 
+    #87CEEB 0%, 
+    #B0E0E6 40%, 
+    #98D8A8 70%, 
+    #7BC47F 85%, 
+    #5A9E5F 100%);
+  box-shadow: 
+    inset 0 0 60px rgba(255,255,255,0.15),
+    0 8px 32px rgba(90,158,95,0.2);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 배경 구름 */
+.catch-bg-cloud {
+  position: absolute;
+  font-size: 36px;
+  opacity: 0.35;
+  animation: catchCloudDrift 12s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes catchCloudDrift {
+  0%{transform:translateX(0)}
+  50%{transform:translateX(30px)}
+  100%{transform:translateX(0)}
+}
+
+/* ── 바구니 ── */
+.catch-basket {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-32px);
+  font-size: 42px;
+  width: 64px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  z-index: 10;
+  transition: left 0.04s linear;
+}
+.shake-anim {
+  animation: catchShake 0.4s ease;
+}
+@keyframes catchShake {
+  0%,100%{transform:translateX(-32px) rotate(0)}
+  20%{transform:translateX(-32px) rotate(-12deg)}
+  40%{transform:translateX(-32px) rotate(12deg)}
+  60%{transform:translateX(-32px) rotate(-8deg)}
+  80%{transform:translateX(-32px) rotate(8deg)}
+}
+
+/* ── 낙하 아이템 ── */
+.catch-item {
+  position: absolute;
+  font-size: 30px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+}
+
+/* ── 점수 이펙트 ── */
+.catch-float-text {
+  position: absolute;
+  font-family: 'Jua', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 15;
+  text-shadow: 0 1px 4px rgba(255,255,255,0.8);
+  animation: catchFloatUp 0.8s ease-out forwards;
+}
+@keyframes catchFloatUp {
+  0%  { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+  100%{ opacity: 0; transform: translateY(-60px) scale(0.8); }
+}
+
+/* ── 시작 오버레이 ── */
+.catch-overlay {
+  position: absolute;
+  inset: 0;
+  top: 56px; /* HUD 높이만큼 오프셋 */
+  border-radius: 24px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.catch-overlay.hidden { display: none; }
+.catch-overlay-content {
+  text-align: center;
+  padding: 24px;
+}
+.catch-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #78350f;
+}
+
+/* ── 결과 화면 ── */
+.catch-result-screen {
+  padding-top: 20px;
+}
+.catch-result-stats {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.catch-result-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 16px;
+  padding: 12px 16px;
+  min-width: 80px;
+  border: 1.5px solid rgba(255,255,255,0.8);
+}
+.catch-result-num {
+  font-family: 'Jua', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+.catch-result-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #9ca3af;
+}
+.catch-reward-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.08));
+  border: 1.5px solid rgba(251,191,36,0.25);
+  border-radius: 18px;
+  padding: 14px 20px;
+  margin-bottom: 8px;
+}
+
+/* ── 다크모드 ── */
+[data-theme="dark"] .catch-hud-item {
+  background: rgba(30,30,40,0.7);
+  border-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .catch-hud-label { color: #6b7280; }
+[data-theme="dark"] .catch-hud-value { color: #fbbf24; }
+[data-theme="dark"] .catch-hud-timer .catch-hud-value { color: #34d399; }
+[data-theme="dark"] .catch-hud-danger {
+  background: rgba(127,29,29,0.4) !important;
+}
+[data-theme="dark"] .catch-exit-btn {
+  background: rgba(255,255,255,0.08);
+  color: #6b7280;
+}
+[data-theme="dark"] .catch-field {
+  background: linear-gradient(180deg, #1e3a5f 0%, #2d4a6f 40%, #2d5a3f 70%, #1e4a2f 100%);
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .catch-bg-cloud { opacity: 0.15; }
+[data-theme="dark"] .catch-overlay {
+  background: rgba(20,20,30,0.88);
+}
+[data-theme="dark"] .catch-overlay h2 { color: #fbbf24 !important; }
+[data-theme="dark"] .catch-overlay p { color: #d97706 !important; }
+[data-theme="dark"] .catch-legend { color: #fbbf24; }
+[data-theme="dark"] .catch-result-stat {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .catch-result-label { color: #6b7280; }
+[data-theme="dark"] .catch-reward-box {
+  background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.05));
+  border-color: rgba(251,191,36,0.15);
+}
+[data-theme="dark"] .catch-float-text {
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}

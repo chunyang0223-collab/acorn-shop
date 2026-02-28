@@ -147,7 +147,7 @@ async function doSignup() {
 // ──────────────────────────────────────────────
 //  TABS
 // ──────────────────────────────────────────────
-const U_TABS = ['shop','gacha','quest','recycle','mypage'];
+const U_TABS = ['shop','gacha','quest','recycle','minigame','mypage'];
 const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','txlog','users','events','recycle'];
 
 function uTab(tab, btn) {
@@ -196,10 +196,11 @@ function uTab(tab, btn) {
   if (tab === 'quest')  renderQuests();
   if (tab === 'mypage') renderMypage();
   if (tab === 'recycle') renderRecycleTab();
+  if (tab === 'minigame') renderMinigameHub();
 }
 
 // ── 메뉴 점검 관리 ──
-const MAINT_TABS = ['shop','gacha','quest','recycle','mypage'];
+const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','mypage'];
 
 async function toggleMaintenance(tab) {
   // 현재 DB 값 읽기
