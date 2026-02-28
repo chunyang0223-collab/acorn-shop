@@ -914,6 +914,23 @@ body {
   position: relative;
 }
 .shop-card-soldout .btn { border: 2px dashed #d1d5db !important; background: transparent !important; color: #9ca3af !important; box-shadow: none !important; }
+.soldout-ribbon {
+  position: absolute;
+  top: 16px; right: -34px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  font-family: 'Jua', sans-serif;
+  padding: 4px 40px;
+  transform: rotate(45deg);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+  letter-spacing: 1px;
+}
+[data-theme="dark"] .soldout-ribbon {
+  background: linear-gradient(135deg, #991b1b, #7f1d1d) !important;
+}
 
 /* ══════════════════════════════════════════════
    v2 개선: 다크모드 뱃지 오버라이드
@@ -941,16 +958,18 @@ body {
    v2 개선: 관리자 대시보드 모바일 레이아웃
    ══════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  #atab-dashboard .flex.gap-3.mb-5 {
-    flex-direction: column;
+  /* 대시보드: 현황 + 점검 → 세로 배치 */
+  #dashboard-top {
+    flex-direction: column !important;
   }
-  #atab-dashboard .flex.gap-3.mb-5 > .flex.flex-col {
+  #dashboard-top > .dashboard-stats {
+    flex: 1 1 auto !important;
     min-width: auto !important;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
   }
-  #atab-dashboard .flex.gap-3.mb-5 > .flex.flex-col > .clay-card {
+  #dashboard-top > .dashboard-stats > .clay-card {
     flex: 1 1 calc(50% - 3px);
     min-width: 120px;
   }
