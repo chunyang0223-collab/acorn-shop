@@ -1166,15 +1166,15 @@ body {
   z-index: 10;
   will-change: transform;
 }
-.shake-anim {
+.catch-basket.shake-anim {
   animation: catchShake 0.4s ease;
 }
 @keyframes catchShake {
-  0%,100%{transform:translateX(var(--bx, 0)) rotate(0)}
-  20%{transform:translateX(var(--bx, 0)) rotate(-12deg)}
-  40%{transform:translateX(var(--bx, 0)) rotate(12deg)}
-  60%{transform:translateX(var(--bx, 0)) rotate(-8deg)}
-  80%{transform:translateX(var(--bx, 0)) rotate(8deg)}
+  0%,100%{ filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)) hue-rotate(0deg); }
+  10%{ filter: drop-shadow(0 4px 12px rgba(220,38,38,0.5)) hue-rotate(-30deg); }
+  30%{ filter: drop-shadow(0 4px 12px rgba(220,38,38,0.4)) hue-rotate(20deg); }
+  50%{ filter: drop-shadow(0 4px 12px rgba(220,38,38,0.3)) hue-rotate(-15deg); }
+  70%{ filter: drop-shadow(0 4px 8px rgba(220,38,38,0.2)) hue-rotate(10deg); }
 }
 
 /* ── 낙하 아이템 ── */
