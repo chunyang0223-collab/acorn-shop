@@ -1566,6 +1566,21 @@ body {
 .um-btn-item  { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
 .um-btn-game  { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
 
+/* 탈퇴 버튼 */
+.um-delete-wrap { margin-top: 6px; text-align: right; }
+.um-btn-delete {
+  font-family: 'Jua', sans-serif;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(239,68,68,0.2);
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.um-btn-delete:hover { background: rgba(239,68,68,0.08); }
+
 /* btn-red for modal */
 .btn-red {
   background: linear-gradient(135deg, #fca5a5, #ef4444) !important;
@@ -1584,3 +1599,5 @@ body {
 [data-theme="dark"] .um-sub { color: #6b7280; }
 [data-theme="dark"] .um-acorn { color: #fbbf24; }
 [data-theme="dark"] .um-btn { box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+[data-theme="dark"] .um-btn-delete { border-color: rgba(239,68,68,0.15); color: #fca5a5; }
+[data-theme="dark"] .um-btn-delete:hover { background: rgba(239,68,68,0.1); }
