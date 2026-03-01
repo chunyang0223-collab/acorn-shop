@@ -1033,6 +1033,8 @@ body {
 [data-theme="dark"] .mg-card-preview { filter: brightness(0.85); }
 [data-theme="dark"] .mg-coming-soon { background: rgba(0,0,0,0.55); }
 [data-theme="dark"] .mg-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
+.mg-tag-danger { background: rgba(239,68,68,0.12) !important; color: #dc2626 !important; }
+[data-theme="dark"] .mg-tag-danger { background: rgba(239,68,68,0.15) !important; color: #fca5a5 !important; }
 
 /* ══════════════════════════════════════════════
    도토리 캐치 — 게임 컨테이너
@@ -1153,8 +1155,7 @@ body {
 .catch-basket {
   position: absolute;
   bottom: 12px;
-  left: 50%;
-  transform: translateX(-32px);
+  left: 0;
   font-size: 42px;
   width: 64px;
   height: 48px;
@@ -1163,22 +1164,23 @@ body {
   justify-content: center;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
   z-index: 10;
-  transition: left 0.04s linear;
+  will-change: transform;
 }
 .shake-anim {
   animation: catchShake 0.4s ease;
 }
 @keyframes catchShake {
-  0%,100%{transform:translateX(-32px) rotate(0)}
-  20%{transform:translateX(-32px) rotate(-12deg)}
-  40%{transform:translateX(-32px) rotate(12deg)}
-  60%{transform:translateX(-32px) rotate(-8deg)}
-  80%{transform:translateX(-32px) rotate(8deg)}
+  0%,100%{transform:translateX(var(--bx, 0)) rotate(0)}
+  20%{transform:translateX(var(--bx, 0)) rotate(-12deg)}
+  40%{transform:translateX(var(--bx, 0)) rotate(12deg)}
+  60%{transform:translateX(var(--bx, 0)) rotate(-8deg)}
+  80%{transform:translateX(var(--bx, 0)) rotate(8deg)}
 }
 
 /* ── 낙하 아이템 ── */
 .catch-item {
   position: absolute;
+  top: 0;
   font-size: 30px;
   width: 36px;
   height: 36px;
@@ -1188,6 +1190,7 @@ body {
   z-index: 5;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+  will-change: transform;
 }
 
 /* ── 점수 이펙트 ── */

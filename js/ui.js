@@ -148,7 +148,7 @@ async function doSignup() {
 //  TABS
 // ──────────────────────────────────────────────
 const U_TABS = ['shop','gacha','quest','recycle','minigame','mypage'];
-const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','txlog','users','events','recycle'];
+const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings'];
 
 function uTab(tab, btn) {
   U_TABS.forEach(t => document.getElementById('utab-'+t).classList.add('hidden'));
@@ -255,5 +255,6 @@ function aTab(tab, btn) {
   if (tab === 'users')      renderUserAdmin();
   if (tab === 'events')     { _loadEventsFromDB().then(() => { renderEventAdmin(); renderScheduleList(); }); return; }
   if (tab === 'recycle')    renderRecycleAdmin();
+  if (tab === 'minigameSettings') renderMinigameAdmin();
 }
 
