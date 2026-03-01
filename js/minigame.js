@@ -1,42 +1,36 @@
 // ──────────────────────────────────────────────
-//  미니게임 시스템 (설정 DB 연동)
+//  미니게임 시스템 v2 (도전/보상 횟수 분리)
 // ──────────────────────────────────────────────
 
-// 기본 설정값 (DB에 없을 때 사용)
 const MG_DEFAULTS = {
   catch: {
-    name: '도토리 캐치',
-    icon: '🧺',
-    dailyLimit: 5,
+    name: '도토리 캐치', icon: '🧺',
+    playLimit: 10,    // 1일 도전 횟수
+    rewardLimit: 3,   // 1일 보상 횟수
     entryFee: 0,
-    rewardRate: 10,
+    rewardRate: 10,   // N점당 1도토리
     maxReward: 20,
     duration: 30
   },
   '2048': {
-    name: '2048 도토리',
-    icon: '🧩',
-    dailyLimit: 5,
-    entryFee: 0,
-    rewardRate: 50,
-    maxReward: 30,
-    duration: 0
+    name: '2048 도토리', icon: '🧩',
+    playLimit: 10, rewardLimit: 3,
+    entryFee: 0, rewardRate: 50, maxReward: 30, duration: 0
   },
   roulette: {
-    name: '행운의 룰렛',
-    icon: '🎡',
-    dailyLimit: 10,
-    entryFee: 5,
-    rewardRate: 1,
-    maxReward: 50,
-    duration: 0
+    name: '행운의 룰렛', icon: '🎡',
+    playLimit: 10, rewardLimit: 5,
+    entryFee: 5, rewardRate: 1, maxReward: 50, duration: 0
   }
 };
 
 let _mgSettings = {};
-let _mgTodayPlays = {};
+let _mgTodayPlays = {};   // { catch: 3 }  도전 횟수
+let _mgTodayRewards = {}; // { catch: 1 }  보상 수령 횟수
+let _mgBonusPlays = {};   // { catch: 2 }  관리자 충전 보너스 도전
+let _mgBonusRewards = {}; // { catch: 1 }  관리자 충전 보너스 보상
 
-// ── 설정 로드 (app_settings 테이블) ──
+// ── 설정 로드 ──
 async function loadMinigameSettings() {
   try {
     const { data } = await sb.from('app_settings').select('value').eq('key', 'minigame_settings').single();
@@ -46,40 +40,78 @@ async function loadMinigameSettings() {
 }
 
 function getMgSetting(gameId, key) {
+  // v1 호환: 이전 dailyLimit → playLimit 매핑
+  if (key === 'playLimit' && _mgSettings?.[gameId]?.playLimit === undefined && _mgSettings?.[gameId]?.dailyLimit !== undefined) {
+    return _mgSettings[gameId].dailyLimit;
+  }
   return _mgSettings?.[gameId]?.[key] ?? MG_DEFAULTS[gameId]?.[key] ?? 0;
 }
 
-// ── 오늘 플레이 횟수 조회 ──
+// ── 오늘 도전/보상 횟수 조회 ──
 async function loadTodayPlays() {
   if (!myProfile) return;
   const today = new Date().toISOString().slice(0, 10);
   try {
     const { data } = await sb
       .from('minigame_plays')
-      .select('game_id')
+      .select('game_id, rewarded')
       .eq('user_id', myProfile.id)
       .gte('played_at', today + 'T00:00:00')
       .lte('played_at', today + 'T23:59:59');
+
     _mgTodayPlays = {};
+    _mgTodayRewards = {};
     (data || []).forEach(r => {
       _mgTodayPlays[r.game_id] = (_mgTodayPlays[r.game_id] || 0) + 1;
+      if (r.rewarded) _mgTodayRewards[r.game_id] = (_mgTodayRewards[r.game_id] || 0) + 1;
     });
-  } catch(e) { console.warn('[minigame] 플레이 횟수 조회 실패:', e); }
+  } catch(e) { console.warn('[minigame] 횟수 조회 실패:', e); }
+
+  // 보너스 횟수 로드
+  await _loadBonusPlays();
+}
+
+async function _loadBonusPlays() {
+  if (!myProfile) return;
+  try {
+    const { data } = await sb.from('app_settings')
+      .select('value')
+      .eq('key', 'mg_bonus_' + myProfile.id)
+      .single();
+    const bonus = data?.value || {};
+    _mgBonusPlays = bonus.plays || {};
+    _mgBonusRewards = bonus.rewards || {};
+  } catch(e) {
+    _mgBonusPlays = {};
+    _mgBonusRewards = {};
+  }
+}
+
+// 유효 한도 계산 (설정값 + 보너스)
+function getPlayLimit(gameId) {
+  return getMgSetting(gameId, 'playLimit') + (_mgBonusPlays[gameId] || 0);
+}
+function getRewardLimit(gameId) {
+  return getMgSetting(gameId, 'rewardLimit') + (_mgBonusRewards[gameId] || 0);
 }
 
 // ── 플레이 기록 저장 ──
-async function recordPlay(gameId, score, reward) {
+async function recordPlay(gameId, score, rewarded) {
   if (!myProfile) return;
+  const reward = rewarded ? Math.min(getMgSetting(gameId, 'maxReward'), Math.max(score > 0 ? 1 : 0, Math.floor(score / getMgSetting(gameId, 'rewardRate')))) : 0;
   try {
     await sb.from('minigame_plays').insert({
       user_id: myProfile.id,
       game_id: gameId,
       score: score,
       reward: reward,
+      rewarded: rewarded,
       played_at: new Date().toISOString()
     });
     _mgTodayPlays[gameId] = (_mgTodayPlays[gameId] || 0) + 1;
-  } catch(e) { console.warn('[minigame] 플레이 기록 실패:', e); }
+    if (rewarded) _mgTodayRewards[gameId] = (_mgTodayRewards[gameId] || 0) + 1;
+  } catch(e) { console.warn('[minigame] 기록 실패:', e); }
+  return reward;
 }
 
 // 게임 목록
@@ -104,22 +136,25 @@ async function renderMinigameHub() {
 
   const grid = document.getElementById('minigameGrid');
   grid.innerHTML = MINIGAMES.map(g => {
-    const limit = getMgSetting(g.id, 'dailyLimit');
+    const pLimit = getPlayLimit(g.id);
+    const rLimit = getRewardLimit(g.id);
     const played = _mgTodayPlays[g.id] || 0;
-    const remaining = Math.max(0, limit - played);
+    const rewarded = _mgTodayRewards[g.id] || 0;
+    const pRemain = Math.max(0, pLimit - played);
+    const rRemain = Math.max(0, rLimit - rewarded);
     const fee = getMgSetting(g.id, 'entryFee');
     const maxReward = getMgSetting(g.id, 'maxReward');
     const duration = getMgSetting(g.id, 'duration');
-    const exhausted = remaining <= 0 && g.ready;
+    const exhausted = pRemain <= 0 && g.ready;
 
     return `
-    <div class="mg-card clay-card ${g.ready && !exhausted ? 'card-hover' : ''}" 
+    <div class="mg-card clay-card ${g.ready && !exhausted ? 'card-hover' : ''}"
          ${g.ready && !exhausted ? `onclick="startMinigame('${g.id}')"` : ''}
          style="cursor:${g.ready && !exhausted ? 'pointer' : 'default'}">
       <div class="mg-card-preview" style="background:${g.color}">
         <span class="mg-card-icon">${g.icon}</span>
         ${!g.ready ? '<div class="mg-coming-soon">COMING SOON</div>' : ''}
-        ${exhausted ? '<div class="mg-coming-soon">오늘 횟수 소진</div>' : ''}
+        ${exhausted ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
       </div>
       <div class="p-4">
         <h3 class="font-black text-gray-800 text-base mb-1">${g.name}</h3>
@@ -128,7 +163,8 @@ async function renderMinigameHub() {
           ${duration > 0 ? `<span class="mg-tag">⏱ ${duration}초</span>` : ''}
           ${fee > 0 ? `<span class="mg-tag">🌰 ${fee} 참가비</span>` : '<span class="mg-tag">무료</span>'}
           <span class="mg-tag">🎁 최대 ${maxReward}</span>
-          ${g.ready ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 ${remaining}/${limit}회</span>` : ''}
+          ${g.ready ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
+          ${g.ready ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -139,10 +175,10 @@ async function startMinigame(id) {
   await loadMinigameSettings();
   await loadTodayPlays();
 
-  const limit = getMgSetting(id, 'dailyLimit');
+  const pLimit = getPlayLimit(id);
   const played = _mgTodayPlays[id] || 0;
-  if (played >= limit) {
-    toast('⚠️', `오늘 플레이 횟수를 모두 사용했어요! (${limit}/${limit}회)`);
+  if (played >= pLimit) {
+    toast('⚠️', `오늘 도전 횟수를 모두 사용했어요! (${pLimit}/${pLimit}회)`);
     renderMinigameHub();
     return;
   }
@@ -153,12 +189,14 @@ async function startMinigame(id) {
       toast('❌', `참가비가 부족해요! (필요: 🌰${fee}, 보유: 🌰${myProfile?.acorns || 0})`);
       return;
     }
+    const rLimit = getRewardLimit(id);
+    const rewarded = _mgTodayRewards[id] || 0;
     showModal(`<div class="text-center">
       <div style="font-size:2.5rem;margin-bottom:8px">🎮</div>
       <h2 class="text-lg font-black text-gray-800 mb-2">게임 시작</h2>
       <p class="text-sm text-gray-500 mb-1">참가비 <span class="font-black text-amber-600">🌰 ${fee}</span>이 차감됩니다.</p>
-      <p class="text-xs text-gray-400 mb-4">남은 횟수: ${limit - played}/${limit}회</p>
-      <div class="flex gap-2">
+      <p class="text-xs text-gray-400 mb-1">도전: ${pLimit - played}/${pLimit}회 · 보상: ${rLimit - rewarded}/${rLimit}회</p>
+      <div class="flex gap-2 mt-3">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
         <button class="btn btn-primary flex-1 py-2" onclick="closeModal();_confirmStartGame('${id}',${fee})">시작하기</button>
       </div>
@@ -172,8 +210,7 @@ async function _confirmStartGame(id, fee) {
   if (fee > 0) {
     try {
       const res = await sb.rpc('adjust_acorns', {
-        p_user_id: myProfile.id,
-        p_amount: -fee,
+        p_user_id: myProfile.id, p_amount: -fee,
         p_reason: `미니게임 [${MG_DEFAULTS[id]?.name || id}] 참가비 -${fee}🌰`
       });
       if (!res.data?.success) { toast('❌', '참가비 차감 실패!'); return; }
@@ -185,11 +222,9 @@ async function _confirmStartGame(id, fee) {
 }
 
 function exitMinigame() {
-  const hub = document.getElementById('minigame-hub');
-  const play = document.getElementById('minigame-play');
-  hub.classList.remove('hidden');
-  play.classList.add('hidden');
-  play.innerHTML = '';
+  document.getElementById('minigame-hub').classList.remove('hidden');
+  document.getElementById('minigame-play').classList.add('hidden');
+  document.getElementById('minigame-play').innerHTML = '';
   renderMinigameHub();
 }
 
@@ -219,7 +254,6 @@ function startCatchGame() {
   const play = document.getElementById('minigame-play');
   hub.classList.add('hidden');
   play.classList.remove('hidden');
-
   const gameDuration = getMgSetting('catch', 'duration');
 
   play.innerHTML = `
@@ -271,7 +305,6 @@ function _initCatchControls() {
   _catch.fieldEl = field;
   _catch.basketEl = document.getElementById('catchBasket');
   _catch.fieldW = field.offsetWidth;
-
   const ro = new ResizeObserver(() => { if (_catch.fieldEl) _catch.fieldW = _catch.fieldEl.offsetWidth; });
   ro.observe(field);
 
@@ -281,19 +314,16 @@ function _initCatchControls() {
     const t = e.touches[0], r = field.getBoundingClientRect();
     _catch.basketX = Math.max(0, Math.min(1, (t.clientX - r.left) / r.width));
   }, { passive: false });
-
   field.addEventListener('touchstart', e => {
     if (!_catch?.running) return;
     const t = e.touches[0], r = field.getBoundingClientRect();
     _catch.basketX = Math.max(0, Math.min(1, (t.clientX - r.left) / r.width));
   }, { passive: true });
-
   field.addEventListener('mousemove', e => {
     if (!_catch?.running) return;
     const r = field.getBoundingClientRect();
     _catch.basketX = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
   });
-
   document.addEventListener('keydown', _catchKeyHandler);
 }
 
@@ -306,8 +336,7 @@ function _catchKeyHandler(e) {
 function beginCatchGame() {
   document.getElementById('catchOverlay').classList.add('hidden');
   _catch.running = true;
-  _catch.score = 0;
-  _catch.timeLeft = _catch.duration;
+  _catch.score = 0; _catch.timeLeft = _catch.duration;
   _catch.combo = 0; _catch.maxCombo = 0;
   _catch.caught = 0; _catch.missed = 0;
   _catch.basketXCurrent = _catch.basketX;
@@ -319,7 +348,6 @@ function beginCatchGame() {
     if (_catch.timeLeft <= 5) document.getElementById('catchTimer').parentElement.classList.add('catch-hud-danger');
     if (_catch.timeLeft <= 0) endCatchGame();
   }, 1000);
-
   _scheduleSpawn();
   _catch.frameId = requestAnimationFrame(_catchGameLoop);
 }
@@ -335,54 +363,38 @@ function _spawnItem() {
   if (!_catch?.running) return;
   const field = _catch.fieldEl;
   if (!field) return;
-
   const totalW = CATCH_CONFIG.items.reduce((s, i) => s + i.weight, 0);
   let r = Math.random() * totalW, chosen = CATCH_CONFIG.items[0];
   for (const item of CATCH_CONFIG.items) { r -= item.weight; if (r <= 0) { chosen = item; break; } }
-
-  const fw = _catch.fieldW;
-  const x = Math.random() * (fw - CATCH_CONFIG.itemSize);
+  const fw = _catch.fieldW, x = Math.random() * (fw - CATCH_CONFIG.itemSize);
   const progress = (_catch.duration - _catch.timeLeft) / _catch.duration;
   const speed = CATCH_CONFIG.baseSpeed + (CATCH_CONFIG.maxSpeed - CATCH_CONFIG.baseSpeed) * progress;
-
   const el = document.createElement('div');
-  el.className = 'catch-item';
-  el.textContent = chosen.emoji;
+  el.className = 'catch-item'; el.textContent = chosen.emoji;
   el.dataset.x = x; el.dataset.y = -40;
-  el.style.left = x + 'px';
-  el.style.transform = 'translateY(-40px)';
-  el.dataset.points = chosen.points;
-  el.dataset.type = chosen.type;
+  el.style.left = x + 'px'; el.style.transform = 'translateY(-40px)';
+  el.dataset.points = chosen.points; el.dataset.type = chosen.type;
   el.dataset.speed = speed + (Math.random() * 0.8 - 0.4);
-  field.appendChild(el);
-  _catch.items.push(el);
+  field.appendChild(el); _catch.items.push(el);
 }
 
 function _catchGameLoop() {
   if (!_catch?.running) return;
   const basket = _catch.basketEl, field = _catch.fieldEl;
   if (!field || !basket) return;
-
   const fw = _catch.fieldW, fh = field.offsetHeight, bw = CATCH_CONFIG.basketWidth;
-
-  // 바구니 lerp
   _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * 0.25;
   const bx = _catch.basketXCurrent * (fw - bw);
   basket.style.transform = `translateX(${bx}px)`;
-
   const basketLeft = bx, basketRight = bx + bw, basketTop = fh - 60;
   const toRemove = [];
-
   for (const el of _catch.items) {
     const y = parseFloat(el.dataset.y) || 0;
     const speed = parseFloat(el.dataset.speed) || CATCH_CONFIG.baseSpeed;
     const newY = y + speed;
-    el.dataset.y = newY;
-    el.style.transform = `translateY(${newY}px)`;
-
+    el.dataset.y = newY; el.style.transform = `translateY(${newY}px)`;
     const itemX = parseFloat(el.dataset.x) + CATCH_CONFIG.itemSize / 2;
     const itemBottom = newY + CATCH_CONFIG.itemSize;
-
     if (itemBottom >= basketTop && itemBottom <= basketTop + 30 && itemX >= basketLeft - 10 && itemX <= basketRight + 10) {
       _catchCollect(parseInt(el.dataset.points), el.dataset.type, el);
       toRemove.push(el); continue;
@@ -397,9 +409,7 @@ function _catchGameLoop() {
 }
 
 function _catchCollect(points, type, el) {
-  const field = _catch.fieldEl;
-  const x = parseFloat(el.dataset.x), y = parseFloat(el.dataset.y);
-
+  const field = _catch.fieldEl, x = parseFloat(el.dataset.x), y = parseFloat(el.dataset.y);
   if (points > 0) {
     _catch.combo++;
     if (_catch.combo > _catch.maxCombo) _catch.maxCombo = _catch.combo;
@@ -434,18 +444,21 @@ function _showCatchEffect(parent, x, y, text, color) {
 function endCatchGame() {
   if (!_catch) return;
   _catch.running = false;
-  clearInterval(_catch.timerId);
-  clearTimeout(_catch.spawnId);
+  clearInterval(_catch.timerId); clearTimeout(_catch.spawnId);
   cancelAnimationFrame(_catch.frameId);
   document.removeEventListener('keydown', _catchKeyHandler);
   _catch.items.forEach(el => el.remove());
   _catch.items = [];
 
   const score = _catch.score, maxCombo = _catch.maxCombo, caught = _catch.caught;
-
   const rewardRate = getMgSetting('catch', 'rewardRate');
   const maxReward = getMgSetting('catch', 'maxReward');
   const reward = Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate)));
+
+  // 보상 수령 가능 여부
+  const rLimit = getRewardLimit('catch');
+  const rUsed = _mgTodayRewards['catch'] || 0;
+  const canClaim = rUsed < rLimit && reward > 0;
 
   playSound('gachaResult');
 
@@ -468,22 +481,60 @@ function endCatchGame() {
             <span class="catch-result-label">캐치 성공</span>
           </div>
         </div>
+
         <div class="catch-reward-box">
           <span style="font-size:1.8rem">🌰</span>
           <div>
-            <p class="font-black" style="color:#78350f;font-size:18px">+${reward} 도토리 획득!</p>
+            <p class="font-black" style="color:#78350f;font-size:18px">${reward} 도토리 획득 가능</p>
             <p class="text-xs" style="color:#b45309;font-weight:700">${rewardRate}점당 1도토리 (최대 ${maxReward})</p>
+            ${canClaim ? `<p class="text-xs mt-1" style="color:#7c3aed;font-weight:700">보상 수령 남은 횟수: ${rLimit - rUsed}/${rLimit}회</p>` : ''}
           </div>
         </div>
+
+        ${canClaim ? `
+        <div class="flex gap-2 mt-4">
+          <button class="btn btn-gray flex-1 py-3" onclick="_finishCatch(${score},false)">넘기기</button>
+          <button class="btn btn-primary flex-1 py-3" onclick="_finishCatch(${score},true)">🌰 보상 받기</button>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">보상을 넘기면 도전 횟수만 차감됩니다</p>
+        ` : `
+        <div class="mt-4">
+          ${reward > 0 ? '<p class="text-sm text-gray-400 mb-2">오늘 보상 수령 횟수를 모두 사용했어요</p>' : ''}
+          <button class="btn btn-gray w-full py-3" onclick="_finishCatch(${score},false)">확인</button>
+        </div>
+        `}
+      </div>
+    </div>`;
+}
+
+async function _finishCatch(score, claimReward) {
+  const rewardRate = getMgSetting('catch', 'rewardRate');
+  const maxReward = getMgSetting('catch', 'maxReward');
+  const reward = claimReward ? Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate))) : 0;
+
+  // 기록 저장 (도전 횟수 +1, 보상 여부 기록)
+  await recordPlay('catch', score, claimReward);
+
+  // 보상 지급
+  if (claimReward && reward > 0) {
+    await _giveMinigameReward(reward, score, 'catch');
+    toast('🌰', `+${reward} 도토리를 받았어요!`);
+  } else {
+    toast('🎮', '기록이 저장되었습니다');
+  }
+
+  // 다시하기/돌아가기 화면
+  document.getElementById('minigame-play').innerHTML = `
+    <div class="catch-result-screen">
+      <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
+        <div style="font-size:3rem;margin-bottom:8px">${claimReward ? '🌰' : '✅'}</div>
+        <h2 class="font-black text-lg mb-2" style="color:#78350f">${claimReward ? `+${reward} 도토리 획득!` : '기록 저장 완료'}</h2>
         <div class="flex gap-2 mt-4">
           <button class="btn btn-gray flex-1 py-3" onclick="exitMinigame()">돌아가기</button>
           <button class="btn btn-primary flex-1 py-3" onclick="startMinigame('catch')">다시하기</button>
         </div>
       </div>
     </div>`;
-
-  recordPlay('catch', score, reward);
-  _giveMinigameReward(reward, score, 'catch');
 }
 
 async function _giveMinigameReward(reward, score, gameId) {
@@ -502,7 +553,7 @@ function confirmExitCatch() {
     showModal(`<div class="text-center">
       <div style="font-size:2.5rem;margin-bottom:8px">⚠️</div>
       <h2 class="text-lg font-black text-gray-800 mb-2">게임을 종료할까요?</h2>
-      <p class="text-sm text-gray-500 mb-4">현재 진행 중인 게임이 끝나고<br>점수에 따른 보상을 받게 됩니다.</p>
+      <p class="text-sm text-gray-500 mb-4">현재 진행 중인 게임이 끝나고<br>결과 화면으로 이동합니다.</p>
       <div class="flex gap-2">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">계속하기</button>
         <button class="btn btn-primary flex-1 py-2" onclick="closeModal();endCatchGame()">종료하기</button>
@@ -518,7 +569,6 @@ function confirmExitCatch() {
 
 async function renderMinigameAdmin() {
   await loadMinigameSettings();
-
   const list = document.getElementById('mgSettingsList');
   const games = ['catch', '2048', 'roulette'];
 
@@ -531,8 +581,12 @@ async function renderMinigameAdmin() {
       <h3 class="font-black text-gray-800 text-base mb-3">${def.icon} ${def.name}</h3>
       <div class="space-y-2">
         <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 횟수</label>
-          <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-${id}-dailyLimit" value="${val('dailyLimit')}">
+          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
+          <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-${id}-playLimit" value="${val('playLimit')}">
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 1일 보상 횟수</label>
+          <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-${id}-rewardLimit" value="${val('rewardLimit')}">
         </div>
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 참가비</label>
@@ -555,18 +609,19 @@ async function renderMinigameAdmin() {
       <button class="btn btn-primary w-full py-2 mt-3 text-sm" onclick="saveMinigameSetting('${id}')">💾 저장</button>
     </div>`;
   }).join('');
-
   _renderMinigameStats();
 }
 
 async function saveMinigameSetting(gameId) {
-  const keys = ['dailyLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration'];
+  const keys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration'];
   const updated = {};
   for (const key of keys) {
     const el = document.getElementById(`mg-${gameId}-${key}`);
     if (el) updated[key] = parseInt(el.value) || 0;
   }
   _mgSettings[gameId] = { ...(_mgSettings[gameId] || {}), ...updated };
+  // v1→v2: dailyLimit 제거
+  delete _mgSettings[gameId].dailyLimit;
 
   try {
     const { data: existing } = await sb.from('app_settings').select('key').eq('key', 'minigame_settings').single();
@@ -579,13 +634,81 @@ async function saveMinigameSetting(gameId) {
   } catch(e) { toast('❌', '설정 저장 실패: ' + (e.message || e)); }
 }
 
+// ── 관리자: 횟수 충전 ──
+async function showMgChargeModal(userId, userName) {
+  showModal(`<div class="text-center">
+    <div style="font-size:2rem;margin-bottom:8px">🎮</div>
+    <h2 class="text-lg font-black text-gray-800 mb-3">${userName} 미니게임 횟수 충전</h2>
+    <div class="space-y-3 text-left" style="max-width:260px;margin:0 auto">
+      <div>
+        <label class="text-xs font-bold text-gray-500 mb-1 block">게임 선택</label>
+        <select class="field" id="mgChargeGame">
+          <option value="catch">🧺 도토리 캐치</option>
+          <option value="2048">🧩 2048 도토리</option>
+          <option value="roulette">🎡 행운의 룰렛</option>
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <label class="text-xs font-bold text-gray-500 mb-1 block">추가 도전 횟수</label>
+          <input class="field text-center" type="number" min="0" max="100" id="mgChargePlays" value="0">
+        </div>
+        <div class="flex-1">
+          <label class="text-xs font-bold text-gray-500 mb-1 block">추가 보상 횟수</label>
+          <input class="field text-center" type="number" min="0" max="100" id="mgChargeRewards" value="0">
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary flex-1 py-2" onclick="_doMgCharge('${userId}','${userName}')">충전하기</button>
+    </div>
+  </div>`);
+}
+
+async function _doMgCharge(userId, userName) {
+  const gameId = document.getElementById('mgChargeGame').value;
+  const addPlays = parseInt(document.getElementById('mgChargePlays').value) || 0;
+  const addRewards = parseInt(document.getElementById('mgChargeRewards').value) || 0;
+  if (addPlays <= 0 && addRewards <= 0) { toast('⚠️', '충전할 횟수를 입력해주세요'); return; }
+
+  closeModal();
+  try {
+    const key = 'mg_bonus_' + userId;
+    let bonus = {};
+    try {
+      const { data } = await sb.from('app_settings').select('value').eq('key', key).single();
+      bonus = data?.value || {};
+    } catch(e) {}
+
+    if (!bonus.plays) bonus.plays = {};
+    if (!bonus.rewards) bonus.rewards = {};
+    bonus.plays[gameId] = (bonus.plays[gameId] || 0) + addPlays;
+    bonus.rewards[gameId] = (bonus.rewards[gameId] || 0) + addRewards;
+
+    const { data: existing } = await sb.from('app_settings').select('key').eq('key', key).single().catch(() => ({ data: null }));
+    if (existing) {
+      await sb.from('app_settings').update({ value: bonus, updated_at: new Date().toISOString() }).eq('key', key);
+    } else {
+      await sb.from('app_settings').insert({ key: key, value: bonus, updated_at: new Date().toISOString() });
+    }
+
+    const parts = [];
+    if (addPlays > 0) parts.push(`도전 +${addPlays}`);
+    if (addRewards > 0) parts.push(`보상 +${addRewards}`);
+    toast('✅', `${userName}에게 ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 충전 완료!`);
+  } catch(e) { toast('❌', '충전 실패: ' + (e.message || e)); }
+}
+
+
+// ── 통계 ──
 async function _renderMinigameStats() {
   const area = document.getElementById('mgStatsArea');
   if (!area) return;
   const today = new Date().toISOString().slice(0, 10);
   try {
     const { data } = await sb.from('minigame_plays')
-      .select('game_id, score, reward, user_id')
+      .select('game_id, score, reward, user_id, rewarded')
       .gte('played_at', today + 'T00:00:00')
       .lte('played_at', today + 'T23:59:59');
 
@@ -593,8 +716,9 @@ async function _renderMinigameStats() {
 
     const stats = {}, players = new Set();
     for (const r of data) {
-      if (!stats[r.game_id]) stats[r.game_id] = { plays: 0, totalReward: 0, bestScore: 0 };
+      if (!stats[r.game_id]) stats[r.game_id] = { plays: 0, claims: 0, totalReward: 0, bestScore: 0 };
       stats[r.game_id].plays++;
+      if (r.rewarded) stats[r.game_id].claims++;
       stats[r.game_id].totalReward += r.reward || 0;
       stats[r.game_id].bestScore = Math.max(stats[r.game_id].bestScore, r.score || 0);
       players.add(r.user_id);
@@ -605,8 +729,9 @@ async function _renderMinigameStats() {
       ${Object.entries(stats).map(([gid, s]) => `
         <div class="clay-card p-3 mb-2 text-left">
           <span class="font-black text-sm text-gray-700">${MG_DEFAULTS[gid]?.icon || '🎮'} ${MG_DEFAULTS[gid]?.name || gid}</span>
-          <div class="flex gap-4 mt-1 text-xs text-gray-500 font-semibold">
+          <div class="flex gap-3 mt-1 text-xs text-gray-500 font-semibold flex-wrap">
             <span>🎮 ${s.plays}회</span>
+            <span>🌰 수령 ${s.claims}회</span>
             <span>🏆 최고 ${s.bestScore}점</span>
             <span>🌰 총 ${s.totalReward} 지급</span>
           </div>
@@ -636,7 +761,6 @@ function _getPeriodRange(period) {
     mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
     return { from: mon.toISOString().slice(0, 10) + 'T00:00:00', to: now.toISOString().slice(0, 10) + 'T23:59:59' };
   }
-  // alltime
   return { from: '2020-01-01T00:00:00', to: '2099-12-31T23:59:59' };
 }
 
@@ -647,13 +771,8 @@ function _medalEmoji(rank) {
   return `<span class="rank-num">${rank}</span>`;
 }
 
-function _periodLabel(period) {
-  if (period === 'daily') return '오늘';
-  if (period === 'weekly') return '이번 주';
-  return '전체';
-}
+function _periodLabel(p) { return p === 'daily' ? '오늘' : p === 'weekly' ? '이번 주' : '전체'; }
 
-// ── 사용자 랭킹 ──
 function setRankPeriod(period, btn) {
   _rankPeriod = period;
   document.querySelectorAll('#utab-ranking .rank-period-btn').forEach(b => b.classList.remove('active'));
@@ -668,123 +787,70 @@ async function renderUserRanking() {
   list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
 
   try {
-    // 기간 내 각 유저의 최고점수 조회
-    const { data } = await sb
-      .from('minigame_plays')
-      .select('user_id, score')
-      .eq('game_id', gameId)
-      .gte('played_at', range.from)
-      .lte('played_at', range.to)
-      .order('score', { ascending: false })
-      .limit(200);
+    const { data } = await sb.from('minigame_plays').select('user_id, score')
+      .eq('game_id', gameId).gte('played_at', range.from).lte('played_at', range.to)
+      .order('score', { ascending: false }).limit(200);
 
     if (!data?.length) {
       list.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">📊 ${_periodLabel(_rankPeriod)} 기록이 없습니다</p>`;
-      _renderMyStats(gameId);
-      return;
+      _renderMyStats(gameId); return;
     }
 
-    // 유저별 최고점수
     const best = {};
-    for (const r of data) {
-      if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score;
-    }
-
-    // 유저 이름 조회
+    for (const r of data) { if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score; }
     const userIds = Object.keys(best);
     const { data: users } = await sb.from('users').select('id, display_name').in('id', userIds);
     const nameMap = {};
     (users || []).forEach(u => nameMap[u.id] = u.display_name);
 
-    // 정렬
-    const sorted = Object.entries(best)
-      .map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' }))
-      .sort((a, b) => b.score - a.score);
-
+    const sorted = Object.entries(best).map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' })).sort((a, b) => b.score - a.score);
     const myId = myProfile?.id;
     const myRank = sorted.findIndex(r => r.uid === myId) + 1;
 
     list.innerHTML = sorted.slice(0, 20).map((r, i) => {
-      const rank = i + 1;
-      const isMe = r.uid === myId;
-      return `
-      <div class="rank-row ${isMe ? 'rank-row-me' : ''} ${rank <= 3 ? 'rank-row-top' : ''}">
+      const rank = i + 1, isMe = r.uid === myId;
+      return `<div class="rank-row ${isMe ? 'rank-row-me' : ''} ${rank <= 3 ? 'rank-row-top' : ''}">
         <div class="rank-medal">${_medalEmoji(rank)}</div>
         <div class="rank-name">${r.name}${isMe ? ' <span class="rank-me-badge">나</span>' : ''}</div>
         <div class="rank-score">${r.score.toLocaleString()}점</div>
       </div>`;
     }).join('');
 
-    // 내가 20위 밖이면 별도 표시
     if (myRank > 20 && myId) {
       const me = sorted.find(r => r.uid === myId);
-      if (me) {
-        list.innerHTML += `
-        <div class="rank-divider">⋯</div>
-        <div class="rank-row rank-row-me">
-          <div class="rank-medal"><span class="rank-num">${myRank}</span></div>
-          <div class="rank-name">${me.name} <span class="rank-me-badge">나</span></div>
-          <div class="rank-score">${me.score.toLocaleString()}점</div>
-        </div>`;
-      }
+      if (me) list.innerHTML += `<div class="rank-divider">⋯</div><div class="rank-row rank-row-me">
+        <div class="rank-medal"><span class="rank-num">${myRank}</span></div>
+        <div class="rank-name">${me.name} <span class="rank-me-badge">나</span></div>
+        <div class="rank-score">${me.score.toLocaleString()}점</div></div>`;
     }
-  } catch(e) {
-    list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">랭킹 조회 실패</p>';
-    console.warn('[ranking]', e);
-  }
-
+  } catch(e) { list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">랭킹 조회 실패</p>'; }
   _renderMyStats(gameId);
 }
 
 async function _renderMyStats(gameId) {
   const area = document.getElementById('myGameStats');
   if (!area || !myProfile) return;
-
   try {
-    const { data } = await sb
-      .from('minigame_plays')
-      .select('score, reward, played_at')
-      .eq('user_id', myProfile.id)
-      .eq('game_id', gameId)
-      .order('played_at', { ascending: false })
-      .limit(100);
+    const { data } = await sb.from('minigame_plays').select('score, reward, played_at')
+      .eq('user_id', myProfile.id).eq('game_id', gameId)
+      .order('played_at', { ascending: false }).limit(100);
 
-    if (!data?.length) {
-      area.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">아직 플레이 기록이 없어요</p>';
-      return;
-    }
+    if (!data?.length) { area.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">아직 플레이 기록이 없어요</p>'; return; }
 
     const totalPlays = data.length;
     const bestScore = Math.max(...data.map(r => r.score));
     const totalReward = data.reduce((s, r) => s + (r.reward || 0), 0);
     const avgScore = Math.round(data.reduce((s, r) => s + r.score, 0) / totalPlays);
 
-    area.innerHTML = `
-      <div class="flex gap-3 justify-center flex-wrap">
-        <div class="rank-my-stat">
-          <span class="rank-my-num" style="color:#d97706">${totalPlays}</span>
-          <span class="rank-my-label">총 플레이</span>
-        </div>
-        <div class="rank-my-stat">
-          <span class="rank-my-num" style="color:#dc2626">${bestScore}</span>
-          <span class="rank-my-label">최고 점수</span>
-        </div>
-        <div class="rank-my-stat">
-          <span class="rank-my-num" style="color:#059669">${avgScore}</span>
-          <span class="rank-my-label">평균 점수</span>
-        </div>
-        <div class="rank-my-stat">
-          <span class="rank-my-num" style="color:#7c3aed">${totalReward}</span>
-          <span class="rank-my-label">총 보상 🌰</span>
-        </div>
-      </div>`;
-  } catch(e) {
-    area.innerHTML = '<p class="text-sm text-gray-400">기록 조회 실패</p>';
-  }
+    area.innerHTML = `<div class="flex gap-3 justify-center flex-wrap">
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:#d97706">${totalPlays}</span><span class="rank-my-label">총 플레이</span></div>
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:#dc2626">${bestScore}</span><span class="rank-my-label">최고 점수</span></div>
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:#059669">${avgScore}</span><span class="rank-my-label">평균 점수</span></div>
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:#7c3aed">${totalReward}</span><span class="rank-my-label">총 보상 🌰</span></div>
+    </div>`;
+  } catch(e) { area.innerHTML = '<p class="text-sm text-gray-400">기록 조회 실패</p>'; }
 }
 
-
-// ── 관리자 랭킹 ──
 function setAdminRankPeriod(period, btn) {
   _adminRankPeriod = period;
   document.querySelectorAll('#atab-ranking .rank-period-btn').forEach(b => b.classList.remove('active'));
@@ -799,78 +865,45 @@ async function renderAdminRanking() {
   list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
 
   try {
-    const { data } = await sb
-      .from('minigame_plays')
-      .select('user_id, score')
-      .eq('game_id', gameId)
-      .gte('played_at', range.from)
-      .lte('played_at', range.to)
-      .order('score', { ascending: false })
-      .limit(200);
+    const { data } = await sb.from('minigame_plays').select('user_id, score')
+      .eq('game_id', gameId).gte('played_at', range.from).lte('played_at', range.to)
+      .order('score', { ascending: false }).limit(200);
 
-    if (!data?.length) {
-      list.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">📊 ${_periodLabel(_adminRankPeriod)} 기록이 없습니다</p>`;
-      renderMinigameLog();
-      return;
-    }
+    if (!data?.length) { list.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">📊 ${_periodLabel(_adminRankPeriod)} 기록이 없습니다</p>`; renderMinigameLog(); return; }
 
     const best = {};
-    for (const r of data) {
-      if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score;
-    }
-
+    for (const r of data) { if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score; }
     const userIds = Object.keys(best);
     const { data: users } = await sb.from('users').select('id, display_name').in('id', userIds);
     const nameMap = {};
     (users || []).forEach(u => nameMap[u.id] = u.display_name);
 
-    const sorted = Object.entries(best)
-      .map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' }))
-      .sort((a, b) => b.score - a.score);
-
+    const sorted = Object.entries(best).map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' })).sort((a, b) => b.score - a.score);
     list.innerHTML = sorted.slice(0, 30).map((r, i) => {
       const rank = i + 1;
-      return `
-      <div class="rank-row ${rank <= 3 ? 'rank-row-top' : ''}">
+      return `<div class="rank-row ${rank <= 3 ? 'rank-row-top' : ''}">
         <div class="rank-medal">${_medalEmoji(rank)}</div>
         <div class="rank-name">${r.name}</div>
         <div class="rank-score">${r.score.toLocaleString()}점</div>
       </div>`;
     }).join('');
-  } catch(e) {
-    list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">랭킹 조회 실패</p>';
-  }
-
-  // 로그도 함께 로드
+  } catch(e) { list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">랭킹 조회 실패</p>'; }
   _mgLogOffset = 0;
   renderMinigameLog();
 }
 
-
-// ── 관리자 미니게임 이용 로그 ──
 async function renderMinigameLog() {
   const gameFilter = document.getElementById('adminLogGameFilter')?.value || '';
   const list = document.getElementById('minigameLogList');
   _mgLogOffset = 0;
-
   try {
-    let query = sb
-      .from('minigame_plays')
-      .select('user_id, game_id, score, reward, played_at')
-      .order('played_at', { ascending: false })
-      .range(0, MG_LOG_PAGE - 1);
-
+    let query = sb.from('minigame_plays').select('user_id, game_id, score, reward, rewarded, played_at')
+      .order('played_at', { ascending: false }).range(0, MG_LOG_PAGE - 1);
     if (gameFilter) query = query.eq('game_id', gameFilter);
-
     const { data } = await query;
 
-    if (!data?.length) {
-      list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로그가 없습니다</p>';
-      document.getElementById('mgLogMoreBtn').style.display = 'none';
-      return;
-    }
+    if (!data?.length) { list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로그가 없습니다</p>'; document.getElementById('mgLogMoreBtn').style.display = 'none'; return; }
 
-    // 유저 이름 조회
     const uids = [...new Set(data.map(r => r.user_id))];
     const { data: users } = await sb.from('users').select('id, display_name').in('id', uids);
     const nameMap = {};
@@ -878,41 +911,26 @@ async function renderMinigameLog() {
 
     list.innerHTML = _renderLogRows(data, nameMap);
     _mgLogOffset = data.length;
-
     document.getElementById('mgLogMoreBtn').style.display = data.length >= MG_LOG_PAGE ? '' : 'none';
-  } catch(e) {
-    list.innerHTML = '<p class="text-sm text-gray-400">로그 조회 실패</p>';
-  }
+  } catch(e) { list.innerHTML = '<p class="text-sm text-gray-400">로그 조회 실패</p>'; }
 }
 
 async function loadMoreMinigameLogs() {
   const gameFilter = document.getElementById('adminLogGameFilter')?.value || '';
   const list = document.getElementById('minigameLogList');
-
   try {
-    let query = sb
-      .from('minigame_plays')
-      .select('user_id, game_id, score, reward, played_at')
-      .order('played_at', { ascending: false })
-      .range(_mgLogOffset, _mgLogOffset + MG_LOG_PAGE - 1);
-
+    let query = sb.from('minigame_plays').select('user_id, game_id, score, reward, rewarded, played_at')
+      .order('played_at', { ascending: false }).range(_mgLogOffset, _mgLogOffset + MG_LOG_PAGE - 1);
     if (gameFilter) query = query.eq('game_id', gameFilter);
-
     const { data } = await query;
-
-    if (!data?.length) {
-      document.getElementById('mgLogMoreBtn').style.display = 'none';
-      return;
-    }
+    if (!data?.length) { document.getElementById('mgLogMoreBtn').style.display = 'none'; return; }
 
     const uids = [...new Set(data.map(r => r.user_id))];
     const { data: users } = await sb.from('users').select('id, display_name').in('id', uids);
     const nameMap = {};
     (users || []).forEach(u => nameMap[u.id] = u.display_name);
-
     list.innerHTML += _renderLogRows(data, nameMap);
     _mgLogOffset += data.length;
-
     document.getElementById('mgLogMoreBtn').style.display = data.length >= MG_LOG_PAGE ? '' : 'none';
   } catch(e) { console.warn('[mgLog]', e); }
 }
@@ -922,12 +940,12 @@ function _renderLogRows(data, nameMap) {
     const t = new Date(r.played_at);
     const timeStr = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
     const gameName = MG_DEFAULTS[r.game_id]?.icon || '🎮';
-    return `
-    <div class="mg-log-row">
+    const rewardStr = r.rewarded ? `<span style="color:#059669">+${r.reward}🌰</span>` : '<span style="color:#9ca3af">넘김</span>';
+    return `<div class="mg-log-row">
       <span class="mg-log-game">${gameName}</span>
       <span class="mg-log-user">${nameMap[r.user_id] || '—'}</span>
       <span class="mg-log-score">${r.score}점</span>
-      <span class="mg-log-reward" style="color:#059669">+${r.reward}🌰</span>
+      <span class="mg-log-reward">${rewardStr}</span>
       <span class="mg-log-time">${timeStr}</span>
     </div>`;
   }).join('');

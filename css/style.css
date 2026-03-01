@@ -1034,7 +1034,9 @@ body {
 [data-theme="dark"] .mg-coming-soon { background: rgba(0,0,0,0.55); }
 [data-theme="dark"] .mg-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
 .mg-tag-danger { background: rgba(239,68,68,0.12) !important; color: #dc2626 !important; }
+.mg-tag-reward { background: rgba(34,197,94,0.12) !important; color: #059669 !important; }
 [data-theme="dark"] .mg-tag-danger { background: rgba(239,68,68,0.15) !important; color: #fca5a5 !important; }
+[data-theme="dark"] .mg-tag-reward { background: rgba(34,197,94,0.1) !important; color: #6ee7b7 !important; }
 
 /* ══════════════════════════════════════════════
    도토리 캐치 — 게임 컨테이너
