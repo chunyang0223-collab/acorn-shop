@@ -143,6 +143,7 @@ const supabase = (() => {
         lt(col, val)   { _filters.push(col + '=lt.'   + encodeURIComponent(val)); return q; },
         order(col, opts){ _order = col + (opts?.ascending === false ? '.desc' : '.asc'); return q; },
         limit(n)       { _filters.push('limit=' + n); return q; },
+        range(from, to){ _filters.push('limit=' + (to - from + 1)); _filters.push('offset=' + from); return q; },
         single()       { _single = true; return q; },
         maybeSingle()  { _maybeSingle = true; return q; },
         insert(data)   { _method = 'POST'; _body = JSON.stringify(data); return q; },

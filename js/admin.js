@@ -943,18 +943,71 @@ async function renderUserAdmin() {
   const { data: users } = await sb.from('users').select('*').order('acorns', { ascending: false });
   const el = document.getElementById('userAdminList');
   el.innerHTML = users?.length
-    ? users.map(u => `<div class="flex items-center gap-3 p-3 rounded-2xl" style="background:#f9fafb">
-        <div class="text-2xl">${u.avatar_emoji||'🐿️'}</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-black text-gray-800 text-sm">${u.display_name}${u.is_admin?' 👑':''}</p>
-          <p class="text-xs text-gray-400">가입: ${fmtTs(u.created_at)}</p>
-          <p class="text-xs" style="color:#a78bfa">🕐 최근접속: ${u.last_seen_at ? fmtTs(u.last_seen_at) : '기록없음'}</p>
+    ? users.map(u => {
+      const esc = s => s.replace(/'/g, "\\'");
+      return `<div class="um-card">
+        <div class="um-top">
+          <div class="um-avatar">${u.avatar_emoji||'🐿️'}</div>
+          <div class="um-info">
+            <p class="um-name">${u.display_name}${u.is_admin?' 👑':''}</p>
+            <p class="um-sub">가입: ${fmtTs(u.created_at)} · 접속: ${u.last_seen_at ? fmtTs(u.last_seen_at) : '기록없음'}</p>
+          </div>
+          <div class="um-acorn">🌰 ${u.acorns}</div>
         </div>
-        <div class="flex flex-col items-end gap-1">
-          <div class="font-black text-amber-600 text-sm">🌰 ${u.acorns}</div>
-          ${u.is_admin ? '' : `<button class="btn btn-purple px-2 py-1 text-xs" onclick="showGiftItemModal('${u.id}','${u.display_name}')">🎁 선물</button>`}
-        </div>
-      </div>`).join('')
+        ${u.is_admin ? '' : `<div class="um-actions">
+          <button class="um-btn um-btn-acorn" onclick="showAcornModal('${u.id}','${esc(u.display_name)}',1)">🌰 도토리 지급</button>
+          <button class="um-btn um-btn-minus" onclick="showAcornModal('${u.id}','${esc(u.display_name)}',-1)">🌰 도토리 차감</button>
+          <button class="um-btn um-btn-item" onclick="showGiftItemModal('${u.id}','${esc(u.display_name)}')">🎁 아이템 선물</button>
+          <button class="um-btn um-btn-game" onclick="showMgChargeModal('${u.id}','${esc(u.display_name)}')">🎮 게임횟수 조정</button>
+        </div>`}
+      </div>`;
+    }).join('')
+    : '<p class="text-sm text-gray-400 text-center py-6">회원이 없어요</p>';
+}
+
+// ── 도토리 지급/차감 모달 (통합) ──
+function showAcornModal(userId, userName, direction) {
+  const isGive = direction > 0;
+  showModal(`<div class="text-center">
+    <div style="font-size:2.5rem;margin-bottom:8px">${isGive ? '🌰' : '💸'}</div>
+    <h2 class="text-lg font-black text-gray-800 mb-3">${userName} 도토리 ${isGive ? '지급' : '차감'}</h2>
+    <div class="space-y-3 text-left" style="max-width:280px;margin:0 auto">
+      <div>
+        <label class="text-xs font-bold text-gray-500 mb-1 block">수량</label>
+        <input class="field text-center" type="number" min="1" max="99999" id="acornModalAmt" placeholder="도토리 수량" value="">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500 mb-1 block">사유 (선택)</label>
+        <input class="field" type="text" id="acornModalMemo" placeholder="${isGive ? '지급 사유' : '차감 사유'}">
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+      <button class="btn ${isGive ? 'btn-primary' : 'btn-red'} flex-1 py-2" onclick="_doAcornAction('${userId}','${userName}',${direction})">${isGive ? '🌰 지급하기' : '💸 차감하기'}</button>
+    </div>
+  </div>`);
+  setTimeout(() => document.getElementById('acornModalAmt')?.focus(), 100);
+}
+
+async function _doAcornAction(userId, userName, direction) {
+  const amt = parseInt(document.getElementById('acornModalAmt')?.value) || 0;
+  const memo = document.getElementById('acornModalMemo')?.value?.trim() || '';
+  if (amt <= 0) { toast('⚠️', '수량을 입력해주세요'); return; }
+
+  closeModal();
+  const finalAmt = direction > 0 ? amt : -amt;
+  const reason = (direction > 0 ? '관리자 지급' : '관리자 차감') + (memo ? `: ${memo}` : '');
+
+  try {
+    const res = await sb.rpc('adjust_acorns', { p_user_id: userId, p_amount: finalAmt, p_reason: reason });
+    if (res.data?.success) {
+      toast('✅', `${userName}에게 ${direction > 0 ? '+' : ''}${finalAmt}🌰 ${direction > 0 ? '지급' : '차감'} 완료 (잔액: ${res.data.balance}🌰)`);
+      renderUserAdmin();
+    } else {
+      toast('❌', res.data?.error || '처리 실패');
+    }
+  } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
+}
     : '<p class="text-sm text-gray-400 text-center py-6">회원이 없어요</p>';
 }
 

@@ -638,8 +638,9 @@ async function saveMinigameSetting(gameId) {
 async function showMgChargeModal(userId, userName) {
   showModal(`<div class="text-center">
     <div style="font-size:2rem;margin-bottom:8px">🎮</div>
-    <h2 class="text-lg font-black text-gray-800 mb-3">${userName} 미니게임 횟수 충전</h2>
-    <div class="space-y-3 text-left" style="max-width:260px;margin:0 auto">
+    <h2 class="text-lg font-black text-gray-800 mb-3">${userName} 게임횟수 조정</h2>
+    <p class="text-xs text-gray-400 mb-3">양수 = 충전, 음수 = 차감</p>
+    <div class="space-y-3 text-left" style="max-width:280px;margin:0 auto">
       <div>
         <label class="text-xs font-bold text-gray-500 mb-1 block">게임 선택</label>
         <select class="field" id="mgChargeGame">
@@ -650,18 +651,18 @@ async function showMgChargeModal(userId, userName) {
       </div>
       <div class="flex gap-2">
         <div class="flex-1">
-          <label class="text-xs font-bold text-gray-500 mb-1 block">추가 도전 횟수</label>
-          <input class="field text-center" type="number" min="0" max="100" id="mgChargePlays" value="0">
+          <label class="text-xs font-bold text-gray-500 mb-1 block">도전 횟수</label>
+          <input class="field text-center" type="number" min="-100" max="100" id="mgChargePlays" value="0">
         </div>
         <div class="flex-1">
-          <label class="text-xs font-bold text-gray-500 mb-1 block">추가 보상 횟수</label>
-          <input class="field text-center" type="number" min="0" max="100" id="mgChargeRewards" value="0">
+          <label class="text-xs font-bold text-gray-500 mb-1 block">보상 횟수</label>
+          <input class="field text-center" type="number" min="-100" max="100" id="mgChargeRewards" value="0">
         </div>
       </div>
     </div>
     <div class="flex gap-2 mt-4">
       <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
-      <button class="btn btn-primary flex-1 py-2" onclick="_doMgCharge('${userId}','${userName}')">충전하기</button>
+      <button class="btn btn-primary flex-1 py-2" onclick="_doMgCharge('${userId}','${userName}')">적용하기</button>
     </div>
   </div>`);
 }
@@ -670,7 +671,7 @@ async function _doMgCharge(userId, userName) {
   const gameId = document.getElementById('mgChargeGame').value;
   const addPlays = parseInt(document.getElementById('mgChargePlays').value) || 0;
   const addRewards = parseInt(document.getElementById('mgChargeRewards').value) || 0;
-  if (addPlays <= 0 && addRewards <= 0) { toast('⚠️', '충전할 횟수를 입력해주세요'); return; }
+  if (addPlays === 0 && addRewards === 0) { toast('⚠️', '조정할 횟수를 입력해주세요'); return; }
 
   closeModal();
   try {
@@ -683,8 +684,8 @@ async function _doMgCharge(userId, userName) {
 
     if (!bonus.plays) bonus.plays = {};
     if (!bonus.rewards) bonus.rewards = {};
-    bonus.plays[gameId] = (bonus.plays[gameId] || 0) + addPlays;
-    bonus.rewards[gameId] = (bonus.rewards[gameId] || 0) + addRewards;
+    bonus.plays[gameId] = Math.max(0, (bonus.plays[gameId] || 0) + addPlays);
+    bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + addRewards);
 
     const { data: existing } = await sb.from('app_settings').select('key').eq('key', key).single().catch(() => ({ data: null }));
     if (existing) {
@@ -694,10 +695,10 @@ async function _doMgCharge(userId, userName) {
     }
 
     const parts = [];
-    if (addPlays > 0) parts.push(`도전 +${addPlays}`);
-    if (addRewards > 0) parts.push(`보상 +${addRewards}`);
-    toast('✅', `${userName}에게 ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 충전 완료!`);
-  } catch(e) { toast('❌', '충전 실패: ' + (e.message || e)); }
+    if (addPlays !== 0) parts.push(`도전 ${addPlays > 0 ? '+' : ''}${addPlays}`);
+    if (addRewards !== 0) parts.push(`보상 ${addRewards > 0 ? '+' : ''}${addRewards}`);
+    toast('✅', `${userName} ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 완료!`);
+  } catch(e) { toast('❌', '처리 실패: ' + (e.message || e)); }
 }
 
 

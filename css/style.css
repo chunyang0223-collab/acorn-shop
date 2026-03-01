@@ -1486,3 +1486,101 @@ body {
 }
 [data-theme="dark"] .mg-log-user { color: #d1d5db; }
 [data-theme="dark"] .mg-log-time { color: #6b7280; }
+
+/* ══════════════════════════════════════════════
+   회원관리 카드 (통합)
+   ══════════════════════════════════════════════ */
+.um-card {
+  background: rgba(255,255,255,0.55);
+  border-radius: 18px;
+  padding: 14px;
+  border: 1.5px solid rgba(255,255,255,0.8);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: box-shadow 0.15s;
+}
+.um-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.um-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.um-avatar {
+  font-size: 28px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(251,191,36,0.08);
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+.um-info { flex: 1; min-width: 0; }
+.um-name {
+  font-weight: 900;
+  font-size: 14px;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.um-sub {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.um-acorn {
+  font-family: 'Jua', sans-serif;
+  color: #d97706;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.um-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.um-btn {
+  font-family: 'Jua', sans-serif;
+  font-size: 12px;
+  padding: 9px 4px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #fff;
+  transition: transform 0.1s, filter 0.1s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.um-btn:active { transform: scale(0.96); }
+.um-btn:hover { filter: brightness(1.05); }
+.um-btn-acorn { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.um-btn-minus { background: linear-gradient(135deg, #fca5a5, #ef4444); }
+.um-btn-item  { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+.um-btn-game  { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+
+/* btn-red for modal */
+.btn-red {
+  background: linear-gradient(135deg, #fca5a5, #ef4444) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+/* 다크모드 */
+[data-theme="dark"] .um-card {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .um-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+[data-theme="dark"] .um-avatar { background: rgba(251,191,36,0.06); }
+[data-theme="dark"] .um-name { color: #e5e7eb; }
+[data-theme="dark"] .um-sub { color: #6b7280; }
+[data-theme="dark"] .um-acorn { color: #fbbf24; }
+[data-theme="dark"] .um-btn { box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
