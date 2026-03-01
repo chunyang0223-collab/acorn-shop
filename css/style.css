@@ -1488,6 +1488,91 @@ body {
 [data-theme="dark"] .mg-log-time { color: #6b7280; }
 
 /* ══════════════════════════════════════════════
+   게임횟수 조정 모달
+   ══════════════════════════════════════════════ */
+.mgc-status {
+  background: rgba(245,240,255,0.6);
+  border: 1.5px solid rgba(192,132,252,0.15);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.mgc-status-title {
+  font-family: 'Jua', sans-serif;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+.mgc-status-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+.mgc-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.mgc-stat-num { font-family: 'Jua', sans-serif; font-size: 20px; line-height: 1; }
+.mgc-stat-label { font-size: 10px; font-weight: 800; color: #9ca3af; }
+.mgc-play { color: #3b82f6; }
+.mgc-reward { color: #059669; }
+.mgc-slash { font-size: 16px; color: #d1d5db; }
+
+.mgc-adjust { margin-bottom: 8px; }
+.mgc-adjust-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.mgc-adjust-label {
+  font-family: 'Jua', sans-serif;
+  font-size: 14px;
+  color: #374151;
+}
+.mgc-controls { display: flex; align-items: center; gap: 0; }
+.mgc-btn {
+  width: 36px; height: 36px;
+  border-radius: 12px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  font-family: 'Jua', sans-serif;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s;
+  user-select: none;
+}
+.mgc-btn:hover { background: #f9fafb; border-color: #c084fc; }
+.mgc-btn:active { transform: scale(0.92); background: #f3f0ff; }
+.mgc-btn-minus { color: #ef4444; }
+.mgc-btn-plus { color: #3b82f6; }
+.mgc-val {
+  font-family: 'Jua', sans-serif;
+  font-size: 22px;
+  color: #374151;
+  min-width: 48px;
+  text-align: center;
+}
+.mgc-val-plus { color: #3b82f6; }
+.mgc-val-minus { color: #ef4444; }
+.mgc-diff {
+  font-family: 'Jua', sans-serif;
+  font-size: 11px;
+  min-width: 48px;
+  text-align: center;
+  height: 14px;
+}
+.mgc-diff-plus { color: #3b82f6; }
+.mgc-diff-minus { color: #ef4444; }
+
+[data-theme="dark"] .mgc-status { background: rgba(192,132,252,0.06); border-color: rgba(192,132,252,0.1); }
+[data-theme="dark"] .mgc-adjust-row { border-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .mgc-adjust-label { color: #e5e7eb; }
+[data-theme="dark"] .mgc-btn { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+[data-theme="dark"] .mgc-btn:hover { background: rgba(255,255,255,0.08); border-color: #c084fc; }
+[data-theme="dark"] .mgc-val { color: #e5e7eb; }
+
+/* ══════════════════════════════════════════════
    회원관리 카드 (통합)
    ══════════════════════════════════════════════ */
 .um-card {
