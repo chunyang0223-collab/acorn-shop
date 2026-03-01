@@ -13,7 +13,7 @@ async function initAppUI() {
     document.getElementById('userMode').classList.add('hidden');
     renderDashboard();
     loadMaintenanceSettings().then(renderMaintenanceBtns);
-    populateGiveSelect();
+    populateAllUsers();
     populateLogFilter();
     updateReqBadge();
   } else {
