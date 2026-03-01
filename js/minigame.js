@@ -635,57 +635,167 @@ async function saveMinigameSetting(gameId) {
 }
 
 // ── 관리자: 횟수 충전 ──
+// ── 관리자: 게임횟수 조정 모달 ──
+let _mgChargeState = {};
+
 async function showMgChargeModal(userId, userName) {
+  // 유저의 오늘 사용량 조회
+  const today = new Date().toISOString().slice(0, 10);
+  let userPlays = {}, userRewards = {};
+  try {
+    const { data } = await sb.from('minigame_plays')
+      .select('game_id, rewarded')
+      .eq('user_id', userId)
+      .gte('played_at', today + 'T00:00:00')
+      .lte('played_at', today + 'T23:59:59');
+    (data || []).forEach(r => {
+      userPlays[r.game_id] = (userPlays[r.game_id] || 0) + 1;
+      if (r.rewarded) userRewards[r.game_id] = (userRewards[r.game_id] || 0) + 1;
+    });
+  } catch(e) {}
+
+  // 유저 보너스 조회
+  let userBonus = {};
+  try {
+    const { data } = await sb.from('app_settings').select('value').eq('key', 'mg_bonus_' + userId).single();
+    userBonus = data?.value || {};
+  } catch(e) {}
+
+  _mgChargeState = { userId, userName, userPlays, userRewards, userBonus };
+
+  const gameId = 'catch';
+  _renderMgChargeModal(gameId);
+}
+
+function _renderMgChargeModal(gameId) {
+  const s = _mgChargeState;
+  const pBase = getMgSetting(gameId, 'playLimit');
+  const rBase = getMgSetting(gameId, 'rewardLimit');
+  const pBonus = s.userBonus?.plays?.[gameId] || 0;
+  const rBonus = s.userBonus?.rewards?.[gameId] || 0;
+  const pTotal = pBase + pBonus;
+  const rTotal = rBase + rBonus;
+  const pUsed = s.userPlays[gameId] || 0;
+  const rUsed = s.userRewards[gameId] || 0;
+
+  // 조정값 초기화
+  _mgChargeState._curPlay = pTotal;
+  _mgChargeState._curReward = rTotal;
+  _mgChargeState._origPlay = pTotal;
+  _mgChargeState._origReward = rTotal;
+  _mgChargeState._gameId = gameId;
+
   showModal(`<div class="text-center">
     <div style="font-size:2rem;margin-bottom:8px">🎮</div>
-    <h2 class="text-lg font-black text-gray-800 mb-3">${userName} 게임횟수 조정</h2>
-    <p class="text-xs text-gray-400 mb-3">양수 = 충전, 음수 = 차감</p>
-    <div class="space-y-3 text-left" style="max-width:280px;margin:0 auto">
-      <div>
-        <label class="text-xs font-bold text-gray-500 mb-1 block">게임 선택</label>
-        <select class="field" id="mgChargeGame">
-          <option value="catch">🧺 도토리 캐치</option>
-          <option value="2048">🧩 2048 도토리</option>
-          <option value="roulette">🎡 행운의 룰렛</option>
-        </select>
+    <h2 class="text-lg font-black text-gray-800 mb-1">${s.userName} 게임횟수 조정</h2>
+    <p class="text-xs text-gray-400 mb-4">현재 횟수를 확인하고 조정하세요</p>
+
+    <select class="field mb-3" id="mgChargeGame" onchange="_onMgChargeGameChange()">
+      ${Object.entries(MG_DEFAULTS).map(([id, d]) =>
+        `<option value="${id}" ${id === gameId ? 'selected' : ''}>${d.icon} ${d.name}</option>`
+      ).join('')}
+    </select>
+
+    <div class="mgc-status">
+      <div class="mgc-status-title">오늘 사용 현황</div>
+      <div class="mgc-status-row">
+        <div class="mgc-stat"><span class="mgc-stat-num mgc-play">${pUsed}</span><span class="mgc-stat-label">도전 사용</span></div>
+        <span class="mgc-slash">/</span>
+        <div class="mgc-stat"><span class="mgc-stat-num mgc-play" id="mgcPlayTotal">${pTotal}</span><span class="mgc-stat-label">도전 한도</span></div>
+        <div style="width:12px"></div>
+        <div class="mgc-stat"><span class="mgc-stat-num mgc-reward">${rUsed}</span><span class="mgc-stat-label">보상 사용</span></div>
+        <span class="mgc-slash">/</span>
+        <div class="mgc-stat"><span class="mgc-stat-num mgc-reward" id="mgcRewardTotal">${rTotal}</span><span class="mgc-stat-label">보상 한도</span></div>
       </div>
-      <div class="flex gap-2">
-        <div class="flex-1">
-          <label class="text-xs font-bold text-gray-500 mb-1 block">도전 횟수</label>
-          <input class="field text-center" type="number" min="-100" max="100" id="mgChargePlays" value="0">
+    </div>
+
+    <div class="mgc-adjust">
+      <div class="mgc-adjust-row">
+        <span class="mgc-adjust-label">🎮 도전 한도</span>
+        <div>
+          <div class="mgc-controls">
+            <button class="mgc-btn mgc-btn-minus" onclick="_mgcAdj('play',-1)">−</button>
+            <span class="mgc-val" id="mgcPlayVal">${pTotal}</span>
+            <button class="mgc-btn mgc-btn-plus" onclick="_mgcAdj('play',1)">+</button>
+          </div>
+          <div class="mgc-diff" id="mgcPlayDiff"></div>
         </div>
-        <div class="flex-1">
-          <label class="text-xs font-bold text-gray-500 mb-1 block">보상 횟수</label>
-          <input class="field text-center" type="number" min="-100" max="100" id="mgChargeRewards" value="0">
+      </div>
+      <div class="mgc-adjust-row" style="border-bottom:none">
+        <span class="mgc-adjust-label">🌰 보상 한도</span>
+        <div>
+          <div class="mgc-controls">
+            <button class="mgc-btn mgc-btn-minus" onclick="_mgcAdj('reward',-1)">−</button>
+            <span class="mgc-val" id="mgcRewardVal">${rTotal}</span>
+            <button class="mgc-btn mgc-btn-plus" onclick="_mgcAdj('reward',1)">+</button>
+          </div>
+          <div class="mgc-diff" id="mgcRewardDiff"></div>
         </div>
       </div>
     </div>
+
     <div class="flex gap-2 mt-4">
       <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
-      <button class="btn btn-primary flex-1 py-2" onclick="_doMgCharge('${userId}','${userName}')">적용하기</button>
+      <button class="btn btn-primary flex-1 py-2" onclick="_doMgCharge()">적용하기</button>
     </div>
+    <p class="text-xs text-gray-400 mt-2">한도 = 기본 설정 + 관리자 보너스</p>
   </div>`);
 }
 
-async function _doMgCharge(userId, userName) {
+function _onMgChargeGameChange() {
   const gameId = document.getElementById('mgChargeGame').value;
-  const addPlays = parseInt(document.getElementById('mgChargePlays').value) || 0;
-  const addRewards = parseInt(document.getElementById('mgChargeRewards').value) || 0;
-  if (addPlays === 0 && addRewards === 0) { toast('⚠️', '조정할 횟수를 입력해주세요'); return; }
+  closeModal();
+  setTimeout(() => _renderMgChargeModal(gameId), 50);
+}
+
+function _mgcAdj(type, delta) {
+  const s = _mgChargeState;
+  if (type === 'play') {
+    s._curPlay = Math.max(0, s._curPlay + delta);
+    document.getElementById('mgcPlayVal').textContent = s._curPlay;
+    document.getElementById('mgcPlayTotal').textContent = s._curPlay;
+    _mgcUpdateDiff('play', s._curPlay, s._origPlay);
+  } else {
+    s._curReward = Math.max(0, s._curReward + delta);
+    document.getElementById('mgcRewardVal').textContent = s._curReward;
+    document.getElementById('mgcRewardTotal').textContent = s._curReward;
+    _mgcUpdateDiff('reward', s._curReward, s._origReward);
+  }
+}
+
+function _mgcUpdateDiff(type, cur, orig) {
+  const el = document.getElementById('mgc' + (type === 'play' ? 'Play' : 'Reward') + 'Diff');
+  const valEl = document.getElementById('mgc' + (type === 'play' ? 'Play' : 'Reward') + 'Val');
+  const diff = cur - orig;
+  if (diff === 0) {
+    el.textContent = '';
+    valEl.className = 'mgc-val';
+  } else if (diff > 0) {
+    el.textContent = '+' + diff;
+    el.className = 'mgc-diff mgc-diff-plus';
+    valEl.className = 'mgc-val mgc-val-plus';
+  } else {
+    el.textContent = '' + diff;
+    el.className = 'mgc-diff mgc-diff-minus';
+    valEl.className = 'mgc-val mgc-val-minus';
+  }
+}
+
+async function _doMgCharge() {
+  const s = _mgChargeState;
+  const gameId = s._gameId;
+  const playDiff = s._curPlay - s._origPlay;
+  const rewardDiff = s._curReward - s._origReward;
+  if (playDiff === 0 && rewardDiff === 0) { toast('⚠️', '변경사항이 없습니다'); return; }
 
   closeModal();
   try {
-    const key = 'mg_bonus_' + userId;
-    let bonus = {};
-    try {
-      const { data } = await sb.from('app_settings').select('value').eq('key', key).single();
-      bonus = data?.value || {};
-    } catch(e) {}
-
+    const key = 'mg_bonus_' + s.userId;
+    let bonus = s.userBonus || {};
     if (!bonus.plays) bonus.plays = {};
     if (!bonus.rewards) bonus.rewards = {};
-    bonus.plays[gameId] = Math.max(0, (bonus.plays[gameId] || 0) + addPlays);
-    bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + addRewards);
+    bonus.plays[gameId] = Math.max(0, (bonus.plays[gameId] || 0) + playDiff);
+    bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + rewardDiff);
 
     const { data: existing } = await sb.from('app_settings').select('key').eq('key', key).single().catch(() => ({ data: null }));
     if (existing) {
@@ -694,10 +804,13 @@ async function _doMgCharge(userId, userName) {
       await sb.from('app_settings').insert({ key: key, value: bonus, updated_at: new Date().toISOString() });
     }
 
+    // 상태 업데이트
+    s.userBonus = bonus;
+
     const parts = [];
-    if (addPlays !== 0) parts.push(`도전 ${addPlays > 0 ? '+' : ''}${addPlays}`);
-    if (addRewards !== 0) parts.push(`보상 ${addRewards > 0 ? '+' : ''}${addRewards}`);
-    toast('✅', `${userName} ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 완료!`);
+    if (playDiff !== 0) parts.push(`도전 ${playDiff > 0 ? '+' : ''}${playDiff}`);
+    if (rewardDiff !== 0) parts.push(`보상 ${rewardDiff > 0 ? '+' : ''}${rewardDiff}`);
+    toast('✅', `${s.userName} ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 완료!`);
   } catch(e) { toast('❌', '처리 실패: ' + (e.message || e)); }
 }
 
