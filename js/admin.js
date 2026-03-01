@@ -868,8 +868,18 @@ function fmtTime(ts) {
 //  ADMIN — USERS
 // ──────────────────────────────────────────────
 async function renderUserAdmin() {
-  const { data: users } = await sb.from('users').select('*').order('acorns', { ascending: false });
+  const sort = document.getElementById('userSortFilter')?.value || 'recent';
+  let orderCol = 'last_seen_at', asc = false;
+  if (sort === 'acorns')  { orderCol = 'acorns'; asc = false; }
+  if (sort === 'newest')  { orderCol = 'created_at'; asc = false; }
+  if (sort === 'name')    { orderCol = 'display_name'; asc = true; }
+  if (sort === 'recent')  { orderCol = 'last_seen_at'; asc = false; }
+
+  const { data: users } = await sb.from('users').select('*').order(orderCol, { ascending: asc });
   const el = document.getElementById('userAdminList');
+  const badge = document.getElementById('userCountBadge');
+  if (badge) badge.textContent = `(${users?.length || 0}명)`;
+
   el.innerHTML = users?.length
     ? users.map(u => {
       const esc = s => s.replace(/'/g, "\\'");
@@ -887,10 +897,47 @@ async function renderUserAdmin() {
           <button class="um-btn um-btn-minus" onclick="showAcornModal('${u.id}','${esc(u.display_name)}',-1)">🌰 도토리 차감</button>
           <button class="um-btn um-btn-item" onclick="showGiftItemModal('${u.id}','${esc(u.display_name)}')">🎁 아이템 선물</button>
           <button class="um-btn um-btn-game" onclick="showMgChargeModal('${u.id}','${esc(u.display_name)}')">🎮 게임횟수 조정</button>
+        </div>
+        <div class="um-delete-wrap">
+          <button class="um-btn-delete" onclick="confirmDeleteUser('${u.id}','${esc(u.display_name)}')">🗑️ 탈퇴</button>
         </div>`}
       </div>`;
     }).join('')
     : '<p class="text-sm text-gray-400 text-center py-6">회원이 없어요</p>';
+}
+
+// ── 회원 삭제(탈퇴) ──
+function confirmDeleteUser(userId, userName) {
+  showModal(`<div class="text-center">
+    <div style="font-size:2.5rem;margin-bottom:8px">⚠️</div>
+    <h2 class="text-lg font-black text-gray-800 mb-2">회원 탈퇴 처리</h2>
+    <p class="text-sm text-gray-500 mb-1"><b>${userName}</b>님을 탈퇴 처리합니다.</p>
+    <p class="text-xs text-red-500 font-bold mb-4">⚠️ 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
+    <div class="flex gap-2">
+      <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+      <button class="btn btn-red flex-1 py-2" onclick="_executeDeleteUser('${userId}','${userName}')">🗑️ 삭제 확인</button>
+    </div>
+  </div>`);
+}
+
+async function _executeDeleteUser(userId, userName) {
+  closeModal();
+  toast('⏳', `${userName} 탈퇴 처리 중...`);
+  try {
+    // 관련 데이터 순서대로 삭제 (FK 제약 고려)
+    await sb.from('notifications').delete().eq('user_id', userId);
+    await sb.from('minigame_plays').delete().eq('user_id', userId);
+    await sb.from('quest_requests').delete().eq('user_id', userId);
+    await sb.from('inventory').delete().eq('user_id', userId);
+    await sb.from('transactions').delete().eq('user_id', userId);
+    // 보너스 횟수 데이터
+    await sb.from('app_settings').delete().eq('key', 'mg_bonus_' + userId);
+    // 유저 삭제
+    const { error } = await sb.from('users').delete().eq('id', userId);
+    if (error) { toast('❌', '삭제 실패: ' + error.message); return; }
+    toast('✅', `${userName} 탈퇴 처리 완료`);
+    renderUserAdmin();
+  } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
 }
 
 // ── 도토리 지급/차감 모달 (통합) ──
