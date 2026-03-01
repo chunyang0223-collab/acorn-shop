@@ -613,3 +613,322 @@ async function _renderMinigameStats() {
         </div>`).join('')}`;
   } catch(e) { area.innerHTML = '<p class="text-sm text-gray-400">통계 조회 실패</p>'; }
 }
+
+
+// ══════════════════════════════════════════════
+//  랭킹 시스템
+// ══════════════════════════════════════════════
+
+let _rankPeriod = 'daily';
+let _adminRankPeriod = 'daily';
+let _mgLogOffset = 0;
+const MG_LOG_PAGE = 20;
+
+function _getPeriodRange(period) {
+  const now = new Date();
+  if (period === 'daily') {
+    const d = now.toISOString().slice(0, 10);
+    return { from: d + 'T00:00:00', to: d + 'T23:59:59' };
+  }
+  if (period === 'weekly') {
+    const day = now.getDay();
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+    return { from: mon.toISOString().slice(0, 10) + 'T00:00:00', to: now.toISOString().slice(0, 10) + 'T23:59:59' };
+  }
+  // alltime
+  return { from: '2020-01-01T00:00:00', to: '2099-12-31T23:59:59' };
+}
+
+function _medalEmoji(rank) {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
+  return `<span class="rank-num">${rank}</span>`;
+}
+
+function _periodLabel(period) {
+  if (period === 'daily') return '오늘';
+  if (period === 'weekly') return '이번 주';
+  return '전체';
+}
+
+// ── 사용자 랭킹 ──
+function setRankPeriod(period, btn) {
+  _rankPeriod = period;
+  document.querySelectorAll('#utab-ranking .rank-period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderUserRanking();
+}
+
+async function renderUserRanking() {
+  const gameId = document.getElementById('rankGameFilter')?.value || 'catch';
+  const range = _getPeriodRange(_rankPeriod);
+  const list = document.getElementById('userRankingList');
+  list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
+
+  try {
+    // 기간 내 각 유저의 최고점수 조회
+    const { data } = await sb
+      .from('minigame_plays')
+      .select('user_id, score')
+      .eq('game_id', gameId)
+      .gte('played_at', range.from)
+      .lte('played_at', range.to)
+      .order('score', { ascending: false })
+      .limit(200);
+
+    if (!data?.length) {
+      list.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">📊 ${_periodLabel(_rankPeriod)} 기록이 없습니다</p>`;
+      _renderMyStats(gameId);
+      return;
+    }
+
+    // 유저별 최고점수
+    const best = {};
+    for (const r of data) {
+      if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score;
+    }
+
+    // 유저 이름 조회
+    const userIds = Object.keys(best);
+    const { data: users } = await sb.from('users').select('id, display_name').in('id', userIds);
+    const nameMap = {};
+    (users || []).forEach(u => nameMap[u.id] = u.display_name);
+
+    // 정렬
+    const sorted = Object.entries(best)
+      .map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' }))
+      .sort((a, b) => b.score - a.score);
+
+    const myId = myProfile?.id;
+    const myRank = sorted.findIndex(r => r.uid === myId) + 1;
+
+    list.innerHTML = sorted.slice(0, 20).map((r, i) => {
+      const rank = i + 1;
+      const isMe = r.uid === myId;
+      return `
+      <div class="rank-row ${isMe ? 'rank-row-me' : ''} ${rank <= 3 ? 'rank-row-top' : ''}">
+        <div class="rank-medal">${_medalEmoji(rank)}</div>
+        <div class="rank-name">${r.name}${isMe ? ' <span class="rank-me-badge">나</span>' : ''}</div>
+        <div class="rank-score">${r.score.toLocaleString()}점</div>
+      </div>`;
+    }).join('');
+
+    // 내가 20위 밖이면 별도 표시
+    if (myRank > 20 && myId) {
+      const me = sorted.find(r => r.uid === myId);
+      if (me) {
+        list.innerHTML += `
+        <div class="rank-divider">⋯</div>
+        <div class="rank-row rank-row-me">
+          <div class="rank-medal"><span class="rank-num">${myRank}</span></div>
+          <div class="rank-name">${me.name} <span class="rank-me-badge">나</span></div>
+          <div class="rank-score">${me.score.toLocaleString()}점</div>
+        </div>`;
+      }
+    }
+  } catch(e) {
+    list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">랭킹 조회 실패</p>';
+    console.warn('[ranking]', e);
+  }
+
+  _renderMyStats(gameId);
+}
+
+async function _renderMyStats(gameId) {
+  const area = document.getElementById('myGameStats');
+  if (!area || !myProfile) return;
+
+  try {
+    const { data } = await sb
+      .from('minigame_plays')
+      .select('score, reward, played_at')
+      .eq('user_id', myProfile.id)
+      .eq('game_id', gameId)
+      .order('played_at', { ascending: false })
+      .limit(100);
+
+    if (!data?.length) {
+      area.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">아직 플레이 기록이 없어요</p>';
+      return;
+    }
+
+    const totalPlays = data.length;
+    const bestScore = Math.max(...data.map(r => r.score));
+    const totalReward = data.reduce((s, r) => s + (r.reward || 0), 0);
+    const avgScore = Math.round(data.reduce((s, r) => s + r.score, 0) / totalPlays);
+
+    area.innerHTML = `
+      <div class="flex gap-3 justify-center flex-wrap">
+        <div class="rank-my-stat">
+          <span class="rank-my-num" style="color:#d97706">${totalPlays}</span>
+          <span class="rank-my-label">총 플레이</span>
+        </div>
+        <div class="rank-my-stat">
+          <span class="rank-my-num" style="color:#dc2626">${bestScore}</span>
+          <span class="rank-my-label">최고 점수</span>
+        </div>
+        <div class="rank-my-stat">
+          <span class="rank-my-num" style="color:#059669">${avgScore}</span>
+          <span class="rank-my-label">평균 점수</span>
+        </div>
+        <div class="rank-my-stat">
+          <span class="rank-my-num" style="color:#7c3aed">${totalReward}</span>
+          <span class="rank-my-label">총 보상 🌰</span>
+        </div>
+      </div>`;
+  } catch(e) {
+    area.innerHTML = '<p class="text-sm text-gray-400">기록 조회 실패</p>';
+  }
+}
+
+
+// ── 관리자 랭킹 ──
+function setAdminRankPeriod(period, btn) {
+  _adminRankPeriod = period;
+  document.querySelectorAll('#atab-ranking .rank-period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdminRanking();
+}
+
+async function renderAdminRanking() {
+  const gameId = document.getElementById('adminRankGameFilter')?.value || 'catch';
+  const range = _getPeriodRange(_adminRankPeriod);
+  const list = document.getElementById('adminRankingList');
+  list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
+
+  try {
+    const { data } = await sb
+      .from('minigame_plays')
+      .select('user_id, score')
+      .eq('game_id', gameId)
+      .gte('played_at', range.from)
+      .lte('played_at', range.to)
+      .order('score', { ascending: false })
+      .limit(200);
+
+    if (!data?.length) {
+      list.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">📊 ${_periodLabel(_adminRankPeriod)} 기록이 없습니다</p>`;
+      renderMinigameLog();
+      return;
+    }
+
+    const best = {};
+    for (const r of data) {
+      if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score;
+    }
+
+    const userIds = Object.keys(best);
+    const { data: users } = await sb.from('users').select('id, display_name').in('id', userIds);
+    const nameMap = {};
+    (users || []).forEach(u => nameMap[u.id] = u.display_name);
+
+    const sorted = Object.entries(best)
+      .map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' }))
+      .sort((a, b) => b.score - a.score);
+
+    list.innerHTML = sorted.slice(0, 30).map((r, i) => {
+      const rank = i + 1;
+      return `
+      <div class="rank-row ${rank <= 3 ? 'rank-row-top' : ''}">
+        <div class="rank-medal">${_medalEmoji(rank)}</div>
+        <div class="rank-name">${r.name}</div>
+        <div class="rank-score">${r.score.toLocaleString()}점</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">랭킹 조회 실패</p>';
+  }
+
+  // 로그도 함께 로드
+  _mgLogOffset = 0;
+  renderMinigameLog();
+}
+
+
+// ── 관리자 미니게임 이용 로그 ──
+async function renderMinigameLog() {
+  const gameFilter = document.getElementById('adminLogGameFilter')?.value || '';
+  const list = document.getElementById('minigameLogList');
+  _mgLogOffset = 0;
+
+  try {
+    let query = sb
+      .from('minigame_plays')
+      .select('user_id, game_id, score, reward, played_at')
+      .order('played_at', { ascending: false })
+      .range(0, MG_LOG_PAGE - 1);
+
+    if (gameFilter) query = query.eq('game_id', gameFilter);
+
+    const { data } = await query;
+
+    if (!data?.length) {
+      list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로그가 없습니다</p>';
+      document.getElementById('mgLogMoreBtn').style.display = 'none';
+      return;
+    }
+
+    // 유저 이름 조회
+    const uids = [...new Set(data.map(r => r.user_id))];
+    const { data: users } = await sb.from('users').select('id, display_name').in('id', uids);
+    const nameMap = {};
+    (users || []).forEach(u => nameMap[u.id] = u.display_name);
+
+    list.innerHTML = _renderLogRows(data, nameMap);
+    _mgLogOffset = data.length;
+
+    document.getElementById('mgLogMoreBtn').style.display = data.length >= MG_LOG_PAGE ? '' : 'none';
+  } catch(e) {
+    list.innerHTML = '<p class="text-sm text-gray-400">로그 조회 실패</p>';
+  }
+}
+
+async function loadMoreMinigameLogs() {
+  const gameFilter = document.getElementById('adminLogGameFilter')?.value || '';
+  const list = document.getElementById('minigameLogList');
+
+  try {
+    let query = sb
+      .from('minigame_plays')
+      .select('user_id, game_id, score, reward, played_at')
+      .order('played_at', { ascending: false })
+      .range(_mgLogOffset, _mgLogOffset + MG_LOG_PAGE - 1);
+
+    if (gameFilter) query = query.eq('game_id', gameFilter);
+
+    const { data } = await query;
+
+    if (!data?.length) {
+      document.getElementById('mgLogMoreBtn').style.display = 'none';
+      return;
+    }
+
+    const uids = [...new Set(data.map(r => r.user_id))];
+    const { data: users } = await sb.from('users').select('id, display_name').in('id', uids);
+    const nameMap = {};
+    (users || []).forEach(u => nameMap[u.id] = u.display_name);
+
+    list.innerHTML += _renderLogRows(data, nameMap);
+    _mgLogOffset += data.length;
+
+    document.getElementById('mgLogMoreBtn').style.display = data.length >= MG_LOG_PAGE ? '' : 'none';
+  } catch(e) { console.warn('[mgLog]', e); }
+}
+
+function _renderLogRows(data, nameMap) {
+  return data.map(r => {
+    const t = new Date(r.played_at);
+    const timeStr = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    const gameName = MG_DEFAULTS[r.game_id]?.icon || '🎮';
+    return `
+    <div class="mg-log-row">
+      <span class="mg-log-game">${gameName}</span>
+      <span class="mg-log-user">${nameMap[r.user_id] || '—'}</span>
+      <span class="mg-log-score">${r.score}점</span>
+      <span class="mg-log-reward" style="color:#059669">+${r.reward}🌰</span>
+      <span class="mg-log-time">${timeStr}</span>
+    </div>`;
+  }).join('');
+}

@@ -108,6 +108,7 @@
       <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0">📋 퀘스트</button>
       <button class="tab-btn" onclick="uTab('recycle',this)" style="flex-shrink:0">♻️ 재활용</button>
       <button class="tab-btn" onclick="uTab('minigame',this)" style="flex-shrink:0">🎮 미니게임</button>
+      <button class="tab-btn" onclick="uTab('ranking',this)" style="flex-shrink:0">🏆 랭킹</button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0">👤 마이</button>
     </div></div>
     <div id="utab-shop">
@@ -207,6 +208,31 @@
       <div id="minigame-play" class="hidden"></div>
     </div>
 
+    <!-- 🏆 랭킹 탭 (사용자) -->
+    <div id="utab-ranking" class="hidden">
+      <div class="clay-card p-5 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-black text-gray-800">🏆 미니게임 랭킹</h2>
+          <select id="rankGameFilter" class="field text-sm" style="width:auto" onchange="renderUserRanking()">
+            <option value="catch">🧺 도토리 캐치</option>
+          </select>
+        </div>
+        <div class="flex gap-1 mb-4">
+          <button class="rank-period-btn active" data-period="daily" onclick="setRankPeriod('daily',this)">오늘</button>
+          <button class="rank-period-btn" data-period="weekly" onclick="setRankPeriod('weekly',this)">이번 주</button>
+          <button class="rank-period-btn" data-period="alltime" onclick="setRankPeriod('alltime',this)">전체</button>
+        </div>
+        <div id="userRankingList" class="space-y-2">
+          <p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>
+        </div>
+      </div>
+      <!-- 내 기록 -->
+      <div class="clay-card p-5">
+        <h2 class="text-base font-black text-gray-800 mb-3">📊 내 기록</h2>
+        <div id="myGameStats" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
+      </div>
+    </div>
+
     <div id="utab-mypage" class="hidden">
       <div class="clay-card p-6 mb-4" id="mypageHeader"></div>
 
@@ -284,6 +310,7 @@
       <button class="tab-btn" onclick="aTab('recycle',this)">♻️ 재활용센터</button>
       <button class="tab-btn" onclick="aTab('events',this)">🎉 이벤트</button>
       <button class="tab-btn" onclick="aTab('minigameSettings',this)">🎮 미니게임</button>
+      <button class="tab-btn" onclick="aTab('ranking',this)">🏆 랭킹</button>
       <button class="tab-btn" onclick="aTab('give',this)">🌰 지급</button>
       <button class="tab-btn" onclick="aTab('txlog',this)">🗂️ 로그</button>
       <button class="tab-btn" onclick="aTab('users',this)">👥 회원</button>
@@ -780,6 +807,42 @@
         <h2 class="text-lg font-black text-gray-800 mb-1">📊 오늘의 미니게임 현황</h2>
         <p class="text-xs text-gray-400 font-semibold mb-4">오늘 유저들의 플레이 통계</p>
         <div id="mgStatsArea" class="text-sm text-gray-500 text-center py-4">로딩 중...</div>
+      </div>
+    </div>
+
+    <!-- 🏆 관리자 랭킹 탭 -->
+    <div id="atab-ranking" class="hidden">
+      <div class="clay-card p-5 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-black text-gray-800">🏆 미니게임 랭킹</h2>
+          <select id="adminRankGameFilter" class="field text-sm" style="width:auto" onchange="renderAdminRanking()">
+            <option value="catch">🧺 도토리 캐치</option>
+          </select>
+        </div>
+        <div class="flex gap-1 mb-4">
+          <button class="rank-period-btn active" data-period="daily" onclick="setAdminRankPeriod('daily',this)">오늘</button>
+          <button class="rank-period-btn" data-period="weekly" onclick="setAdminRankPeriod('weekly',this)">이번 주</button>
+          <button class="rank-period-btn" data-period="alltime" onclick="setAdminRankPeriod('alltime',this)">전체</button>
+        </div>
+        <div id="adminRankingList" class="space-y-2">
+          <p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>
+        </div>
+      </div>
+      <!-- 이용 로그 -->
+      <div class="clay-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-black text-gray-800">📋 미니게임 이용 로그</h2>
+          <select id="adminLogGameFilter" class="field text-sm" style="width:auto" onchange="renderMinigameLog()">
+            <option value="">전체 게임</option>
+            <option value="catch">🧺 도토리 캐치</option>
+          </select>
+        </div>
+        <div id="minigameLogList" class="space-y-1">
+          <p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>
+        </div>
+        <div class="text-center mt-3">
+          <button class="btn btn-gray px-4 py-2 text-xs" id="mgLogMoreBtn" onclick="loadMoreMinigameLogs()" style="display:none">더 보기</button>
+        </div>
       </div>
     </div>
 

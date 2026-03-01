@@ -147,8 +147,8 @@ async function doSignup() {
 // ──────────────────────────────────────────────
 //  TABS
 // ──────────────────────────────────────────────
-const U_TABS = ['shop','gacha','quest','recycle','minigame','mypage'];
-const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings'];
+const U_TABS = ['shop','gacha','quest','recycle','minigame','ranking','mypage'];
+const A_TABS = ['dashboard','give','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','ranking'];
 
 function uTab(tab, btn) {
   U_TABS.forEach(t => document.getElementById('utab-'+t).classList.add('hidden'));
@@ -197,6 +197,7 @@ function uTab(tab, btn) {
   if (tab === 'mypage') renderMypage();
   if (tab === 'recycle') renderRecycleTab();
   if (tab === 'minigame') renderMinigameHub();
+  if (tab === 'ranking') renderUserRanking();
 }
 
 // ── 메뉴 점검 관리 ──
@@ -256,5 +257,6 @@ function aTab(tab, btn) {
   if (tab === 'events')     { _loadEventsFromDB().then(() => { renderEventAdmin(); renderScheduleList(); }); return; }
   if (tab === 'recycle')    renderRecycleAdmin();
   if (tab === 'minigameSettings') renderMinigameAdmin();
+  if (tab === 'ranking') renderAdminRanking();
 }
 
