@@ -1,83 +1,11 @@
 // ──────────────────────────────────────────────
-//  ADMIN — GIVE
+//  ADMIN — 초기 유저 목록 로드
 // ──────────────────────────────────────────────
-async function populateGiveSelect() {
+async function populateAllUsers() {
   const { data: users } = await sb.from('users').select('*').eq('is_admin', false).order('display_name');
   allUsers = users || [];
-  const sel = document.getElementById('giveUser');
-  if (!sel) return;
-  sel.innerHTML = allUsers.map(u => `<option value="${u.id}">${u.display_name} (${u.acorns}🌰)</option>`).join('');
-  // logUserFilter 제거됨 (사용자 현황판으로 대체)
 }
 
-async function giveAcorns() {
-  await withLock('giveAcorns', async () => { await _giveAcornsInner(); });
-}
-async function _giveAcornsInner() {
-  const giveBtn = document.querySelector('#atab-give .btn-primary');
-  btnLock(giveBtn, '지급 중...');
-  playSound('click');
-
-  try {
-    const userId = document.getElementById('giveUser').value;
-    const amount = parseInt(document.getElementById('giveAmount').value);
-    const memo   = document.getElementById('giveMemo')?.value || '';
-    if (!userId || !amount || amount === 0) { toast('❌', '사용자와 지급량을 확인해주세요'); return; }
-
-    const { data: u } = await sb.from('users').select('display_name').eq('id', userId).single();
-    const isDeduct = amount < 0;
-    const absAmt = Math.abs(amount);
-
-    if (isDeduct) {
-      // 차감: RPC로 즉시 처리
-      const res = await sb.rpc('admin_give_acorns', { p_target_user_id: userId, p_amount: amount, p_memo: memo || '관리자 차감' });
-      if (res.error) { toast('❌', '차감 실패: ' + res.error.message); return; }
-      // res.data는 객체 또는 배열일 수 있음
-      const resData = Array.isArray(res.data) ? res.data[0] : res.data;
-      if (!resData?.success) { toast('❌', '차감 실패: ' + (resData?.error || JSON.stringify(resData))); return; }
-      await pushNotif(userId, 'admin', '도토리 차감 🌰',
-        `관리자가 ${absAmt} 도토리를 차감했어요. ${memo ? '(' + memo + ')' : ''}`);
-    } else {
-      // 지급: 선물상자를 인벤토리에 생성, 사용자가 수령 시 도토리 증가
-      const { error: invErr } = await sb.from('inventory').insert({
-        user_id: userId,
-        product_id: null,
-        product_snapshot: {
-          name: `도토리 선물 (+${absAmt}🌰)`,
-          icon: '🎁',
-          reward_type: 'GIFT_ACORN',
-          gift_qty: absAmt,
-          memo: memo || ''
-        },
-        from_gacha: false,
-        status: 'held'
-      });
-      if (invErr) { toast('❌', '선물 실패: ' + invErr.message); return; }
-      await pushNotif(userId, 'admin', '선물 도착! 🎁',
-        `도토리 ${absAmt}🌰를 선물받았어요! 인벤토리를 확인하세요. ${memo ? '(' + memo + ')' : ''}`);
-    }
-    toast('✅', `${u?.display_name||'사용자'}에게 ${absAmt} 도토리 ${isDeduct ? '차감' : '선물'}!`);
-    document.getElementById('giveAmount').value = '';
-    document.getElementById('giveMemo').value = '';
-    populateGiveSelect();
-    renderGiveHistory();
-  } finally {
-    btnUnlock(giveBtn);
-  }
-}
-
-
-async function renderGiveHistory() {
-  const { data: list } = await sb.from('transactions').select('*, users(display_name)').ilike('reason', '관리자 지급%').order('created_at', { ascending: false }).limit(8);
-  const el = document.getElementById('giveHistory');
-  el.innerHTML = list?.length
-    ? list.map(t => `<div class="flex items-center justify-between p-3 rounded-xl bg-gray-50">
-        <div><p class="text-sm font-bold text-gray-800">${t.users?.display_name||''}</p>
-          <p class="text-xs text-gray-400">${t.reason.replace('관리자 지급 — ','')} · ${fmtTs(t.created_at)}</p></div>
-        <span class="font-black text-amber-600">+${t.amount}🌰</span>
-      </div>`).join('')
-    : '<p class="text-sm text-gray-400 text-center py-4">지급 내역 없음</p>';
-}
 
 // ──────────────────────────────────────────────
 //  ADMIN — PRODUCTS
@@ -641,7 +569,7 @@ function filterReqs(f, btn) {
 //  ADMIN — TX LOG
 // ──────────────────────────────────────────────
 async function populateLogFilter() {
-  await populateGiveSelect();
+  await populateAllUsers();
 }
 
 // ── 사용자 현황판 ──
@@ -1007,8 +935,6 @@ async function _doAcornAction(userId, userName, direction) {
       toast('❌', res.data?.error || '처리 실패');
     }
   } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
-}
-    : '<p class="text-sm text-gray-400 text-center py-6">회원이 없어요</p>';
 }
 
 async function showGiftItemModal(userId, userName) {
