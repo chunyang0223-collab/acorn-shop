@@ -199,7 +199,8 @@ const supabase = (() => {
           method: 'POST', headers: h,
           body: JSON.stringify(params)
         });
-        const d = await r.json();
+        const text = await r.text();
+        const d = text ? JSON.parse(text) : null;
         if (!r.ok) return { data: null, error: { message: d?.message || d?.hint || 'RPC 오류' } };
         return { data: d, error: null };
       } catch(e) {
