@@ -639,6 +639,9 @@ async function saveMinigameSetting(gameId) {
 let _mgChargeState = {};
 
 async function showMgChargeModal(userId, userName) {
+  // 관리자 모드에서도 설정 로드 보장
+  await loadMinigameSettings();
+
   // 유저의 오늘 사용량 조회
   const today = new Date().toISOString().slice(0, 10);
   let userPlays = {}, userRewards = {};
