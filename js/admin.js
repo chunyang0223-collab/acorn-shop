@@ -876,6 +876,16 @@ async function renderUserAdmin() {
   if (sort === 'recent')  { orderCol = 'last_seen_at'; asc = false; }
 
   const { data: users } = await sb.from('users').select('*').order(orderCol, { ascending: asc });
+
+  // null last_seen_at을 맨 뒤로 보내기 (최근 접속순일 때)
+  if (sort === 'recent' && users) {
+    users.sort((a, b) => {
+      if (!a.last_seen_at && !b.last_seen_at) return 0;
+      if (!a.last_seen_at) return 1;
+      if (!b.last_seen_at) return -1;
+      return new Date(b.last_seen_at) - new Date(a.last_seen_at);
+    });
+  }
   const el = document.getElementById('userAdminList');
   const badge = document.getElementById('userCountBadge');
   if (badge) badge.textContent = `(${users?.length || 0}명)`;
@@ -925,16 +935,19 @@ async function _executeDeleteUser(userId, userName) {
   toast('⏳', `${userName} 탈퇴 처리 중...`);
   try {
     // 관련 데이터 순서대로 삭제 (FK 제약 고려)
-    await sb.from('notifications').delete().eq('user_id', userId);
-    await sb.from('minigame_plays').delete().eq('user_id', userId);
-    await sb.from('quest_requests').delete().eq('user_id', userId);
-    await sb.from('inventory').delete().eq('user_id', userId);
-    await sb.from('transactions').delete().eq('user_id', userId);
+    const tables = ['notifications','minigame_plays','quest_requests','inventory','transactions'];
+    for (const t of tables) {
+      const { error } = await sb.from(t).delete().eq('user_id', userId);
+      if (error) console.warn(`[delete] ${t}:`, error.message);
+    }
     // 보너스 횟수 데이터
     await sb.from('app_settings').delete().eq('key', 'mg_bonus_' + userId);
     // 유저 삭제
     const { error } = await sb.from('users').delete().eq('id', userId);
-    if (error) { toast('❌', '삭제 실패: ' + error.message); return; }
+    if (error) {
+      toast('❌', '회원 삭제 실패: ' + error.message + ' (RLS 정책 확인 필요)');
+      return;
+    }
     toast('✅', `${userName} 탈퇴 처리 완료`);
     renderUserAdmin();
   } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
@@ -1074,13 +1087,29 @@ async function renderDashboard() {
   const todayGiven = (todayTxs||[]).filter(t => t.amount > 0 && !t.reason?.startsWith('뽑기 사용')).reduce((s,t)=>s+t.amount,0);
   const todayUsed  = (todayTxs||[]).filter(t => t.amount < 0).reduce((s,t)=>s+Math.abs(t.amount),0);
 
-  document.getElementById('ds-users').textContent      = users?.length || 0;
-  document.getElementById('ds-todayGacha').textContent = todayGachaCount;
-  document.getElementById('ds-todayGiven').textContent = '+' + todayGiven;
-  document.getElementById('ds-todayUsed').textContent  = '-' + todayUsed;
+  // 홈 미니 통계
+  const _set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  _set('ds-users', users?.length || 0);
+  _set('ds-todayGacha', todayGachaCount);
+  _set('ds-todayGiven', '+' + todayGiven);
+  _set('ds-todayUsed', '-' + todayUsed);
+  // 상세 페이지
+  _set('ds-users2', users?.length || 0);
+  _set('ds-todayGacha2', todayGachaCount);
+  _set('ds-todayGiven2', '+' + todayGiven);
+  _set('ds-todayUsed2', '-' + todayUsed);
 
-  const logEl = document.getElementById('ds-activityLog');
-  logEl.innerHTML = recentTxs?.length
+  // 신청 뱃지 (그리드)
+  const reqBadge = document.getElementById('reqBadgeGrid');
+  if (reqBadge) {
+    const { data: pendingReqs } = await sb.from('product_requests').select('id').eq('status', 'pending');
+    const cnt = pendingReqs?.length || 0;
+    if (cnt > 0) { reqBadge.textContent = cnt; reqBadge.classList.remove('hidden'); }
+    else reqBadge.classList.add('hidden');
+  }
+
+  // 활동 로그 (홈 + 상세)
+  const logHTML = recentTxs?.length
     ? `<div class="overflow-x-auto"><table class="w-full" style="min-width:340px">
         <thead><tr class="border-b border-gray-100 text-left">
           <th class="pb-2 font-black text-gray-400 text-xs pr-2">사용자</th>
@@ -1096,6 +1125,11 @@ async function renderDashboard() {
         </tr>`).join('')}</tbody>
       </table></div>`
     : '<p class="text-sm text-gray-400 text-center py-4">활동 없음</p>';
+
+  const logEl = document.getElementById('ds-activityLog');
+  if (logEl) logEl.innerHTML = logHTML;
+  const logEl2 = document.getElementById('ds-activityLog2');
+  if (logEl2) logEl2.innerHTML = logHTML;
 }
 
 // ──────────────────────────────────────────────
