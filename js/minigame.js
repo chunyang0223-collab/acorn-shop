@@ -5,10 +5,10 @@
 const MG_DEFAULTS = {
   catch: {
     name: '도토리 캐치', icon: '🧺',
-    playLimit: 10,    // 1일 도전 횟수
-    rewardLimit: 3,   // 1일 보상 횟수
+    playLimit: 10,
+    rewardLimit: 3,
     entryFee: 0,
-    rewardRate: 10,   // N점당 1도토리
+    rewardRate: 10,
     maxReward: 20,
     duration: 30
   },
@@ -25,33 +25,42 @@ const MG_DEFAULTS = {
 };
 
 let _mgSettings = {};
-let _mgTodayPlays = {};   // { catch: 3 }  도전 횟수
-let _mgTodayRewards = {}; // { catch: 1 }  보상 수령 횟수
-let _mgBonusPlays = {};   // { catch: 2 }  관리자 충전 보너스 도전
-let _mgBonusRewards = {}; // { catch: 1 }  관리자 충전 보너스 보상
+let _mgTodayPlays = {};
+let _mgTodayRewards = {};
+let _mgBonusPlays = {};
+let _mgBonusRewards = {};
 
 // ── 설정 로드 ──
 async function loadMinigameSettings() {
   try {
-    const { data } = await sb.from('app_settings').select('value').eq('key', 'minigame_settings').single();
-    _mgSettings = data?.value || {};
+    const { data } = await sb.from('app_settings').select('value').eq('key', 'minigame_settings').maybeSingle();
+    _mgSettings = _parseValue(data?.value) || {};
   } catch(e) { _mgSettings = {}; }
   return _mgSettings;
 }
 
 function getMgSetting(gameId, key) {
-  // v1 호환: 이전 dailyLimit → playLimit 매핑
   if (key === 'playLimit' && _mgSettings?.[gameId]?.playLimit === undefined && _mgSettings?.[gameId]?.dailyLimit !== undefined) {
     return _mgSettings[gameId].dailyLimit;
   }
   return _mgSettings?.[gameId]?.[key] ?? MG_DEFAULTS[gameId]?.[key] ?? 0;
 }
 
+// ✅ value 컬럼이 문자열로 저장된 경우를 대비한 방어적 파싱
+function _parseValue(val) {
+  if (!val) return {};
+  if (typeof val === 'object') return val;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch(e) { return {}; }
+  }
+  return {};
+}
+
 // ── 오늘 도전/보상 횟수 조회 ──
 async function loadTodayPlays() {
   if (!myProfile) return;
 
-  // ✅ KST 기준 오늘 날짜 사용 (UTC가 아님)
+  // ✅ KST 기준 오늘 날짜
   const today = getToday();
   const fromUTC = today + 'T00:00:00+09:00';
   const toUTC   = today + 'T23:59:59+09:00';
@@ -72,7 +81,6 @@ async function loadTodayPlays() {
     });
   } catch(e) { console.warn('[minigame] 횟수 조회 실패:', e); }
 
-  // 보너스 횟수 로드
   await _loadBonusPlays();
 }
 
@@ -82,17 +90,17 @@ async function _loadBonusPlays() {
     const { data } = await sb.from('app_settings')
       .select('value')
       .eq('key', 'mg_bonus_' + myProfile.id)
-      .maybeSingle(); // ✅ single() → maybeSingle()
-    const bonus = data?.value || {};
-    _mgBonusPlays = bonus.plays || {};
+      .maybeSingle();
+    // ✅ 방어적 파싱
+    const bonus = _parseValue(data?.value);
+    _mgBonusPlays   = bonus.plays   || {};
     _mgBonusRewards = bonus.rewards || {};
   } catch(e) {
-    _mgBonusPlays = {};
+    _mgBonusPlays   = {};
     _mgBonusRewards = {};
   }
 }
 
-// 유효 한도 계산 (설정값 + 보너스)
 function getPlayLimit(gameId) {
   return getMgSetting(gameId, 'playLimit') + (_mgBonusPlays[gameId] || 0);
 }
@@ -119,11 +127,10 @@ async function recordPlay(gameId, score, rewarded) {
   return reward;
 }
 
-// 게임 목록
 const MINIGAMES = [
-  { id: 'catch', name: '🌰 도토리 캐치', desc: '하늘에서 떨어지는 도토리를 바구니로 받아요!', icon: '🧺', color: 'linear-gradient(135deg, #87CEEB, #90EE90)', ready: true },
-  { id: '2048', name: '🧩 2048 도토리', desc: '같은 숫자를 합쳐서 큰 수를 만들어요!', icon: '🧩', color: 'linear-gradient(135deg, #fef3c7, #fed7aa)', ready: false },
-  { id: 'roulette', name: '🎡 행운의 룰렛', desc: '도토리를 걸고 룰렛을 돌려보세요!', icon: '🎡', color: 'linear-gradient(135deg, #fce4ff, #dbeafe)', ready: false }
+  { id: 'catch',    name: '🌰 도토리 캐치',   desc: '하늘에서 떨어지는 도토리를 바구니로 받아요!', icon: '🧺', color: 'linear-gradient(135deg, #87CEEB, #90EE90)', ready: true },
+  { id: '2048',     name: '🧩 2048 도토리',   desc: '같은 숫자를 합쳐서 큰 수를 만들어요!',        icon: '🧩', color: 'linear-gradient(135deg, #fef3c7, #fed7aa)', ready: false },
+  { id: 'roulette', name: '🎡 행운의 룰렛',   desc: '도토리를 걸고 룰렛을 돌려보세요!',            icon: '🎡', color: 'linear-gradient(135deg, #fce4ff, #dbeafe)', ready: false }
 ];
 
 // ──────────────────────────────────────────────
@@ -141,15 +148,15 @@ async function renderMinigameHub() {
 
   const grid = document.getElementById('minigameGrid');
   grid.innerHTML = MINIGAMES.map(g => {
-    const pLimit = getPlayLimit(g.id);
-    const rLimit = getRewardLimit(g.id);
-    const played = _mgTodayPlays[g.id] || 0;
-    const rewarded = _mgTodayRewards[g.id] || 0;
-    const pRemain = Math.max(0, pLimit - played);
-    const rRemain = Math.max(0, rLimit - rewarded);
-    const fee = getMgSetting(g.id, 'entryFee');
+    const pLimit    = getPlayLimit(g.id);
+    const rLimit    = getRewardLimit(g.id);
+    const played    = _mgTodayPlays[g.id]   || 0;
+    const rewarded  = _mgTodayRewards[g.id] || 0;
+    const pRemain   = Math.max(0, pLimit - played);
+    const rRemain   = Math.max(0, rLimit - rewarded);
+    const fee       = getMgSetting(g.id, 'entryFee');
     const maxReward = getMgSetting(g.id, 'maxReward');
-    const duration = getMgSetting(g.id, 'duration');
+    const duration  = getMgSetting(g.id, 'duration');
     const exhausted = pRemain <= 0 && g.ready;
 
     return `
@@ -158,8 +165,8 @@ async function renderMinigameHub() {
          style="cursor:${g.ready && !exhausted ? 'pointer' : 'default'}">
       <div class="mg-card-preview" style="background:${g.color}">
         <span class="mg-card-icon">${g.icon}</span>
-        ${!g.ready ? '<div class="mg-coming-soon">COMING SOON</div>' : ''}
-        ${exhausted ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
+        ${!g.ready   ? '<div class="mg-coming-soon">COMING SOON</div>' : ''}
+        ${exhausted  ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
       </div>
       <div class="p-4">
         <h3 class="font-black text-gray-800 text-base mb-1">${g.name}</h3>
@@ -194,7 +201,7 @@ async function startMinigame(id) {
       toast('❌', `참가비가 부족해요! (필요: 🌰${fee}, 보유: 🌰${myProfile?.acorns || 0})`);
       return;
     }
-    const rLimit = getRewardLimit(id);
+    const rLimit   = getRewardLimit(id);
     const rewarded = _mgTodayRewards[id] || 0;
     showModal(`<div class="text-center">
       <div style="font-size:2.5rem;margin-bottom:8px">🎮</div>
@@ -255,7 +262,7 @@ const CATCH_CONFIG = {
 let _catch = null;
 
 function startCatchGame() {
-  const hub = document.getElementById('minigame-hub');
+  const hub  = document.getElementById('minigame-hub');
   const play = document.getElementById('minigame-play');
   hub.classList.add('hidden');
   play.classList.remove('hidden');
@@ -307,9 +314,9 @@ function startCatchGame() {
 function _initCatchControls() {
   const field = document.getElementById('catchField');
   if (!field) return;
-  _catch.fieldEl = field;
+  _catch.fieldEl  = field;
   _catch.basketEl = document.getElementById('catchBasket');
-  _catch.fieldW = field.offsetWidth;
+  _catch.fieldW   = field.offsetWidth;
   const ro = new ResizeObserver(() => { if (_catch.fieldEl) _catch.fieldW = _catch.fieldEl.offsetWidth; });
   ro.observe(field);
 
@@ -334,16 +341,16 @@ function _initCatchControls() {
 
 function _catchKeyHandler(e) {
   if (!_catch?.running) return;
-  if (e.key === 'ArrowLeft' || e.key === 'a') _catch.basketX = Math.max(0, _catch.basketX - 0.06);
+  if (e.key === 'ArrowLeft'  || e.key === 'a') _catch.basketX = Math.max(0, _catch.basketX - 0.06);
   else if (e.key === 'ArrowRight' || e.key === 'd') _catch.basketX = Math.min(1, _catch.basketX + 0.06);
 }
 
 function beginCatchGame() {
   document.getElementById('catchOverlay').classList.add('hidden');
   _catch.running = true;
-  _catch.score = 0; _catch.timeLeft = _catch.duration;
-  _catch.combo = 0; _catch.maxCombo = 0;
-  _catch.caught = 0; _catch.missed = 0;
+  _catch.score   = 0; _catch.timeLeft = _catch.duration;
+  _catch.combo   = 0; _catch.maxCombo = 0;
+  _catch.caught  = 0; _catch.missed   = 0;
   _catch.basketXCurrent = _catch.basketX;
   playSound('gacha');
 
@@ -379,7 +386,7 @@ function _spawnItem() {
   el.dataset.x = x; el.dataset.y = -40;
   el.style.left = x + 'px'; el.style.transform = 'translateY(-40px)';
   el.dataset.points = chosen.points; el.dataset.type = chosen.type;
-  el.dataset.speed = speed + (Math.random() * 0.8 - 0.4);
+  el.dataset.speed  = speed + (Math.random() * 0.8 - 0.4);
   field.appendChild(el); _catch.items.push(el);
 }
 
@@ -394,11 +401,11 @@ function _catchGameLoop() {
   const basketLeft = bx, basketRight = bx + bw, basketTop = fh - 60;
   const toRemove = [];
   for (const el of _catch.items) {
-    const y = parseFloat(el.dataset.y) || 0;
+    const y     = parseFloat(el.dataset.y)     || 0;
     const speed = parseFloat(el.dataset.speed) || CATCH_CONFIG.baseSpeed;
-    const newY = y + speed;
+    const newY  = y + speed;
     el.dataset.y = newY; el.style.transform = `translateY(${newY}px)`;
-    const itemX = parseFloat(el.dataset.x) + CATCH_CONFIG.itemSize / 2;
+    const itemX      = parseFloat(el.dataset.x) + CATCH_CONFIG.itemSize / 2;
     const itemBottom = newY + CATCH_CONFIG.itemSize;
     if (itemBottom >= basketTop && itemBottom <= basketTop + 30 && itemX >= basketLeft - 10 && itemX <= basketRight + 10) {
       _catchCollect(parseInt(el.dataset.points), el.dataset.type, el);
@@ -419,7 +426,7 @@ function _catchCollect(points, type, el) {
     _catch.combo++;
     if (_catch.combo > _catch.maxCombo) _catch.maxCombo = _catch.combo;
     _catch.caught++;
-    let bonus = _catch.combo >= 10 ? 3 : _catch.combo >= 5 ? 1 : 0;
+    const bonus = _catch.combo >= 10 ? 3 : _catch.combo >= 5 ? 1 : 0;
     const total = points + bonus;
     _catch.score += total;
     _showCatchEffect(field, x, y, `+${total}`, type === 'golden' ? '#d97706' : type === 'mushroom' ? '#7c3aed' : '#059669');
@@ -455,15 +462,13 @@ function endCatchGame() {
   _catch.items.forEach(el => el.remove());
   _catch.items = [];
 
-  const score = _catch.score, maxCombo = _catch.maxCombo, caught = _catch.caught;
+  const score     = _catch.score, maxCombo = _catch.maxCombo, caught = _catch.caught;
   const rewardRate = getMgSetting('catch', 'rewardRate');
-  const maxReward = getMgSetting('catch', 'maxReward');
-  const reward = Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate)));
-
-  // 보상 수령 가능 여부
-  const rLimit = getRewardLimit('catch');
-  const rUsed = _mgTodayRewards['catch'] || 0;
-  const canClaim = rUsed < rLimit && reward > 0;
+  const maxReward  = getMgSetting('catch', 'maxReward');
+  const reward     = Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate)));
+  const rLimit     = getRewardLimit('catch');
+  const rUsed      = _mgTodayRewards['catch'] || 0;
+  const canClaim   = rUsed < rLimit && reward > 0;
 
   playSound('gachaResult');
 
@@ -486,7 +491,6 @@ function endCatchGame() {
             <span class="catch-result-label">캐치 성공</span>
           </div>
         </div>
-
         <div class="catch-reward-box">
           <span style="font-size:1.8rem">🌰</span>
           <div>
@@ -495,7 +499,6 @@ function endCatchGame() {
             ${canClaim ? `<p class="text-xs mt-1" style="color:#7c3aed;font-weight:700">보상 수령 남은 횟수: ${rLimit - rUsed}/${rLimit}회</p>` : ''}
           </div>
         </div>
-
         ${canClaim ? `
         <div class="flex gap-2 mt-4">
           <button class="btn btn-gray flex-1 py-3" onclick="_finishCatch(${score},false)">넘기기</button>
@@ -514,13 +517,11 @@ function endCatchGame() {
 
 async function _finishCatch(score, claimReward) {
   const rewardRate = getMgSetting('catch', 'rewardRate');
-  const maxReward = getMgSetting('catch', 'maxReward');
-  const reward = claimReward ? Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate))) : 0;
+  const maxReward  = getMgSetting('catch', 'maxReward');
+  const reward     = claimReward ? Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate))) : 0;
 
-  // 기록 저장 (도전 횟수 +1, 보상 여부 기록)
   await recordPlay('catch', score, claimReward);
 
-  // 보상 지급
   if (claimReward && reward > 0) {
     await _giveMinigameReward(reward, score, 'catch');
     toast('🌰', `+${reward} 도토리를 받았어요!`);
@@ -528,7 +529,6 @@ async function _finishCatch(score, claimReward) {
     toast('🎮', '기록이 저장되었습니다');
   }
 
-  // 다시하기/돌아가기 화면
   document.getElementById('minigame-play').innerHTML = `
     <div class="catch-result-screen">
       <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
@@ -574,12 +574,12 @@ function confirmExitCatch() {
 
 async function renderMinigameAdmin() {
   await loadMinigameSettings();
-  const list = document.getElementById('mgSettingsList');
+  const list  = document.getElementById('mgSettingsList');
   const games = ['catch', '2048', 'roulette'];
 
   list.innerHTML = games.map(id => {
     const def = MG_DEFAULTS[id];
-    const s = _mgSettings[id] || {};
+    const s   = _mgSettings[id] || {};
     const val = (key) => s[key] ?? def[key];
     return `
     <div class="clay-card p-4">
@@ -625,20 +625,15 @@ async function saveMinigameSetting(gameId) {
     if (el) updated[key] = parseInt(el.value) || 0;
   }
   _mgSettings[gameId] = { ...(_mgSettings[gameId] || {}), ...updated };
-  // v1→v2: dailyLimit 제거
-  delete _mgSettings[gameId].dailyLimit;
+  delete _mgSettings[gameId].dailyLimit; // v1→v2 마이그레이션
 
   try {
-    const { data: existing } = await sb.from('app_settings')
-      .select('key')
-      .eq('key', 'minigame_settings')
-      .maybeSingle(); // ✅ single() → maybeSingle()
-
-    if (existing) {
-      await sb.from('app_settings').update({ value: _mgSettings, updated_at: new Date().toISOString() }).eq('key', 'minigame_settings');
-    } else {
-      await sb.from('app_settings').insert({ key: 'minigame_settings', value: _mgSettings, updated_at: new Date().toISOString() });
-    }
+    // ✅ upsert 사용 (check-then-insert/update 패턴 제거)
+    const { error } = await sb.from('app_settings').upsert(
+      { key: 'minigame_settings', value: _mgSettings, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) throw new Error(error.message);
     toast('✅', `${MG_DEFAULTS[gameId]?.name || gameId} 설정이 저장되었습니다!`);
   } catch(e) { toast('❌', '설정 저장 실패: ' + (e.message || e)); }
 }
@@ -650,7 +645,7 @@ async function showMgChargeModal(userId, userName) {
   await loadMinigameSettings();
 
   // ✅ KST 기준 오늘 날짜
-  const today = getToday();
+  const today   = getToday();
   const fromUTC = today + 'T00:00:00+09:00';
   const toUTC   = today + 'T23:59:59+09:00';
 
@@ -662,43 +657,41 @@ async function showMgChargeModal(userId, userName) {
       .gte('played_at', fromUTC)
       .lte('played_at', toUTC);
     (data || []).forEach(r => {
-      userPlays[r.game_id] = (userPlays[r.game_id] || 0) + 1;
+      userPlays[r.game_id]   = (userPlays[r.game_id]   || 0) + 1;
       if (r.rewarded) userRewards[r.game_id] = (userRewards[r.game_id] || 0) + 1;
     });
   } catch(e) {}
 
-  // ✅ maybeSingle() 사용
+  // ✅ maybeSingle + 방어적 파싱
   let userBonus = {};
   try {
     const { data } = await sb.from('app_settings')
       .select('value')
       .eq('key', 'mg_bonus_' + userId)
       .maybeSingle();
-    userBonus = data?.value || {};
+    userBonus = _parseValue(data?.value);
   } catch(e) {}
 
   _mgChargeState = { userId, userName, userPlays, userRewards, userBonus };
-
-  const gameId = 'catch';
-  _renderMgChargeModal(gameId);
+  _renderMgChargeModal('catch');
 }
 
 function _renderMgChargeModal(gameId) {
-  const s = _mgChargeState;
-  const pBase = getMgSetting(gameId, 'playLimit');
-  const rBase = getMgSetting(gameId, 'rewardLimit');
-  const pBonus = s.userBonus?.plays?.[gameId] || 0;
+  const s      = _mgChargeState;
+  const pBase  = getMgSetting(gameId, 'playLimit');
+  const rBase  = getMgSetting(gameId, 'rewardLimit');
+  const pBonus = s.userBonus?.plays?.[gameId]   || 0;
   const rBonus = s.userBonus?.rewards?.[gameId] || 0;
   const pTotal = pBase + pBonus;
   const rTotal = rBase + rBonus;
-  const pUsed = s.userPlays[gameId] || 0;
-  const rUsed = s.userRewards[gameId] || 0;
+  const pUsed  = s.userPlays[gameId]   || 0;
+  const rUsed  = s.userRewards[gameId] || 0;
 
-  _mgChargeState._curPlay = pTotal;
-  _mgChargeState._curReward = rTotal;
-  _mgChargeState._origPlay = pTotal;
+  _mgChargeState._curPlay    = pTotal;
+  _mgChargeState._curReward  = rTotal;
+  _mgChargeState._origPlay   = pTotal;
   _mgChargeState._origReward = rTotal;
-  _mgChargeState._gameId = gameId;
+  _mgChargeState._gameId     = gameId;
 
   showModal(`<div class="text-center">
     <div style="font-size:2rem;margin-bottom:8px">🎮</div>
@@ -731,7 +724,7 @@ function _renderMgChargeModal(gameId) {
           <div class="mgc-controls">
             <button class="mgc-btn mgc-btn-minus" onclick="_mgcAdj('play',-1)">−</button>
             <span class="mgc-val" id="mgcPlayVal">${pTotal}</span>
-            <button class="mgc-btn mgc-btn-plus" onclick="_mgcAdj('play',1)">+</button>
+            <button class="mgc-btn mgc-btn-plus"  onclick="_mgcAdj('play',1)">+</button>
           </div>
           <div class="mgc-diff" id="mgcPlayDiff"></div>
         </div>
@@ -742,7 +735,7 @@ function _renderMgChargeModal(gameId) {
           <div class="mgc-controls">
             <button class="mgc-btn mgc-btn-minus" onclick="_mgcAdj('reward',-1)">−</button>
             <span class="mgc-val" id="mgcRewardVal">${rTotal}</span>
-            <button class="mgc-btn mgc-btn-plus" onclick="_mgcAdj('reward',1)">+</button>
+            <button class="mgc-btn mgc-btn-plus"  onclick="_mgcAdj('reward',1)">+</button>
           </div>
           <div class="mgc-diff" id="mgcRewardDiff"></div>
         </div>
@@ -767,69 +760,61 @@ function _mgcAdj(type, delta) {
   const s = _mgChargeState;
   if (type === 'play') {
     s._curPlay = Math.max(0, s._curPlay + delta);
-    document.getElementById('mgcPlayVal').textContent = s._curPlay;
+    document.getElementById('mgcPlayVal').textContent   = s._curPlay;
     document.getElementById('mgcPlayTotal').textContent = s._curPlay;
     _mgcUpdateDiff('play', s._curPlay, s._origPlay);
   } else {
     s._curReward = Math.max(0, s._curReward + delta);
-    document.getElementById('mgcRewardVal').textContent = s._curReward;
+    document.getElementById('mgcRewardVal').textContent   = s._curReward;
     document.getElementById('mgcRewardTotal').textContent = s._curReward;
     _mgcUpdateDiff('reward', s._curReward, s._origReward);
   }
 }
 
 function _mgcUpdateDiff(type, cur, orig) {
-  const el = document.getElementById('mgc' + (type === 'play' ? 'Play' : 'Reward') + 'Diff');
+  const el    = document.getElementById('mgc' + (type === 'play' ? 'Play' : 'Reward') + 'Diff');
   const valEl = document.getElementById('mgc' + (type === 'play' ? 'Play' : 'Reward') + 'Val');
-  const diff = cur - orig;
+  const diff  = cur - orig;
   if (diff === 0) {
-    el.textContent = '';
+    el.textContent  = '';
     valEl.className = 'mgc-val';
   } else if (diff > 0) {
-    el.textContent = '+' + diff;
-    el.className = 'mgc-diff mgc-diff-plus';
+    el.textContent  = '+' + diff;
+    el.className    = 'mgc-diff mgc-diff-plus';
     valEl.className = 'mgc-val mgc-val-plus';
   } else {
-    el.textContent = '' + diff;
-    el.className = 'mgc-diff mgc-diff-minus';
+    el.textContent  = '' + diff;
+    el.className    = 'mgc-diff mgc-diff-minus';
     valEl.className = 'mgc-val mgc-val-minus';
   }
 }
 
 async function _doMgCharge() {
-  const s = _mgChargeState;
-  const gameId = s._gameId;
+  const s          = _mgChargeState;
+  const gameId     = s._gameId;
   const playDiff   = s._curPlay   - s._origPlay;
   const rewardDiff = s._curReward - s._origReward;
   if (playDiff === 0 && rewardDiff === 0) { toast('⚠️', '변경사항이 없습니다'); return; }
 
   closeModal();
   try {
-    const key = 'mg_bonus_' + s.userId;
-    let bonus = s.userBonus || {};
+    const key   = 'mg_bonus_' + s.userId;
+    let bonus   = _parseValue(s.userBonus); // ✅ 방어적 파싱
     if (!bonus.plays)   bonus.plays   = {};
     if (!bonus.rewards) bonus.rewards = {};
 
     bonus.plays[gameId]   = Math.max(0, (bonus.plays[gameId]   || 0) + playDiff);
     bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + rewardDiff);
 
-    // ✅ .single().catch() 대신 maybeSingle() 사용
-    const { data: existing } = await sb.from('app_settings')
-      .select('key')
-      .eq('key', key)
-      .maybeSingle();
+    // ✅ upsert 사용 — check-then-insert/update 패턴 제거
+    //    key 컬럼 충돌 시 자동으로 UPDATE, 없으면 INSERT
+    const { error } = await sb.from('app_settings').upsert(
+      { key, value: bonus, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) throw new Error(error.message);
 
-    if (existing) {
-      const { error } = await sb.from('app_settings')
-        .update({ value: bonus, updated_at: new Date().toISOString() })
-        .eq('key', key);
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await sb.from('app_settings')
-        .insert({ key, value: bonus, updated_at: new Date().toISOString() });
-      if (error) throw new Error(error.message);
-    }
-
+    // 메모리 상태 갱신
     s.userBonus = bonus;
 
     const parts = [];
@@ -847,7 +832,7 @@ async function _renderMinigameStats() {
   if (!area) return;
 
   // ✅ KST 기준 오늘 날짜
-  const today = getToday();
+  const today   = getToday();
   const fromUTC = today + 'T00:00:00+09:00';
   const toUTC   = today + 'T23:59:59+09:00';
 
@@ -889,26 +874,26 @@ async function _renderMinigameStats() {
 //  랭킹 시스템
 // ══════════════════════════════════════════════
 
-let _rankPeriod = 'daily';
+let _rankPeriod      = 'daily';
 let _adminRankPeriod = 'daily';
-let _mgLogOffset = 0;
-const MG_LOG_PAGE = 20;
+let _mgLogOffset     = 0;
+const MG_LOG_PAGE    = 20;
 
 function _getPeriodRange(period) {
-  const now = new Date();
+  // ✅ KST 기준
   if (period === 'daily') {
-    // ✅ KST 기준 오늘
     const d = getToday();
     return { from: d + 'T00:00:00+09:00', to: d + 'T23:59:59+09:00' };
   }
   if (period === 'weekly') {
+    const now = new Date();
     const day = now.getDay();
     const mon = new Date(now);
     mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-    const monStr = mon.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })
-      .replace(/\. /g, '-').replace(/\.$/, '').split('-').map((v, i) => i === 0 ? v : v.padStart(2, '0')).join('-');
-    const todayStr = getToday();
-    return { from: monStr + 'T00:00:00+09:00', to: todayStr + 'T23:59:59+09:00' };
+    // KST 기준 월요일 날짜 문자열
+    const monKST = new Date(mon.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+    const todStr = getToday();
+    return { from: monKST + 'T00:00:00+09:00', to: todStr + 'T23:59:59+09:00' };
   }
   return { from: '2020-01-01T00:00:00+09:00', to: '2099-12-31T23:59:59+09:00' };
 }
@@ -931,8 +916,8 @@ function setRankPeriod(period, btn) {
 
 async function renderUserRanking() {
   const gameId = document.getElementById('rankGameFilter')?.value || 'catch';
-  const range = _getPeriodRange(_rankPeriod);
-  const list = document.getElementById('userRankingList');
+  const range  = _getPeriodRange(_rankPeriod);
+  const list   = document.getElementById('userRankingList');
   list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
 
   try {
@@ -952,8 +937,10 @@ async function renderUserRanking() {
     const nameMap = {};
     (users || []).forEach(u => nameMap[u.id] = u.display_name);
 
-    const sorted = Object.entries(best).map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' })).sort((a, b) => b.score - a.score);
-    const myId = myProfile?.id;
+    const sorted = Object.entries(best)
+      .map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' }))
+      .sort((a, b) => b.score - a.score);
+    const myId   = myProfile?.id;
     const myRank = sorted.findIndex(r => r.uid === myId) + 1;
 
     list.innerHTML = sorted.slice(0, 20).map((r, i) => {
@@ -986,10 +973,10 @@ async function _renderMyStats(gameId) {
 
     if (!data?.length) { area.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">아직 플레이 기록이 없어요</p>'; return; }
 
-    const totalPlays = data.length;
-    const bestScore = Math.max(...data.map(r => r.score));
+    const totalPlays  = data.length;
+    const bestScore   = Math.max(...data.map(r => r.score));
     const totalReward = data.reduce((s, r) => s + (r.reward || 0), 0);
-    const avgScore = Math.round(data.reduce((s, r) => s + r.score, 0) / totalPlays);
+    const avgScore    = Math.round(data.reduce((s, r) => s + r.score, 0) / totalPlays);
 
     area.innerHTML = `<div class="flex gap-3 justify-center flex-wrap">
       <div class="rank-my-stat"><span class="rank-my-num" style="color:#d97706">${totalPlays}</span><span class="rank-my-label">총 플레이</span></div>
@@ -1009,8 +996,8 @@ function setAdminRankPeriod(period, btn) {
 
 async function renderAdminRanking() {
   const gameId = document.getElementById('adminRankGameFilter')?.value || 'catch';
-  const range = _getPeriodRange(_adminRankPeriod);
-  const list = document.getElementById('adminRankingList');
+  const range  = _getPeriodRange(_adminRankPeriod);
+  const list   = document.getElementById('adminRankingList');
   list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
 
   try {
@@ -1027,7 +1014,10 @@ async function renderAdminRanking() {
     const nameMap = {};
     (users || []).forEach(u => nameMap[u.id] = u.display_name);
 
-    const sorted = Object.entries(best).map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' })).sort((a, b) => b.score - a.score);
+    const sorted = Object.entries(best)
+      .map(([uid, score]) => ({ uid, score, name: nameMap[uid] || '알 수 없음' }))
+      .sort((a, b) => b.score - a.score);
+
     list.innerHTML = sorted.slice(0, 30).map((r, i) => {
       const rank = i + 1;
       return `<div class="rank-row ${rank <= 3 ? 'rank-row-top' : ''}">
@@ -1051,7 +1041,11 @@ async function renderMinigameLog() {
     if (gameFilter) query = query.eq('game_id', gameFilter);
     const { data } = await query;
 
-    if (!data?.length) { list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로그가 없습니다</p>'; document.getElementById('mgLogMoreBtn').style.display = 'none'; return; }
+    if (!data?.length) {
+      list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로그가 없습니다</p>';
+      document.getElementById('mgLogMoreBtn').style.display = 'none';
+      return;
+    }
 
     const uids = [...new Set(data.map(r => r.user_id))];
     const { data: users } = await sb.from('users').select('id, display_name').in('id', uids);
@@ -1059,7 +1053,7 @@ async function renderMinigameLog() {
     (users || []).forEach(u => nameMap[u.id] = u.display_name);
 
     list.innerHTML = _renderLogRows(data, nameMap);
-    _mgLogOffset = data.length;
+    _mgLogOffset   = data.length;
     document.getElementById('mgLogMoreBtn').style.display = data.length >= MG_LOG_PAGE ? '' : 'none';
   } catch(e) { list.innerHTML = '<p class="text-sm text-gray-400">로그 조회 실패</p>'; }
 }
@@ -1079,17 +1073,19 @@ async function loadMoreMinigameLogs() {
     const nameMap = {};
     (users || []).forEach(u => nameMap[u.id] = u.display_name);
     list.innerHTML += _renderLogRows(data, nameMap);
-    _mgLogOffset += data.length;
+    _mgLogOffset   += data.length;
     document.getElementById('mgLogMoreBtn').style.display = data.length >= MG_LOG_PAGE ? '' : 'none';
   } catch(e) { console.warn('[mgLog]', e); }
 }
 
 function _renderLogRows(data, nameMap) {
   return data.map(r => {
-    const t = new Date(r.played_at);
-    const timeStr = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-    const gameName = MG_DEFAULTS[r.game_id]?.icon || '🎮';
-    const rewardStr = r.rewarded ? `<span style="color:#059669">+${r.reward}🌰</span>` : '<span style="color:#9ca3af">넘김</span>';
+    const t         = new Date(r.played_at);
+    const timeStr   = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    const gameName  = MG_DEFAULTS[r.game_id]?.icon || '🎮';
+    const rewardStr = r.rewarded
+      ? `<span style="color:#059669">+${r.reward}🌰</span>`
+      : '<span style="color:#9ca3af">넘김</span>';
     return `<div class="mg-log-row">
       <span class="mg-log-game">${gameName}</span>
       <span class="mg-log-user">${nameMap[r.user_id] || '—'}</span>
