@@ -259,6 +259,14 @@ const CATCH_CONFIG = {
   ]
 };
 
+// 관리자 설정에서 속도 읽기
+function getCatchSpeed(key) {
+  const s = _mgSettings?.catch || {};
+  if (key === 'baseSpeed') return s.baseSpeed ?? CATCH_CONFIG.baseSpeed;
+  if (key === 'maxSpeed')  return s.maxSpeed  ?? CATCH_CONFIG.maxSpeed;
+  return CATCH_CONFIG[key];
+}
+
 let _catch = null;
 
 function startCatchGame() {
@@ -380,7 +388,7 @@ function _spawnItem() {
   for (const item of CATCH_CONFIG.items) { r -= item.weight; if (r <= 0) { chosen = item; break; } }
   const fw = _catch.fieldW, x = Math.random() * (fw - CATCH_CONFIG.itemSize);
   const progress = (_catch.duration - _catch.timeLeft) / _catch.duration;
-  const speed = CATCH_CONFIG.baseSpeed + (CATCH_CONFIG.maxSpeed - CATCH_CONFIG.baseSpeed) * progress;
+  const speed = getCatchSpeed('baseSpeed') + (getCatchSpeed('maxSpeed') - getCatchSpeed('baseSpeed')) * progress;
   const el = document.createElement('div');
   el.className = 'catch-item'; el.textContent = chosen.emoji;
   el.dataset.x = x; el.dataset.y = -40;
@@ -390,28 +398,20 @@ function _spawnItem() {
   field.appendChild(el); _catch.items.push(el);
 }
 
-function _catchGameLoop(timestamp) {
+function _catchGameLoop() {
   if (!_catch?.running) return;
-  // delta time: 60fps 기준 1.0 (프레임 독립적 속도)
-  const now = timestamp || performance.now();
-  const last = _catch._lastFrameTime || now;
-  _catch._lastFrameTime = now;
-  const rawDt = (now - last) / 16.667; // 16.667ms = 1 frame at 60fps
-  const dt = Math.min(Math.max(rawDt, 0.5), 2.5); // 0.5~2.5 클램프
-
   const basket = _catch.basketEl, field = _catch.fieldEl;
   if (!field || !basket) return;
   const fw = _catch.fieldW, fh = field.offsetHeight, bw = CATCH_CONFIG.basketWidth;
-  const smoothing = 0.25 * dt;
-  _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * Math.min(smoothing, 0.9);
+  _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * 0.25;
   const bx = _catch.basketXCurrent * (fw - bw);
   basket.style.transform = `translateX(${bx}px)`;
   const basketLeft = bx, basketRight = bx + bw, basketTop = fh - 60;
   const toRemove = [];
   for (const el of _catch.items) {
     const y     = parseFloat(el.dataset.y)     || 0;
-    const speed = parseFloat(el.dataset.speed) || CATCH_CONFIG.baseSpeed;
-    const newY  = y + speed * dt;
+    const speed = parseFloat(el.dataset.speed) || getCatchSpeed('baseSpeed');
+    const newY  = y + speed;
     el.dataset.y = newY; el.style.transform = `translateY(${newY}px)`;
     const itemX      = parseFloat(el.dataset.x) + CATCH_CONFIG.itemSize / 2;
     const itemBottom = newY + CATCH_CONFIG.itemSize;
@@ -618,6 +618,15 @@ async function renderMinigameAdmin() {
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">⏱ 게임 시간(초)</label>
           <input class="field text-center" type="number" min="10" max="300" style="width:80px" id="mg-${id}-duration" value="${val('duration')}">
         </div>` : ''}
+        ${id === 'catch' ? `
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🐌 시작 속도</label>
+          <input class="field text-center" type="number" min="0.5" max="10" step="0.1" style="width:80px" id="mg-${id}-baseSpeed" value="${val('baseSpeed') ?? 2.2}">
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🚀 최대 속도</label>
+          <input class="field text-center" type="number" min="1" max="20" step="0.1" style="width:80px" id="mg-${id}-maxSpeed" value="${val('maxSpeed') ?? 5.5}">
+        </div>` : ''}
       </div>
       <button class="btn btn-primary w-full py-2 mt-3 text-sm" onclick="saveMinigameSetting('${id}')">💾 저장</button>
     </div>`;
@@ -626,11 +635,16 @@ async function renderMinigameAdmin() {
 }
 
 async function saveMinigameSetting(gameId) {
-  const keys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration'];
+  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration'];
+  const floatKeys = ['baseSpeed', 'maxSpeed'];
   const updated = {};
-  for (const key of keys) {
+  for (const key of intKeys) {
     const el = document.getElementById(`mg-${gameId}-${key}`);
     if (el) updated[key] = parseInt(el.value) || 0;
+  }
+  for (const key of floatKeys) {
+    const el = document.getElementById(`mg-${gameId}-${key}`);
+    if (el) updated[key] = parseFloat(el.value) || 0;
   }
   _mgSettings[gameId] = { ...(_mgSettings[gameId] || {}), ...updated };
   delete _mgSettings[gameId].dailyLimit; // v1→v2 마이그레이션
@@ -652,7 +666,6 @@ let _mgChargeState = {};
 async function showMgChargeModal(userId, userName) {
   await loadMinigameSettings();
 
-  // ✅ KST 기준 오늘 날짜
   const today   = getToday();
   const fromUTC = today + 'T00:00:00+09:00';
   const toUTC   = today + 'T23:59:59+09:00';
@@ -670,41 +683,29 @@ async function showMgChargeModal(userId, userName) {
     });
   } catch(e) {}
 
-  // ✅ maybeSingle + 방어적 파싱
-  let userBonus = {};
-  try {
-    const { data } = await sb.from('app_settings')
-      .select('value')
-      .eq('key', 'mg_bonus_' + userId)
-      .maybeSingle();
-    userBonus = _parseValue(data?.value);
-  } catch(e) {}
-
-  _mgChargeState = { userId, userName, userPlays, userRewards, userBonus };
+  _mgChargeState = { userId, userName, userPlays, userRewards };
   _renderMgChargeModal('catch');
 }
 
 function _renderMgChargeModal(gameId) {
   const s      = _mgChargeState;
-  const pBase  = getMgSetting(gameId, 'playLimit');
-  const rBase  = getMgSetting(gameId, 'rewardLimit');
-  const pBonus = s.userBonus?.plays?.[gameId]   || 0;
-  const rBonus = s.userBonus?.rewards?.[gameId] || 0;
-  const pTotal = pBase + pBonus;
-  const rTotal = rBase + rBonus;
+  const pLimit = getMgSetting(gameId, 'playLimit');
+  const rLimit = getMgSetting(gameId, 'rewardLimit');
   const pUsed  = s.userPlays[gameId]   || 0;
   const rUsed  = s.userRewards[gameId] || 0;
+  const pLeft  = Math.max(0, pLimit - pUsed);
+  const rLeft  = Math.max(0, rLimit - rUsed);
 
-  _mgChargeState._curPlay    = pTotal;
-  _mgChargeState._curReward  = rTotal;
-  _mgChargeState._origPlay   = pTotal;
-  _mgChargeState._origReward = rTotal;
-  _mgChargeState._gameId     = gameId;
+  _mgChargeState._curPlayUsed    = pUsed;
+  _mgChargeState._curRewardUsed  = rUsed;
+  _mgChargeState._origPlayUsed   = pUsed;
+  _mgChargeState._origRewardUsed = rUsed;
+  _mgChargeState._gameId         = gameId;
 
   showModal(`<div class="text-center">
     <div style="font-size:2rem;margin-bottom:8px">🎮</div>
     <h2 class="text-lg font-black text-gray-800 mb-1">${s.userName} 게임횟수 조정</h2>
-    <p class="text-xs text-gray-400 mb-4">현재 횟수를 확인하고 조정하세요</p>
+    <p class="text-xs text-gray-400 mb-4">오늘의 사용 횟수를 조정합니다</p>
 
     <select class="field mb-3" id="mgChargeGame" onchange="_onMgChargeGameChange()">
       ${Object.entries(MG_DEFAULTS).map(([id, d]) =>
@@ -713,78 +714,79 @@ function _renderMgChargeModal(gameId) {
     </select>
 
     <div class="mgc-status">
-      <div class="mgc-status-title">오늘 사용 현황</div>
+      <div class="mgc-status-title">오늘 현황</div>
       <div class="mgc-status-row">
         <div class="mgc-stat"><span class="mgc-stat-num mgc-play">${pUsed}</span><span class="mgc-stat-label">도전 사용</span></div>
         <span class="mgc-slash">/</span>
-        <div class="mgc-stat"><span class="mgc-stat-num mgc-play" id="mgcPlayTotal">${pTotal}</span><span class="mgc-stat-label">도전 한도</span></div>
-        <div style="width:12px"></div>
+        <div class="mgc-stat"><span class="mgc-stat-num">${pLimit}</span><span class="mgc-stat-label">도전 한도</span></div>
+        <span class="mgc-slash">→</span>
+        <div class="mgc-stat"><span class="mgc-stat-num" style="color:#059669">${pLeft}</span><span class="mgc-stat-label">남은 횟수</span></div>
+      </div>
+      <div class="mgc-status-row" style="margin-top:4px">
         <div class="mgc-stat"><span class="mgc-stat-num mgc-reward">${rUsed}</span><span class="mgc-stat-label">보상 사용</span></div>
         <span class="mgc-slash">/</span>
-        <div class="mgc-stat"><span class="mgc-stat-num mgc-reward" id="mgcRewardTotal">${rTotal}</span><span class="mgc-stat-label">보상 한도</span></div>
+        <div class="mgc-stat"><span class="mgc-stat-num">${rLimit}</span><span class="mgc-stat-label">보상 한도</span></div>
+        <span class="mgc-slash">→</span>
+        <div class="mgc-stat"><span class="mgc-stat-num" style="color:#059669">${rLeft}</span><span class="mgc-stat-label">남은 횟수</span></div>
       </div>
     </div>
 
     <div class="mgc-adjust">
       <div class="mgc-adjust-row">
-        <span class="mgc-adjust-label">🎮 도전 한도</span>
-        <div>
-          <div class="mgc-controls">
-            <button class="mgc-btn mgc-btn-minus" onclick="_mgcAdj('play',-1)">−</button>
-            <span class="mgc-val" id="mgcPlayVal">${pTotal}</span>
-            <button class="mgc-btn mgc-btn-plus"  onclick="_mgcAdj('play',1)">+</button>
-          </div>
-          <div class="mgc-diff" id="mgcPlayDiff"></div>
+        <span class="mgc-adjust-label">🎮 도전 사용횟수</span>
+        <div class="mgc-adj-btns">
+          <button class="mgc-adj-btn" onclick="_mgcUsedAdj('play',-1)">−</button>
+          <span class="mgc-val" id="mgcPlayVal">${pUsed}</span>
+          <button class="mgc-adj-btn" onclick="_mgcUsedAdj('play',+1)">+</button>
         </div>
+        <span class="mgc-diff" id="mgcPlayDiff"></span>
       </div>
-      <div class="mgc-adjust-row" style="border-bottom:none">
-        <span class="mgc-adjust-label">🌰 보상 한도</span>
-        <div>
-          <div class="mgc-controls">
-            <button class="mgc-btn mgc-btn-minus" onclick="_mgcAdj('reward',-1)">−</button>
-            <span class="mgc-val" id="mgcRewardVal">${rTotal}</span>
-            <button class="mgc-btn mgc-btn-plus"  onclick="_mgcAdj('reward',1)">+</button>
-          </div>
-          <div class="mgc-diff" id="mgcRewardDiff"></div>
+      <div class="mgc-adjust-row">
+        <span class="mgc-adjust-label">🌰 보상 사용횟수</span>
+        <div class="mgc-adj-btns">
+          <button class="mgc-adj-btn" onclick="_mgcUsedAdj('reward',-1)">−</button>
+          <span class="mgc-val" id="mgcRewardVal">${rUsed}</span>
+          <button class="mgc-adj-btn" onclick="_mgcUsedAdj('reward',+1)">+</button>
         </div>
+        <span class="mgc-diff" id="mgcRewardDiff"></span>
       </div>
     </div>
 
-    <div class="flex gap-2 mt-4">
+    <p class="text-xs text-gray-400 mt-2 mb-3">
+      − 줄이면 기회가 늘어납니다 &nbsp;|&nbsp; + 늘리면 기회가 줄어듭니다
+    </p>
+
+    <div class="flex gap-2 mt-3">
       <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
-      <button class="btn btn-primary flex-1 py-2" onclick="_doMgCharge()">적용하기</button>
+      <button class="btn btn-primary flex-1 py-2" onclick="_doMgCharge()">적용</button>
     </div>
-    <p class="text-xs text-gray-400 mt-2">한도 = 기본 설정 + 관리자 보너스</p>
   </div>`);
 }
 
 function _onMgChargeGameChange() {
   const gameId = document.getElementById('mgChargeGame').value;
-  closeModal();
-  setTimeout(() => _renderMgChargeModal(gameId), 50);
+  _renderMgChargeModal(gameId);
 }
 
-function _mgcAdj(type, delta) {
+function _mgcUsedAdj(type, delta) {
   const s = _mgChargeState;
   if (type === 'play') {
-    s._curPlay = Math.max(0, s._curPlay + delta);
-    document.getElementById('mgcPlayVal').textContent   = s._curPlay;
-    document.getElementById('mgcPlayTotal').textContent = s._curPlay;
-    _mgcUpdateDiff('play', s._curPlay, s._origPlay);
+    s._curPlayUsed = Math.max(0, s._curPlayUsed + delta);
+    document.getElementById('mgcPlayVal').textContent = s._curPlayUsed;
+    _showUsedDiff('mgcPlayDiff', s._curPlayUsed - s._origPlayUsed, 'mgcPlayVal');
   } else {
-    s._curReward = Math.max(0, s._curReward + delta);
-    document.getElementById('mgcRewardVal').textContent   = s._curReward;
-    document.getElementById('mgcRewardTotal').textContent = s._curReward;
-    _mgcUpdateDiff('reward', s._curReward, s._origReward);
+    s._curRewardUsed = Math.max(0, s._curRewardUsed + delta);
+    document.getElementById('mgcRewardVal').textContent = s._curRewardUsed;
+    _showUsedDiff('mgcRewardDiff', s._curRewardUsed - s._origRewardUsed, 'mgcRewardVal');
   }
 }
 
-function _mgcUpdateDiff(type, cur, orig) {
-  const el    = document.getElementById('mgc' + (type === 'play' ? 'Play' : 'Reward') + 'Diff');
-  const valEl = document.getElementById('mgc' + (type === 'play' ? 'Play' : 'Reward') + 'Val');
-  const diff  = cur - orig;
+function _showUsedDiff(diffId, diff, valId) {
+  const el = document.getElementById(diffId);
+  const valEl = document.getElementById(valId);
   if (diff === 0) {
     el.textContent  = '';
+    el.className    = 'mgc-diff';
     valEl.className = 'mgc-val';
   } else if (diff > 0) {
     el.textContent  = '+' + diff;
@@ -800,38 +802,76 @@ function _mgcUpdateDiff(type, cur, orig) {
 async function _doMgCharge() {
   const s          = _mgChargeState;
   const gameId     = s._gameId;
-  const playDiff   = s._curPlay   - s._origPlay;
-  const rewardDiff = s._curReward - s._origReward;
+  const playDiff   = s._curPlayUsed   - s._origPlayUsed;
+  const rewardDiff = s._curRewardUsed - s._origRewardUsed;
   if (playDiff === 0 && rewardDiff === 0) { toast('⚠️', '변경사항이 없습니다'); return; }
 
   closeModal();
   try {
-    let bonus = _parseValue(s.userBonus);
-    if (!bonus.plays)   bonus.plays   = {};
-    if (!bonus.rewards) bonus.rewards = {};
+    const today = getToday();
 
-    // 새 총 한도에서 base를 뺀 값이 bonus
-    const pBase = getMgSetting(gameId, 'playLimit');
-    const rBase = getMgSetting(gameId, 'rewardLimit');
-    bonus.plays[gameId]   = s._curPlay   - pBase;
-    bonus.rewards[gameId] = s._curReward - rBase;
-
-    const key = 'mg_bonus_' + s.userId;
-    const { data: existing } = await sb.from('app_settings').select('key').eq('key', key).maybeSingle();
-    if (existing) {
-      const { error } = await sb.from('app_settings').update({ value: bonus, updated_at: new Date().toISOString() }).eq('key', key);
-      if (error) throw new Error(error.message || JSON.stringify(error));
-    } else {
-      const { error } = await sb.from('app_settings').insert({ key, value: bonus, updated_at: new Date().toISOString() });
-      if (error) throw new Error(error.message || JSON.stringify(error));
+    // 사용횟수 증가 → 가짜 기록 추가 (기회 차감)
+    if (playDiff > 0) {
+      const rows = [];
+      for (let i = 0; i < playDiff; i++) {
+        rows.push({
+          user_id: s.userId, game_id: gameId,
+          score: 0, reward: 0,
+          rewarded: rewardDiff > 0 && i < rewardDiff,
+          played_at: new Date().toISOString()
+        });
+      }
+      await sb.from('minigame_plays').insert(rows);
     }
 
-    s.userBonus = bonus;
+    // 사용횟수 감소 → 최신 기록 삭제 (기회 복구)
+    if (playDiff < 0) {
+      const deleteCount = Math.abs(playDiff);
+      const { data: recent } = await sb.from('minigame_plays')
+        .select('id')
+        .eq('user_id', s.userId)
+        .eq('game_id', gameId)
+        .gte('played_at', today + 'T00:00:00+09:00')
+        .lte('played_at', today + 'T23:59:59+09:00')
+        .order('played_at', { ascending: false })
+        .limit(deleteCount);
+      if (recent?.length) {
+        const ids = recent.map(r => r.id);
+        await sb.from('minigame_plays').delete().in('id', ids);
+      }
+    }
+
+    // 보상횟수만 별도 조정 (도전 변경 없이 보상만)
+    if (rewardDiff !== 0 && playDiff === 0) {
+      if (rewardDiff > 0) {
+        const { data: unrewarded } = await sb.from('minigame_plays')
+          .select('id').eq('user_id', s.userId).eq('game_id', gameId)
+          .eq('rewarded', false)
+          .gte('played_at', today + 'T00:00:00+09:00')
+          .lte('played_at', today + 'T23:59:59+09:00')
+          .order('played_at', { ascending: false })
+          .limit(rewardDiff);
+        if (unrewarded?.length) {
+          await sb.from('minigame_plays').update({ rewarded: true }).in('id', unrewarded.map(r => r.id));
+        }
+      } else {
+        const { data: rewarded } = await sb.from('minigame_plays')
+          .select('id').eq('user_id', s.userId).eq('game_id', gameId)
+          .eq('rewarded', true)
+          .gte('played_at', today + 'T00:00:00+09:00')
+          .lte('played_at', today + 'T23:59:59+09:00')
+          .order('played_at', { ascending: false })
+          .limit(Math.abs(rewardDiff));
+        if (rewarded?.length) {
+          await sb.from('minigame_plays').update({ rewarded: false }).in('id', rewarded.map(r => r.id));
+        }
+      }
+    }
 
     const parts = [];
-    if (playDiff   !== 0) parts.push(`도전 ${playDiff   > 0 ? '+' : ''}${playDiff}`);
+    if (playDiff   !== 0) parts.push(`도전 ${playDiff > 0 ? '+' : ''}${playDiff}`);
     if (rewardDiff !== 0) parts.push(`보상 ${rewardDiff > 0 ? '+' : ''}${rewardDiff}`);
-    toast('✅', `${s.userName} ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 완료!`);
+    toast('✅', `${s.userName} ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 조정 완료!`);
 
   } catch(e) { toast('❌', '처리 실패: ' + (e.message || e)); }
 }
