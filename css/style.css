@@ -906,6 +906,105 @@ body {
 }
 
 /* ══════════════════════════════════════════════
+   관리자 C안 — 핀 탭바 + 홈 그리드
+   ══════════════════════════════════════════════ */
+.adm-pin-bar-wrap { padding: 8px; }
+.adm-pin-bar {
+  display: flex; gap: 3px; padding: 5px;
+  background: rgba(255,255,255,0.5); border-radius: 18px;
+  border: 1.5px solid rgba(255,255,255,0.7);
+}
+.adm-pin-tab {
+  font-family: 'Jua', sans-serif; font-size: 13px; padding: 11px 0;
+  border-radius: 14px; border: none; background: transparent; color: #9ca3af;
+  cursor: pointer; flex: 1; text-align: center; transition: all 0.15s;
+}
+.adm-pin-tab.active {
+  background: linear-gradient(135deg, #f472b6, #c084fc); color: #fff;
+  box-shadow: 0 3px 10px rgba(192,132,252,0.25);
+}
+
+/* 축소 통계 */
+.adm-stats-mini {
+  display: flex; gap: 6px; margin: 0 8px 10px; padding: 8px 6px;
+  background: rgba(180,83,9,0.04); border-radius: 14px; border: 1px solid rgba(180,83,9,0.06);
+}
+.adm-stat-m { flex: 1; text-align: center; position: relative; }
+.adm-stat-m + .adm-stat-m::before { content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 1px; background: rgba(180,83,9,0.08); }
+.adm-stat-m-num { font-family: 'Jua', sans-serif; font-size: 14px; line-height: 1.3; }
+.adm-stat-m-num.c1 { color: #d97706; }
+.adm-stat-m-num.c2 { color: #2563eb; }
+.adm-stat-m-num.c3 { color: #059669; }
+.adm-stat-m-num.c4 { color: #9333ea; }
+.adm-stat-m-label { font-size: 8px; font-weight: 800; color: #b0a89e; }
+
+/* 메뉴 그리드 */
+.adm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.adm-grid-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 14px 4px; border-radius: 18px;
+  background: rgba(255,255,255,0.55); border: 1.5px solid rgba(255,255,255,0.75);
+  box-shadow: 4px 4px 12px rgba(188,170,145,0.14), -3px -3px 8px rgba(255,255,255,0.5);
+  cursor: pointer; transition: all 0.15s; gap: 5px; position: relative;
+}
+.adm-grid-item:hover { transform: translateY(-2px); box-shadow: 5px 5px 18px rgba(188,170,145,0.22); }
+.adm-grid-item:active { transform: scale(0.95); }
+.adm-grid-icon { font-size: 24px; }
+.adm-grid-label { font-family: 'Jua', sans-serif; font-size: 11px; color: #374151; text-align: center; }
+.adm-grid-badge { position: absolute; top: 5px; right: 5px; min-width: 16px; height: 16px; border-radius: 99px; background: #ef4444; color: #fff; font-family: 'Jua', sans-serif; font-size: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.adm-edit-btn { border: 1.5px dashed rgba(192,132,252,0.25) !important; background: transparent !important; box-shadow: none !important; }
+.adm-edit-btn .adm-grid-icon { opacity: 0.35; }
+.adm-edit-btn .adm-grid-label { color: #9ca3af; }
+
+/* 섹션 라벨 */
+.adm-section-label { font-family: 'Jua', sans-serif; font-size: 11px; color: #b45309; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-left: 2px; }
+
+/* 점검 칩 */
+.adm-maint-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.adm-maint-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 12px;
+  background: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.6);
+  font-family: 'Jua', sans-serif; font-size: 11px; color: #374151;
+  cursor: pointer; transition: all 0.1s;
+}
+.adm-maint-chip:active { transform: scale(0.95); }
+.maint-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.maint-dot.on { background: #22c55e; }
+.maint-dot.off { background: #ef4444; }
+
+/* 뒤로가기 */
+.adm-back-btn {
+  font-family: 'Jua', sans-serif; font-size: 13px; color: #7c3aed;
+  background: none; border: none; cursor: pointer; padding: 8px 4px; margin-bottom: 8px;
+}
+.adm-back-btn:hover { text-decoration: underline; }
+
+/* 탭 편집 모달 */
+.pin-edit-list { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; }
+.pin-edit-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 12px;
+  background: rgba(255,255,255,0.5); border: 1.5px solid #e5e7eb;
+  cursor: pointer; transition: all 0.15s;
+}
+.pin-edit-item.pinned { border-color: #c084fc; background: rgba(192,132,252,0.06); }
+.pin-edit-icon { font-size: 18px; }
+.pin-edit-label { font-family: 'Jua', sans-serif; font-size: 13px; color: #374151; flex: 1; }
+.pin-edit-check { display: none; }
+.pin-edit-star { font-size: 16px; color: #d1d5db; }
+.pin-edit-item.pinned .pin-edit-star { color: #c084fc; }
+
+/* 다크모드 */
+[data-theme="dark"] .adm-pin-bar { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .adm-pin-tab { color: #6b7280; }
+[data-theme="dark"] .adm-stats-mini { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
+[data-theme="dark"] .adm-grid-item { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); box-shadow: none; }
+[data-theme="dark"] .adm-grid-label { color: #d1d5db; }
+[data-theme="dark"] .adm-maint-chip { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #d1d5db; }
+[data-theme="dark"] .adm-back-btn { color: #a78bfa; }
+
+/* ══════════════════════════════════════════════
    v2 개선: 품절 카드 강화
    ══════════════════════════════════════════════ */
 .shop-card-soldout {
