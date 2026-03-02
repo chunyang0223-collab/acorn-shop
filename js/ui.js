@@ -172,7 +172,7 @@ let _adminPins = [...DEFAULT_PINS];
 
 async function loadAdminPins() {
   try {
-    const { data } = await sb.from('app_settings').select('value').eq('key', 'admin_pinned_tabs').single();
+    const { data } = await sb.from('app_settings').select('value').eq('key', 'admin_pinned_tabs').maybeSingle();
     if (data?.value?.length) _adminPins = data.value;
   } catch(e) {}
   renderPinTabBar();
@@ -316,7 +316,7 @@ async function savePinEditor() {
 
   try {
     const key = 'admin_pinned_tabs';
-    const { data } = await sb.from('app_settings').select('key').eq('key', key).single().catch(() => ({ data: null }));
+    const { data } = await sb.from('app_settings').select('key').eq('key', key).maybeSingle();
     if (data) {
       await sb.from('app_settings').update({ value: selected, updated_at: new Date().toISOString() }).eq('key', key);
     } else {
