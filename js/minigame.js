@@ -50,14 +50,19 @@ function getMgSetting(gameId, key) {
 // ── 오늘 도전/보상 횟수 조회 ──
 async function loadTodayPlays() {
   if (!myProfile) return;
-  const today = new Date().toISOString().slice(0, 10);
+
+  // ✅ KST 기준 오늘 날짜 사용 (UTC가 아님)
+  const today = getToday();
+  const fromUTC = today + 'T00:00:00+09:00';
+  const toUTC   = today + 'T23:59:59+09:00';
+
   try {
     const { data } = await sb
       .from('minigame_plays')
       .select('game_id, rewarded')
       .eq('user_id', myProfile.id)
-      .gte('played_at', today + 'T00:00:00')
-      .lte('played_at', today + 'T23:59:59');
+      .gte('played_at', fromUTC)
+      .lte('played_at', toUTC);
 
     _mgTodayPlays = {};
     _mgTodayRewards = {};
@@ -77,7 +82,7 @@ async function _loadBonusPlays() {
     const { data } = await sb.from('app_settings')
       .select('value')
       .eq('key', 'mg_bonus_' + myProfile.id)
-      .single();
+      .maybeSingle(); // ✅ single() → maybeSingle()
     const bonus = data?.value || {};
     _mgBonusPlays = bonus.plays || {};
     _mgBonusRewards = bonus.rewards || {};
@@ -624,7 +629,11 @@ async function saveMinigameSetting(gameId) {
   delete _mgSettings[gameId].dailyLimit;
 
   try {
-    const { data: existing } = await sb.from('app_settings').select('key').eq('key', 'minigame_settings').single();
+    const { data: existing } = await sb.from('app_settings')
+      .select('key')
+      .eq('key', 'minigame_settings')
+      .maybeSingle(); // ✅ single() → maybeSingle()
+
     if (existing) {
       await sb.from('app_settings').update({ value: _mgSettings, updated_at: new Date().toISOString() }).eq('key', 'minigame_settings');
     } else {
@@ -634,33 +643,37 @@ async function saveMinigameSetting(gameId) {
   } catch(e) { toast('❌', '설정 저장 실패: ' + (e.message || e)); }
 }
 
-// ── 관리자: 횟수 충전 ──
 // ── 관리자: 게임횟수 조정 모달 ──
 let _mgChargeState = {};
 
 async function showMgChargeModal(userId, userName) {
-  // 관리자 모드에서도 설정 로드 보장
   await loadMinigameSettings();
 
-  // 유저의 오늘 사용량 조회
-  const today = new Date().toISOString().slice(0, 10);
+  // ✅ KST 기준 오늘 날짜
+  const today = getToday();
+  const fromUTC = today + 'T00:00:00+09:00';
+  const toUTC   = today + 'T23:59:59+09:00';
+
   let userPlays = {}, userRewards = {};
   try {
     const { data } = await sb.from('minigame_plays')
       .select('game_id, rewarded')
       .eq('user_id', userId)
-      .gte('played_at', today + 'T00:00:00')
-      .lte('played_at', today + 'T23:59:59');
+      .gte('played_at', fromUTC)
+      .lte('played_at', toUTC);
     (data || []).forEach(r => {
       userPlays[r.game_id] = (userPlays[r.game_id] || 0) + 1;
       if (r.rewarded) userRewards[r.game_id] = (userRewards[r.game_id] || 0) + 1;
     });
   } catch(e) {}
 
-  // 유저 보너스 조회
+  // ✅ maybeSingle() 사용
   let userBonus = {};
   try {
-    const { data } = await sb.from('app_settings').select('value').eq('key', 'mg_bonus_' + userId).single();
+    const { data } = await sb.from('app_settings')
+      .select('value')
+      .eq('key', 'mg_bonus_' + userId)
+      .maybeSingle();
     userBonus = data?.value || {};
   } catch(e) {}
 
@@ -681,7 +694,6 @@ function _renderMgChargeModal(gameId) {
   const pUsed = s.userPlays[gameId] || 0;
   const rUsed = s.userRewards[gameId] || 0;
 
-  // 조정값 초기화
   _mgChargeState._curPlay = pTotal;
   _mgChargeState._curReward = rTotal;
   _mgChargeState._origPlay = pTotal;
@@ -787,7 +799,7 @@ function _mgcUpdateDiff(type, cur, orig) {
 async function _doMgCharge() {
   const s = _mgChargeState;
   const gameId = s._gameId;
-  const playDiff = s._curPlay - s._origPlay;
+  const playDiff   = s._curPlay   - s._origPlay;
   const rewardDiff = s._curReward - s._origReward;
   if (playDiff === 0 && rewardDiff === 0) { toast('⚠️', '변경사항이 없습니다'); return; }
 
@@ -795,25 +807,36 @@ async function _doMgCharge() {
   try {
     const key = 'mg_bonus_' + s.userId;
     let bonus = s.userBonus || {};
-    if (!bonus.plays) bonus.plays = {};
+    if (!bonus.plays)   bonus.plays   = {};
     if (!bonus.rewards) bonus.rewards = {};
-    bonus.plays[gameId] = Math.max(0, (bonus.plays[gameId] || 0) + playDiff);
+
+    bonus.plays[gameId]   = Math.max(0, (bonus.plays[gameId]   || 0) + playDiff);
     bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + rewardDiff);
 
-    const { data: existing } = await sb.from('app_settings').select('key').eq('key', key).single().catch(() => ({ data: null }));
+    // ✅ .single().catch() 대신 maybeSingle() 사용
+    const { data: existing } = await sb.from('app_settings')
+      .select('key')
+      .eq('key', key)
+      .maybeSingle();
+
     if (existing) {
-      await sb.from('app_settings').update({ value: bonus, updated_at: new Date().toISOString() }).eq('key', key);
+      const { error } = await sb.from('app_settings')
+        .update({ value: bonus, updated_at: new Date().toISOString() })
+        .eq('key', key);
+      if (error) throw new Error(error.message);
     } else {
-      await sb.from('app_settings').insert({ key: key, value: bonus, updated_at: new Date().toISOString() });
+      const { error } = await sb.from('app_settings')
+        .insert({ key, value: bonus, updated_at: new Date().toISOString() });
+      if (error) throw new Error(error.message);
     }
 
-    // 상태 업데이트
     s.userBonus = bonus;
 
     const parts = [];
-    if (playDiff !== 0) parts.push(`도전 ${playDiff > 0 ? '+' : ''}${playDiff}`);
+    if (playDiff   !== 0) parts.push(`도전 ${playDiff   > 0 ? '+' : ''}${playDiff}`);
     if (rewardDiff !== 0) parts.push(`보상 ${rewardDiff > 0 ? '+' : ''}${rewardDiff}`);
     toast('✅', `${s.userName} ${MG_DEFAULTS[gameId]?.name} ${parts.join(', ')} 완료!`);
+
   } catch(e) { toast('❌', '처리 실패: ' + (e.message || e)); }
 }
 
@@ -822,12 +845,17 @@ async function _doMgCharge() {
 async function _renderMinigameStats() {
   const area = document.getElementById('mgStatsArea');
   if (!area) return;
-  const today = new Date().toISOString().slice(0, 10);
+
+  // ✅ KST 기준 오늘 날짜
+  const today = getToday();
+  const fromUTC = today + 'T00:00:00+09:00';
+  const toUTC   = today + 'T23:59:59+09:00';
+
   try {
     const { data } = await sb.from('minigame_plays')
       .select('game_id, score, reward, user_id, rewarded')
-      .gte('played_at', today + 'T00:00:00')
-      .lte('played_at', today + 'T23:59:59');
+      .gte('played_at', fromUTC)
+      .lte('played_at', toUTC);
 
     if (!data?.length) { area.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">오늘 플레이 기록이 없습니다</p>'; return; }
 
@@ -869,16 +897,20 @@ const MG_LOG_PAGE = 20;
 function _getPeriodRange(period) {
   const now = new Date();
   if (period === 'daily') {
-    const d = now.toISOString().slice(0, 10);
-    return { from: d + 'T00:00:00', to: d + 'T23:59:59' };
+    // ✅ KST 기준 오늘
+    const d = getToday();
+    return { from: d + 'T00:00:00+09:00', to: d + 'T23:59:59+09:00' };
   }
   if (period === 'weekly') {
     const day = now.getDay();
     const mon = new Date(now);
     mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-    return { from: mon.toISOString().slice(0, 10) + 'T00:00:00', to: now.toISOString().slice(0, 10) + 'T23:59:59' };
+    const monStr = mon.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })
+      .replace(/\. /g, '-').replace(/\.$/, '').split('-').map((v, i) => i === 0 ? v : v.padStart(2, '0')).join('-');
+    const todayStr = getToday();
+    return { from: monStr + 'T00:00:00+09:00', to: todayStr + 'T23:59:59+09:00' };
   }
-  return { from: '2020-01-01T00:00:00', to: '2099-12-31T23:59:59' };
+  return { from: '2020-01-01T00:00:00+09:00', to: '2099-12-31T23:59:59+09:00' };
 }
 
 function _medalEmoji(rank) {
