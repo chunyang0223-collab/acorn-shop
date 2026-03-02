@@ -390,12 +390,19 @@ function _spawnItem() {
   field.appendChild(el); _catch.items.push(el);
 }
 
-function _catchGameLoop() {
+function _catchGameLoop(timestamp) {
   if (!_catch?.running) return;
+  // delta time 계산 (60fps 기준 정규화)
+  if (!_catch._lastFrameTime) _catch._lastFrameTime = timestamp;
+  const delta = (timestamp - _catch._lastFrameTime) / (1000 / 60); // 60fps에서 1.0
+  _catch._lastFrameTime = timestamp;
+  // 비정상 delta 클램프 (탭 전환 후 복귀 등)
+  const dt = Math.min(delta, 3);
+
   const basket = _catch.basketEl, field = _catch.fieldEl;
   if (!field || !basket) return;
   const fw = _catch.fieldW, fh = field.offsetHeight, bw = CATCH_CONFIG.basketWidth;
-  _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * 0.25;
+  _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * (1 - Math.pow(0.75, dt));
   const bx = _catch.basketXCurrent * (fw - bw);
   basket.style.transform = `translateX(${bx}px)`;
   const basketLeft = bx, basketRight = bx + bw, basketTop = fh - 60;
@@ -403,7 +410,7 @@ function _catchGameLoop() {
   for (const el of _catch.items) {
     const y     = parseFloat(el.dataset.y)     || 0;
     const speed = parseFloat(el.dataset.speed) || CATCH_CONFIG.baseSpeed;
-    const newY  = y + speed;
+    const newY  = y + speed * dt;
     el.dataset.y = newY; el.style.transform = `translateY(${newY}px)`;
     const itemX      = parseFloat(el.dataset.x) + CATCH_CONFIG.itemSize / 2;
     const itemBottom = newY + CATCH_CONFIG.itemSize;
@@ -805,12 +812,15 @@ async function _doMgCharge() {
     bonus.plays[gameId]   = Math.max(0, (bonus.plays[gameId]   || 0) + playDiff);
     bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + rewardDiff);
 
-    // ✅ RLS 우회: SECURITY DEFINER RPC 함수 사용
-    const { error } = await sb.rpc('upsert_mg_bonus', {
-      p_user_id: s.userId,
-      p_bonus:   bonus
-    });
-    if (error) throw new Error(error.message);
+    const key = 'mg_bonus_' + s.userId;
+    const { data: existing } = await sb.from('app_settings').select('key').eq('key', key).maybeSingle();
+    if (existing) {
+      const { error } = await sb.from('app_settings').update({ value: bonus, updated_at: new Date().toISOString() }).eq('key', key);
+      if (error) throw new Error(error.message || JSON.stringify(error));
+    } else {
+      const { error } = await sb.from('app_settings').insert({ key, value: bonus, updated_at: new Date().toISOString() });
+      if (error) throw new Error(error.message || JSON.stringify(error));
+    }
 
     s.userBonus = bonus;
 
