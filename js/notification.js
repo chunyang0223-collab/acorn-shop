@@ -9,14 +9,27 @@ async function updateReqBadge() {
   if (!myProfile?.is_admin) return;
   try {
     const { data } = await sb.from('product_requests').select('id').eq('status', 'pending');
-    const badge = document.getElementById('reqBadge');
-    if (!badge) return;
     const cnt = data?.length || 0;
-    if (cnt > 0) {
-      badge.textContent = cnt > 9 ? '9+' : cnt;
-      badge.classList.remove('hidden');
-    } else {
-      badge.classList.add('hidden');
+    const show = cnt > 0;
+    const label = cnt > 9 ? '9+' : String(cnt);
+
+    // 그리드 뱃지
+    const gridBadge = document.getElementById('reqBadgeGrid');
+    if (gridBadge) {
+      if (show) { gridBadge.textContent = label; gridBadge.classList.remove('hidden'); }
+      else gridBadge.classList.add('hidden');
+    }
+
+    // 핀 탭바에 requests가 있으면 dot 표시
+    const pinIdx = (window._adminPins || []).indexOf('requests');
+    if (pinIdx >= 0) {
+      const pinBtn = document.getElementById('pinTab' + (pinIdx + 1));
+      if (pinBtn) {
+        const def = ADMIN_MENU_DEFS?.requests;
+        if (def) {
+          pinBtn.innerHTML = def.icon + ' ' + def.label + (show ? ' <span style="color:#ef4444;font-size:8px">●</span>' : '');
+        }
+      }
     }
   } catch(e) {}
 }
