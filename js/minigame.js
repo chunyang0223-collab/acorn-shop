@@ -392,17 +392,18 @@ function _spawnItem() {
 
 function _catchGameLoop(timestamp) {
   if (!_catch?.running) return;
-  // delta time 계산 (60fps 기준 정규화)
-  if (!_catch._lastFrameTime) _catch._lastFrameTime = timestamp;
-  const delta = (timestamp - _catch._lastFrameTime) / (1000 / 60); // 60fps에서 1.0
-  _catch._lastFrameTime = timestamp;
-  // 비정상 delta 클램프 (탭 전환 후 복귀 등)
-  const dt = Math.min(delta, 3);
+  // delta time: 60fps 기준 1.0 (프레임 독립적 속도)
+  const now = timestamp || performance.now();
+  const last = _catch._lastFrameTime || now;
+  _catch._lastFrameTime = now;
+  const rawDt = (now - last) / 16.667; // 16.667ms = 1 frame at 60fps
+  const dt = Math.min(Math.max(rawDt, 0.5), 2.5); // 0.5~2.5 클램프
 
   const basket = _catch.basketEl, field = _catch.fieldEl;
   if (!field || !basket) return;
   const fw = _catch.fieldW, fh = field.offsetHeight, bw = CATCH_CONFIG.basketWidth;
-  _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * (1 - Math.pow(0.75, dt));
+  const smoothing = 0.25 * dt;
+  _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * Math.min(smoothing, 0.9);
   const bx = _catch.basketXCurrent * (fw - bw);
   basket.style.transform = `translateX(${bx}px)`;
   const basketLeft = bx, basketRight = bx + bw, basketTop = fh - 60;
@@ -809,8 +810,11 @@ async function _doMgCharge() {
     if (!bonus.plays)   bonus.plays   = {};
     if (!bonus.rewards) bonus.rewards = {};
 
-    bonus.plays[gameId]   = Math.max(0, (bonus.plays[gameId]   || 0) + playDiff);
-    bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + rewardDiff);
+    // 새 총 한도에서 base를 뺀 값이 bonus
+    const pBase = getMgSetting(gameId, 'playLimit');
+    const rBase = getMgSetting(gameId, 'rewardLimit');
+    bonus.plays[gameId]   = s._curPlay   - pBase;
+    bonus.rewards[gameId] = s._curReward - rBase;
 
     const key = 'mg_bonus_' + s.userId;
     const { data: existing } = await sb.from('app_settings').select('key').eq('key', key).maybeSingle();
