@@ -798,23 +798,20 @@ async function _doMgCharge() {
 
   closeModal();
   try {
-    const key   = 'mg_bonus_' + s.userId;
-    let bonus   = _parseValue(s.userBonus); // ✅ 방어적 파싱
+    let bonus = _parseValue(s.userBonus);
     if (!bonus.plays)   bonus.plays   = {};
     if (!bonus.rewards) bonus.rewards = {};
 
     bonus.plays[gameId]   = Math.max(0, (bonus.plays[gameId]   || 0) + playDiff);
     bonus.rewards[gameId] = Math.max(0, (bonus.rewards[gameId] || 0) + rewardDiff);
 
-    // ✅ upsert 사용 — check-then-insert/update 패턴 제거
-    //    key 컬럼 충돌 시 자동으로 UPDATE, 없으면 INSERT
-    const { error } = await sb.from('app_settings').upsert(
-      { key, value: bonus, updated_at: new Date().toISOString() },
-      { onConflict: 'key' }
-    );
+    // ✅ RLS 우회: SECURITY DEFINER RPC 함수 사용
+    const { error } = await sb.rpc('upsert_mg_bonus', {
+      p_user_id: s.userId,
+      p_bonus:   bonus
+    });
     if (error) throw new Error(error.message);
 
-    // 메모리 상태 갱신
     s.userBonus = bonus;
 
     const parts = [];
@@ -824,7 +821,6 @@ async function _doMgCharge() {
 
   } catch(e) { toast('❌', '처리 실패: ' + (e.message || e)); }
 }
-
 
 // ── 통계 ──
 async function _renderMinigameStats() {
