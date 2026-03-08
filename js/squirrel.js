@@ -3,7 +3,7 @@
    ================================================================ */
 
 var _sqSquirrels = [];
-var _sqSettings  = { shop_price:30, acorn_min:20, acorn_max:50, time_chance:40, time_min_hours:1, time_max_hours:8, feed_multi_min:0.5, feed_multi_max:1.3 };
+var _sqSettings  = { shop_price:30, acorn_min:20, acorn_max:50, time_chance:40, time_min_minutes:10, time_max_minutes:60, feed_multi_min:0.5, feed_multi_max:1.3, stat_hp_min:60, stat_hp_max:120, stat_atk_min:8, stat_atk_max:20, stat_def_min:4, stat_def_max:14, sell_price_base:20, sell_price_max:80 };
 var _sqAudioCtx  = null;
 
 function _sqGetAudio() {
@@ -229,7 +229,7 @@ function sqCardHTML(sq) {
     } else {
       babyHTML = `
         <div style="margin-top:12px">
-          <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지${isAdmin ? ` <span style="float:right;color:#f59e0b">${sq.acorns_fed}/${sq.acorns_required}</span>` : ''}</div>
+          <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지</div>
           <div style="height:12px;border-radius:99px;background:#f3f4f6;overflow:hidden;margin-bottom:12px">
             <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
           </div>
@@ -369,15 +369,39 @@ async function sqFeedSquirrel(id) {
   let grew = false;
   let growType = null;
 
-  if (newFed >= sq.acorns_required) {
-    if (sq.needs_time) {
-      const hours = Math.floor(Math.random() * ((_sqSettings.time_max_hours||8) - (_sqSettings.time_min_hours||1) + 1)) + (_sqSettings.time_min_hours||1);
-      updates.grows_at = new Date(Date.now() + hours * 3600000).toISOString();
-    } else {
+  const prevPct = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
+  const newPctCheck = Math.min(100, Math.round((newFed / sq.acorns_required) * 100));
+  const triggerPct = sq.time_trigger_pct || null;
+
+  // needs_time 타이머 발동: 해당 구간 통과 시 (아직 grows_at 없을 때만)
+  let timerTriggered = false;
+  if (sq.needs_time && !sq.grows_at && triggerPct && prevPct < triggerPct && newPctCheck >= triggerPct) {
+    const minutes = Math.floor(Math.random() * ((_sqSettings.time_max_minutes||60) - (_sqSettings.time_min_minutes||10) + 1)) + (_sqSettings.time_min_minutes||10);
+    updates.grows_at = new Date(Date.now() + minutes * 60000).toISOString();
+    timerTriggered = true;
+  }
+
+  // 타이머 대기 중이면 성장 불가
+  if (!timerTriggered && !sq.grows_at && newFed >= sq.acorns_required) {
+    if (!sq.needs_time) {
       growType = Math.random() < 0.5 ? 'explorer' : 'pet';
       updates.status = growType;
       grew = true;
     }
+    // needs_time인데 triggerPct 없으면(구버전 호환) 100%에서 타이머 발동
+    if (sq.needs_time && !triggerPct) {
+      const minutes = Math.floor(Math.random() * ((_sqSettings.time_max_minutes||60) - (_sqSettings.time_min_minutes||10) + 1)) + (_sqSettings.time_min_minutes||10);
+      updates.grows_at = new Date(Date.now() + minutes * 60000).toISOString();
+      timerTriggered = true;
+    }
+  }
+
+  // 타이머 끝난 후 도토리 추가 급여로 100% 도달 → 성장
+  if (!grew && sq.grows_at && new Date(sq.grows_at) <= new Date() && newFed >= sq.acorns_required) {
+    growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+    updates.status = growType;
+    updates.grows_at = null;
+    grew = true;
   }
 
   try {
@@ -385,13 +409,12 @@ async function sqFeedSquirrel(id) {
     await sb.from('squirrels').update(updates).eq('id', id);
 
     // ── 카드 게이지 업데이트 ──
-    const newPct = Math.min(100, Math.round((newFed / sq.acorns_required) * 100));
     const gauge = document.getElementById('sqGauge-' + id);
     if (gauge) {
       gauge.style.background = isGood
         ? 'linear-gradient(90deg,#fbbf24,#f59e0b,#10b981)'
         : 'linear-gradient(90deg,#fb923c,#f97316)';
-      requestAnimationFrame(() => { gauge.style.width = newPct + '%'; });
+      requestAnimationFrame(() => { gauge.style.width = newPctCheck + '%'; });
     }
 
     // ── 사운드 + 파티클 ──
@@ -403,18 +426,14 @@ async function sqFeedSquirrel(id) {
     }
 
     if (grew) {
-      // 게이지 꽉 차는 거 보여준 뒤 성장 연출
       setTimeout(() => _sqGrowCard(id, sq.name, growType), 1200);
-    } else if (updates.grows_at) {
-      // 로컬 업데이트 후 카드 인라인 타이머로 전환 (sqLoadSquirrels 불필요)
+    } else if (timerTriggered) {
       sq.acorns_fed = newFed;
       sq.acorns_spent = newSpent;
       sq.grows_at = updates.grows_at;
-      sq.needs_time = true;
       _sqRenderTimerCard(id, sq);
-      toast('⏳', `${sq.name}이(가) 성장을 준비 중이에요! 타이머가 끝나면 성장해요`);
+      toast('⏳', `${sq.name}이(가) 잠시 쉬어야 해요! 타이머가 끝나면 계속 먹일 수 있어요`);
     } else {
-      // 로컬 업데이트만 (DB 재로드 없이)
       sq.acorns_fed = newFed;
       sq.acorns_spent = newSpent;
     }
@@ -496,6 +515,9 @@ function _sqGrowCard(id, name, growType) {
   const r = cardEl.getBoundingClientRect();
   const cx = r.left + r.width / 2;
   const cy = r.top + r.height / 2;
+
+  // 버튼 즉시 비활성화
+  cardEl.querySelectorAll('button').forEach(b => { b.disabled = true; b.style.opacity = '0.4'; b.style.pointerEvents = 'none'; });
 
   // 1단계: 흔들림
   cardEl.style.transition = 'none';
@@ -585,9 +607,17 @@ async function sqDoBuySquirrel(price) {
   closeModal();
   const acornsNeeded = Math.floor(Math.random() * ((_sqSettings.acorn_max||50) - (_sqSettings.acorn_min||20) + 1)) + (_sqSettings.acorn_min||20);
   const needsTime = Math.random() * 100 < (_sqSettings.time_chance||40);
-  const baseHp  = 80  + Math.floor(Math.random() * 40);
-  const baseAtk = 8   + Math.floor(Math.random() * 10);
-  const baseDef = 4   + Math.floor(Math.random() * 8);
+  // needs_time이면 10~60% 사이 랜덤 구간에서 타이머 발동
+  const timeTriggerPct = needsTime ? (10 + Math.floor(Math.random() * 51)) : null;
+  const hpMin  = _sqSettings.stat_hp_min  || 60;
+  const hpMax  = _sqSettings.stat_hp_max  || 120;
+  const atkMin = _sqSettings.stat_atk_min || 8;
+  const atkMax = _sqSettings.stat_atk_max || 20;
+  const defMin = _sqSettings.stat_def_min || 4;
+  const defMax = _sqSettings.stat_def_max || 14;
+  const baseHp  = hpMin  + Math.floor(Math.random() * (hpMax  - hpMin  + 1));
+  const baseAtk = atkMin + Math.floor(Math.random() * (atkMax - atkMin + 1));
+  const baseDef = defMin + Math.floor(Math.random() * (defMax - defMin + 1));
 
   try {
     await spendAcorns(price, '다람쥐 구매');
@@ -599,6 +629,7 @@ async function sqDoBuySquirrel(price) {
       acorns_fed: 0,
       acorns_required: acornsNeeded,
       needs_time: needsTime,
+      time_trigger_pct: timeTriggerPct,
       stats: { hp: baseHp, atk: baseAtk, def: baseDef },
       hp_current: baseHp,
       acquired_from: 'shop'
@@ -627,8 +658,11 @@ function sqSyncAcornBadge() {
 // ================================================================
 function sqSellSquirrel(id) {
   const sq = _sqSquirrels.find(s => s.id === id);
+  const sellBase = _sqSettings.sell_price_base || 20;
   const statSum = (sq.stats?.hp||100) + (sq.stats?.atk||10) * 3 + (sq.stats?.def||5) * 2;
-  const price = Math.max(10, 20 + Math.floor(statSum * 0.3) + Math.floor(Math.random() * 20) - 10);
+  const maxStatSum = (_sqSettings.stat_hp_max||120) + (_sqSettings.stat_atk_max||20) * 3 + (_sqSettings.stat_def_max||14) * 2;
+  const sellMax = _sqSettings.sell_price_max || 80;
+  const price = Math.round(sellBase + (statSum / maxStatSum) * (sellMax - sellBase));
   const desc = sq.status === 'explorer' ? '탐험을 즐기는 활발한 녀석이군요!' : '온순하고 귀여운 애완 다람쥐네요!';
 
   showModal(`
@@ -782,10 +816,18 @@ async function sqAdminInit() {
   document.getElementById('sqSet_acornMin').value     = _sqSettings.acorn_min       || 20;
   document.getElementById('sqSet_acornMax').value     = _sqSettings.acorn_max       || 50;
   document.getElementById('sqSet_timeChance').value   = _sqSettings.time_chance     || 40;
-  document.getElementById('sqSet_timeMin').value      = _sqSettings.time_min_hours  || 1;
-  document.getElementById('sqSet_timeMax').value      = _sqSettings.time_max_hours  || 8;
+  document.getElementById('sqSet_timeMin').value      = _sqSettings.time_min_minutes  || 10;
+  document.getElementById('sqSet_timeMax').value      = _sqSettings.time_max_minutes  || 60;
   document.getElementById('sqSet_multiMin').value     = _sqSettings.feed_multi_min  || 0.5;
   document.getElementById('sqSet_multiMax').value     = _sqSettings.feed_multi_max  || 1.3;
+  document.getElementById('sqSet_hpMin').value        = _sqSettings.stat_hp_min     || 60;
+  document.getElementById('sqSet_hpMax').value        = _sqSettings.stat_hp_max     || 120;
+  document.getElementById('sqSet_atkMin').value       = _sqSettings.stat_atk_min    || 8;
+  document.getElementById('sqSet_atkMax').value       = _sqSettings.stat_atk_max    || 20;
+  document.getElementById('sqSet_defMin').value       = _sqSettings.stat_def_min    || 4;
+  document.getElementById('sqSet_defMax').value       = _sqSettings.stat_def_max    || 14;
+  document.getElementById('sqSet_sellBase').value     = _sqSettings.sell_price_base || 20;
+  document.getElementById('sqSet_sellMax').value      = _sqSettings.sell_price_max  || 80;
   await sqAdminLoadList();
 }
 
@@ -795,10 +837,18 @@ async function sqSaveSettings() {
     acorn_min:       parseInt(document.getElementById('sqSet_acornMin').value)    || 20,
     acorn_max:       parseInt(document.getElementById('sqSet_acornMax').value)    || 50,
     time_chance:     parseInt(document.getElementById('sqSet_timeChance').value)  || 40,
-    time_min_hours:  parseInt(document.getElementById('sqSet_timeMin').value)     || 1,
-    time_max_hours:  parseInt(document.getElementById('sqSet_timeMax').value)     || 8,
+    time_min_minutes:  parseInt(document.getElementById('sqSet_timeMin').value)     || 10,
+    time_max_minutes:  parseInt(document.getElementById('sqSet_timeMax').value)     || 60,
     feed_multi_min:  parseFloat(document.getElementById('sqSet_multiMin').value)  || 0.5,
     feed_multi_max:  parseFloat(document.getElementById('sqSet_multiMax').value)  || 1.3,
+    stat_hp_min:     parseInt(document.getElementById('sqSet_hpMin').value)       || 60,
+    stat_hp_max:     parseInt(document.getElementById('sqSet_hpMax').value)       || 120,
+    stat_atk_min:    parseInt(document.getElementById('sqSet_atkMin').value)      || 8,
+    stat_atk_max:    parseInt(document.getElementById('sqSet_atkMax').value)      || 20,
+    stat_def_min:    parseInt(document.getElementById('sqSet_defMin').value)      || 4,
+    stat_def_max:    parseInt(document.getElementById('sqSet_defMax').value)      || 14,
+    sell_price_base: parseInt(document.getElementById('sqSet_sellBase').value)    || 20,
+    sell_price_max:  parseInt(document.getElementById('sqSet_sellMax').value)     || 80,
   };
   const { error } = await sb.from('app_settings')
     .upsert({ key: 'squirrel_settings', value: val }, { onConflict: 'key' });
