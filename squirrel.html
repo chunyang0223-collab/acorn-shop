@@ -261,9 +261,9 @@
   <div class="clay-card p-4">
     <div class="title-font text-base text-gray-700 mb-3">🛒 다람쥐 분양</div>
     <div class="clay-card p-5 text-center" style="background: linear-gradient(135deg,#fffbeb,#fef3c7);">
-      <div style="font-size: 56px; animation: idle-bounce 2s ease-in-out infinite;" class="mb-2">🥚</div>
-      <div class="title-font text-lg text-amber-800 mb-1">미지의 다람쥐 알</div>
-      <div class="text-xs text-gray-500 mb-3">어떤 다람쥐가 나올지 모릅니다!</div>
+      <img src="images/baby-squirrel.png" style="width:110px; height:110px; object-fit:contain; animation: idle-bounce 2s ease-in-out infinite;" class="mx-auto mb-2">
+      <div class="title-font text-lg text-amber-800 mb-1">아기 다람쥐 분양</div>
+      <div class="text-xs text-gray-500 mb-3">도토리를 먹여서 키워보세요!</div>
       <div class="flex gap-2 justify-center">
         <button class="btn btn-primary" onclick="buySquirrel('shop')">🌰 30 도토리로 구매</button>
         <button class="btn btn-purple"  onclick="buySquirrel('gacha')">🎰 뽑기로 획득</button>
@@ -300,8 +300,8 @@
 
 <script>
 // ── Supabase 설정 ──
-const SUPABASE_URL = 'https://fqtnxrkxyzjrmaiaunqe.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_MpZnq9JYoQLTXc9Uda_nmA_5OAybs0X';
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── 상태 ──
@@ -312,19 +312,12 @@ let sqSettings = {}; // 관리자 설정
 
 // ── 초기화 ──
 async function init() {
-  // 개발용: 로그인 체크 임시 비활성화
-  const { data: { session } } = await sb.auth.getSession();
-  
-  if (session) {
-    const { data: profile } = await sb.from('users')
-      .select('*').eq('id', session.user.id).single();
-    myProfile = profile;
-    document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
-  } else {
-    // 로그인 없이도 UI 확인 가능하도록 더미 프로필
-    myProfile = { id: 'test', acorns: 999, display_name: '테스트' };
-    document.getElementById('acornBalance').textContent = `🌰 999`;
-  }
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { location.href = 'index.html'; return; }
+
+  const { data: profile } = await sb.from('users').select('*').eq('id', user.id).single();
+  myProfile = profile;
+  document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
 
   await loadSettings();
   await loadSquirrels();
@@ -363,7 +356,7 @@ function renderSquirrelGrid() {
   if (mySquirrels.length === 0) {
     grid.innerHTML = `
       <div class="col-span-2 text-center py-8">
-        <div style="font-size:48px">🥚</div>
+        <div style="font-size:48px">🐿️</div>
         <div class="text-sm text-gray-400 font-bold mt-2">아직 다람쥐가 없어요</div>
         <div class="text-xs text-gray-300 mt-1">상점에서 분양받아보세요!</div>
       </div>`;
@@ -380,7 +373,7 @@ function renderSquirrelGrid() {
 }
 
 function squirrelCardHTML(sq) {
-  const typeLabel = { baby:'미성장', explorer:'탐험형', pet:'애완형' };
+  const typeLabel = { baby:'아기', explorer:'탐험형', pet:'애완형' };
   const typeBadge = { baby:'badge-baby', explorer:'badge-explorer', pet:'badge-pet' };
   const statusBadge = { exploring:'badge-exploring', recovering:'badge-recovering' };
   const emoji = squirrelEmoji(sq);
@@ -424,7 +417,7 @@ function squirrelCardHTML(sq) {
 }
 
 function squirrelEmoji(sq) {
-  if (sq.status === 'baby') return '🐣';
+  if (sq.status === 'baby') return '🐿️';
   if (sq.status === 'pet') return '🐿️';
   if (sq.status === 'explorer' || sq.status === 'exploring') return '🦔';
   if (sq.status === 'recovering') return '😴';
@@ -521,7 +514,7 @@ function openSquirrelModal(id) {
   if (!sq) return;
   const box = document.getElementById('squirrelModalBox');
   const emoji = squirrelEmoji(sq);
-  const typeLabel = { baby:'미성장 🥚', explorer:'탐험형 🗺️', pet:'애완형 🏡' };
+  const typeLabel = { baby:'아기 다람쥐 🐿️', explorer:'탐험형 🗺️', pet:'애완형 🏡' };
   const pct = sq.status === 'baby' ? Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100)) : 100;
 
   box.innerHTML = `
@@ -679,7 +672,7 @@ async function loadActiveExpedition() {
 async function startExpeditionFlow() {
   const explorers = mySquirrels.filter(s => s.status === 'explorer');
   if (explorers.length === 0) {
-    showAlert('🗺️', '탐험형 다람쥐가 없어요', '미성장 다람쥐를 키워서 탐험형으로 성장시켜보세요!');
+    showAlert('🗺️', '탐험형 다람쥐가 없어요', '다람쥐를 키워서 탐험형으로 성장시켜보세요!');
     return;
   }
 
