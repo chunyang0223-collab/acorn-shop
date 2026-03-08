@@ -181,7 +181,6 @@ const supabase = (() => {
             if (cr) { const m = cr.match(/\/(\d+)/); if (m) count = parseInt(m[1]); }
 
             if (!r.ok) {
-              if (r.status === 400) console.error('[supabase 400]', finalUrl, d);
               // maybeSingle: 406(결과없음)은 에러 아님 → data:null, error:null
               if (_maybeSingle && (r.status === 406 || r.status === 404)) {
                 resolve({ data: null, error: null, count });
