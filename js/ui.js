@@ -374,8 +374,9 @@ function uTab(tab, btn) {
   if (tab === 'mypage') renderMypage();
   if (tab === 'recycle') renderRecycleTab();
   if (tab === 'minigame') renderMinigameHub();
-  if (tab === 'squirrel') sqInit();
   if (tab === 'ranking') renderUserRanking();
+  if (tab === 'squirrel') { sqInit(); }
+  else if (typeof _sqUnsubscribe === 'function') _sqUnsubscribe();
 }
 
 // ── 메뉴 점검 관리 ──
