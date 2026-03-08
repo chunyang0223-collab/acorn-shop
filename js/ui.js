@@ -148,7 +148,7 @@ async function doSignup() {
 // ──────────────────────────────────────────────
 //  TABS
 // ──────────────────────────────────────────────
-const U_TABS = ['shop','gacha','quest','recycle','minigame','ranking','mypage'];
+const U_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','ranking','mypage'];
 const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','ranking'];
 
 // ── 관리자 메뉴 정의 (그리드용) ──
@@ -236,6 +236,7 @@ function aTab(tab, btn) {
   if (tab === 'events')     { _loadEventsFromDB().then(() => { renderEventAdmin(); renderScheduleList(); }); return; }
   if (tab === 'recycle')    renderRecycleAdmin();
   if (tab === 'minigameSettings') renderMinigameAdmin();
+  if (tab === 'squirrelSettings') sqAdminInit();
   if (tab === 'ranking') renderAdminRanking();
 }
 
@@ -373,11 +374,12 @@ function uTab(tab, btn) {
   if (tab === 'mypage') renderMypage();
   if (tab === 'recycle') renderRecycleTab();
   if (tab === 'minigame') renderMinigameHub();
+  if (tab === 'squirrel') sqInit();
   if (tab === 'ranking') renderUserRanking();
 }
 
 // ── 메뉴 점검 관리 ──
-const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','mypage'];
+const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','mypage'];
 
 async function toggleMaintenance(tab) {
   // 현재 DB 값 읽기
