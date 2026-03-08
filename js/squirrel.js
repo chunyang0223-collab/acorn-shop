@@ -114,8 +114,18 @@ function _sqSpawnParticles(isGood, count = 8) {
 //  관리자 전용: squirrel 탭 강제 진입
 // ================================================================
 function sqAdminEnter() {
+  document.getElementById('adminMode').classList.add('hidden');
+  document.getElementById('userMode').classList.remove('hidden');
+  document.getElementById('sqAdminBackBar')?.classList.remove('hidden');
   const sqBtn = document.querySelector('#userTabBar .tab-btn[onclick*="squirrel"]');
   if (sqBtn) sqBtn.click();
+}
+
+function sqAdminBack() {
+  if (typeof _sqUnsubscribe === 'function') _sqUnsubscribe();
+  document.getElementById('sqAdminBackBar')?.classList.add('hidden');
+  document.getElementById('userMode').classList.add('hidden');
+  document.getElementById('adminMode').classList.remove('hidden');
 }
 function sqAdminClose() {}
 
