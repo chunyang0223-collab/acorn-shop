@@ -396,18 +396,13 @@ async function sqFeedSquirrel(id) {
     }
 
     if (grew) {
-      // 게이지 꽉 차는 거 보여준 뒤 성장 연출
+      // 게이지 꽉 차는 거 보여준 뒤 성장 연출 (sqLoadSquirrels 호출 없음 - _sqGrowCard가 로컬 처리)
       setTimeout(() => _sqGrowCard(id, sq.name, growType), 1200);
-      toast('🎉', `${sq.name}이(가) 성장하고 있어요...`);
     } else if (updates.grows_at) {
       toast('⏳', '도토리를 다 먹었어요! 잠시 후 성장합니다');
       await sqLoadSquirrels();
     } else {
-      const msgs = isGood
-        ? [`냠냠! ${sq.name}이(가) 맛있게 먹었어요! 🥰`, `와! ${sq.name}이(가) 기운이 넘쳐요! ✨`]
-        : [`${sq.name}이(가) 조금 먹었어요 🐿️`, `${sq.name}이(가) 한 입만... 뿅`];
-      toast(isGood ? '✨' : '🌰', msgs[Math.floor(Math.random()*msgs.length)]);
-      // _sqSquirrels 로컬 업데이트 (DB 재로드 없이)
+      // 로컬 업데이트만 (DB 재로드 없이)
       sq.acorns_fed = newFed;
       sq.acorns_spent = newSpent;
     }
