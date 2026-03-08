@@ -1,22 +1,56 @@
 /* ================================================================
-   🐿️ 다람쥐 시스템 (squirrel.js)
+   🐿️ 다람쥐 시스템 (squirrel.js) - 상태 관리 기반 재설계
+   ================================================================
+   핵심 설계:
+   - _sqState[id] = 'idle' | 'busy' 로 카드별 처리 상태 추적
+   - 모든 액션 진입 시 busy 체크 → busy면 즉시 리턴
+   - sqLoadSquirrels()는 초기 진입·탐험 시작에만 호출
+   - 나머지는 _sqSquirrels 로컬 업데이트 + 카드 DOM 직접 갱신
    ================================================================ */
 
-var _sqSquirrels = [];
-var _sqSettings  = { shop_price:30, acorn_min:20, acorn_max:50, time_chance:40, time_min_minutes:10, time_max_minutes:60, feed_multi_min:0.5, feed_multi_max:1.3, stat_hp_min:60, stat_hp_max:120, stat_atk_min:8, stat_atk_max:20, stat_def_min:4, stat_def_max:14, sell_price_base:20, sell_price_max:80 };
-var _sqAudioCtx  = null;
+// ── 전역 상태 ──
+var _sqSquirrels = [];   // 로컬 캐시
+var _sqState     = {};   // id → 'idle' | 'busy'  (처리 중 플래그)
+var _sqTimers    = {};   // id → intervalId (카운트다운 인터벌)
+var _sqSettings  = {
+  shop_price: 30, acorn_min: 20, acorn_max: 50,
+  time_chance: 40, time_min_minutes: 10, time_max_minutes: 60,
+  feed_multi_min: 0.5, feed_multi_max: 1.3,
+  stat_hp_min: 60, stat_hp_max: 120,
+  stat_atk_min: 8, stat_atk_max: 20,
+  stat_def_min: 4, stat_def_max: 14,
+  sell_price_base: 20, sell_price_max: 80
+};
+var _sqAudioCtx = null;
 
+// ── 상태 관리 헬퍼 ──
+function _sqIsBusy(id) { return _sqState[id] === 'busy'; }
+function _sqSetBusy(id) { _sqState[id] = 'busy'; }
+function _sqSetIdle(id) { _sqState[id] = 'idle'; }
+
+// ── 로컬 캐시 업데이트 ──
+function _sqUpdate(id, patch) {
+  const idx = _sqSquirrels.findIndex(s => s.id === id);
+  if (idx >= 0) Object.assign(_sqSquirrels[idx], patch);
+}
+
+// ── 카운트다운 인터벌 정리 ──
+function _sqClearTimer(id) {
+  if (_sqTimers[id]) { clearInterval(_sqTimers[id]); delete _sqTimers[id]; }
+}
+
+// ================================================================
+//  사운드
+// ================================================================
 function _sqGetAudio() {
   if (!_sqAudioCtx) _sqAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return _sqAudioCtx;
 }
 
-// 배율 ≥ 1: 뾰오오옹~ / < 1: 뿅
 function _sqPlayFeedSound(isGood) {
   try {
     const ctx = _sqGetAudio();
-    const osc  = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
     if (isGood) {
       osc.type = 'sine';
@@ -37,7 +71,6 @@ function _sqPlayFeedSound(isGood) {
   } catch(e) {}
 }
 
-// 성장 팡파르
 function _sqPlayGrowSound() {
   try {
     const ctx = _sqGetAudio();
@@ -53,7 +86,9 @@ function _sqPlayGrowSound() {
   } catch(e) {}
 }
 
-// 파티클 (좌표 지정 버전)
+// ================================================================
+//  파티클
+// ================================================================
 function _sqSpawnParticlesAt(cx, cy, isGood, count = 8) {
   let container = document.getElementById('sqParticles');
   if (!container) {
@@ -71,42 +106,17 @@ function _sqSpawnParticlesAt(cx, cy, isGood, count = 8) {
     setTimeout(() => p.remove(), 1600);
   }
 }
-// 하위 호환
 function _sqSpawnParticles(isGood, count = 8) {
   _sqSpawnParticlesAt(window.innerWidth/2, window.innerHeight*0.5, isGood, count);
 }
 
 // ================================================================
-//  관리자 전용: 다람쥐 탭 강제 진입 (점검 우회)
+//  관리자 전용: squirrel 탭 강제 진입
 // ================================================================
 function sqAdminEnter() {
-  // 관리자 화면 → 사용자 화면으로 전환
-  document.getElementById('adminMode').classList.add('hidden');
-  document.getElementById('userMode').classList.remove('hidden');
-
-  // 점검 오버레이 강제 제거 후 squirrel 탭 활성화
-  const tabEl = document.getElementById('utab-squirrel');
-  const overlay = document.getElementById('maint-overlay-squirrel');
-  if (overlay) {
-    overlay.remove();
-    tabEl.querySelectorAll('[data-maint-hidden]').forEach(el => {
-      el.style.display = '';
-      el.removeAttribute('data-maint-hidden');
-    });
-  }
-
-  // 모든 탭 숨기고 squirrel만 표시
-  (window.U_TABS || ['shop','gacha','quest','recycle','minigame','squirrel','ranking','mypage'])
-    .forEach(t => document.getElementById('utab-'+t)?.classList.add('hidden'));
-  document.querySelectorAll('#userTabBar .tab-btn').forEach(b => b.classList.remove('active'));
-  tabEl.classList.remove('hidden');
   const sqBtn = document.querySelector('#userTabBar .tab-btn[onclick*="squirrel"]');
-  if (sqBtn) sqBtn.classList.add('active');
-
-  sqInit();
+  if (sqBtn) sqBtn.click();
 }
-
-// sqAdminClose는 더 이상 필요 없지만 혹시 남아있는 참조 대비
 function sqAdminClose() {}
 
 // ================================================================
@@ -114,69 +124,157 @@ function sqAdminClose() {}
 // ================================================================
 function sqTab(tab) {
   ['my','shop','expedition'].forEach(t => {
-    const el = document.getElementById('sqcontent-' + t);
-    const btn = document.getElementById('sqtab-' + t);
-    if (el) el.classList.toggle('hidden', t !== tab);
-    if (btn) btn.classList.toggle('active', t === tab);
+    document.getElementById('sqcontent-' + t)?.classList.toggle('hidden', t !== tab);
+    document.getElementById('sqtab-' + t)?.classList.toggle('active', t === tab);
   });
 }
 
 // ================================================================
-//  초기화 (설정 + 다람쥐 목록 + 탐험 현황)
+//  초기화
 // ================================================================
 async function sqInit() {
   await sqLoadSettings();
   await sqLoadSquirrels();
   await sqLoadActiveExpedition();
+  _sqSubscribe();
 }
 
 // ================================================================
-//  설정 로드 (406 방지: .limit(1) 사용)
+//  Realtime 구독 (다른 탭/기기 변경 사항 반영)
+// ================================================================
+function _sqSubscribe() {
+  // 기존 구독 해제 후 재구독
+  _sqUnsubscribe();
+
+  window._sqChannel = sb.channel('sq-' + myProfile.id)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'squirrels',
+      filter: 'user_id=eq.' + myProfile.id
+    }, (payload) => {
+      const id = payload.new?.id || payload.old?.id;
+      if (!id) return;
+
+      // busy 상태(성장 연출·타이머 진행 중)면 무시 — 이미 로컬에서 처리 중
+      if (_sqIsBusy(id)) return;
+
+      if (payload.eventType === 'DELETE') {
+        // 다른 탭에서 판매함
+        _sqSquirrels = _sqSquirrels.filter(s => s.id !== id);
+        delete _sqState[id];
+        _sqClearTimer(id);
+        document.getElementById('sqCard-' + id)?.remove();
+        const countEl = document.getElementById('squirrelCount');
+        if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+
+      } else if (payload.eventType === 'INSERT') {
+        // 다른 탭에서 구매함
+        const newSq = payload.new;
+        if (_sqSquirrels.find(s => s.id === newSq.id)) return; // 이미 있으면 무시
+        _sqSquirrels.push(newSq);
+        _sqState[newSq.id] = 'idle';
+        const grid = document.getElementById('squirrelGrid');
+        if (grid) {
+          grid.querySelector('.text-center.py-8')?.remove();
+          const tmp = document.createElement('div');
+          tmp.innerHTML = sqCardHTML(newSq);
+          grid.appendChild(tmp.firstElementChild);
+          if (newSq.status === 'baby' && newSq.grows_at) {
+            _sqSetBusy(newSq.id);
+            _sqStartTimer(newSq.id, newSq);
+          }
+        }
+        const countEl = document.getElementById('squirrelCount');
+        if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+
+      } else if (payload.eventType === 'UPDATE') {
+        // 다른 탭에서 먹이기·성장 등
+        const updated = payload.new;
+        const idx = _sqSquirrels.findIndex(s => s.id === id);
+
+        if (idx < 0) return; // 목록에 없으면 무시
+        const prev = _sqSquirrels[idx];
+        _sqSquirrels[idx] = updated;
+        _sqState[id] = 'idle';
+
+        // 성장 발생 (baby → explorer/pet)
+        if (prev.status === 'baby' && updated.status !== 'baby') {
+          _sqClearTimer(id);
+          _sqGrowCard(id, updated.name, updated.status);
+
+        // 타이머 발동 (grows_at 새로 생김)
+        } else if (!prev.grows_at && updated.grows_at) {
+          _sqSetBusy(id);
+          const gauge = document.getElementById('sqGauge-' + id);
+          if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
+          _sqStartTimer(id, updated);
+
+        // 타이머 해제 (grows_at → null, 여전히 baby)
+        } else if (prev.grows_at && !updated.grows_at && updated.status === 'baby') {
+          _sqClearTimer(id);
+          _sqShowFeedButtons(id);
+
+        // 일반 먹이기 (acorns_fed 변경)
+        } else if (updated.status === 'baby') {
+          const pct = Math.min(100, Math.round((updated.acorns_fed / updated.acorns_required) * 100));
+          const gauge = document.getElementById('sqGauge-' + id);
+          if (gauge) requestAnimationFrame(() => { gauge.style.width = pct + '%'; });
+        }
+      }
+    })
+    .subscribe();
+}
+
+function _sqUnsubscribe() {
+  if (window._sqChannel) {
+    sb.removeChannel(window._sqChannel);
+    window._sqChannel = null;
+  }
+}
+
+// ================================================================
+//  설정 로드
 // ================================================================
 async function sqLoadSettings() {
   try {
     const { data, error } = await sb.from('app_settings')
       .select('value').eq('key','squirrel_settings').limit(1);
-    if (!error && data && data.length > 0) {
-      _sqSettings = data[0].value;
-    }
-  } catch(e) { /* 기본값 유지 */ }
+    if (!error && data?.length > 0) _sqSettings = { ..._sqSettings, ...data[0].value };
+  } catch(e) {}
 }
 
 // ================================================================
-//  다람쥐 목록 로드
+//  다람쥐 목록 로드 (초기 진입·탐험 시작에만 사용)
 // ================================================================
 async function sqLoadSquirrels() {
   const { data } = await sb.from('squirrels')
     .select('*').eq('user_id', myProfile.id).order('created_at');
   _sqSquirrels = data || [];
 
-  // 성장 타이머 체크 (grows_at 지난 것)
+  // grows_at 만료 서버 체크
   const now = new Date();
-  let grew = false;
   for (const sq of _sqSquirrels) {
-    if (sq.status === 'baby' && sq.needs_time && sq.grows_at && new Date(sq.grows_at) <= now) {
-      const newType = Math.random() < 0.5 ? 'explorer' : 'pet';
-      await sb.from('squirrels').update({ status: newType, grows_at: null, needs_time: false }).eq('id', sq.id);
-      toast('🎉', `${sq.name}이(가) ${newType === 'explorer' ? '탐험형 🗺️' : '애완형 🏡'}으로 성장했어요!`);
-      grew = true;
+    if (sq.status === 'baby' && sq.grows_at && new Date(sq.grows_at) <= now) {
+      const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+      await sb.from('squirrels').update({ status: growType, grows_at: null }).eq('id', sq.id);
+      sq.status = growType; sq.grows_at = null;
     }
   }
-  if (grew) {
-    const { data: fresh } = await sb.from('squirrels').select('*').eq('user_id', myProfile.id).order('created_at');
-    _sqSquirrels = fresh || [];
-  }
+
+  // 상태 초기화 (새로 불러온 목록에 맞게)
+  _sqState = {};
+  _sqSquirrels.forEach(sq => { _sqState[sq.id] = 'idle'; });
 
   sqRenderGrid();
 }
 
 // ================================================================
-//  그리드 렌더링
+//  그리드 렌더링 (초기 진입·전체 재렌더 시에만)
 // ================================================================
 function sqRenderGrid() {
   const grid = document.getElementById('squirrelGrid');
-  const countEl = document.getElementById('squirrelCount');
   if (!grid) return;
+  document.getElementById('squirrelCount')?.setAttribute('textContent', _sqSquirrels.length + ' / 10');
+  const countEl = document.getElementById('squirrelCount');
   if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
 
   if (_sqSquirrels.length === 0) {
@@ -191,24 +289,27 @@ function sqRenderGrid() {
 
   grid.innerHTML = _sqSquirrels.map(sq => sqCardHTML(sq)).join('');
 
-  // grows_at 있는 카드는 타이머 자동 시작
+  // grows_at 남아있는 카드는 타이머 재개
   _sqSquirrels.forEach(sq => {
     if (sq.status === 'baby' && sq.grows_at) {
-      _sqRenderTimerCard(sq.id, sq);
+      _sqSetBusy(sq.id);
+      _sqStartTimer(sq.id, sq);
     }
   });
 }
 
+// ================================================================
+//  카드 HTML 생성
+// ================================================================
 function sqCardHTML(sq) {
-  const isAdmin = myProfile?.is_admin;
   const borderColor = (sq.status === 'explorer' || sq.status === 'exploring') ? '#3b82f6'
                     : sq.status === 'pet' ? '#ec4899'
                     : sq.status === 'baby' ? '#fbbf24' : '#a3a3a3';
-  const badgeStyle = (sq.status === 'explorer' || sq.status === 'exploring') ? 'background:#dbeafe;color:#1e40af'
-                   : sq.status === 'pet' ? 'background:#fce7f3;color:#9d174d'
-                   : 'background:#fef3c7;color:#92400e';
-  const typeLabel = { baby:'아기 다람쥐', explorer:'탐험형 🗺️', pet:'애완형 🏡', exploring:'탐험 중 🗺️', recovering:'회복 중 😴' };
-  const badgeLabel = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
+  const badgeStyle  = (sq.status === 'explorer' || sq.status === 'exploring') ? 'background:#dbeafe;color:#1e40af'
+                    : sq.status === 'pet' ? 'background:#fce7f3;color:#9d174d'
+                    : 'background:#fef3c7;color:#92400e';
+  const typeLabel   = { baby:'아기 다람쥐', explorer:'탐험형 🗺️', pet:'애완형 🏡', exploring:'탐험 중 🗺️', recovering:'회복 중 😴' };
+  const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
 
   const imgHTML = sq.status === 'baby'
     ? `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`
@@ -217,30 +318,29 @@ function sqCardHTML(sq) {
   let babyHTML = '';
   if (sq.status === 'baby') {
     const pct = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
-    if (sq.grows_at) {
-      babyHTML = `
-        <div style="margin-top:12px">
-          <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지</div>
-          <div style="height:12px;border-radius:99px;background:#f3f4f6;overflow:hidden">
-            <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%"></div>
-          </div>
-          <div style="font-size:11px;color:#16a34a;font-weight:800;margin-top:6px;text-align:center">🌱 성장 대기 중...</div>
-        </div>`;
-    } else {
-      babyHTML = `
-        <div style="margin-top:12px">
-          <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지</div>
-          <div style="height:12px;border-radius:99px;background:#f3f4f6;overflow:hidden;margin-bottom:12px">
-            <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
-          </div>
-          <div data-feed-row style="display:flex;align-items:center;gap:8px">
-            <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
-            <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
-            <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
-            <button onclick="sqFeedSquirrel('${sq.id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
-          </div>
-        </div>`;
-    }
+    // grows_at 있으면 타이머 UI (버튼 없음) — _sqStartTimer가 별도로 채워줌
+    babyHTML = `
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지</div>
+        <div style="height:12px;border-radius:99px;background:#f3f4f6;overflow:hidden;margin-bottom:12px">
+          <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
+        </div>
+        <div id="sqFeedArea-${sq.id}">
+          ${sq.grows_at
+            ? `<div style="background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
+                <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
+                <div id="sqTimer-${sq.id}" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
+                <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
+               </div>`
+            : `<div style="display:flex;align-items:center;gap:8px">
+                <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
+                <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
+                <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
+                <button onclick="sqFeedSquirrel('${sq.id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
+               </div>`
+          }
+        </div>
+      </div>`;
   }
 
   let statsHTML = '';
@@ -281,81 +381,150 @@ function sqCardHTML(sq) {
 }
 
 // ================================================================
-//  다람쥐 상세 모달
+//  카드 feedArea 교체 헬퍼
 // ================================================================
-function sqOpenModal(id) {
-  const sq = _sqSquirrels.find(s => s.id === id);
-  if (!sq) return;
-  const emoji = sq.status === 'recovering' ? '😴' : (sq.status === 'explorer' || sq.status === 'exploring') ? '🦔' : '🐿️';
-  const typeLabel = { baby:'아기 다람쥐 🐿️', explorer:'탐험형 🗺️', pet:'애완형 🏡', exploring:'탐험 중 🗺️', recovering:'회복 중 😴' };
-  const pct = sq.status === 'baby' ? Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100)) : 100;
+function _sqShowFeedButtons(id) {
+  const area = document.getElementById('sqFeedArea-' + id);
+  if (!area) return;
+  area.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="sqAdjFeed('${id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
+      <span id="sqFeedCnt-${id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
+      <button onclick="sqAdjFeed('${id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
+      <button onclick="sqFeedSquirrel('${id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
+    </div>`;
+}
 
-  showModal(`
-    <div class="text-center mb-4">
-      <div style="font-size:64px">${emoji}</div>
-      <div class="title-font text-xl text-gray-800 mt-1">${sq.name}</div>
-      <div class="text-sm text-gray-400">${typeLabel[sq.status] || sq.status}</div>
-    </div>
-
-    ${sq.status === 'baby' ? `
-    <div class="clay-card p-3 mb-3" style="background:#fffbeb">
-      <div class="flex justify-between text-xs text-gray-500 mb-1 font-bold">
-        <span>🌰 성장 게이지</span>${myProfile?.is_admin ? `<span>${sq.acorns_fed} / ${sq.acorns_required}</span>` : ''}
-      </div>
-      <div style="height:10px;border-radius:99px;background:#f3f4f6;overflow:hidden">
-        <div id="sqModalGauge" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
-      </div>
-      ${myProfile?.is_admin && sq.needs_time ? '<div class="text-xs text-amber-600 mt-2 font-bold text-center">⏳ 이 다람쥐는 도토리 외에 시간도 필요해요</div>' : ''}
-      ${sq.grows_at ? '<div class="text-xs text-green-600 mt-1 font-bold text-center">🌱 성장 대기 중...</div>' : ''}
-    </div>
-    ${!sq.grows_at ? `
-    <div class="flex gap-2 mb-3">
-      <input type="number" id="sqFeedAmount" class="field" placeholder="먹일 도토리 수" min="1" style="flex:1">
-      <button class="btn btn-primary" onclick="sqFeedSquirrel('${sq.id}')">🌰 먹이기</button>
-    </div>` : ''}` : ''}
-
-    ${sq.status !== 'baby' ? `
-    <div class="grid grid-cols-3 gap-2 mb-3">
-      <div class="clay-card p-2 text-center">
-        <div class="text-xs text-gray-400 font-bold">❤️ HP</div>
-        <div class="title-font text-lg text-red-500">${sq.hp_current}<span class="text-xs text-gray-300">/${sq.stats?.hp||100}</span></div>
-      </div>
-      <div class="clay-card p-2 text-center">
-        <div class="text-xs text-gray-400 font-bold">⚔️ 공격</div>
-        <div class="title-font text-lg text-orange-500">${sq.stats?.atk||10}</div>
-      </div>
-      <div class="clay-card p-2 text-center">
-        <div class="text-xs text-gray-400 font-bold">🛡️ 방어</div>
-        <div class="title-font text-lg text-blue-500">${sq.stats?.def||5}</div>
-      </div>
-    </div>` : ''}
-
-    <div class="flex gap-2">
-      ${(sq.status === 'pet' || sq.status === 'explorer') ? `<button class="btn btn-red btn-sm flex-1" onclick="sqSellSquirrel('${sq.id}')">🏪 펫샵에 팔기</button>` : ''}
-      <button class="btn btn-gray btn-sm flex-1" onclick="closeModal()">닫기</button>
-    </div>`);
+function _sqShowTimerUI(id) {
+  const area = document.getElementById('sqFeedArea-' + id);
+  if (!area) return;
+  area.innerHTML = `
+    <div style="background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
+      <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
+      <div id="sqTimer-${id}" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
+      <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
+    </div>`;
 }
 
 // ================================================================
-//  먹이기 - [−][수량][+][도토리 주기] 인라인 카드 방식
+//  타이머 시작 (grows_at 카운트다운)
+// ================================================================
+function _sqStartTimer(id, sq) {
+  _sqClearTimer(id); // 기존 인터벌 정리
+  _sqShowTimerUI(id);
+
+  const growsAt = new Date(sq.grows_at);
+
+  function fmt(ms) {
+    if (ms <= 0) return '00:00:00';
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+  }
+
+  _sqTimers[id] = setInterval(async () => {
+    const remaining = growsAt - Date.now();
+    const el = document.getElementById('sqTimer-' + id);
+    if (el) el.textContent = fmt(remaining);
+
+    if (remaining <= 0) {
+      _sqClearTimer(id);
+      // 타이머 완료 → 도토리 주기 버튼 복원
+      _sqUpdate(id, { grows_at: null });
+      _sqSetIdle(id);
+      _sqShowFeedButtons(id);
+      toast('🌱', `${sq.name}이(가) 쉬었어요! 이제 다시 먹일 수 있어요`);
+    }
+  }, 1000);
+}
+
+// ================================================================
+//  성장 연출 (흔들림 → 페이드아웃 → 새 카드 페이드인)
+// ================================================================
+function _sqGrowCard(id, name, growType) {
+  const cardEl = document.getElementById('sqCard-' + id);
+  if (!cardEl) {
+    // 카드가 DOM에 없으면 로컬 상태만 갱신하고 카드 새로 추가
+    _sqUpdate(id, { status: growType, grows_at: null });
+    _sqSetIdle(id);
+    return;
+  }
+
+  const r = cardEl.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+
+  // 흔들림
+  cardEl.style.transition = 'none';
+  cardEl.style.animation = 'sqCardShake 0.5s ease';
+  _sqSpawnParticlesAt(cx, cy, true, 12);
+
+  setTimeout(() => {
+    cardEl.style.animation = '';
+    cardEl.style.transition = 'opacity 0.4s, transform 0.4s, box-shadow 0.4s';
+    cardEl.style.boxShadow = '0 0 40px rgba(251,191,36,0.8), 0 0 80px rgba(251,191,36,0.4)';
+    cardEl.style.opacity = '0';
+    cardEl.style.transform = 'scale(0.85)';
+
+    setTimeout(() => {
+      _sqPlayGrowSound();
+      _sqSpawnParticlesAt(cx, cy, true, 20);
+
+      // 로컬 캐시 업데이트
+      _sqUpdate(id, { status: growType, grows_at: null });
+      _sqSetIdle(id);
+
+      const sq = _sqSquirrels.find(s => s.id === id);
+      if (!sq) return;
+
+      const tmp = document.createElement('div');
+      tmp.innerHTML = sqCardHTML(sq);
+      const newCard = tmp.firstElementChild;
+      newCard.style.opacity = '0';
+      newCard.style.transform = 'scale(0.88) translateY(12px)';
+      newCard.style.transition = 'opacity 0.5s, transform 0.5s';
+      cardEl.replaceWith(newCard);
+
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        newCard.style.opacity = '1';
+        newCard.style.transform = 'scale(1) translateY(0)';
+      }));
+
+      toast('🎉', `${name}이(가) ${growType === 'explorer' ? '탐험형 🗺️' : '애완형 🏡'}으로 성장했어요!`);
+      setTimeout(() => _sqSpawnParticlesAt(cx, cy, true, 15), 300);
+    }, 1500);
+  }, 500);
+}
+
+// ================================================================
+//  먹이기
 // ================================================================
 function sqAdjFeed(id, delta) {
   const el = document.getElementById('sqFeedCnt-' + id);
   if (!el) return;
   let v = parseInt(el.textContent) + delta;
-  v = Math.max(1, Math.min(99, v));
-  el.textContent = v;
+  el.textContent = Math.max(1, Math.min(99, v));
 }
 
 async function sqFeedSquirrel(id) {
+  // ── busy 체크: 처리 중이면 즉시 리턴 ──
+  if (_sqIsBusy(id)) return;
+  _sqSetBusy(id);
+
   const sq = _sqSquirrels.find(s => s.id === id);
-  if (!sq) return;
+  if (!sq) { _sqSetIdle(id); return; }
+
   const cntEl = document.getElementById('sqFeedCnt-' + id);
   const amount = cntEl ? parseInt(cntEl.textContent) : 5;
-  if (!amount || amount < 1) return;
-  if (!canAfford(amount)) { toast('🌰', '도토리가 부족해요'); return; }
+  if (!amount || amount < 1) { _sqSetIdle(id); return; }
+  if (!canAfford(amount)) { toast('🌰', '도토리가 부족해요'); _sqSetIdle(id); return; }
 
-  // 배율 적용
+  // 버튼 즉시 비활성화
+  const feedArea = document.getElementById('sqFeedArea-' + id);
+  if (feedArea) feedArea.querySelectorAll('button').forEach(b => {
+    b.disabled = true; b.style.opacity = '0.4'; b.style.pointerEvents = 'none';
+  });
+
+  // 배율 계산
   const minM = _sqSettings.feed_multi_min || 0.5;
   const maxM = _sqSettings.feed_multi_max || 1.3;
   const multi   = minM + Math.random() * (maxM - minM);
@@ -366,58 +535,52 @@ async function sqFeedSquirrel(id) {
   const newSpent = (sq.acorns_spent || 0) + amount;
   const updates  = { acorns_fed: newFed, acorns_spent: newSpent };
 
-  let grew = false;
-  let growType = null;
-
-  const prevPct = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
-  const newPctCheck = Math.min(100, Math.round((newFed / sq.acorns_required) * 100));
+  // ── 성장 조건 판단 ──
+  const prevPct    = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
+  const newPct     = Math.min(100, Math.round((newFed / sq.acorns_required) * 100));
   const triggerPct = sq.time_trigger_pct || null;
 
-  // needs_time 타이머 발동: 해당 구간 통과 시 (아직 grows_at 없을 때만)
-  let timerTriggered = false;
-  if (sq.needs_time && !sq.grows_at && triggerPct && prevPct < triggerPct && newPctCheck >= triggerPct) {
+  let action = 'none'; // 'timer' | 'grow' | 'none'
+
+  // 1) needs_time + trigger 구간 통과 → 타이머 발동
+  if (sq.needs_time && !sq.grows_at && triggerPct && prevPct < triggerPct && newPct >= triggerPct) {
     const minutes = Math.floor(Math.random() * ((_sqSettings.time_max_minutes||60) - (_sqSettings.time_min_minutes||10) + 1)) + (_sqSettings.time_min_minutes||10);
     updates.grows_at = new Date(Date.now() + minutes * 60000).toISOString();
-    timerTriggered = true;
+    action = 'timer';
   }
-
-  // 타이머 대기 중이면 성장 불가
-  if (!timerTriggered && !sq.grows_at && newFed >= sq.acorns_required) {
-    if (!sq.needs_time) {
-      growType = Math.random() < 0.5 ? 'explorer' : 'pet';
-      updates.status = growType;
-      grew = true;
-    }
-    // needs_time인데 triggerPct 없으면(구버전 호환) 100%에서 타이머 발동
-    if (sq.needs_time && !triggerPct) {
-      const minutes = Math.floor(Math.random() * ((_sqSettings.time_max_minutes||60) - (_sqSettings.time_min_minutes||10) + 1)) + (_sqSettings.time_min_minutes||10);
-      updates.grows_at = new Date(Date.now() + minutes * 60000).toISOString();
-      timerTriggered = true;
-    }
+  // 2) needs_time + triggerPct 없음(구버전 호환) + 100% → 타이머 발동
+  else if (sq.needs_time && !sq.grows_at && !triggerPct && newFed >= sq.acorns_required) {
+    const minutes = Math.floor(Math.random() * ((_sqSettings.time_max_minutes||60) - (_sqSettings.time_min_minutes||10) + 1)) + (_sqSettings.time_min_minutes||10);
+    updates.grows_at = new Date(Date.now() + minutes * 60000).toISOString();
+    action = 'timer';
   }
-
-  // 타이머 끝난 후 도토리 추가 급여로 100% 도달 → 성장
-  if (!grew && sq.grows_at && new Date(sq.grows_at) <= new Date() && newFed >= sq.acorns_required) {
-    growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+  // 3) 타이머 완료 후 100% 도달 → 성장
+  else if (sq.grows_at && new Date(sq.grows_at) <= new Date() && newFed >= sq.acorns_required) {
+    const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
     updates.status = growType;
     updates.grows_at = null;
-    grew = true;
+    action = 'grow:' + growType;
+  }
+  // 4) needs_time 없이 100% 도달 → 성장
+  else if (!sq.needs_time && !sq.grows_at && newFed >= sq.acorns_required) {
+    const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+    updates.status = growType;
+    action = 'grow:' + growType;
   }
 
   try {
     await spendAcorns(amount, '다람쥐 먹이기');
     await sb.from('squirrels').update(updates).eq('id', id);
 
-    // ── 카드 게이지 업데이트 ──
+    // 게이지 업데이트
     const gauge = document.getElementById('sqGauge-' + id);
     if (gauge) {
       gauge.style.background = isGood
         ? 'linear-gradient(90deg,#fbbf24,#f59e0b,#10b981)'
         : 'linear-gradient(90deg,#fb923c,#f97316)';
-      requestAnimationFrame(() => { gauge.style.width = newPctCheck + '%'; });
+      requestAnimationFrame(() => { gauge.style.width = newPct + '%'; });
     }
 
-    // ── 사운드 + 파티클 ──
     _sqPlayFeedSound(isGood);
     const cardEl = document.getElementById('sqCard-' + id);
     if (cardEl) {
@@ -425,153 +588,40 @@ async function sqFeedSquirrel(id) {
       _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/2, isGood, isGood ? 10 : 5);
     }
 
-    if (grew) {
-      setTimeout(() => _sqGrowCard(id, sq.name, growType), 1200);
-    } else if (timerTriggered) {
-      sq.acorns_fed = newFed;
-      sq.acorns_spent = newSpent;
-      sq.grows_at = updates.grows_at;
-      _sqRenderTimerCard(id, sq);
+    // 로컬 캐시 업데이트 (status/grows_at은 아래 action 처리에서)
+    _sqUpdate(id, { acorns_fed: newFed, acorns_spent: newSpent });
+
+    if (action === 'timer') {
+      _sqUpdate(id, { grows_at: updates.grows_at });
+      // gauge 100%
+      if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
+      _sqStartTimer(id, { ...sq, grows_at: updates.grows_at });
       toast('⏳', `${sq.name}이(가) 잠시 쉬어야 해요! 타이머가 끝나면 계속 먹일 수 있어요`);
+      // busy는 _sqStartTimer 완료 시 풀림 (_sqSetIdle in timer)
+
+    } else if (action.startsWith('grow:')) {
+      const growType = action.split(':')[1];
+      _sqUpdate(id, { status: growType, grows_at: null });
+      // 게이지 100% 보여주고 성장 연출 (busy는 _sqGrowCard 완료 시 풀림)
+      if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
+      setTimeout(() => _sqGrowCard(id, sq.name, growType), 1200);
+
     } else {
-      sq.acorns_fed = newFed;
-      sq.acorns_spent = newSpent;
+      // 일반 먹이기 완료 → 버튼 복원
+      _sqSetIdle(id);
+      _sqShowFeedButtons(id);
     }
+
   } catch(e) {
     console.error(e);
     toast('❌', '오류가 발생했어요');
+    _sqSetIdle(id);
+    _sqShowFeedButtons(id);
   }
-}
-
-// 타이머 카드: grows_at까지 카운트다운 표시, 완료 시 자동 성장
-function _sqRenderTimerCard(id, sq) {
-  const cardEl = document.getElementById('sqCard-' + id);
-  if (!cardEl) return;
-
-  // 먹이기 행을 타이머 UI로 교체
-  const feedRow = cardEl.querySelector('[data-feed-row]');
-  const growsAt = new Date(sq.grows_at);
-
-  function fmt(ms) {
-    if (ms <= 0) return '00:00:00';
-    const s = Math.floor(ms / 1000);
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sc = s % 60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
-  }
-
-  // 게이지 100%로
-  const gauge = document.getElementById('sqGauge-' + id);
-  if (gauge) {
-    gauge.style.background = 'linear-gradient(90deg,#fbbf24,#f59e0b,#10b981)';
-    requestAnimationFrame(() => { gauge.style.width = '100%'; });
-  }
-
-  // 타이머 div 삽입 (먹이기 행 교체)
-  const timerId = 'sqTimer-' + id;
-  const timerHTML = `
-    <div id="${timerId}" style="margin-top:12px;background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
-      <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
-      <div id="${timerId}-count" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
-      <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 자동으로 성장해요</div>
-    </div>`;
-
-  // 기존 먹이기 UI 제거하고 타이머 삽입
-  const existing = document.getElementById(timerId);
-  if (existing) existing.remove();
-  if (feedRow) {
-    feedRow.outerHTML = timerHTML;
-  } else {
-    cardEl.insertAdjacentHTML('beforeend', timerHTML);
-  }
-
-  // 카운트다운 인터벌
-  const intervalId = setInterval(() => {
-    const remaining = growsAt - Date.now();
-    const el = document.getElementById(timerId + '-count');
-    if (el) el.textContent = fmt(remaining);
-
-    if (remaining <= 0) {
-      clearInterval(intervalId);
-      // 자동 성장
-      const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
-      sb.from('squirrels').update({ status: growType, grows_at: null, needs_time: false }).eq('id', id).then(() => {
-        _sqGrowCard(id, sq.name, growType);
-      });
-    }
-  }, 1000);
-
-  // 인터벌 ID 저장 (혹시 탭 전환 시 정리용)
-  if (!window._sqTimers) window._sqTimers = {};
-  window._sqTimers[id] = intervalId;
-}
-
-// B방식: 카드 흔들림 → 페이드아웃 → 기대감 딜레이 → 새 카드 페이드인
-function _sqGrowCard(id, name, growType) {
-  const cardEl = document.getElementById('sqCard-' + id);
-  if (!cardEl) { sqLoadSquirrels(); return; }
-
-  const r = cardEl.getBoundingClientRect();
-  const cx = r.left + r.width / 2;
-  const cy = r.top + r.height / 2;
-
-  // 버튼 즉시 비활성화
-  cardEl.querySelectorAll('button').forEach(b => { b.disabled = true; b.style.opacity = '0.4'; b.style.pointerEvents = 'none'; });
-
-  // 1단계: 흔들림
-  cardEl.style.transition = 'none';
-  cardEl.style.animation = 'sqCardShake 0.5s ease';
-  _sqSpawnParticlesAt(cx, cy, true, 12);
-
-  setTimeout(() => {
-    // 2단계: 빛나며 페이드아웃
-    cardEl.style.animation = '';
-    cardEl.style.transition = 'opacity 0.4s, transform 0.4s, box-shadow 0.4s';
-    cardEl.style.boxShadow = '0 0 40px rgba(251,191,36,0.8), 0 0 80px rgba(251,191,36,0.4)';
-    cardEl.style.opacity = '0';
-    cardEl.style.transform = 'scale(0.85)';
-
-    // 3단계: 1.5초 기대감 딜레이 후 새 카드 (DB 재조회 없이 로컬 처리)
-    setTimeout(() => {
-      _sqPlayGrowSound();
-      _sqSpawnParticlesAt(cx, cy, true, 20);
-
-      // 로컬 _sqSquirrels 업데이트
-      const idx = _sqSquirrels.findIndex(s => s.id === id);
-      if (idx >= 0) {
-        _sqSquirrels[idx] = {
-          ..._sqSquirrels[idx],
-          status: growType,
-          acorns_fed: _sqSquirrels[idx].acorns_fed,
-        };
-      }
-
-      // 새 카드 생성
-      const newSq = _sqSquirrels[idx];
-      const tmp = document.createElement('div');
-      tmp.innerHTML = sqCardHTML(newSq);
-      const newCard = tmp.firstElementChild;
-      newCard.style.opacity = '0';
-      newCard.style.transform = 'scale(0.88) translateY(12px)';
-      newCard.style.transition = 'opacity 0.5s, transform 0.5s';
-      cardEl.replaceWith(newCard);
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          newCard.style.opacity = '1';
-          newCard.style.transform = 'scale(1) translateY(0)';
-        });
-      });
-
-      toast('🎉', `${name}이(가) ${growType === 'explorer' ? '탐험형 🗺️' : '애완형 🏡'}으로 성장했어요!`);
-      setTimeout(() => _sqSpawnParticlesAt(cx, cy, true, 15), 300);
-    }, 1500);
-  }, 500);
 }
 
 // ================================================================
-//  구매 (관리자는 도토리 차감 없이 테스트 가능)
+//  구매
 // ================================================================
 async function sqBuySquirrel(from) {
   if (_sqSquirrels.length >= 10) {
@@ -582,20 +632,16 @@ async function sqBuySquirrel(from) {
     showModal(`<div class="text-center"><div style="font-size:40px">🎰</div><div class="title-font text-lg text-gray-800 my-2">뽑기로 획득</div><div class="text-sm text-gray-500 mb-4">뽑기 탭에서 다람쥐를 획득할 수 있어요!</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
     return;
   }
-
   const price = _sqSettings.shop_price || 30;
-  const isAdmin = myProfile?.is_admin;
-
   if (!canAfford(price)) {
     showModal(`<div class="text-center"><div style="font-size:40px">🌰</div><div class="title-font text-lg text-gray-800 my-2">도토리 부족</div><div class="text-sm text-gray-500 mb-4">${price} 도토리가 필요해요.</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
     return;
   }
-
   showModal(`
     <div class="text-center">
       <img src="images/baby-squirrel.png" style="width:80px;height:80px;object-fit:contain" class="mx-auto mb-2">
       <div class="title-font text-lg text-gray-800 mb-1">아기 다람쥐 분양</div>
-      <div class="text-sm text-gray-500 mb-4">${isAdmin ? '관리자 테스트 모드 — 도토리 차감 없이 분양합니다' : `<strong>${price} 🌰</strong>에 분양받을까요?`}</div>
+      <div class="text-sm text-gray-500 mb-4">${myProfile?.is_admin ? '관리자 테스트 모드 — 도토리 차감 없이 분양합니다' : `<strong>${price} 🌰</strong>에 분양받을까요?`}</div>
       <div class="flex gap-2">
         <button class="btn btn-primary flex-1" onclick="sqDoBuySquirrel(${price})">분양받기</button>
         <button class="btn btn-gray flex-1" onclick="closeModal()">취소</button>
@@ -606,39 +652,48 @@ async function sqBuySquirrel(from) {
 async function sqDoBuySquirrel(price) {
   closeModal();
   const acornsNeeded = Math.floor(Math.random() * ((_sqSettings.acorn_max||50) - (_sqSettings.acorn_min||20) + 1)) + (_sqSettings.acorn_min||20);
-  const needsTime = Math.random() * 100 < (_sqSettings.time_chance||40);
-  // needs_time이면 10~60% 사이 랜덤 구간에서 타이머 발동
+  const needsTime    = Math.random() * 100 < (_sqSettings.time_chance||40);
   const timeTriggerPct = needsTime ? (10 + Math.floor(Math.random() * 51)) : null;
-  const hpMin  = _sqSettings.stat_hp_min  || 60;
-  const hpMax  = _sqSettings.stat_hp_max  || 120;
-  const atkMin = _sqSettings.stat_atk_min || 8;
-  const atkMax = _sqSettings.stat_atk_max || 20;
-  const defMin = _sqSettings.stat_def_min || 4;
-  const defMax = _sqSettings.stat_def_max || 14;
-  const baseHp  = hpMin  + Math.floor(Math.random() * (hpMax  - hpMin  + 1));
-  const baseAtk = atkMin + Math.floor(Math.random() * (atkMax - atkMin + 1));
-  const baseDef = defMin + Math.floor(Math.random() * (defMax - defMin + 1));
+  const baseHp  = (_sqSettings.stat_hp_min||60)  + Math.floor(Math.random() * ((_sqSettings.stat_hp_max||120)  - (_sqSettings.stat_hp_min||60)  + 1));
+  const baseAtk = (_sqSettings.stat_atk_min||8)  + Math.floor(Math.random() * ((_sqSettings.stat_atk_max||20)  - (_sqSettings.stat_atk_min||8)  + 1));
+  const baseDef = (_sqSettings.stat_def_min||4)  + Math.floor(Math.random() * ((_sqSettings.stat_def_max||14)  - (_sqSettings.stat_def_min||4)  + 1));
+
+  // time_trigger_pct 컬럼 존재 여부 확인
+  let hasTriggerCol = false;
+  try {
+    const { error } = await sb.from('squirrels').select('time_trigger_pct').limit(1);
+    hasTriggerCol = !error;
+  } catch(e) {}
 
   try {
     await spendAcorns(price, '다람쥐 구매');
 
-    const { error: e2 } = await sb.from('squirrels').insert({
-      user_id: myProfile.id,
-      name: sqRandomName(),
-      status: 'baby',
-      acorns_fed: 0,
-      acorns_required: acornsNeeded,
-      needs_time: needsTime,
-      time_trigger_pct: timeTriggerPct,
+    const insertData = {
+      user_id: myProfile.id, name: sqRandomName(), status: 'baby',
+      acorns_fed: 0, acorns_required: acornsNeeded, needs_time: needsTime,
       stats: { hp: baseHp, atk: baseAtk, def: baseDef },
-      hp_current: baseHp,
-      acquired_from: 'shop'
-    });
+      hp_current: baseHp, acquired_from: 'shop'
+    };
+    if (hasTriggerCol && timeTriggerPct !== null) insertData.time_trigger_pct = timeTriggerPct;
+
+    const { data: inserted, error: e2 } = await sb.from('squirrels').insert(insertData).select().single();
     if (e2) throw e2;
 
-    toast('🎉', '새 다람쥐를 분양받았어요!');
+    // 로컬 캐시에 추가 + 카드만 DOM에 append (전체 재렌더 없음)
+    _sqSquirrels.push(inserted);
+    _sqState[inserted.id] = 'idle';
     sqTab('my');
-    await sqLoadSquirrels();
+
+    const grid = document.getElementById('squirrelGrid');
+    const countEl = document.getElementById('squirrelCount');
+    if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+    if (grid) {
+      grid.querySelector('.text-center.py-8')?.remove(); // 빈 상태 메시지 제거
+      const tmp = document.createElement('div');
+      tmp.innerHTML = sqCardHTML(inserted);
+      grid.appendChild(tmp.firstElementChild);
+    }
+    toast('🎉', '새 다람쥐를 분양받았어요!');
   } catch(e) {
     console.error(e);
     toast('❌', '오류가 발생했어요');
@@ -646,11 +701,11 @@ async function sqDoBuySquirrel(price) {
 }
 
 // ================================================================
-//  도토리 배지 동기화 (관리자 모달 + 일반 뱃지)
+//  도토리 배지 동기화
 // ================================================================
 function sqSyncAcornBadge() {
-  const main = document.getElementById('acornBadge');
-  if (main) main.textContent = myProfile.acorns.toLocaleString();
+  const el = document.getElementById('acornBadge');
+  if (el) el.textContent = myProfile.acorns.toLocaleString();
 }
 
 // ================================================================
@@ -658,12 +713,13 @@ function sqSyncAcornBadge() {
 // ================================================================
 function sqSellSquirrel(id) {
   const sq = _sqSquirrels.find(s => s.id === id);
-  const sellBase = _sqSettings.sell_price_base || 20;
-  const statSum = (sq.stats?.hp||100) + (sq.stats?.atk||10) * 3 + (sq.stats?.def||5) * 2;
-  const maxStatSum = (_sqSettings.stat_hp_max||120) + (_sqSettings.stat_atk_max||20) * 3 + (_sqSettings.stat_def_max||14) * 2;
-  const sellMax = _sqSettings.sell_price_max || 80;
-  const price = Math.round(sellBase + (statSum / maxStatSum) * (sellMax - sellBase));
-  const desc = sq.status === 'explorer' ? '탐험을 즐기는 활발한 녀석이군요!' : '온순하고 귀여운 애완 다람쥐네요!';
+  if (!sq) return;
+  const sellBase  = _sqSettings.sell_price_base || 20;
+  const sellMax   = _sqSettings.sell_price_max  || 80;
+  const statSum   = (sq.stats?.hp||100) + (sq.stats?.atk||10) * 3 + (sq.stats?.def||5) * 2;
+  const maxStat   = (_sqSettings.stat_hp_max||120) + (_sqSettings.stat_atk_max||20) * 3 + (_sqSettings.stat_def_max||14) * 2;
+  const price     = Math.round(sellBase + (statSum / maxStat) * (sellMax - sellBase));
+  const desc      = sq.status === 'explorer' ? '탐험을 즐기는 활발한 녀석이군요!' : '온순하고 귀여운 애완 다람쥐네요!';
 
   showModal(`
     <div class="text-center">
@@ -684,45 +740,68 @@ async function sqDoSell(id, price) {
     await sb.from('squirrels').delete().eq('id', id);
     myProfile.acorns += price;
     sqSyncAcornBadge();
+    // 로컬 캐시에서 제거 + DOM 카드 제거
+    _sqSquirrels = _sqSquirrels.filter(s => s.id !== id);
+    delete _sqState[id];
+    _sqClearTimer(id);
+    document.getElementById('sqCard-' + id)?.remove();
+    const countEl = document.getElementById('squirrelCount');
+    if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+    if (_sqSquirrels.length === 0) {
+      const grid = document.getElementById('squirrelGrid');
+      if (grid) grid.innerHTML = `
+        <div class="text-center py-8">
+          <div style="font-size:48px">🐿️</div>
+          <div class="text-sm text-gray-400 font-bold mt-2">아직 다람쥐가 없어요</div>
+          <div class="text-xs text-gray-300 mt-1">상점에서 분양받아보세요!</div>
+        </div>`;
+    }
     toast('🏪', `${price} 도토리를 받았어요!`);
-    await sqLoadSquirrels();
   } catch(e) {
     toast('❌', '오류가 발생했어요');
   }
 }
 
 // ================================================================
+//  이름 랜덤 생성
+// ================================================================
+function sqRandomName() {
+  const names = ['솜이','구름','밤이','콩이','도토리','알밤','새벽','별이','하늘','눈송이','복실','뭉치','보리','찰떡','깜찍이','토리','몽실','솔이','바람','이슬'];
+  return names[Math.floor(Math.random() * names.length)];
+}
+
+// ================================================================
 //  탐험
 // ================================================================
 async function sqLoadActiveExpedition() {
-  const area = document.getElementById('sqActiveExpeditionArea');
-  if (!area) return;
-
-  // maybeSingle 대신 limit(1) 사용
-  const { data } = await sb.from('expeditions')
-    .select('*').eq('user_id', myProfile.id).eq('status','active').limit(1);
-  const exp = data?.[0] || null;
-
-  if (exp) {
-    area.innerHTML = `
-      <div class="clay-card p-4">
-        <div class="title-font text-base text-gray-700 mb-2">⚔️ 진행 중인 탐험</div>
-        <div class="flex items-center gap-3">
-          <div class="text-3xl">🗺️</div>
-          <div>
-            <div class="font-black text-gray-700">${exp.current_step} / ${exp.total_steps} 칸 진행</div>
-            <div class="text-xs text-gray-400">획득 보상: ${(exp.loot||[]).length}개</div>
+  try {
+    const { data } = await sb.from('expeditions')
+      .select('*').eq('user_id', myProfile.id).eq('status','active').limit(1);
+    const area = document.getElementById('sqActiveExpedition');
+    const exp = data?.[0];
+    if (area && exp) {
+      area.innerHTML = `
+        <div class="clay-card p-4 mb-4" style="background:#eff6ff;border-left:4px solid #3b82f6">
+          <div class="flex items-center gap-3">
+            <div class="text-3xl">🗺️</div>
+            <div>
+              <div class="font-black text-gray-700">${exp.current_step} / ${exp.total_steps} 칸 진행</div>
+              <div class="text-xs text-gray-400">획득 보상: ${(exp.loot||[]).length}개</div>
+            </div>
+            <button class="btn btn-primary btn-sm ml-auto" onclick="sqContinueExpedition('${exp.id}')">계속하기 →</button>
           </div>
-          <button class="btn btn-primary btn-sm ml-auto" onclick="sqContinueExpedition('${exp.id}')">계속하기 →</button>
-        </div>
-      </div>`;
-  } else {
-    area.innerHTML = '';
-  }
+        </div>`;
+    } else if (area) {
+      area.innerHTML = '';
+    }
+  } catch(e) {}
 }
 
 async function sqStartExpeditionFlow() {
+  // 탐험 시작 전 최신 상태 로드 (explorer 필터 정확도 보장)
+  await sqLoadSquirrels();
   const explorers = _sqSquirrels.filter(s => s.status === 'explorer');
+
   if (explorers.length === 0) {
     showModal(`<div class="text-center"><div style="font-size:40px">🗺️</div><div class="title-font text-lg text-gray-800 my-2">탐험형 다람쥐가 없어요</div><div class="text-sm text-gray-500 mb-4">다람쥐를 키워서 탐험형으로 성장시켜보세요!</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
     return;
@@ -768,108 +847,97 @@ function sqToggleExpSelect(id) {
     document.getElementById('expcard-' + id).style.borderColor = 'transparent';
     document.getElementById('expcheck-' + id).textContent = '⬜';
   } else {
-    if (window._sqExpSelected.length >= 3) { toast('⚠️', '최대 3마리까지 선택할 수 있어요'); return; }
+    if (window._sqExpSelected.length >= 3) { toast('⚠️','최대 3마리까지 선택할 수 있어요'); return; }
     window._sqExpSelected.push(id);
-    document.getElementById('expcard-' + id).style.borderColor = '#f59e0b';
+    document.getElementById('expcard-' + id).style.borderColor = '#3b82f6';
     document.getElementById('expcheck-' + id).textContent = '✅';
   }
 }
 
 async function sqLaunchExpedition() {
-  if (!window._sqExpSelected?.length) { toast('⚠️', '다람쥐를 1마리 이상 선택해주세요'); return; }
+  const ids = window._sqExpSelected || [];
+  if (!ids.length) { toast('⚠️','다람쥐를 선택해주세요'); return; }
   try {
-    await sb.from('expeditions').insert({
-      user_id: myProfile.id,
-      squirrel_ids: window._sqExpSelected,
-      current_step: 0,
-      total_steps: 5,
-      status: 'active',
-      loot: []
+    const { error } = await sb.from('expeditions').insert({
+      user_id: myProfile.id, squirrel_ids: ids,
+      current_step: 0, total_steps: 5, status: 'active', loot: []
     });
+    if (error) throw error;
+    await sb.from('squirrels').update({ status: 'exploring' }).in('id', ids);
+    ids.forEach(id => _sqUpdate(id, { status: 'exploring' }));
     closeModal();
-    toast('🗺️', '탐험을 시작했어요!');
+    toast('🗺️', '탐험을 떠났어요!');
     await sqLoadActiveExpedition();
-    sqTab('expedition');
+    sqRenderGrid();
   } catch(e) {
-    toast('❌', '탐험 시작에 실패했어요');
+    toast('❌', '출발 실패');
   }
 }
 
 async function sqContinueExpedition(expId) {
-  toast('🚧', '탐험 진행 화면은 준비 중이에요');
+  toast('🚧', '탐험 진행 화면은 준비 중이에요!');
 }
 
 // ================================================================
-//  이름 랜덤
-// ================================================================
-function sqRandomName() {
-  const names = ['꼬미','솔방울','도토','밤톨','잣순이','솜이','깜찍이','하루','봄봄','단풍이','찰떡','밀키','코코','뭉치'];
-  return names[Math.floor(Math.random() * names.length)];
-}
-
-// ================================================================
-//  관리자 패널: 설정 로드/저장 + 목록
+//  관리자 패널
 // ================================================================
 async function sqAdminInit() {
   await sqLoadSettings();
-  document.getElementById('sqSet_shopPrice').value    = _sqSettings.shop_price      || 30;
-  document.getElementById('sqSet_acornMin').value     = _sqSettings.acorn_min       || 20;
-  document.getElementById('sqSet_acornMax').value     = _sqSettings.acorn_max       || 50;
-  document.getElementById('sqSet_timeChance').value   = _sqSettings.time_chance     || 40;
-  document.getElementById('sqSet_timeMin').value      = _sqSettings.time_min_minutes  || 10;
-  document.getElementById('sqSet_timeMax').value      = _sqSettings.time_max_minutes  || 60;
-  document.getElementById('sqSet_multiMin').value     = _sqSettings.feed_multi_min  || 0.5;
-  document.getElementById('sqSet_multiMax').value     = _sqSettings.feed_multi_max  || 1.3;
-  document.getElementById('sqSet_hpMin').value        = _sqSettings.stat_hp_min     || 60;
-  document.getElementById('sqSet_hpMax').value        = _sqSettings.stat_hp_max     || 120;
-  document.getElementById('sqSet_atkMin').value       = _sqSettings.stat_atk_min    || 8;
-  document.getElementById('sqSet_atkMax').value       = _sqSettings.stat_atk_max    || 20;
-  document.getElementById('sqSet_defMin').value       = _sqSettings.stat_def_min    || 4;
-  document.getElementById('sqSet_defMax').value       = _sqSettings.stat_def_max    || 14;
-  document.getElementById('sqSet_sellBase').value     = _sqSettings.sell_price_base || 20;
-  document.getElementById('sqSet_sellMax').value      = _sqSettings.sell_price_max  || 80;
+  document.getElementById('sqSet_price').value       = _sqSettings.shop_price        || 30;
+  document.getElementById('sqSet_acornMin').value    = _sqSettings.acorn_min         || 20;
+  document.getElementById('sqSet_acornMax').value    = _sqSettings.acorn_max         || 50;
+  document.getElementById('sqSet_timeChance').value  = _sqSettings.time_chance       || 40;
+  document.getElementById('sqSet_timeMin').value     = _sqSettings.time_min_minutes  || 10;
+  document.getElementById('sqSet_timeMax').value     = _sqSettings.time_max_minutes  || 60;
+  document.getElementById('sqSet_multiMin').value    = _sqSettings.feed_multi_min    || 0.5;
+  document.getElementById('sqSet_multiMax').value    = _sqSettings.feed_multi_max    || 1.3;
+  document.getElementById('sqSet_hpMin').value       = _sqSettings.stat_hp_min       || 60;
+  document.getElementById('sqSet_hpMax').value       = _sqSettings.stat_hp_max       || 120;
+  document.getElementById('sqSet_atkMin').value      = _sqSettings.stat_atk_min      || 8;
+  document.getElementById('sqSet_atkMax').value      = _sqSettings.stat_atk_max      || 20;
+  document.getElementById('sqSet_defMin').value      = _sqSettings.stat_def_min      || 4;
+  document.getElementById('sqSet_defMax').value      = _sqSettings.stat_def_max      || 14;
+  document.getElementById('sqSet_sellBase').value    = _sqSettings.sell_price_base   || 20;
+  document.getElementById('sqSet_sellMax').value     = _sqSettings.sell_price_max    || 80;
   await sqAdminLoadList();
 }
 
 async function sqSaveSettings() {
-  const val = {
-    shop_price:      parseInt(document.getElementById('sqSet_shopPrice').value)   || 30,
-    acorn_min:       parseInt(document.getElementById('sqSet_acornMin').value)    || 20,
-    acorn_max:       parseInt(document.getElementById('sqSet_acornMax').value)    || 50,
-    time_chance:     parseInt(document.getElementById('sqSet_timeChance').value)  || 40,
-    time_min_minutes:  parseInt(document.getElementById('sqSet_timeMin').value)     || 10,
-    time_max_minutes:  parseInt(document.getElementById('sqSet_timeMax').value)     || 60,
-    feed_multi_min:  parseFloat(document.getElementById('sqSet_multiMin').value)  || 0.5,
-    feed_multi_max:  parseFloat(document.getElementById('sqSet_multiMax').value)  || 1.3,
-    stat_hp_min:     parseInt(document.getElementById('sqSet_hpMin').value)       || 60,
-    stat_hp_max:     parseInt(document.getElementById('sqSet_hpMax').value)       || 120,
-    stat_atk_min:    parseInt(document.getElementById('sqSet_atkMin').value)      || 8,
-    stat_atk_max:    parseInt(document.getElementById('sqSet_atkMax').value)      || 20,
-    stat_def_min:    parseInt(document.getElementById('sqSet_defMin').value)      || 4,
-    stat_def_max:    parseInt(document.getElementById('sqSet_defMax').value)      || 14,
-    sell_price_base: parseInt(document.getElementById('sqSet_sellBase').value)    || 20,
-    sell_price_max:  parseInt(document.getElementById('sqSet_sellMax').value)     || 80,
+  const settings = {
+    shop_price:       parseInt(document.getElementById('sqSet_price').value)      || 30,
+    acorn_min:        parseInt(document.getElementById('sqSet_acornMin').value)   || 20,
+    acorn_max:        parseInt(document.getElementById('sqSet_acornMax').value)   || 50,
+    time_chance:      parseInt(document.getElementById('sqSet_timeChance').value) || 40,
+    time_min_minutes: parseInt(document.getElementById('sqSet_timeMin').value)    || 10,
+    time_max_minutes: parseInt(document.getElementById('sqSet_timeMax').value)    || 60,
+    feed_multi_min:   parseFloat(document.getElementById('sqSet_multiMin').value) || 0.5,
+    feed_multi_max:   parseFloat(document.getElementById('sqSet_multiMax').value) || 1.3,
+    stat_hp_min:      parseInt(document.getElementById('sqSet_hpMin').value)      || 60,
+    stat_hp_max:      parseInt(document.getElementById('sqSet_hpMax').value)      || 120,
+    stat_atk_min:     parseInt(document.getElementById('sqSet_atkMin').value)     || 8,
+    stat_atk_max:     parseInt(document.getElementById('sqSet_atkMax').value)     || 20,
+    stat_def_min:     parseInt(document.getElementById('sqSet_defMin').value)     || 4,
+    stat_def_max:     parseInt(document.getElementById('sqSet_defMax').value)     || 14,
+    sell_price_base:  parseInt(document.getElementById('sqSet_sellBase').value)   || 20,
+    sell_price_max:   parseInt(document.getElementById('sqSet_sellMax').value)    || 80,
   };
   const { error } = await sb.from('app_settings')
-    .upsert({ key: 'squirrel_settings', value: val }, { onConflict: 'key' });
-  if (error) { toast('❌', '저장 실패'); return; }
-  _sqSettings = val;
-  toast('✅', '설정이 저장됐어요');
+    .upsert({ key:'squirrel_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict:'key' });
+  if (!error) { _sqSettings = settings; toast('✅','설정이 저장되었어요'); }
+  else toast('❌','저장 실패');
 }
 
 async function sqAdminLoadList() {
-  const { data } = await sb.from('squirrels')
-    .select('*, users(display_name)').order('created_at', { ascending: false }).limit(50);
   const el = document.getElementById('sqAdminList');
   if (!el) return;
-  if (!data?.length) { el.innerHTML = '<div class="text-center py-4 text-gray-400">보유 다람쥐가 없어요</div>'; return; }
-  const typeLabel = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
+  const { data } = await sb.from('squirrels').select('*').order('created_at', { ascending: false });
+  if (!data?.length) { el.innerHTML = '<div class="text-xs text-gray-400 text-center py-4">다람쥐가 없어요</div>'; return; }
   el.innerHTML = data.map(sq => `
-    <div class="flex items-center justify-between py-2 border-b border-gray-100">
-      <div>
-        <span class="font-black text-gray-700 text-sm">${sq.name}</span>
-        <span class="badge ml-1" style="font-size:10px">${typeLabel[sq.status]||sq.status}</span>
+    <div style="background:white;border-radius:12px;padding:10px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:24px">${sq.status==='baby'?'🐿️':sq.status==='pet'?'🐱':'🦔'}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:900;color:#1f2937">${sq.name} <span style="font-size:10px;color:#9ca3af">(${sq.status})</span></div>
+        <div style="font-size:10px;color:#9ca3af">${sq.status==='baby'?`게이지 ${sq.acorns_fed}/${sq.acorns_required}`:`HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`}</div>
       </div>
-      <div class="text-xs text-gray-400">${sq.users?.display_name || '알 수 없음'}</div>
     </div>`).join('');
 }
