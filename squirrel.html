@@ -312,14 +312,19 @@ let sqSettings = {}; // 관리자 설정
 
 // ── 초기화 ──
 async function init() {
-  // 세션 로드 대기
+  // 개발용: 로그인 체크 임시 비활성화
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { location.href = 'index.html'; return; }
-
-  const { data: profile } = await sb.from('users')
-    .select('*').eq('id', session.user.id).single();
-  myProfile = profile;
-  document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
+  
+  if (session) {
+    const { data: profile } = await sb.from('users')
+      .select('*').eq('id', session.user.id).single();
+    myProfile = profile;
+    document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
+  } else {
+    // 로그인 없이도 UI 확인 가능하도록 더미 프로필
+    myProfile = { id: 'test', acorns: 999, display_name: '테스트' };
+    document.getElementById('acornBalance').textContent = `🌰 999`;
+  }
 
   await loadSettings();
   await loadSquirrels();
