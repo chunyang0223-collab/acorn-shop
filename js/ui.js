@@ -416,21 +416,3 @@ function renderMaintenanceBtns() {
     }
   });
 }
-
-// ── 관리자 다람쥐 탭 진입 ──
-function adminEnterSquirrel() {
-  // 관리자 화면 → 사용자 화면 전환
-  document.getElementById('adminMode').classList.add('hidden');
-  document.getElementById('userMode').classList.remove('hidden');
-
-  // 다람쥐 탭 강제 활성화 (점검 우회)
-  U_TABS.forEach(t => document.getElementById('utab-'+t).classList.add('hidden'));
-  document.querySelectorAll('#userTabBar .tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('utab-squirrel').classList.remove('hidden');
-
-  // 탭 버튼 활성화
-  const sqBtn = document.querySelector('#userTabBar .tab-btn[onclick*="squirrel"]');
-  if (sqBtn) sqBtn.classList.add('active');
-
-  sqInit();
-}
