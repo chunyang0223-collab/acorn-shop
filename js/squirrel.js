@@ -142,93 +142,105 @@ async function sqInit() {
 // ================================================================
 //  Realtime 구독 (다른 탭/기기 변경 사항 반영)
 // ================================================================
+// ── 폴링 기반 동기화 (현재 Supabase 경량 클라이언트가 Realtime 웹소켓 미지원)
+// 다른 탭/기기 변경을 5초마다 DB 조회로 감지
+var _sqPollSnapshot = {}; // id → updated_at 스냅샷
+
 function _sqSubscribe() {
-  // 기존 구독 해제 후 재구독
   _sqUnsubscribe();
+  _sqTakePollSnapshot();
+  window._sqPollInterval = setInterval(_sqPoll, 5000);
+}
 
-  window._sqChannel = sb.channel('sq-' + myProfile.id)
-    .on('postgres_changes', {
-      event: '*', schema: 'public', table: 'squirrels',
-      filter: 'user_id=eq.' + myProfile.id
-    }, (payload) => {
-      const id = payload.new?.id || payload.old?.id;
-      if (!id) return;
+function _sqUnsubscribe() {
+  if (window._sqPollInterval) {
+    clearInterval(window._sqPollInterval);
+    window._sqPollInterval = null;
+  }
+  _sqPollSnapshot = {};
+}
 
-      // busy 상태(성장 연출·타이머 진행 중)면 무시 — 이미 로컬에서 처리 중
-      if (_sqIsBusy(id)) return;
+function _sqTakePollSnapshot() {
+  _sqPollSnapshot = {};
+  _sqSquirrels.forEach(sq => { _sqPollSnapshot[sq.id] = sq.updated_at || sq.created_at; });
+}
 
-      if (payload.eventType === 'DELETE') {
-        // 다른 탭에서 판매함
-        _sqSquirrels = _sqSquirrels.filter(s => s.id !== id);
-        delete _sqState[id];
-        _sqClearTimer(id);
-        document.getElementById('sqCard-' + id)?.remove();
-        const countEl = document.getElementById('squirrelCount');
-        if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+async function _sqPoll() {
+  try {
+    const { data } = await sb.from('squirrels')
+      .select('*').eq('user_id', myProfile.id).order('created_at');
+    if (!data) return;
 
-      } else if (payload.eventType === 'INSERT') {
-        // 다른 탭에서 구매함
-        const newSq = payload.new;
-        if (_sqSquirrels.find(s => s.id === newSq.id)) return; // 이미 있으면 무시
-        _sqSquirrels.push(newSq);
-        _sqState[newSq.id] = 'idle';
+    const fresh = data;
+    const freshIds = new Set(fresh.map(s => s.id));
+    const localIds = new Set(_sqSquirrels.map(s => s.id));
+
+    // INSERT: 새로 생긴 것
+    fresh.forEach(sq => {
+      if (!localIds.has(sq.id)) {
+        _sqSquirrels.push(sq);
+        _sqState[sq.id] = 'idle';
         const grid = document.getElementById('squirrelGrid');
         if (grid) {
           grid.querySelector('.text-center.py-8')?.remove();
           const tmp = document.createElement('div');
-          tmp.innerHTML = sqCardHTML(newSq);
+          tmp.innerHTML = sqCardHTML(sq);
           grid.appendChild(tmp.firstElementChild);
-          if (newSq.status === 'baby' && newSq.grows_at) {
-            _sqSetBusy(newSq.id);
-            _sqStartTimer(newSq.id, newSq);
+          if (sq.status === 'baby' && sq.grows_at) {
+            _sqSetBusy(sq.id);
+            _sqStartTimer(sq.id, sq);
           }
         }
         const countEl = document.getElementById('squirrelCount');
         if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
-
-      } else if (payload.eventType === 'UPDATE') {
-        // 다른 탭에서 먹이기·성장 등
-        const updated = payload.new;
-        const idx = _sqSquirrels.findIndex(s => s.id === id);
-
-        if (idx < 0) return; // 목록에 없으면 무시
-        const prev = _sqSquirrels[idx];
-        _sqSquirrels[idx] = updated;
-        _sqState[id] = 'idle';
-
-        // 성장 발생 (baby → explorer/pet)
-        if (prev.status === 'baby' && updated.status !== 'baby') {
-          _sqClearTimer(id);
-          _sqGrowCard(id, updated.name, updated.status);
-
-        // 타이머 발동 (grows_at 새로 생김)
-        } else if (!prev.grows_at && updated.grows_at) {
-          _sqSetBusy(id);
-          const gauge = document.getElementById('sqGauge-' + id);
-          if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
-          _sqStartTimer(id, updated);
-
-        // 타이머 해제 (grows_at → null, 여전히 baby)
-        } else if (prev.grows_at && !updated.grows_at && updated.status === 'baby') {
-          _sqClearTimer(id);
-          _sqShowFeedButtons(id);
-
-        // 일반 먹이기 (acorns_fed 변경)
-        } else if (updated.status === 'baby') {
-          const pct = Math.min(100, Math.round((updated.acorns_fed / updated.acorns_required) * 100));
-          const gauge = document.getElementById('sqGauge-' + id);
-          if (gauge) requestAnimationFrame(() => { gauge.style.width = pct + '%'; });
-        }
       }
-    })
-    .subscribe();
-}
+    });
 
-function _sqUnsubscribe() {
-  if (window._sqChannel) {
-    sb.removeChannel(window._sqChannel);
-    window._sqChannel = null;
-  }
+    // DELETE: 사라진 것
+    _sqSquirrels.forEach(sq => {
+      if (!freshIds.has(sq.id)) {
+        _sqSquirrels = _sqSquirrels.filter(s => s.id !== sq.id);
+        delete _sqState[sq.id];
+        _sqClearTimer(sq.id);
+        document.getElementById('sqCard-' + sq.id)?.remove();
+        const countEl = document.getElementById('squirrelCount');
+        if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+      }
+    });
+
+    // UPDATE: updated_at 변경된 것
+    fresh.forEach(updated => {
+      const id = updated.id;
+      if (_sqIsBusy(id)) return; // 로컬 처리 중이면 무시
+      const snapshot = _sqPollSnapshot[id];
+      if (snapshot && snapshot === (updated.updated_at || updated.created_at)) return; // 변경 없음
+
+      const idx = _sqSquirrels.findIndex(s => s.id === id);
+      if (idx < 0) return;
+      const prev = _sqSquirrels[idx];
+      _sqSquirrels[idx] = updated;
+
+      if (prev.status === 'baby' && updated.status !== 'baby') {
+        _sqClearTimer(id);
+        _sqGrowCard(id, updated.name, updated.status);
+      } else if (!prev.grows_at && updated.grows_at) {
+        _sqSetBusy(id);
+        const gauge = document.getElementById('sqGauge-' + id);
+        if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
+        _sqStartTimer(id, updated);
+      } else if (prev.grows_at && !updated.grows_at && updated.status === 'baby') {
+        _sqClearTimer(id);
+        _sqShowFeedButtons(id);
+      } else if (updated.status === 'baby') {
+        const pct = Math.min(100, Math.round((updated.acorns_fed / updated.acorns_required) * 100));
+        const gauge = document.getElementById('sqGauge-' + id);
+        if (gauge) requestAnimationFrame(() => { gauge.style.width = pct + '%'; });
+      }
+    });
+
+    // 스냅샷 갱신
+    _sqTakePollSnapshot();
+  } catch(e) {}
 }
 
 // ================================================================
@@ -883,7 +895,7 @@ async function sqContinueExpedition(expId) {
 // ================================================================
 async function sqAdminInit() {
   await sqLoadSettings();
-  document.getElementById('sqSet_price').value       = _sqSettings.shop_price        || 30;
+  document.getElementById('sqSet_shopPrice').value       = _sqSettings.shop_price        || 30;
   document.getElementById('sqSet_acornMin').value    = _sqSettings.acorn_min         || 20;
   document.getElementById('sqSet_acornMax').value    = _sqSettings.acorn_max         || 50;
   document.getElementById('sqSet_timeChance').value  = _sqSettings.time_chance       || 40;
@@ -904,7 +916,7 @@ async function sqAdminInit() {
 
 async function sqSaveSettings() {
   const settings = {
-    shop_price:       parseInt(document.getElementById('sqSet_price').value)      || 30,
+    shop_price:       parseInt(document.getElementById('sqSet_shopPrice').value)      || 30,
     acorn_min:        parseInt(document.getElementById('sqSet_acornMin').value)   || 20,
     acorn_max:        parseInt(document.getElementById('sqSet_acornMax').value)   || 50,
     time_chance:      parseInt(document.getElementById('sqSet_timeChance').value) || 40,
