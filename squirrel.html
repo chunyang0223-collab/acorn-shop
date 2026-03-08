@@ -312,10 +312,12 @@ let sqSettings = {}; // 관리자 설정
 
 // ── 초기화 ──
 async function init() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) { location.href = 'index.html'; return; }
+  // 세션 로드 대기
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.href = 'index.html'; return; }
 
-  const { data: profile } = await sb.from('users').select('*').eq('id', user.id).single();
+  const { data: profile } = await sb.from('users')
+    .select('*').eq('id', session.user.id).single();
   myProfile = profile;
   document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
 
