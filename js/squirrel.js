@@ -6,18 +6,37 @@ var _sqSquirrels = [];
 var _sqSettings  = { shop_price:30, acorn_min:20, acorn_max:50, time_chance:40, time_min_hours:1, time_max_hours:8 };
 
 // ================================================================
-//  관리자 전용: 모달 열기/닫기
+//  관리자 전용: 다람쥐 탭 강제 진입 (점검 우회)
 // ================================================================
 function sqAdminEnter() {
-  document.getElementById('sqAdminModal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  // 관리자 화면 → 사용자 화면으로 전환
+  document.getElementById('adminMode').classList.add('hidden');
+  document.getElementById('userMode').classList.remove('hidden');
+
+  // 점검 오버레이 강제 제거 후 squirrel 탭 활성화
+  const tabEl = document.getElementById('utab-squirrel');
+  const overlay = document.getElementById('maint-overlay-squirrel');
+  if (overlay) {
+    overlay.remove();
+    tabEl.querySelectorAll('[data-maint-hidden]').forEach(el => {
+      el.style.display = '';
+      el.removeAttribute('data-maint-hidden');
+    });
+  }
+
+  // 모든 탭 숨기고 squirrel만 표시
+  (window.U_TABS || ['shop','gacha','quest','recycle','minigame','squirrel','ranking','mypage'])
+    .forEach(t => document.getElementById('utab-'+t)?.classList.add('hidden'));
+  document.querySelectorAll('#userTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+  tabEl.classList.remove('hidden');
+  const sqBtn = document.querySelector('#userTabBar .tab-btn[onclick*="squirrel"]');
+  if (sqBtn) sqBtn.classList.add('active');
+
   sqInit();
 }
 
-function sqAdminClose() {
-  document.getElementById('sqAdminModal').classList.add('hidden');
-  document.body.style.overflow = '';
-}
+// sqAdminClose는 더 이상 필요 없지만 혹시 남아있는 참조 대비
+function sqAdminClose() {}
 
 // ================================================================
 //  서브탭 전환
@@ -38,9 +57,6 @@ async function sqInit() {
   await sqLoadSettings();
   await sqLoadSquirrels();
   await sqLoadActiveExpedition();
-  // 관리자 모달 도토리 표시
-  const badge = document.getElementById('sqModalAcorn');
-  if (badge) badge.textContent = '🌰 ' + (myProfile?.acorns ?? 0).toLocaleString();
 }
 
 // ================================================================
@@ -316,8 +332,6 @@ async function sqDoBuySquirrel(price) {
 function sqSyncAcornBadge() {
   const main = document.getElementById('acornBadge');
   if (main) main.textContent = myProfile.acorns.toLocaleString();
-  const modal = document.getElementById('sqModalAcorn');
-  if (modal) modal.textContent = '🌰 ' + myProfile.acorns.toLocaleString();
 }
 
 // ================================================================
