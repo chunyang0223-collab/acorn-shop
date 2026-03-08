@@ -159,7 +159,7 @@ async function _confirmRequestInner(productId) {
     if (couponPct > 0) finalPrice = Math.floor(finalPrice * (1 - couponPct/100));
 
     // 잔액 확인
-    if ((myProfile.acorns || 0) < finalPrice) { toast('❌', '도토리 부족!'); return; }
+    if (!canAfford(finalPrice)) { toast('❌', '도토리 부족!'); return; }
 
     const unlimited = p.stock === null || p.stock === undefined || p.stock < 0;
     if (!unlimited && p.stock <= 0) { toast('❌', '품절된 상품이에요!'); renderShop(true); return; }
@@ -184,9 +184,9 @@ async function _confirmRequestInner(productId) {
     const reasonSuffix = (evtDiscount > 0 || couponPct > 0)
       ? ` (할인: ${evtDiscount > 0 ? '이벤트 ' + evtDiscount + '%' : ''}${evtDiscount > 0 && couponPct > 0 ? ' + ' : ''}${couponPct > 0 ? '쿠폰 ' + couponPct + '%' : ''})`
       : '';
-    const res = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -finalPrice, p_reason: `상품 구매 — ${p.icon} ${p.name}${reasonSuffix}` });
-    if (!res.data?.success) { toast('❌', '처리 실패: ' + (res.data?.error || '')); return; }
-    myProfile.acorns = res.data.balance;
+    const res = await spendAcorns(finalPrice, `상품 구매 — ${p.icon} ${p.name}${reasonSuffix}`);
+    if (res.error) { toast('❌', '처리 실패: ' + (res.error.message || '')); return; }
+    if (!myProfile?.is_admin) myProfile.acorns = res.data?.balance ?? myProfile.acorns;
 
     if (!unlimited) {
       await sb.from('products').update({ stock: p.stock - 1 }).eq('id', productId);
