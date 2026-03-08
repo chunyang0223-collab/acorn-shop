@@ -300,15 +300,15 @@
 
 <script>
 // ── Supabase 설정 ──
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://fqtnxrkxyzjrmaiaunqe.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_MpZnq9JYoQLTXc9Uda_nmA_5OAybs0X';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── 상태 ──
-let myProfile = null;
-let mySquirrels = [];
-let currentTab = 'my';
-let sqSettings = {}; // 관리자 설정
+var myProfile = null;
+var mySquirrels = [];
+var currentTab = 'my';
+var sqSettings = {};
 
 // ── 초기화 ──
 async function init() {
