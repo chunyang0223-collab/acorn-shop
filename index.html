@@ -20,6 +20,10 @@
   0%   { transform: translate(0,0) scale(1); opacity: 1; }
   100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
 }
+@keyframes sqShimmer {
+  0%   { left: -60%; }
+  100% { left: 160%; }
+}
 </style>
 </head>
 <body>
@@ -230,8 +234,8 @@
             <span class="title-font text-base text-gray-700">🐿️ 보유 다람쥐</span>
             <span class="text-xs text-gray-400 font-bold" id="squirrelCount">0 / 10</span>
           </div>
-          <div id="squirrelGrid" class="grid grid-cols-2 gap-3">
-            <div class="col-span-2 flex justify-center py-8"><div class="spinner"></div></div>
+          <div id="squirrelGrid" class="flex flex-col">
+            <div class="flex justify-center py-8"><div class="spinner"></div></div>
           </div>
         </div>
       </div>
