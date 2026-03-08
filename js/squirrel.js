@@ -475,10 +475,20 @@ function _sqGrowCard(id, name, growType) {
   const r = cardEl.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
 
-  // 흔들림
+  // 흔들림 + 긴장감 사운드 (두근두근 → 서스펜스)
   cardEl.style.transition = 'none';
   cardEl.style.animation = 'sqCardShake 0.5s ease';
   _sqSpawnParticlesAt(cx, cy, true, 12);
+  // 두근두근 리듬
+  _playTone(220, 'sine', 0.12, 0.18);
+  setTimeout(() => _playTone(220, 'sine', 0.12, 0.18), 200);
+  setTimeout(() => _playTone(260, 'sine', 0.12, 0.18), 400);
+  setTimeout(() => _playTone(260, 'sine', 0.12, 0.18), 600);
+  // 서스펜스 상승
+  setTimeout(() => _playTone(310, 'triangle', 0.2, 0.15), 800);
+  setTimeout(() => _playTone(370, 'triangle', 0.2, 0.15), 1000);
+  setTimeout(() => _playTone(440, 'triangle', 0.25, 0.15), 1200);
+  setTimeout(() => _playTone(523, 'triangle', 0.3, 0.12), 1400);
 
   setTimeout(() => {
     cardEl.style.animation = '';
@@ -553,7 +563,7 @@ async function sqFeedSquirrel(id) {
   const applied = Math.round(amount * multi * 10) / 10;
   const isGood  = multi >= 1.0;
 
-  const newFed   = Math.round((sq.acorns_fed + applied) * 10) / 10;
+  const newFed   = Math.round(sq.acorns_fed + applied); // integer 컬럼 — 소수 불가
   const newSpent = (sq.acorns_spent || 0) + amount;
   const updates  = { acorns_fed: newFed, acorns_spent: newSpent };
 
@@ -820,8 +830,6 @@ async function sqLoadActiveExpedition() {
 }
 
 async function sqStartExpeditionFlow() {
-  // 탐험 시작 전 최신 상태 로드 (explorer 필터 정확도 보장)
-  await sqLoadSquirrels();
   const explorers = _sqSquirrels.filter(s => s.status === 'explorer');
 
   if (explorers.length === 0) {
