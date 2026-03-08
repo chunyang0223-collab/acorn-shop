@@ -118,15 +118,16 @@ function sqCardHTML(sq) {
   let progressHTML = '';
   if (sq.status === 'baby') {
     const pct = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
+    const isAdmin = myProfile?.is_admin;
     progressHTML = `
       <div class="mt-2">
         <div class="flex justify-between text-xs text-gray-400 mb-1">
-          <span>성장 게이지</span><span>${sq.acorns_fed}/${sq.acorns_required} 🌰</span>
+          <span>성장 게이지</span>${isAdmin ? `<span>${sq.acorns_fed}/${sq.acorns_required} 🌰</span>` : ''}
         </div>
         <div style="height:10px;border-radius:99px;background:#f3f4f6;overflow:hidden">
           <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#f59e0b,#f97316);width:${pct}%;transition:width .5s ease"></div>
         </div>
-        ${sq.needs_time && sq.grows_at ? '<div class="text-xs text-amber-600 mt-1 font-bold">⏳ 성장 대기 중...</div>' : ''}
+        ${isAdmin && sq.needs_time && sq.grows_at ? '<div class="text-xs text-amber-600 mt-1 font-bold">⏳ 성장 대기 중...</div>' : ''}
       </div>`;
   }
 
@@ -163,13 +164,13 @@ function sqOpenModal(id) {
     ${sq.status === 'baby' ? `
     <div class="clay-card p-3 mb-3" style="background:#fffbeb">
       <div class="flex justify-between text-xs text-gray-500 mb-1 font-bold">
-        <span>🌰 성장 게이지</span><span>${sq.acorns_fed} / ${sq.acorns_required}</span>
+        <span>🌰 성장 게이지</span>${myProfile?.is_admin ? `<span>${sq.acorns_fed} / ${sq.acorns_required}</span>` : ''}
       </div>
       <div style="height:10px;border-radius:99px;background:#f3f4f6;overflow:hidden">
         <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#f59e0b,#f97316);width:${pct}%"></div>
       </div>
-      ${sq.needs_time ? '<div class="text-xs text-amber-600 mt-2 font-bold text-center">⏳ 이 다람쥐는 도토리 외에 시간도 필요해요</div>' : ''}
-      ${sq.grows_at   ? '<div class="text-xs text-green-600 mt-1 font-bold text-center">🌱 성장 대기 중...</div>' : ''}
+      ${myProfile?.is_admin && sq.needs_time ? '<div class="text-xs text-amber-600 mt-2 font-bold text-center">⏳ 이 다람쥐는 도토리 외에 시간도 필요해요</div>' : ''}
+      ${sq.grows_at ? '<div class="text-xs text-green-600 mt-1 font-bold text-center">🌱 성장 대기 중...</div>' : ''}
     </div>
     ${!sq.grows_at ? `
     <div class="flex gap-2 mb-3">
