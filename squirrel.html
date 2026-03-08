@@ -312,12 +312,17 @@ let sqSettings = {}; // 관리자 설정
 
 // ── 초기화 ──
 async function init() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) { location.href = 'index.html'; return; }
+  const { data: { session } } = await sb.auth.getSession();
 
-  const { data: profile } = await sb.from('users').select('*').eq('id', user.id).single();
-  myProfile = profile;
-  document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
+  if (session) {
+    const { data: profile } = await sb.from('users').select('*').eq('id', session.user.id).single();
+    myProfile = profile;
+    document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
+  } else {
+    // 개발용 더미 (로그인 없이 UI 확인용)
+    myProfile = { id: 'test', acorns: 999, display_name: '테스트' };
+    document.getElementById('acornBalance').textContent = `🌰 999`;
+  }
 
   await loadSettings();
   await loadSquirrels();
@@ -339,13 +344,13 @@ async function loadSettings() {
 }
 
 async function loadSquirrels() {
+  if (myProfile.id === 'test') { mySquirrels = []; renderSquirrelGrid(); return; }
   const { data } = await sb.from('squirrels')
     .select('*')
     .eq('user_id', myProfile.id)
     .order('created_at');
   mySquirrels = data || [];
   renderSquirrelGrid();
-  // 성장 타이머 체크
   checkGrowthTimers();
 }
 
@@ -450,16 +455,33 @@ async function growSquirrel(sq) {
 
 // ── 다람쥐 구매 ──
 async function buySquirrel(from) {
+  if (myProfile.id === 'test') {
+    showAlert('🔒', '로그인이 필요해요', '실제 구매는 로그인 후 이용할 수 있어요.');
+    return;
+  }
   if (mySquirrels.length >= 10) {
     showAlert('😅', '다람쥐를 더 이상 키울 수 없어요', '보유 한도(10마리)에 도달했습니다.\n재활용센터에서 다람쥐를 판매해보세요.');
     return;
   }
+
+  if (from === 'gacha') {
+    showAlert('🎰', '뽑기로 획득', '도토리 상점 메인에서 뽑기를 이용해주세요!\n뽑기 결과로 다람쥐를 받을 수 있어요.');
+    return;
+  }
+
   const price = sqSettings.shop_price || 30;
-  if (from === 'shop' && myProfile.acorns < price) {
+  if (myProfile.acorns < price) {
     showAlert('🌰', '도토리가 부족해요', `${price} 도토리가 필요합니다.`);
     return;
   }
 
+  // 구매 확인
+  showConfirm('🐿️', `아기 다람쥐를 <strong>${price} 🌰</strong>에 분양받을까요?`, async () => {
+    await _doBySquirrel(price);
+  });
+}
+
+async function _doBySquirrel(price) {
   // 랜덤 성장 조건 결정
   const acornsNeeded = Math.floor(
     Math.random() * ((sqSettings.acorn_max || 50) - (sqSettings.acorn_min || 20) + 1)
@@ -470,17 +492,12 @@ async function buySquirrel(from) {
   const baseDef = 4 + Math.floor(Math.random() * 8);
 
   try {
-    if (from === 'shop') {
-      // 도토리 차감
-      const { error: e1 } = await sb.rpc('adjust_acorns', {
-        p_user_id: myProfile.id,
-        p_amount: -price,
-        p_reason: '다람쥐 구매'
-      });
-      if (e1) throw e1;
-      myProfile.acorns -= price;
-      document.getElementById('acornBalance').textContent = `🌰 ${myProfile.acorns.toLocaleString()}`;
-    }
+    const { error: e1 } = await sb.rpc('adjust_acorns', {
+      p_user_id: myProfile.id,
+      p_amount: -price,
+      p_reason: '다람쥐 구매'
+    });
+    if (e1) throw e1;
 
     const { error: e2 } = await sb.from('squirrels').insert({
       user_id: myProfile.id,
@@ -491,14 +508,17 @@ async function buySquirrel(from) {
       needs_time: needsTime,
       stats: { hp: baseHp, atk: baseAtk, def: baseDef },
       hp_current: baseHp,
-      acquired_from: from
+      acquired_from: 'shop'
     });
     if (e2) throw e2;
 
+    myProfile.acorns -= price;
+    document.getElementById('acornBalance').textContent = `🌰 ${myProfile.acorns.toLocaleString()}`;
     toast('🎉', '새 다람쥐를 분양받았어요!');
     await loadSquirrels();
     switchTab('my');
   } catch(e) {
+    console.error(e);
     toast('❌', '오류가 발생했어요');
   }
 }
@@ -644,6 +664,7 @@ async function sellSquirrel(id) {
 
 // ── 탐험 ──
 async function loadActiveExpedition() {
+  if (myProfile.id === 'test') { document.getElementById('activeExpeditionArea').innerHTML = ''; return; }
   const { data } = await sb.from('expeditions')
     .select('*')
     .eq('user_id', myProfile.id)
