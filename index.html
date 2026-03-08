@@ -108,6 +108,7 @@
       <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0">📋 퀘스트</button>
       <button class="tab-btn" onclick="uTab('recycle',this)" style="flex-shrink:0">♻️ 재활용</button>
       <button class="tab-btn" onclick="uTab('minigame',this)" style="flex-shrink:0">🎮 미니게임</button>
+      <button class="tab-btn" onclick="uTab('squirrel',this)" style="flex-shrink:0">🐿️ 다람쥐</button>
       <button class="tab-btn" onclick="uTab('ranking',this)" style="flex-shrink:0">🏆 랭킹</button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0">👤 마이</button>
     </div></div>
@@ -208,7 +209,58 @@
       <div id="minigame-play" class="hidden"></div>
     </div>
 
+    <!-- 🐿️ 다람쥐 탭 -->
+    <div id="utab-squirrel" class="hidden">
+      <!-- 서브탭 -->
+      <div class="clay-card p-2 flex gap-1 mb-4">
+        <button class="tab-btn active flex-1" onclick="sqTab('my')"         id="sqtab-my">🏠 내 다람쥐</button>
+        <button class="tab-btn flex-1"        onclick="sqTab('shop')"       id="sqtab-shop">🛒 상점</button>
+        <button class="tab-btn flex-1"        onclick="sqTab('expedition')" id="sqtab-expedition">⚔️ 탐험</button>
+      </div>
+
+      <!-- 내 다람쥐 -->
+      <div id="sqcontent-my">
+        <div class="clay-card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="title-font text-base text-gray-700">🐿️ 보유 다람쥐</span>
+            <span class="text-xs text-gray-400 font-bold" id="squirrelCount">0 / 10</span>
+          </div>
+          <div id="squirrelGrid" class="grid grid-cols-2 gap-3">
+            <div class="col-span-2 flex justify-center py-8"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 상점 -->
+      <div id="sqcontent-shop" class="hidden">
+        <div class="clay-card p-4">
+          <div class="title-font text-base text-gray-700 mb-3">🛒 다람쥐 분양</div>
+          <div class="clay-card p-5 text-center" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)">
+            <img src="images/baby-squirrel.png" style="width:110px;height:110px;object-fit:contain;animation:idle-bounce 2s ease-in-out infinite" class="mx-auto mb-2">
+            <div class="title-font text-lg text-amber-800 mb-1">아기 다람쥐 분양</div>
+            <div class="text-xs text-gray-500 mb-3">도토리를 먹여서 키워보세요!</div>
+            <div class="flex gap-2 justify-center">
+              <button class="btn btn-primary" onclick="sqBuySquirrel('shop')">🌰 30 도토리로 구매</button>
+              <button class="btn btn-purple"  onclick="sqBuySquirrel('gacha')">🎰 뽑기로 획득</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 탐험 -->
+      <div id="sqcontent-expedition" class="hidden">
+        <div class="clay-card p-5 text-center mb-4">
+          <div style="font-size:48px" class="mb-2">🗺️</div>
+          <div class="title-font text-lg text-gray-700 mb-1">탐험 준비</div>
+          <div class="text-sm text-gray-400 mb-4">탐험형 다람쥐를 보유해야 출발할 수 있어요</div>
+          <button class="btn btn-primary" onclick="sqStartExpeditionFlow()">탐험 출발 →</button>
+        </div>
+        <div id="sqActiveExpeditionArea"></div>
+      </div>
+    </div>
+
     <!-- 🏆 랭킹 탭 (사용자) -->
+
     <div id="utab-ranking" class="hidden">
       <div class="clay-card p-5 mb-4">
         <div class="flex items-center justify-between mb-4">
@@ -330,6 +382,7 @@
         <div class="adm-grid-item" onclick="aTabGrid('recycle')"><span class="adm-grid-icon">♻️</span><span class="adm-grid-label">재활용</span></div>
         <div class="adm-grid-item" onclick="aTabGrid('events')"><span class="adm-grid-icon">🎉</span><span class="adm-grid-label">이벤트</span></div>
         <div class="adm-grid-item" onclick="aTabGrid('minigameSettings')"><span class="adm-grid-icon">🎮</span><span class="adm-grid-label">미니게임</span></div>
+        <div class="adm-grid-item" onclick="aTabGrid('squirrelSettings')"><span class="adm-grid-icon">🐿️</span><span class="adm-grid-label">다람쥐</span></div>
         <div class="adm-grid-item" onclick="aTabGrid('ranking')"><span class="adm-grid-icon">🏆</span><span class="adm-grid-label">랭킹</span></div>
         <div class="adm-grid-item" onclick="aTabGrid('txlog')"><span class="adm-grid-icon">🗂️</span><span class="adm-grid-label">로그</span></div>
         <div class="adm-grid-item" onclick="aTabGrid('users')"><span class="adm-grid-icon">👥</span><span class="adm-grid-label">회원관리</span></div>
@@ -344,6 +397,7 @@
         <div class="adm-maint-chip" onclick="toggleMaintenance('quest')"><span class="maint-dot" id="maint-dot-quest"></span> 📋 퀘스트</div>
         <div class="adm-maint-chip" onclick="toggleMaintenance('recycle')"><span class="maint-dot" id="maint-dot-recycle"></span> ♻️ 재활용</div>
         <div class="adm-maint-chip" onclick="toggleMaintenance('minigame')"><span class="maint-dot" id="maint-dot-minigame"></span> 🎮 미니게임</div>
+        <div class="adm-maint-chip" onclick="toggleMaintenance('squirrel')"><span class="maint-dot" id="maint-dot-squirrel"></span> 🐿️ 다람쥐</div>
         <div class="adm-maint-chip" onclick="toggleMaintenance('mypage')"><span class="maint-dot" id="maint-dot-mypage"></span> 👤 마이</div>
       </div>
 
@@ -383,6 +437,7 @@
             <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">📋 퀘스트</span><button id="maint-quest" onclick="toggleMaintenance('quest')" class="maint-btn"></button></div>
             <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">♻️ 재활용</span><button id="maint-recycle" onclick="toggleMaintenance('recycle')" class="maint-btn"></button></div>
             <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎮 미니게임</span><button id="maint-minigame" onclick="toggleMaintenance('minigame')" class="maint-btn"></button></div>
+            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐿️ 다람쥐</span><button id="maint-squirrel" onclick="toggleMaintenance('squirrel')" class="maint-btn"></button></div>
             <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">👤 마이</span><button id="maint-mypage" onclick="toggleMaintenance('mypage')" class="maint-btn"></button></div>
           </div>
         </div>
@@ -821,6 +876,49 @@
       </div>
     </div>
 
+    <!-- 🐿️ 다람쥐 설정 관리 -->
+    <div id="atab-squirrelSettings" class="hidden">
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-lg font-black text-gray-800 mb-1">🐿️ 다람쥐 설정</h2>
+        <p class="text-xs text-gray-400 font-semibold mb-4">다람쥐 성장 조건 및 탐험 설정을 관리합니다</p>
+        <div class="space-y-3" id="sqSettingsForm">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🛒 상점 구매 가격 (도토리)</label>
+            <input type="number" id="sqSet_shopPrice" class="field" value="30" min="1">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">🌰 성장 도토리 최소</label>
+              <input type="number" id="sqSet_acornMin" class="field" value="20" min="1">
+            </div>
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">🌰 성장 도토리 최대</label>
+              <input type="number" id="sqSet_acornMax" class="field" value="50" min="1">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">⏳ 시간 필요 다람쥐 확률 (%)</label>
+            <input type="number" id="sqSet_timeChance" class="field" value="40" min="0" max="100">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">⏰ 성장 대기 시간 최소 (시간)</label>
+              <input type="number" id="sqSet_timeMin" class="field" value="1" min="1">
+            </div>
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">⏰ 성장 대기 시간 최대 (시간)</label>
+              <input type="number" id="sqSet_timeMax" class="field" value="8" min="1">
+            </div>
+          </div>
+          <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 설정 저장</button>
+        </div>
+      </div>
+      <div class="clay-card p-5">
+        <h2 class="text-base font-black text-gray-800 mb-3">📋 보유 다람쥐 현황</h2>
+        <div id="sqAdminList" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
+      </div>
+    </div>
+
     <!-- 🏆 관리자 랭킹 탭 -->
     <div id="atab-ranking" class="hidden">
       <div class="clay-card p-5 mb-4">
@@ -895,6 +993,7 @@
 <script src="js/recycle.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/minigame.js"></script>
+<script src="js/squirrel.js"></script>
 <script src="js/app.js"></script>
 
 </body>
