@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐿️ 다람쥐 마을</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Nanum Gothic', sans-serif; }
+  .title-font { font-family: 'Jua', sans-serif; }
+
+  body {
+    background: linear-gradient(135deg, #fff8f0 0%, #fef3e2 40%, #fde8d8 100%);
+    min-height: 100vh;
+  }
+
+  /* ── 카드 ── */
+  .clay-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .clay-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+
+  /* ── 버튼 ── */
+  .btn {
+    border-radius: 14px;
+    font-weight: 800;
+    transition: all 0.15s;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: white;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.4);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 24px rgba(245,158,11,0.5); transform: translateY(-1px); }
+  .btn-green  { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; box-shadow: 0 4px 14px rgba(34,197,94,0.3); }
+  .btn-red    { background: linear-gradient(135deg, #f87171, #ef4444); color: white; box-shadow: 0 4px 14px rgba(239,68,68,0.3); }
+  .btn-purple { background: linear-gradient(135deg, #a78bfa, #8b5cf6); color: white; box-shadow: 0 4px 14px rgba(139,92,246,0.35); }
+  .btn-gray   { background: #f3f4f6; color: #6b7280; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 10px; }
+
+  /* ── 탭 ── */
+  .tab-btn {
+    border-radius: 14px;
+    padding: 10px 18px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    font-family: 'Jua', sans-serif;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: white;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+  }
+
+  /* ── 다람쥐 카드 ── */
+  .squirrel-card {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .squirrel-card:hover { border-color: #f59e0b; transform: translateY(-2px); }
+  .squirrel-card.selected { border-color: #f59e0b; background: #fffbeb; }
+
+  .squirrel-card.type-explorer { border-left: 4px solid #3b82f6; }
+  .squirrel-card.type-pet      { border-left: 4px solid #ec4899; }
+  .squirrel-card.type-baby     { border-left: 4px solid #a3a3a3; }
+
+  /* ── 성장 게이지 ── */
+  .progress-bar {
+    height: 10px;
+    border-radius: 99px;
+    background: #f3f4f6;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #f59e0b, #f97316);
+    transition: width 0.5s ease;
+  }
+
+  /* ── 스프라이트 애니메이션 ── */
+  .sprite-container {
+    width: 64px;
+    height: 64px;
+    overflow: hidden;
+    display: inline-block;
+    image-rendering: pixelated;
+  }
+  .sprite-img {
+    display: block;
+    animation: sprite-idle 0.6s steps(1) infinite;
+  }
+  /* 이미지 없을 때 이모지 폴백 */
+  .squirrel-emoji {
+    font-size: 48px;
+    display: block;
+    animation: idle-bounce 2s ease-in-out infinite;
+  }
+  @keyframes idle-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes idle-bounce-fast {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-6px) rotate(3deg); }
+  }
+
+  /* ── 모달 ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s;
+  }
+  .modal-box {
+    background: white; border-radius: 28px;
+    padding: 28px; width: 90%; max-width: 400px;
+    animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+  /* ── 뱃지 ── */
+  .badge { border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 800; }
+  .badge-explorer { background: #dbeafe; color: #1d4ed8; }
+  .badge-pet      { background: #fce7f3; color: #be185d; }
+  .badge-baby     { background: #f3f4f6; color: #6b7280; }
+  .badge-exploring  { background: #d1fae5; color: #065f46; }
+  .badge-recovering { background: #fef3c7; color: #92400e; }
+
+  /* ── 도토리 pill ── */
+  .acorn-pill {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid rgba(251,191,36,0.5);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-weight: 900;
+    font-family: 'Jua', sans-serif;
+    color: #92400e;
+    font-size: 15px;
+  }
+
+  /* ── 빈 슬롯 ── */
+  .empty-slot {
+    background: #fafafa;
+    border: 2px dashed #e5e7eb;
+    border-radius: 20px;
+    padding: 24px 16px;
+    text-align: center;
+    color: #d1d5db;
+    font-size: 13px;
+  }
+
+  /* ── 토스트 ── */
+  #toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #1f2937; color: white;
+    padding: 10px 22px; border-radius: 99px;
+    font-weight: 700; font-size: 13px;
+    opacity: 0; transition: opacity 0.3s;
+    z-index: 999; white-space: nowrap;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+
+  /* ── 로딩 ── */
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid #f3f4f6;
+    border-top-color: #f59e0b;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .field {
+    width: 100%; border: 2px solid #e5e7eb;
+    border-radius: 12px; padding: 10px 14px;
+    font-size: 14px; font-weight: 700;
+    background: rgba(255,255,255,0.7);
+    outline: none; transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+  .field:focus { border-color: #f59e0b; }
+</style>
+</head>
+<body>
+
+<!-- 토스트 -->
+<div id="toast"></div>
+
+<!-- 헤더 -->
+<div class="sticky top-0 z-50" style="background: rgba(255,248,240,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(245,158,11,0.15);">
+  <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <a href="index.html" class="text-gray-400 hover:text-gray-600 text-lg">←</a>
+      <span class="title-font text-xl text-amber-800">🐿️ 다람쥐 마을</span>
+    </div>
+    <div class="acorn-pill" id="acornBalance">🌰 —</div>
+  </div>
+</div>
+
+<!-- 탭 -->
+<div class="max-w-lg mx-auto px-4 pt-4">
+  <div class="clay-card p-2 flex gap-1">
+    <button class="tab-btn active flex-1" onclick="switchTab('my')"    id="tab-my">🏠 내 다람쥐</button>
+    <button class="tab-btn flex-1"        onclick="switchTab('shop')"  id="tab-shop">🛒 상점</button>
+    <button class="tab-btn flex-1"        onclick="switchTab('expedition')" id="tab-expedition">⚔️ 탐험</button>
+  </div>
+</div>
+
+<!-- ───────────────── 내 다람쥐 탭 ───────────────── -->
+<div id="tab-content-my" class="max-w-lg mx-auto px-4 py-4 space-y-4">
+
+  <div class="clay-card p-4">
+    <div class="flex items-center justify-between mb-3">
+      <span class="title-font text-base text-gray-700">🐿️ 보유 다람쥐</span>
+      <span class="text-xs text-gray-400 font-bold" id="squirrelCount">0 / 10</span>
+    </div>
+    <div id="squirrelGrid" class="grid grid-cols-2 gap-3">
+      <!-- 로딩 -->
+      <div class="col-span-2 flex justify-center py-8">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ───────────────── 상점 탭 ───────────────── -->
+<div id="tab-content-shop" class="max-w-lg mx-auto px-4 py-4 space-y-4 hidden">
+
+  <div class="clay-card p-4">
+    <div class="title-font text-base text-gray-700 mb-3">🛒 다람쥐 분양</div>
+    <div class="clay-card p-5 text-center" style="background: linear-gradient(135deg,#fffbeb,#fef3c7);">
+      <div style="font-size: 56px; animation: idle-bounce 2s ease-in-out infinite;" class="mb-2">🥚</div>
+      <div class="title-font text-lg text-amber-800 mb-1">미지의 다람쥐 알</div>
+      <div class="text-xs text-gray-500 mb-3">어떤 다람쥐가 나올지 모릅니다!</div>
+      <div class="flex gap-2 justify-center">
+        <button class="btn btn-primary" onclick="buySquirrel('shop')">🌰 30 도토리로 구매</button>
+        <button class="btn btn-purple"  onclick="buySquirrel('gacha')">🎰 뽑기로 획득</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ───────────────── 탐험 탭 ───────────────── -->
+<div id="tab-content-expedition" class="max-w-lg mx-auto px-4 py-4 space-y-4 hidden">
+
+  <div class="clay-card p-5 text-center">
+    <div style="font-size:48px" class="mb-2">🗺️</div>
+    <div class="title-font text-lg text-gray-700 mb-1">탐험 준비</div>
+    <div class="text-sm text-gray-400 mb-4">탐험형 다람쥐를 보유해야 출발할 수 있어요</div>
+    <button class="btn btn-primary" onclick="startExpeditionFlow()">탐험 출발 →</button>
+  </div>
+
+  <!-- 진행 중 탐험 -->
+  <div id="activeExpeditionArea"></div>
+
+</div>
+
+<!-- ───────────────── 다람쥐 상세 모달 ───────────────── -->
+<div id="squirrelModal" class="modal-overlay hidden" onclick="closeSquirrelModal(event)">
+  <div class="modal-box" id="squirrelModalBox"></div>
+</div>
+
+<!-- ───────────────── 탐험 출발 모달 ───────────────── -->
+<div id="expeditionModal" class="modal-overlay hidden" onclick="closeExpModal(event)">
+  <div class="modal-box" id="expeditionModalBox"></div>
+</div>
+
+<script>
+// ── Supabase 설정 ──
+const SUPABASE_URL = 'https://fqtnxrkxyzjrmaiaunqe.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_MpZnq9JYoQLTXc9Uda_nmA_5OAybs0X';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── 상태 ──
+let myProfile = null;
+let mySquirrels = [];
+let currentTab = 'my';
+let sqSettings = {}; // 관리자 설정
+
+// ── 초기화 ──
+async function init() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { location.href = 'index.html'; return; }
+
+  const { data: profile } = await sb.from('users').select('*').eq('id', user.id).single();
+  myProfile = profile;
+  document.getElementById('acornBalance').textContent = `🌰 ${profile.acorns.toLocaleString()}`;
+
+  await loadSettings();
+  await loadSquirrels();
+  await loadActiveExpedition();
+}
+
+async function loadSettings() {
+  try {
+    const { data } = await sb.from('app_settings').select('value').eq('key', 'squirrel_settings').maybeSingle();
+    sqSettings = data?.value || {
+      shop_price: 30,
+      acorn_min: 20,
+      acorn_max: 50,
+      time_min_hours: 1,
+      time_max_hours: 8,
+      time_chance: 40, // 시간 필요 확률 %
+    };
+  } catch(e) {}
+}
+
+async function loadSquirrels() {
+  const { data } = await sb.from('squirrels')
+    .select('*')
+    .eq('user_id', myProfile.id)
+    .order('created_at');
+  mySquirrels = data || [];
+  renderSquirrelGrid();
+  // 성장 타이머 체크
+  checkGrowthTimers();
+}
+
+function renderSquirrelGrid() {
+  const grid = document.getElementById('squirrelGrid');
+  document.getElementById('squirrelCount').textContent = `${mySquirrels.length} / 10`;
+
+  if (mySquirrels.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-2 text-center py-8">
+        <div style="font-size:48px">🥚</div>
+        <div class="text-sm text-gray-400 font-bold mt-2">아직 다람쥐가 없어요</div>
+        <div class="text-xs text-gray-300 mt-1">상점에서 분양받아보세요!</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = mySquirrels.map(sq => squirrelCardHTML(sq)).join('');
+
+  // 빈 슬롯
+  const empty = 10 - mySquirrels.length;
+  for (let i = 0; i < Math.min(empty, 2); i++) {
+    grid.innerHTML += `<div class="empty-slot"><div style="font-size:24px">＋</div><div class="mt-1">빈 슬롯</div></div>`;
+  }
+}
+
+function squirrelCardHTML(sq) {
+  const typeLabel = { baby:'미성장', explorer:'탐험형', pet:'애완형' };
+  const typeBadge = { baby:'badge-baby', explorer:'badge-explorer', pet:'badge-pet' };
+  const statusBadge = { exploring:'badge-exploring', recovering:'badge-recovering' };
+  const emoji = squirrelEmoji(sq);
+
+  let progressHTML = '';
+  if (sq.status === 'baby') {
+    const pct = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
+    progressHTML = `
+      <div class="mt-2">
+        <div class="flex justify-between text-xs text-gray-400 mb-1">
+          <span>성장 게이지</span>
+          <span>${sq.acorns_fed}/${sq.acorns_required} 🌰</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        ${sq.needs_time && sq.grows_at ? `<div class="text-xs text-amber-600 mt-1 font-bold">⏳ 성장 대기 중...</div>` : ''}
+      </div>`;
+  }
+
+  let statusExtra = '';
+  if (sq.status === 'recovering' && sq.recovering_until) {
+    statusExtra = `<div class="text-xs text-amber-600 font-bold mt-1">💊 회복 중</div>`;
+  }
+
+  return `
+    <div class="squirrel-card type-${sq.status === 'explorer' || sq.status === 'exploring' ? 'explorer' : sq.status === 'pet' ? 'pet' : 'baby'}"
+         onclick="openSquirrelModal('${sq.id}')">
+      <div class="flex items-start gap-2">
+        <div style="font-size:36px; line-height:1; animation: idle-bounce 2s ease-in-out infinite ${Math.random()*2}s;">${emoji}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-gray-800 text-sm truncate">${sq.name}</div>
+          <div class="flex gap-1 flex-wrap mt-0.5">
+            <span class="badge ${typeBadge[sq.status] || 'badge-baby'}">${typeLabel[sq.status] || sq.status}</span>
+            ${sq.status === 'exploring' ? `<span class="badge badge-exploring">탐험중</span>` : ''}
+            ${sq.status === 'recovering' ? `<span class="badge badge-recovering">회복중</span>` : ''}
+          </div>
+          ${statusExtra}
+        </div>
+      </div>
+      ${progressHTML}
+    </div>`;
+}
+
+function squirrelEmoji(sq) {
+  if (sq.status === 'baby') return '🐣';
+  if (sq.status === 'pet') return '🐿️';
+  if (sq.status === 'explorer' || sq.status === 'exploring') return '🦔';
+  if (sq.status === 'recovering') return '😴';
+  return '🐿️';
+}
+
+// ── 성장 타이머 체크 ──
+async function checkGrowthTimers() {
+  const now = new Date();
+  for (const sq of mySquirrels) {
+    if (sq.status === 'baby' && sq.needs_time && sq.grows_at) {
+      if (new Date(sq.grows_at) <= now) {
+        // 성장 완료 처리
+        await growSquirrel(sq);
+      }
+    }
+  }
+}
+
+async function growSquirrel(sq) {
+  const newType = Math.random() < 0.5 ? 'explorer' : 'pet';
+  const { error } = await sb.from('squirrels')
+    .update({ status: newType, grows_at: null, needs_time: false })
+    .eq('id', sq.id);
+  if (!error) {
+    toast('🎉', `${sq.name}이(가) ${newType === 'explorer' ? '탐험형' : '애완형'}으로 성장했어요!`);
+    await loadSquirrels();
+  }
+}
+
+// ── 다람쥐 구매 ──
+async function buySquirrel(from) {
+  if (mySquirrels.length >= 10) {
+    showAlert('😅', '다람쥐를 더 이상 키울 수 없어요', '보유 한도(10마리)에 도달했습니다.\n재활용센터에서 다람쥐를 판매해보세요.');
+    return;
+  }
+  const price = sqSettings.shop_price || 30;
+  if (from === 'shop' && myProfile.acorns < price) {
+    showAlert('🌰', '도토리가 부족해요', `${price} 도토리가 필요합니다.`);
+    return;
+  }
+
+  // 랜덤 성장 조건 결정
+  const acornsNeeded = Math.floor(
+    Math.random() * ((sqSettings.acorn_max || 50) - (sqSettings.acorn_min || 20) + 1)
+  ) + (sqSettings.acorn_min || 20);
+  const needsTime = Math.random() * 100 < (sqSettings.time_chance || 40);
+  const baseHp = 80 + Math.floor(Math.random() * 40);
+  const baseAtk = 8 + Math.floor(Math.random() * 10);
+  const baseDef = 4 + Math.floor(Math.random() * 8);
+
+  try {
+    if (from === 'shop') {
+      // 도토리 차감
+      const { error: e1 } = await sb.rpc('adjust_acorns', {
+        p_user_id: myProfile.id,
+        p_amount: -price,
+        p_reason: '다람쥐 구매'
+      });
+      if (e1) throw e1;
+      myProfile.acorns -= price;
+      document.getElementById('acornBalance').textContent = `🌰 ${myProfile.acorns.toLocaleString()}`;
+    }
+
+    const { error: e2 } = await sb.from('squirrels').insert({
+      user_id: myProfile.id,
+      name: randomSquirrelName(),
+      status: 'baby',
+      acorns_fed: 0,
+      acorns_required: acornsNeeded,
+      needs_time: needsTime,
+      stats: { hp: baseHp, atk: baseAtk, def: baseDef },
+      hp_current: baseHp,
+      acquired_from: from
+    });
+    if (e2) throw e2;
+
+    toast('🎉', '새 다람쥐를 분양받았어요!');
+    await loadSquirrels();
+    switchTab('my');
+  } catch(e) {
+    toast('❌', '오류가 발생했어요');
+  }
+}
+
+function randomSquirrelName() {
+  const names = ['꼬미','솔방울','도토','밤톨','잣순이','너구리','솜이','깜찍이','하루','봄봄','단풍이','찰떡','밀키','코코'];
+  return names[Math.floor(Math.random() * names.length)];
+}
+
+// ── 다람쥐 상세 모달 ──
+function openSquirrelModal(id) {
+  const sq = mySquirrels.find(s => s.id === id);
+  if (!sq) return;
+  const box = document.getElementById('squirrelModalBox');
+  const emoji = squirrelEmoji(sq);
+  const typeLabel = { baby:'미성장 🥚', explorer:'탐험형 🗺️', pet:'애완형 🏡' };
+  const pct = sq.status === 'baby' ? Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100)) : 100;
+
+  box.innerHTML = `
+    <div class="text-center mb-4">
+      <div style="font-size:64px; animation: idle-bounce 1.5s ease-in-out infinite;">${emoji}</div>
+      <div class="title-font text-xl text-gray-800 mt-1">${sq.name}</div>
+      <div class="text-sm text-gray-400">${typeLabel[sq.status] || sq.status}</div>
+    </div>
+
+    ${sq.status === 'baby' ? `
+    <div class="clay-card p-3 mb-3" style="background:#fffbeb">
+      <div class="flex justify-between text-xs text-gray-500 mb-1 font-bold">
+        <span>🌰 성장 게이지</span>
+        <span>${sq.acorns_fed} / ${sq.acorns_required}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      ${sq.needs_time ? `<div class="text-xs text-amber-600 mt-2 font-bold text-center">⏳ 이 다람쥐는 도토리 외에 시간도 필요해요</div>` : ''}
+    </div>
+    <div class="flex gap-2 mb-3">
+      <input type="number" id="feedAmount" class="field" placeholder="먹일 도토리 수" min="1" style="flex:1">
+      <button class="btn btn-primary" onclick="feedSquirrel('${sq.id}')">🌰 먹이기</button>
+    </div>` : ''}
+
+    ${sq.status !== 'baby' ? `
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div class="clay-card p-2 text-center">
+        <div class="text-xs text-gray-400 font-bold">❤️ HP</div>
+        <div class="title-font text-lg text-red-500">${sq.hp_current}<span class="text-xs text-gray-300">/${sq.stats?.hp || 100}</span></div>
+      </div>
+      <div class="clay-card p-2 text-center">
+        <div class="text-xs text-gray-400 font-bold">⚔️ 공격</div>
+        <div class="title-font text-lg text-orange-500">${sq.stats?.atk || 10}</div>
+      </div>
+      <div class="clay-card p-2 text-center">
+        <div class="text-xs text-gray-400 font-bold">🛡️ 방어</div>
+        <div class="title-font text-lg text-blue-500">${sq.stats?.def || 5}</div>
+      </div>
+    </div>` : ''}
+
+    <div class="flex gap-2">
+      ${sq.status === 'pet' || sq.status === 'explorer' ? `
+      <button class="btn btn-red btn-sm flex-1" onclick="sellSquirrel('${sq.id}')">🏪 펫샵에 팔기</button>` : ''}
+      <button class="btn btn-gray btn-sm flex-1" onclick="closeModal()">닫기</button>
+    </div>`;
+
+  document.getElementById('squirrelModal').classList.remove('hidden');
+}
+
+function closeSquirrelModal(e) {
+  if (e.target === document.getElementById('squirrelModal')) closeModal();
+}
+function closeModal() {
+  document.getElementById('squirrelModal').classList.add('hidden');
+}
+
+// ── 도토리 먹이기 ──
+async function feedSquirrel(id) {
+  const sq = mySquirrels.find(s => s.id === id);
+  const amount = parseInt(document.getElementById('feedAmount').value);
+  if (!amount || amount < 1) { toast('⚠️', '먹일 양을 입력해주세요'); return; }
+  if (myProfile.acorns < amount) { toast('🌰', '도토리가 부족해요'); return; }
+
+  try {
+    const newFed = sq.acorns_fed + amount;
+    const updates = { acorns_fed: newFed };
+
+    // 도토리 조건 충족 체크
+    if (newFed >= sq.acorns_required) {
+      if (sq.needs_time) {
+        // 시간 필요 → grows_at 설정
+        const hours = Math.floor(
+          Math.random() * ((sqSettings.time_max_hours||8) - (sqSettings.time_min_hours||1) + 1)
+        ) + (sqSettings.time_min_hours||1);
+        const growsAt = new Date(Date.now() + hours * 3600 * 1000);
+        updates.grows_at = growsAt.toISOString();
+        toast('⏳', `도토리를 다 먹었어요! ${hours}시간 후 성장합니다`);
+      } else {
+        // 즉시 성장
+        const newType = Math.random() < 0.5 ? 'explorer' : 'pet';
+        updates.status = newType;
+        toast('🎉', `${sq.name}이(가) ${newType === 'explorer' ? '탐험형 🗺️' : '애완형 🏡'}으로 성장했어요!`);
+      }
+    } else {
+      toast('🌰', `${sq.name}에게 도토리 ${amount}개를 줬어요!`);
+    }
+
+    // 도토리 차감 + 다람쥐 업데이트
+    await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -amount, p_reason: '다람쥐 먹이기' });
+    await sb.from('squirrels').update(updates).eq('id', id);
+
+    myProfile.acorns -= amount;
+    document.getElementById('acornBalance').textContent = `🌰 ${myProfile.acorns.toLocaleString()}`;
+    closeModal();
+    await loadSquirrels();
+  } catch(e) {
+    toast('❌', '오류가 발생했어요');
+  }
+}
+
+// ── 펫샵 판매 ──
+async function sellSquirrel(id) {
+  const sq = mySquirrels.find(s => s.id === id);
+  // 가격 공식: 기본 20 + 스탯 합계 * 0.5 + 랜덤 ±10
+  const statSum = (sq.stats?.hp || 100) + (sq.stats?.atk || 10) * 3 + (sq.stats?.def || 5) * 2;
+  const base = 20 + Math.floor(statSum * 0.3);
+  const price = base + Math.floor(Math.random() * 20) - 10;
+  const finalPrice = Math.max(10, price);
+
+  const typeDesc = sq.status === 'explorer'
+    ? '탐험을 즐기는 활발한 녀석이군요!'
+    : '온순하고 귀여운 애완 다람쥐네요!';
+
+  closeModal();
+  showConfirm(
+    '🏪 펫샵',
+    `잠깐 살펴볼게요...\n\n${typeDesc}\n\n이 다람쥐는 <strong>${finalPrice} 🌰</strong>에 사겠습니다.\n파시겠어요?`,
+    async () => {
+      await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: finalPrice, p_reason: '펫샵 판매' });
+      await sb.from('squirrels').delete().eq('id', id);
+      myProfile.acorns += finalPrice;
+      document.getElementById('acornBalance').textContent = `🌰 ${myProfile.acorns.toLocaleString()}`;
+      toast('🏪', `${finalPrice} 도토리를 받았어요!`);
+      await loadSquirrels();
+    }
+  );
+}
+
+// ── 탐험 ──
+async function loadActiveExpedition() {
+  const { data } = await sb.from('expeditions')
+    .select('*')
+    .eq('user_id', myProfile.id)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  const area = document.getElementById('activeExpeditionArea');
+  if (data) {
+    area.innerHTML = `
+      <div class="clay-card p-4">
+        <div class="title-font text-base text-gray-700 mb-2">⚔️ 진행 중인 탐험</div>
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">🗺️</div>
+          <div>
+            <div class="font-black text-gray-700">${data.current_step} / ${data.total_steps} 칸 진행</div>
+            <div class="text-xs text-gray-400">획득 보상: ${(data.loot || []).length}개</div>
+          </div>
+          <button class="btn btn-primary btn-sm ml-auto" onclick="continueExpedition('${data.id}')">계속하기 →</button>
+        </div>
+      </div>`;
+  } else {
+    area.innerHTML = '';
+  }
+}
+
+async function startExpeditionFlow() {
+  const explorers = mySquirrels.filter(s => s.status === 'explorer');
+  if (explorers.length === 0) {
+    showAlert('🗺️', '탐험형 다람쥐가 없어요', '미성장 다람쥐를 키워서 탐험형으로 성장시켜보세요!');
+    return;
+  }
+
+  // 진행 중 탐험 있는지 체크
+  const { data: active } = await sb.from('expeditions')
+    .select('id').eq('user_id', myProfile.id).eq('status', 'active').maybeSingle();
+  if (active) {
+    showAlert('⚔️', '이미 탐험 중이에요', '현재 진행 중인 탐험을 완료하거나 귀환 후 다시 출발하세요.');
+    return;
+  }
+
+  renderExpeditionSelectModal(explorers);
+}
+
+function renderExpeditionSelectModal(explorers) {
+  const box = document.getElementById('expeditionModalBox');
+  let selected = [];
+
+  box.innerHTML = `
+    <div class="text-center mb-4">
+      <div style="font-size:40px">🗺️</div>
+      <div class="title-font text-lg text-gray-800">탐험 다람쥐 선택</div>
+      <div class="text-xs text-gray-400 mt-1">최대 3마리를 선택해서 탐험을 떠나요</div>
+    </div>
+    <div class="space-y-2 mb-4" id="explorerList">
+      ${explorers.map(sq => `
+        <div class="squirrel-card" id="exp-sq-${sq.id}" onclick="toggleExpSelect('${sq.id}')">
+          <div class="flex items-center gap-3">
+            <div style="font-size:28px">🦔</div>
+            <div class="flex-1">
+              <div class="font-black text-gray-700">${sq.name}</div>
+              <div class="text-xs text-gray-400">❤️${sq.hp_current} ⚔️${sq.stats?.atk||10} 🛡️${sq.stats?.def||5}</div>
+            </div>
+            <div class="text-xl" id="exp-check-${sq.id}">⬜</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-primary flex-1" onclick="launchExpedition()">⚔️ 출발!</button>
+      <button class="btn btn-gray flex-1" onclick="closeExpModal()">취소</button>
+    </div>`;
+
+  window._expSelected = [];
+  document.getElementById('expeditionModal').classList.remove('hidden');
+
+  window.toggleExpSelect = function(id) {
+    const idx = window._expSelected.indexOf(id);
+    if (idx >= 0) {
+      window._expSelected.splice(idx, 1);
+      document.getElementById(`exp-sq-${id}`).classList.remove('selected');
+      document.getElementById(`exp-check-${id}`).textContent = '⬜';
+    } else {
+      if (window._expSelected.length >= 3) { toast('⚠️', '최대 3마리까지 선택할 수 있어요'); return; }
+      window._expSelected.push(id);
+      document.getElementById(`exp-sq-${id}`).classList.add('selected');
+      document.getElementById(`exp-check-${id}`).textContent = '✅';
+    }
+  };
+}
+
+function closeExpModal(e) {
+  if (!e || e.target === document.getElementById('expeditionModal')) {
+    document.getElementById('expeditionModal').classList.add('hidden');
+  }
+}
+
+async function launchExpedition() {
+  if (!window._expSelected || window._expSelected.length === 0) {
+    toast('⚠️', '다람쥐를 1마리 이상 선택해주세요'); return;
+  }
+  try {
+    await sb.from('expeditions').insert({
+      user_id: myProfile.id,
+      squirrel_ids: window._expSelected,
+      current_step: 0,
+      total_steps: 5,
+      status: 'active',
+      loot: []
+    });
+    closeExpModal();
+    toast('🗺️', '탐험을 시작했어요!');
+    await loadActiveExpedition();
+    switchTab('expedition');
+  } catch(e) {
+    toast('❌', '탐험 시작에 실패했어요');
+  }
+}
+
+async function continueExpedition(expId) {
+  // 추후 탐험 진행 화면 구현
+  toast('🚧', '탐험 진행 화면은 다음 업데이트에서 추가됩니다');
+}
+
+// ── 탭 전환 ──
+function switchTab(tab) {
+  ['my','shop','expedition'].forEach(t => {
+    document.getElementById(`tab-content-${t}`).classList.toggle('hidden', t !== tab);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+  });
+  currentTab = tab;
+}
+
+// ── 유틸 ──
+function toast(icon, msg) {
+  const el = document.getElementById('toast');
+  el.textContent = `${icon} ${msg}`;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function showAlert(icon, title, msg) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box text-center">
+      <div style="font-size:40px" class="mb-2">${icon}</div>
+      <div class="title-font text-lg text-gray-800 mb-1">${title}</div>
+      <div class="text-sm text-gray-500 mb-4">${msg}</div>
+      <button class="btn btn-primary w-full" onclick="this.closest('.modal-overlay').remove()">확인</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function showConfirm(icon, msg, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box text-center">
+      <div style="font-size:40px" class="mb-2">${icon}</div>
+      <div class="text-sm text-gray-600 mb-4 leading-relaxed">${msg}</div>
+      <div class="flex gap-2">
+        <button class="btn btn-primary flex-1" id="confirmYes">판매하기</button>
+        <button class="btn btn-gray flex-1" onclick="this.closest('.modal-overlay').remove()">취소</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); onConfirm(); };
+}
+
+init();
+</script>
+</body>
+</html>
