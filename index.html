@@ -24,6 +24,15 @@
   0%   { left: -60%; }
   100% { left: 160%; }
 }
+@keyframes sqCardShake {
+  0%,100% { transform: translateX(0) rotate(0deg); }
+  15%     { transform: translateX(-6px) rotate(-2deg); }
+  30%     { transform: translateX(6px) rotate(2deg); }
+  45%     { transform: translateX(-5px) rotate(-1deg); }
+  60%     { transform: translateX(5px) rotate(1deg); }
+  75%     { transform: translateX(-3px); }
+  90%     { transform: translateX(3px); }
+}
 </style>
 </head>
 <body>
