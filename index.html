@@ -230,6 +230,10 @@
 
     <!-- 🐿️ 다람쥐 탭 -->
     <div id="utab-squirrel" class="hidden">
+      <!-- 관리자 전용 뒤로가기 -->
+      <div id="sqAdminBackBar" class="hidden mb-3">
+        <button onclick="sqAdminBack()" class="btn btn-gray btn-sm">← 관리자 화면으로</button>
+      </div>
       <!-- 서브탭 -->
       <div class="clay-card p-2 flex gap-1 mb-4">
         <button class="tab-btn active flex-1" onclick="sqTab('my')"         id="sqtab-my">🏠 내 다람쥐</button>
