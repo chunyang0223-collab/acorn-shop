@@ -90,7 +90,30 @@ function toast(icon, msg, duration = 3000) {
 }
 
 // ──────────────────────────────────────────────
-//  PWA
+//  도토리 전역 유틸
+//  - canAfford  : 잔액 체크 (관리자는 항상 true)
+//  - spendAcorns: 차감 (관리자는 RPC·잔액 체크 모두 우회)
+//  앞으로 모든 도토리 차감은 spendAcorns 사용 → 관리자 자동 우회
+// ──────────────────────────────────────────────
+function canAfford(amount) {
+  if (typeof myProfile === 'undefined') return false;
+  if (myProfile?.is_admin) return true;
+  return (myProfile.acorns || 0) >= amount;
+}
+
+async function spendAcorns(amount, reason) {
+  if (myProfile?.is_admin) return { error: null };
+  const res = await sb.rpc('adjust_acorns', {
+    p_user_id: myProfile.id,
+    p_amount: -amount,
+    p_reason: reason
+  });
+  if (!res.error) {
+    myProfile.acorns = (myProfile.acorns || 0) - amount;
+    if (typeof syncAcornBadge === 'function') syncAcornBadge();
+  }
+  return res;
+}
 // ──────────────────────────────────────────────
 let _deferredInstall = null;
 if ('serviceWorker' in navigator) {
