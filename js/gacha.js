@@ -384,7 +384,7 @@ async function doGacha(count) {
     const baseCost = GACHA_COST * count;
     const cost = isFree ? 0 : gachaEvtDiscount > 0 ? Math.floor(baseCost * (1 - gachaEvtDiscount/100)) : baseCost;
 
-    if (!isFree && (myProfile.acorns||0) < cost) {
+    if (!isFree && !canAfford(cost)) {
       playSound('reject'); toast('❌', '도토리가 부족해요!', 1500); return;
     }
 
@@ -398,11 +398,11 @@ async function doGacha(count) {
       toast('❌', '뽑기 상품이 없어요! 관리자에게 문의하세요.'); return;
     }
 
-    // 도토리 차감 (무료면 0원)
+    // 도토리 차감 (무료 또는 관리자는 0원)
     if (cost > 0) {
-      const res = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -cost, p_reason: `뽑기 사용 (${count}회)${gachaEvtDiscount > 0 ? ' - 이벤트 ' + gachaEvtDiscount + '% 할인' : ''}` });
-      if (!res.data?.success) { toast('❌', '처리 실패'); return; }
-      myProfile.acorns = res.data.balance;
+      const res = await spendAcorns(cost, `뽑기 사용 (${count}회)${gachaEvtDiscount > 0 ? ' - 이벤트 ' + gachaEvtDiscount + '% 할인' : ''}`);
+      if (res.error) { toast('❌', '처리 실패'); return; }
+      if (!myProfile?.is_admin) myProfile.acorns = res.data?.balance ?? myProfile.acorns;
       updateAcornDisplay();
     }
 
