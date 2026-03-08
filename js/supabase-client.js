@@ -154,13 +154,19 @@ const supabase = (() => {
         async then(resolve, reject) {
           try {
             let finalUrl = _url;
-            if (!finalUrl.includes('?')) finalUrl += '?select=' + _select;
-            if (_filters.length) finalUrl += '&' + _filters.join('&');
+            // PATCH(update), DELETE는 select=* 불필요 — RLS 400 방지
+            const needsSelect = (_method !== 'PATCH' && _method !== 'DELETE');
+            if (needsSelect) {
+              if (!finalUrl.includes('?')) finalUrl += '?select=' + _select;
+            } else {
+              if (!finalUrl.includes('?')) finalUrl += '?';
+            }
+            if (_filters.length) finalUrl += (finalUrl.endsWith('?') ? '' : '&') + _filters.join('&');
             if (_order) finalUrl += '&order=' + _order;
 
             const h = { ...headers };
             if (_upsert) { h['Prefer'] = 'resolution=merge-duplicates,return=representation'; if (_upsertConflict) { const u = new URL(finalUrl); u.searchParams.set('on_conflict', _upsertConflict); finalUrl = u.toString(); } }
-            else if (_method === 'POST' || _method === 'PATCH') h['Prefer'] = 'return=representation';
+            else if (_method === 'POST') h['Prefer'] = 'return=representation';
             if (_countExact) h['Prefer'] = (h['Prefer'] ? h['Prefer'] + ',' : '') + 'count=exact';
             if (_single || _maybeSingle) h['Accept'] = 'application/vnd.pgrst.object+json';
 
