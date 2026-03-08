@@ -346,7 +346,7 @@ async function sqFeedSquirrel(id) {
   const cntEl = document.getElementById('sqFeedCnt-' + id);
   const amount = cntEl ? parseInt(cntEl.textContent) : 5;
   if (!amount || amount < 1) return;
-  if (myProfile.acorns < amount) { toast('🌰', '도토리가 부족해요'); return; }
+  if (!canAfford(amount)) { toast('🌰', '도토리가 부족해요'); return; }
 
   // 배율 적용
   const minM = _sqSettings.feed_multi_min || 0.5;
@@ -374,10 +374,8 @@ async function sqFeedSquirrel(id) {
   }
 
   try {
-    await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -amount, p_reason: '다람쥐 먹이기' });
+    await spendAcorns(amount, '다람쥐 먹이기');
     await sb.from('squirrels').update(updates).eq('id', id);
-    myProfile.acorns -= amount;
-    sqSyncAcornBadge();
 
     // ── 카드 게이지 업데이트 ──
     const newPct = Math.min(100, Math.round((newFed / sq.acorns_required) * 100));
@@ -483,7 +481,7 @@ async function sqBuySquirrel(from) {
   const price = _sqSettings.shop_price || 30;
   const isAdmin = myProfile?.is_admin;
 
-  if (!isAdmin && myProfile.acorns < price) {
+  if (!canAfford(price)) {
     showModal(`<div class="text-center"><div style="font-size:40px">🌰</div><div class="title-font text-lg text-gray-800 my-2">도토리 부족</div><div class="text-sm text-gray-500 mb-4">${price} 도토리가 필요해요.</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
     return;
   }
@@ -494,7 +492,7 @@ async function sqBuySquirrel(from) {
       <div class="title-font text-lg text-gray-800 mb-1">아기 다람쥐 분양</div>
       <div class="text-sm text-gray-500 mb-4">${isAdmin ? '관리자 테스트 모드 — 도토리 차감 없이 분양합니다' : `<strong>${price} 🌰</strong>에 분양받을까요?`}</div>
       <div class="flex gap-2">
-        <button class="btn btn-primary flex-1" onclick="sqDoBuySquirrel(${isAdmin ? 0 : price})">분양받기</button>
+        <button class="btn btn-primary flex-1" onclick="sqDoBuySquirrel(${price})">분양받기</button>
         <button class="btn btn-gray flex-1" onclick="closeModal()">취소</button>
       </div>
     </div>`);
@@ -509,13 +507,7 @@ async function sqDoBuySquirrel(price) {
   const baseDef = 4   + Math.floor(Math.random() * 8);
 
   try {
-    // 가격이 0이면 (관리자 테스트) 도토리 차감 RPC 생략
-    if (price > 0) {
-      const { error: e1 } = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -price, p_reason: '다람쥐 구매' });
-      if (e1) throw e1;
-      myProfile.acorns -= price;
-      sqSyncAcornBadge();
-    }
+    await spendAcorns(price, '다람쥐 구매');
 
     const { error: e2 } = await sb.from('squirrels').insert({
       user_id: myProfile.id,
