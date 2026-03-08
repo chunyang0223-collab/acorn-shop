@@ -190,6 +190,13 @@ function sqRenderGrid() {
   }
 
   grid.innerHTML = _sqSquirrels.map(sq => sqCardHTML(sq)).join('');
+
+  // grows_at 있는 카드는 타이머 자동 시작
+  _sqSquirrels.forEach(sq => {
+    if (sq.status === 'baby' && sq.grows_at) {
+      _sqRenderTimerCard(sq.id, sq);
+    }
+  });
 }
 
 function sqCardHTML(sq) {
@@ -226,7 +233,7 @@ function sqCardHTML(sq) {
           <div style="height:12px;border-radius:99px;background:#f3f4f6;overflow:hidden;margin-bottom:12px">
             <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
+          <div data-feed-row style="display:flex;align-items:center;gap:8px">
             <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
             <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
             <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
@@ -396,11 +403,16 @@ async function sqFeedSquirrel(id) {
     }
 
     if (grew) {
-      // 게이지 꽉 차는 거 보여준 뒤 성장 연출 (sqLoadSquirrels 호출 없음 - _sqGrowCard가 로컬 처리)
+      // 게이지 꽉 차는 거 보여준 뒤 성장 연출
       setTimeout(() => _sqGrowCard(id, sq.name, growType), 1200);
     } else if (updates.grows_at) {
-      toast('⏳', '도토리를 다 먹었어요! 잠시 후 성장합니다');
-      await sqLoadSquirrels();
+      // 로컬 업데이트 후 카드 인라인 타이머로 전환 (sqLoadSquirrels 불필요)
+      sq.acorns_fed = newFed;
+      sq.acorns_spent = newSpent;
+      sq.grows_at = updates.grows_at;
+      sq.needs_time = true;
+      _sqRenderTimerCard(id, sq);
+      toast('⏳', `${sq.name}이(가) 성장을 준비 중이에요! 타이머가 끝나면 성장해요`);
     } else {
       // 로컬 업데이트만 (DB 재로드 없이)
       sq.acorns_fed = newFed;
@@ -412,52 +424,128 @@ async function sqFeedSquirrel(id) {
   }
 }
 
-// B방식: 카드 페이드아웃 → 딜레이 → 새 카드 페이드인
+// 타이머 카드: grows_at까지 카운트다운 표시, 완료 시 자동 성장
+function _sqRenderTimerCard(id, sq) {
+  const cardEl = document.getElementById('sqCard-' + id);
+  if (!cardEl) return;
+
+  // 먹이기 행을 타이머 UI로 교체
+  const feedRow = cardEl.querySelector('[data-feed-row]');
+  const growsAt = new Date(sq.grows_at);
+
+  function fmt(ms) {
+    if (ms <= 0) return '00:00:00';
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sc = s % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+  }
+
+  // 게이지 100%로
+  const gauge = document.getElementById('sqGauge-' + id);
+  if (gauge) {
+    gauge.style.background = 'linear-gradient(90deg,#fbbf24,#f59e0b,#10b981)';
+    requestAnimationFrame(() => { gauge.style.width = '100%'; });
+  }
+
+  // 타이머 div 삽입 (먹이기 행 교체)
+  const timerId = 'sqTimer-' + id;
+  const timerHTML = `
+    <div id="${timerId}" style="margin-top:12px;background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
+      <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
+      <div id="${timerId}-count" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
+      <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 자동으로 성장해요</div>
+    </div>`;
+
+  // 기존 먹이기 UI 제거하고 타이머 삽입
+  const existing = document.getElementById(timerId);
+  if (existing) existing.remove();
+  if (feedRow) {
+    feedRow.outerHTML = timerHTML;
+  } else {
+    cardEl.insertAdjacentHTML('beforeend', timerHTML);
+  }
+
+  // 카운트다운 인터벌
+  const intervalId = setInterval(() => {
+    const remaining = growsAt - Date.now();
+    const el = document.getElementById(timerId + '-count');
+    if (el) el.textContent = fmt(remaining);
+
+    if (remaining <= 0) {
+      clearInterval(intervalId);
+      // 자동 성장
+      const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+      sb.from('squirrels').update({ status: growType, grows_at: null, needs_time: false }).eq('id', id).then(() => {
+        _sqGrowCard(id, sq.name, growType);
+      });
+    }
+  }, 1000);
+
+  // 인터벌 ID 저장 (혹시 탭 전환 시 정리용)
+  if (!window._sqTimers) window._sqTimers = {};
+  window._sqTimers[id] = intervalId;
+}
+
+// B방식: 카드 흔들림 → 페이드아웃 → 기대감 딜레이 → 새 카드 페이드인
 function _sqGrowCard(id, name, growType) {
   const cardEl = document.getElementById('sqCard-' + id);
   if (!cardEl) { sqLoadSquirrels(); return; }
 
   const r = cardEl.getBoundingClientRect();
-  _sqPlayGrowSound();
-  _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/2, true, 20);
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
 
-  // 페이드아웃
-  cardEl.style.transition = 'opacity 0.5s, transform 0.5s';
-  cardEl.style.opacity = '0';
-  cardEl.style.transform = 'scale(0.88)';
+  // 1단계: 흔들림
+  cardEl.style.transition = 'none';
+  cardEl.style.animation = 'sqCardShake 0.5s ease';
+  _sqSpawnParticlesAt(cx, cy, true, 12);
 
-  // 1.2초 기대감 딜레이 후 새 카드
-  setTimeout(async () => {
-    // DB에서 최신 데이터 로드
-    const { data } = await sb.from('squirrels').select('*').eq('id', id).limit(1);
-    const newSq = data?.[0];
-    if (!newSq) { sqLoadSquirrels(); return; }
+  setTimeout(() => {
+    // 2단계: 빛나며 페이드아웃
+    cardEl.style.animation = '';
+    cardEl.style.transition = 'opacity 0.4s, transform 0.4s, box-shadow 0.4s';
+    cardEl.style.boxShadow = '0 0 40px rgba(251,191,36,0.8), 0 0 80px rgba(251,191,36,0.4)';
+    cardEl.style.opacity = '0';
+    cardEl.style.transform = 'scale(0.85)';
 
-    // _sqSquirrels 로컬 업데이트
-    const idx = _sqSquirrels.findIndex(s => s.id === id);
-    if (idx >= 0) _sqSquirrels[idx] = newSq;
+    // 3단계: 1.5초 기대감 딜레이 후 새 카드 (DB 재조회 없이 로컬 처리)
+    setTimeout(() => {
+      _sqPlayGrowSound();
+      _sqSpawnParticlesAt(cx, cy, true, 20);
 
-    // 새 카드 HTML로 교체
-    const newHtml = sqCardHTML(newSq);
-    const tmp = document.createElement('div');
-    tmp.innerHTML = newHtml;
-    const newCard = tmp.firstElementChild;
-    newCard.style.opacity = '0';
-    newCard.style.transform = 'scale(0.88) translateY(10px)';
-    newCard.style.transition = 'opacity 0.5s, transform 0.5s';
-    cardEl.replaceWith(newCard);
+      // 로컬 _sqSquirrels 업데이트
+      const idx = _sqSquirrels.findIndex(s => s.id === id);
+      if (idx >= 0) {
+        _sqSquirrels[idx] = {
+          ..._sqSquirrels[idx],
+          status: growType,
+          acorns_fed: _sqSquirrels[idx].acorns_fed,
+        };
+      }
 
-    // 페이드인
-    requestAnimationFrame(() => {
+      // 새 카드 생성
+      const newSq = _sqSquirrels[idx];
+      const tmp = document.createElement('div');
+      tmp.innerHTML = sqCardHTML(newSq);
+      const newCard = tmp.firstElementChild;
+      newCard.style.opacity = '0';
+      newCard.style.transform = 'scale(0.88) translateY(12px)';
+      newCard.style.transition = 'opacity 0.5s, transform 0.5s';
+      cardEl.replaceWith(newCard);
+
       requestAnimationFrame(() => {
-        newCard.style.opacity = '1';
-        newCard.style.transform = 'scale(1) translateY(0)';
+        requestAnimationFrame(() => {
+          newCard.style.opacity = '1';
+          newCard.style.transform = 'scale(1) translateY(0)';
+        });
       });
-    });
 
-    toast('🎉', `${name}이(가) ${growType === 'explorer' ? '탐험형 🗺️' : '애완형 🏡'}으로 성장했어요!`);
-    _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/2, true, 15);
-  }, 1200);
+      toast('🎉', `${name}이(가) ${growType === 'explorer' ? '탐험형 🗺️' : '애완형 🏡'}으로 성장했어요!`);
+      setTimeout(() => _sqSpawnParticlesAt(cx, cy, true, 15), 300);
+    }, 1500);
+  }, 500);
 }
 
 // ================================================================
