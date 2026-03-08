@@ -33,6 +33,10 @@
   75%     { transform: translateX(-3px); }
   90%     { transform: translateX(3px); }
 }
+@keyframes idle-bounce {
+  0%,100% { transform: translateY(0px); }
+  50%     { transform: translateY(-6px); }
+}
 </style>
 </head>
 <body>
@@ -262,7 +266,6 @@
             <div class="text-xs text-gray-500 mb-3">도토리를 먹여서 키워보세요!</div>
             <div class="flex gap-2 justify-center">
               <button class="btn btn-primary" onclick="sqBuySquirrel('shop')">🌰 30 도토리로 구매</button>
-              <button class="btn btn-purple"  onclick="sqBuySquirrel('gacha')">🎰 뽑기로 획득</button>
             </div>
           </div>
         </div>
