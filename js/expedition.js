@@ -75,9 +75,9 @@ async function sqContinueExpedition(expId) {
       battleOver: false
     };
 
-    // 타일 데이터 DB 저장 (최초 생성 시)
+    // 타일 데이터 DB 저장 (최초 생성 시, 컬럼 없으면 무시)
     if (!data.tiles) {
-      await sb.from('expeditions').update({ tiles: tiles }).eq('id', expId);
+      try { await sb.from('expeditions').update({ tiles: tiles }).eq('id', expId); } catch(e) {}
     }
 
     // UI 렌더
@@ -856,13 +856,17 @@ async function _expFinish(status) {
   s.loot.forEach(function(l) { totalAcorns += (l.acorns || 0); });
 
   try {
-    // 탐험 상태 업데이트
-    await sb.from('expeditions').update({
+    // 탐험 상태 업데이트 (tiles 컬럼이 없을 수 있으므로 분리)
+    var updateData = {
       status: status,
       current_step: s.currentTile,
-      loot: s.loot,
-      tiles: s.tiles
-    }).eq('id', s.expId);
+      loot: s.loot
+    };
+    // tiles 저장 시도 (컬럼 없으면 무시)
+    try {
+      await sb.from('expeditions').update({ tiles: s.tiles }).eq('id', s.expId);
+    } catch(e) {}
+    await sb.from('expeditions').update(updateData).eq('id', s.expId);
 
     // 다람쥐 상태 복원 + HP 업데이트
     for (var i = 0; i < s.party.length; i++) {
@@ -891,12 +895,12 @@ async function _expFinish(status) {
     toast(status === 'completed' ? '🎉' : '🏳️', msg);
 
   } catch (e) {
-    console.error(e);
-    toast('❌', '탐험 종료 처리 중 오류');
+    console.error('_expFinish error:', e);
+    toast('❌', '탐험 종료 처리 중 오류가 발생했지만 귀환합니다.');
   }
 
+  // 항상 복귀 (에러가 나도)
   _expState = null;
-  // 탐험 탭으로 복귀
   await sqLoadSquirrels();
   await sqLoadActiveExpedition();
   sqTab('expedition');
@@ -909,8 +913,9 @@ async function _expSaveProgress() {
   try {
     await sb.from('expeditions').update({
       current_step: s.currentTile,
-      loot: s.loot,
-      tiles: s.tiles
+      loot: s.loot
     }).eq('id', s.expId);
+    // tiles 컬럼이 있으면 저장 시도 (없으면 무시)
+    try { await sb.from('expeditions').update({ tiles: s.tiles }).eq('id', s.expId); } catch(e) {}
   } catch (e) {}
 }
