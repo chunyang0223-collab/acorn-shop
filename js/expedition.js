@@ -901,6 +901,20 @@ async function _expFinish(status) {
 
   // 항상 복귀 (에러가 나도)
   _expState = null;
+
+  // expedition 탭 HTML을 원래 상태로 복원
+  var container = document.getElementById('sqcontent-expedition');
+  if (container) {
+    container.innerHTML =
+      '<div class="clay-card p-5 text-center mb-4">' +
+        '<div style="font-size:48px" class="mb-2">🗺️</div>' +
+        '<div class="title-font text-lg text-gray-700 mb-1">탐험 준비</div>' +
+        '<div class="text-sm text-gray-400 mb-4">탐험형 다람쥐를 보유해야 출발할 수 있어요</div>' +
+        '<button class="btn btn-primary" onclick="sqStartExpeditionFlow()">탐험 출발 →</button>' +
+      '</div>' +
+      '<div id="sqActiveExpeditionArea"></div>';
+  }
+
   await sqLoadSquirrels();
   await sqLoadActiveExpedition();
   sqTab('expedition');
