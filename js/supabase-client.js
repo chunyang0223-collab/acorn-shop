@@ -154,12 +154,15 @@ const supabase = (() => {
         async then(resolve, reject) {
           try {
             let finalUrl = _url;
-            // PATCH(update), DELETE는 select=* 불필요 — RLS 400 방지
-            const needsSelect = (_method !== 'PATCH' && _method !== 'DELETE');
-            if (needsSelect) {
-              if (!finalUrl.includes('?')) finalUrl += '?select=' + _select;
-            } else {
-              if (!finalUrl.includes('?')) finalUrl += '?';
+            // .select()가 명시적으로 호출되었는지 추적
+            const hasExplicitSelect = finalUrl.includes('?select=');
+            // PATCH/DELETE에서 .select()가 호출되지 않았으면 select 파라미터 생략 (RLS 400 방지)
+            if (!hasExplicitSelect) {
+              if (_method !== 'PATCH' && _method !== 'DELETE') {
+                finalUrl += '?select=' + _select;
+              } else {
+                if (!finalUrl.includes('?')) finalUrl += '?';
+              }
             }
             if (_filters.length) finalUrl += (finalUrl.endsWith('?') ? '' : '&') + _filters.join('&');
             if (_order) finalUrl += '&order=' + _order;
@@ -167,6 +170,8 @@ const supabase = (() => {
             const h = { ...headers };
             if (_upsert) { h['Prefer'] = 'resolution=merge-duplicates,return=representation'; if (_upsertConflict) { const u = new URL(finalUrl); u.searchParams.set('on_conflict', _upsertConflict); finalUrl = u.toString(); } }
             else if (_method === 'POST') h['Prefer'] = 'return=representation';
+            // PATCH/DELETE + .select() 호출 시 return=representation 추가
+            else if ((_method === 'PATCH' || _method === 'DELETE') && hasExplicitSelect) h['Prefer'] = 'return=representation';
             if (_countExact) h['Prefer'] = (h['Prefer'] ? h['Prefer'] + ',' : '') + 'count=exact';
             if (_single || _maybeSingle) h['Accept'] = 'application/vnd.pgrst.object+json';
 
