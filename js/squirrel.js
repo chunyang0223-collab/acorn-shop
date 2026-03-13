@@ -809,7 +809,7 @@ async function sqLoadActiveExpedition() {
   try {
     const { data } = await sb.from('expeditions')
       .select('*').eq('user_id', myProfile.id).eq('status','active').limit(1);
-    const area = document.getElementById('sqActiveExpedition');
+    const area = document.getElementById('sqActiveExpeditionArea');
     const exp = data?.[0];
     if (area && exp) {
       area.innerHTML = `
@@ -904,9 +904,7 @@ async function sqLaunchExpedition() {
   }
 }
 
-async function sqContinueExpedition(expId) {
-  toast('🚧', '탐험 진행 화면은 준비 중이에요!');
-}
+// sqContinueExpedition은 expedition.js로 이동됨
 
 // ================================================================
 //  관리자 패널
