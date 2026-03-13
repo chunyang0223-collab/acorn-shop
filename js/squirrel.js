@@ -888,18 +888,21 @@ async function sqLaunchExpedition() {
   const ids = window._sqExpSelected || [];
   if (!ids.length) { toast('⚠️','다람쥐를 선택해주세요'); return; }
   try {
-    const { error } = await sb.from('expeditions').insert({
+    const { data: inserted, error } = await sb.from('expeditions').insert({
       user_id: myProfile.id, squirrel_ids: ids,
       current_step: 0, total_steps: 5, status: 'active', loot: []
-    });
+    }).select('id').single();
     if (error) throw error;
     await sb.from('squirrels').update({ status: 'exploring' }).in('id', ids);
     ids.forEach(id => _sqUpdate(id, { status: 'exploring' }));
     closeModal();
     toast('🗺️', '탐험을 떠났어요!');
-    await sqLoadActiveExpedition();
     sqRenderGrid();
+    // 바로 탐험 맵으로 진입
+    sqTab('expedition');
+    sqContinueExpedition(inserted.id);
   } catch(e) {
+    console.error(e);
     toast('❌', '출발 실패');
   }
 }
