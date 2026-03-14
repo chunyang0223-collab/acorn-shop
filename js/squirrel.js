@@ -50,11 +50,11 @@ function _sqCalcGrade(sq) {
 
 function _sqGradeStyle(grade) {
   switch(grade) {
-    case 'legend': return { label:'레전드', border:'3px solid #ef4444', shadow:'0 0 12px rgba(239,68,68,.5),0 0 24px rgba(239,68,68,.2)', color:'#dc2626', bg:'#fef2f2' };
-    case 'unique': return { label:'유일', border:'3px solid #eab308', shadow:'0 0 10px rgba(234,179,8,.4)', color:'#ca8a04', bg:'#fefce8' };
-    case 'epic':   return { label:'희귀', border:'3px solid #3b82f6', shadow:'0 0 8px rgba(59,130,246,.3)', color:'#2563eb', bg:'#eff6ff' };
-    case 'rare':   return { label:'레어', border:'3px solid #22c55e', shadow:'0 0 8px rgba(34,197,94,.3)', color:'#16a34a', bg:'#f0fdf4' };
-    default:       return { label:'일반', border:'3px solid #b0b8c0', shadow:'none', color:'#6b7280', bg:'#f3f4f6' };
+    case 'legend': return { label:'레전드', border:'border:3px solid #ef4444', shadow:'0 0 12px rgba(239,68,68,.5),0 0 24px rgba(239,68,68,.2)', color:'#dc2626', bg:'#fef2f2' };
+    case 'unique': return { label:'유일', border:'border:3px solid #eab308', shadow:'0 0 10px rgba(234,179,8,.4)', color:'#ca8a04', bg:'#fefce8' };
+    case 'epic':   return { label:'희귀', border:'border:3px solid #3b82f6', shadow:'0 0 8px rgba(59,130,246,.3)', color:'#2563eb', bg:'#eff6ff' };
+    case 'rare':   return { label:'레어', border:'border:3px solid #22c55e', shadow:'0 0 8px rgba(34,197,94,.3)', color:'#16a34a', bg:'#f0fdf4' };
+    default:       return { label:'일반', border:'border:3px solid #8896a4', shadow:'0 0 4px rgba(100,120,140,.2)', color:'#6b7280', bg:'#eef1f5' };
   }
 }
 
@@ -424,14 +424,10 @@ function sqCardHTML(sq) {
   const grade = (sq.status !== 'baby') ? _sqCalcGrade(sq) : null;
   const gs = grade ? _sqGradeStyle(grade) : null;
 
-  // 디버그: 콘솔에서 등급 확인
-  console.log('[등급 디버그]', sq.name, '| status:', sq.status, '| stats:', JSON.stringify(sq.stats), '| grade:', grade, '| gs:', gs ? gs.label + ' / border: ' + gs.border : 'null');
-
   let imgHTML;
   if (sq.status === 'baby') {
     imgHTML = `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`;
   } else {
-    console.log('[등급 디버그] imgHTML div style:', 'border-radius:18px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;flex-shrink:0;background:' + gs.bg);
     imgHTML = `<div style="border-radius:18px;${gs.border};box-shadow:${gs.shadow};padding:2px;flex-shrink:0;background:${gs.bg}">` +
       `<img src="images/squirrels/${spriteFile}.png" style="width:52px;height:52px;object-fit:contain;border-radius:14px;display:block" onerror="this.outerHTML='<div style=\\'font-size:40px;line-height:52px;text-align:center\\'>🦔</div>'">` +
     `</div>`;
