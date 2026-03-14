@@ -1127,6 +1127,48 @@
           <div id="expSet_aItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
         </div>
 
+        <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">⚔️ 전투 밸런스</h3>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">스킬 배율 (×)</label>
+            <input type="number" id="expSet_skillMulti" class="field" value="1.65" min="0.1" step="0.05">
+            <div class="text-xs text-gray-400 mt-1">데미지 = 공격력 × 배율</div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">스킬 보너스 (0~N)</label>
+            <input type="number" id="expSet_skillBonus" class="field" value="9" min="0">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">일반공격 방어감소 비율</label>
+            <input type="number" id="expSet_atkDefRatio" class="field" value="0.38" min="0" max="1" step="0.01">
+            <div class="text-xs text-gray-400 mt-1">dmg = 공격-방어×비율</div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">일반공격 보너스 (0~N)</label>
+            <input type="number" id="expSet_atkRandom" class="field" value="5" min="0">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 방어감소 비율</label>
+            <input type="number" id="expSet_monDefRatio" class="field" value="0.48" min="0" max="1" step="0.01">
+            <div class="text-xs text-gray-400 mt-1">몬스터 반격 시 적용</div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 보너스 (0~N)</label>
+            <input type="number" id="expSet_monRandom" class="field" value="5" min="0">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🧪 포션 회복량 (%)</label>
+            <input type="number" id="expSet_healPct" class="field" value="40" min="1" max="100">
+            <div class="text-xs text-gray-400 mt-1">최대HP의 N%</div>
+          </div>
+        </div>
+
         <button class="btn btn-primary w-full" onclick="expSaveSettings()">💾 탐험 보상 설정 저장</button>
       </div>
 
