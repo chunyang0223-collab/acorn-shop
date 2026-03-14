@@ -424,10 +424,14 @@ function sqCardHTML(sq) {
   const grade = (sq.status !== 'baby') ? _sqCalcGrade(sq) : null;
   const gs = grade ? _sqGradeStyle(grade) : null;
 
+  // 디버그: 콘솔에서 등급 확인
+  console.log('[등급 디버그]', sq.name, '| status:', sq.status, '| stats:', JSON.stringify(sq.stats), '| grade:', grade, '| gs:', gs ? gs.label + ' / border: ' + gs.border : 'null');
+
   let imgHTML;
   if (sq.status === 'baby') {
     imgHTML = `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`;
   } else {
+    console.log('[등급 디버그] imgHTML div style:', 'border-radius:18px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;flex-shrink:0;background:' + gs.bg);
     imgHTML = `<div style="border-radius:18px;${gs.border};box-shadow:${gs.shadow};padding:2px;flex-shrink:0;background:${gs.bg}">` +
       `<img src="images/squirrels/${spriteFile}.png" style="width:52px;height:52px;object-fit:contain;border-radius:14px;display:block" onerror="this.outerHTML='<div style=\\'font-size:40px;line-height:52px;text-align:center\\'>🦔</div>'">` +
     `</div>`;
