@@ -1006,6 +1006,130 @@
           <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 설정 저장</button>
         </div>
       </div>
+
+      <!-- ⚔️ 탐험 보상 설정 -->
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-lg font-black text-gray-800 mb-1">⚔️ 탐험 보상 설정</h2>
+        <p class="text-xs text-gray-400 font-semibold mb-4">탐험 타일 확률, 보상 범위, 카드 등급 등을 관리합니다</p>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">🗺️ 타일 이벤트 확률 (%)</h3>
+        <p class="text-xs text-gray-400 mb-2">빈칸 + 보물 + 몬스터 = 100 (보스는 마지막칸 고정)</p>
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🍃 빈칸</label>
+            <input type="number" id="expSet_chanceEmpty" class="field" value="25" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">💰 보물</label>
+            <input type="number" id="expSet_chanceTreasure" class="field" value="30" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">⚔️ 몬스터</label>
+            <input type="number" id="expSet_chanceMonster" class="field" value="45" min="0" max="100">
+          </div>
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">✨ 스킬 포인트 (탐험당)</h3>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">최소 SP</label>
+            <input type="number" id="expSet_spMin" class="field" value="1" min="0">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">최대 SP</label>
+            <input type="number" id="expSet_spMax" class="field" value="5" min="1">
+          </div>
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">💰 보물 상자 보상</h3>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">최소 도토리</label>
+            <input type="number" id="expSet_treasureMin" class="field" value="3" min="0">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">최대 도토리</label>
+            <input type="number" id="expSet_treasureMax" class="field" value="12" min="1">
+          </div>
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">🃏 보상 카드 등급 확률 (%)</h3>
+        <p class="text-xs text-gray-400 mb-2">A + B + C = 100</p>
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🥉 C등급</label>
+            <input type="number" id="expSet_weightC" class="field" value="65" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🥈 B등급</label>
+            <input type="number" id="expSet_weightB" class="field" value="28" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🥇 A등급</label>
+            <input type="number" id="expSet_weightA" class="field" value="7" min="0" max="100">
+          </div>
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">🥉 C등급 보상</h3>
+        <div class="grid grid-cols-2 gap-3 mb-2">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
+            <div class="flex gap-2">
+              <input type="number" id="expSet_cAcornMin" class="field" value="5" min="0" style="flex:1">
+              <input type="number" id="expSet_cAcornMax" class="field" value="10" min="0" style="flex:1">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
+            <input type="number" id="expSet_cItemChance" class="field" value="15" min="0" max="100">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (쉼표 구분)</label>
+          <input type="text" id="expSet_cItems" class="field" value="🍄 버섯,🌿 풀잎,🪨 돌멩이" placeholder="🍄 버섯,🌿 풀잎,🪨 돌멩이">
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">🥈 B등급 보상</h3>
+        <div class="grid grid-cols-2 gap-3 mb-2">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
+            <div class="flex gap-2">
+              <input type="number" id="expSet_bAcornMin" class="field" value="10" min="0" style="flex:1">
+              <input type="number" id="expSet_bAcornMax" class="field" value="20" min="0" style="flex:1">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
+            <input type="number" id="expSet_bItemChance" class="field" value="45" min="0" max="100">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (쉼표 구분)</label>
+          <input type="text" id="expSet_bItems" class="field" value="🍎 사과,🔮 마석,🪵 나무" placeholder="🍎 사과,🔮 마석,🪵 나무">
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">🥇 A등급 보상</h3>
+        <div class="grid grid-cols-2 gap-3 mb-2">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
+            <div class="flex gap-2">
+              <input type="number" id="expSet_aAcornMin" class="field" value="20" min="0" style="flex:1">
+              <input type="number" id="expSet_aAcornMax" class="field" value="40" min="0" style="flex:1">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
+            <input type="number" id="expSet_aItemChance" class="field" value="85" min="0" max="100">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (쉼표 구분)</label>
+          <input type="text" id="expSet_aItems" class="field" value="💎 보석,⚗️ 비약,🗡️ 단검" placeholder="💎 보석,⚗️ 비약,🗡️ 단검">
+        </div>
+
+        <button class="btn btn-primary w-full" onclick="expSaveSettings()">💾 탐험 보상 설정 저장</button>
+      </div>
+
       <div class="clay-card p-5">
         <h2 class="text-base font-black text-gray-800 mb-3">📋 보유 다람쥐 현황</h2>
         <div id="sqAdminList" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
