@@ -439,7 +439,7 @@ function sqCardHTML(sq) {
       <div style="display:flex;align-items:center;gap:14px">
         ${imgHTML}
         <div style="flex:1;min-width:0">
-          <div style="font-size:18px;font-weight:900;color:#1f2937">${sq.name}</div>
+          <div style="font-size:18px;font-weight:900;color:#1f2937;cursor:pointer" onclick="sqEditName('${sq.id}')" title="클릭하여 이름 변경">${sq.name} <span style="font-size:11px;color:#d1d5db">✏️</span></div>
           <div style="font-size:12px;font-weight:800;color:#9ca3af;margin-top:2px">${typeLabel[sq.status]||sq.status}</div>
         </div>
         <span style="font-size:10px;font-weight:900;padding:3px 10px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
@@ -895,6 +895,53 @@ async function sqDoBuySquirrel(price) {
 function sqSyncAcornBadge() {
   const el = document.getElementById('acornBadge');
   if (el) el.textContent = myProfile.acorns.toLocaleString();
+}
+
+// ================================================================
+//  이름 변경
+// ================================================================
+function sqEditName(id) {
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq) return;
+  showModal(`
+    <div class="text-center">
+      <div style="font-size:40px" class="mb-2">✏️</div>
+      <div class="title-font text-lg text-gray-800 mb-1">이름 변경</div>
+      <div class="text-sm text-gray-500 mb-3">새 이름을 입력해주세요 (최대 8글자)</div>
+      <input type="text" id="sqNewName" class="field mb-3" value="${sq.name}" maxlength="8" style="text-align:center;font-size:16px;font-weight:900">
+      <div class="flex gap-2">
+        <button class="btn btn-primary flex-1" onclick="sqDoRename('${id}')">변경하기</button>
+        <button class="btn btn-gray flex-1" onclick="closeModal()">취소</button>
+      </div>
+    </div>`);
+  setTimeout(() => {
+    const inp = document.getElementById('sqNewName');
+    if (inp) { inp.focus(); inp.select(); }
+  }, 100);
+}
+
+async function sqDoRename(id) {
+  const inp = document.getElementById('sqNewName');
+  const newName = inp?.value?.trim();
+  if (!newName || newName.length === 0) { toast('⚠️', '이름을 입력해주세요'); return; }
+  if (newName.length > 8) { toast('⚠️', '최대 8글자까지 가능해요'); return; }
+  try {
+    await sb.from('squirrels').update({ name: newName }).eq('id', id);
+    _sqUpdate(id, { name: newName });
+    closeModal();
+    // 카드 교체
+    const cardEl = document.getElementById('sqCard-' + id);
+    const sq = _sqSquirrels.find(s => s.id === id);
+    if (cardEl && sq) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = sqCardHTML(sq);
+      cardEl.replaceWith(tmp.firstElementChild);
+    }
+    toast('✏️', newName + '(으)로 이름이 변경되었어요!');
+  } catch(e) {
+    console.error(e);
+    toast('❌', '이름 변경 실패');
+  }
 }
 
 // ================================================================
