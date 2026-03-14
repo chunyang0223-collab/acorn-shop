@@ -59,7 +59,9 @@ async function expLoadSettings() {
 }
 
 // ── 관리자: 탐험 설정 UI 로드 ──
-function expAdminLoadUI() {
+var _expProductsCache = []; // products 테이블 캐시
+
+async function expAdminLoadUI() {
   var c = _expConfig;
   var el = function(id) { return document.getElementById(id); };
   if (el('expSet_chanceEmpty')) el('expSet_chanceEmpty').value = c.chance_empty;
@@ -75,15 +77,77 @@ function expAdminLoadUI() {
   if (el('expSet_cAcornMin')) el('expSet_cAcornMin').value = c.reward_C.acorns[0];
   if (el('expSet_cAcornMax')) el('expSet_cAcornMax').value = c.reward_C.acorns[1];
   if (el('expSet_cItemChance')) el('expSet_cItemChance').value = Math.round(c.reward_C.itemChance * 100);
-  if (el('expSet_cItems')) el('expSet_cItems').value = c.reward_C.items.join(',');
   if (el('expSet_bAcornMin')) el('expSet_bAcornMin').value = c.reward_B.acorns[0];
   if (el('expSet_bAcornMax')) el('expSet_bAcornMax').value = c.reward_B.acorns[1];
   if (el('expSet_bItemChance')) el('expSet_bItemChance').value = Math.round(c.reward_B.itemChance * 100);
-  if (el('expSet_bItems')) el('expSet_bItems').value = c.reward_B.items.join(',');
   if (el('expSet_aAcornMin')) el('expSet_aAcornMin').value = c.reward_A.acorns[0];
   if (el('expSet_aAcornMax')) el('expSet_aAcornMax').value = c.reward_A.acorns[1];
   if (el('expSet_aItemChance')) el('expSet_aItemChance').value = Math.round(c.reward_A.itemChance * 100);
-  if (el('expSet_aItems')) el('expSet_aItems').value = c.reward_A.items.join(',');
+
+  // products 테이블에서 상품 목록 로드
+  try {
+    var res = await sb.from('products').select('id,name,icon,item_type').order('sort_order');
+    _expProductsCache = res.data || [];
+  } catch(e) { _expProductsCache = []; }
+
+  // 각 등급별 아이템 칩 렌더
+  _expRenderItemChips('expSet_cItemsWrap', c.reward_C.items || []);
+  _expRenderItemChips('expSet_bItemsWrap', c.reward_B.items || []);
+  _expRenderItemChips('expSet_aItemsWrap', c.reward_A.items || []);
+}
+
+// ── 아이템 칩 렌더 ──
+function _expRenderItemChips(wrapId, selectedItems) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+
+  // 이름 기준 중복 제거 (같은 이름의 상점/뽑기 상품은 하나로)
+  var seen = {};
+  var unique = [];
+  _expProductsCache.forEach(function(p) {
+    if (!seen[p.name]) {
+      seen[p.name] = true;
+      unique.push(p);
+    }
+  });
+
+  if (unique.length === 0) {
+    wrap.innerHTML = '<div style="font-size:12px;color:#9ca3af;padding:8px">등록된 상품이 없어요</div>';
+    return;
+  }
+
+  // selectedItems는 "아이콘 이름" 형태의 문자열 배열 → 이름만 추출해서 비교
+  var selectedNames = new Set(selectedItems.map(function(s) {
+    // "🍄 버섯" → "버섯", "💎 보석" → "보석" (이모지+공백 제거)
+    return s.replace(/^\S+\s*/, '').trim() || s;
+  }));
+
+  wrap.innerHTML = unique.map(function(p) {
+    var isSelected = selectedNames.has(p.name);
+    return '<div class="exp-item-chip' + (isSelected ? ' selected' : '') + '" ' +
+      'data-wrap="' + wrapId + '" data-name="' + p.name + '" data-icon="' + (p.icon || '🎁') + '" ' +
+      'onclick="_expToggleItemChip(this)">' +
+      '<span class="exp-item-chip-icon">' + (p.icon || '🎁') + '</span>' +
+      '<span class="exp-item-chip-name">' + p.name + '</span>' +
+      '<span class="exp-item-chip-type">' + (p.item_type === 'gacha' ? '🎲' : '🛍️') + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function _expToggleItemChip(el) {
+  el.classList.toggle('selected');
+}
+
+// ── 선택된 아이템 읽기 ──
+function _expGetSelectedItems(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return [];
+  var chips = wrap.querySelectorAll('.exp-item-chip.selected');
+  var items = [];
+  chips.forEach(function(chip) {
+    items.push(chip.dataset.icon + ' ' + chip.dataset.name);
+  });
+  return items;
 }
 
 // ── 관리자: 탐험 설정 저장 ──
@@ -122,17 +186,17 @@ async function expSaveSettings() {
     reward_C: {
       acorns: [parseInt(el('expSet_cAcornMin')?.value) || 0, parseInt(el('expSet_cAcornMax')?.value) || 0],
       itemChance: (parseInt(el('expSet_cItemChance')?.value) || 0) / 100,
-      items: parseItems(el('expSet_cItems')?.value)
+      items: _expGetSelectedItems('expSet_cItemsWrap')
     },
     reward_B: {
       acorns: [parseInt(el('expSet_bAcornMin')?.value) || 0, parseInt(el('expSet_bAcornMax')?.value) || 0],
       itemChance: (parseInt(el('expSet_bItemChance')?.value) || 0) / 100,
-      items: parseItems(el('expSet_bItems')?.value)
+      items: _expGetSelectedItems('expSet_bItemsWrap')
     },
     reward_A: {
       acorns: [parseInt(el('expSet_aAcornMin')?.value) || 0, parseInt(el('expSet_aAcornMax')?.value) || 0],
       itemChance: (parseInt(el('expSet_aItemChance')?.value) || 0) / 100,
-      items: parseItems(el('expSet_aItems')?.value)
+      items: _expGetSelectedItems('expSet_aItemsWrap')
     }
   };
 
@@ -955,18 +1019,20 @@ function _btlDefeatRetreat() {
   s.loot.forEach(function(l) { totalAcorns += (l.acorns || 0); });
   var halfAcorns = Math.floor(totalAcorns / 2);
   s.loot = [{ type: 'penalty', acorns: halfAcorns }];
-  _expFinish('retreated');
+  _expShowSummary('retreated');
 }
 
 // ================================================================
 //  탐험 완료 요약 화면
 // ================================================================
-function _expShowSummary() {
+function _expShowSummary(finishStatus) {
+  var status = finishStatus || 'completed';
+  var isDefeat = (status === 'retreated');
   var s = _expState;
-  if (!s) { _expComplete(); return; }
+  if (!s) { _expFinish(status); return; }
 
   var container = document.getElementById('sqcontent-expedition');
-  if (!container) { _expComplete(); return; }
+  if (!container) { _expFinish(status); return; }
 
   // 전리품 집계
   var totalAcorns = 0;
@@ -1010,9 +1076,9 @@ function _expShowSummary() {
     '<div style="max-width:420px;margin:0 auto">' +
       // 헤더
       '<div style="text-align:center;padding:24px 16px 16px">' +
-        '<div style="font-size:48px;margin-bottom:8px">🎉</div>' +
-        '<div style="font-size:22px;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,200,0,0.4)">탐험 완료!</div>' +
-        '<div style="font-size:13px;color:#9ca3af;margin-top:4px">모든 구간을 무사히 돌파했어요</div>' +
+        '<div style="font-size:48px;margin-bottom:8px">' + (isDefeat ? '💀' : '🎉') + '</div>' +
+        '<div style="font-size:22px;font-weight:900;color:' + (isDefeat ? '#ef4444' : '#ffd700') + ';text-shadow:0 0 20px ' + (isDefeat ? 'rgba(239,68,68,0.4)' : 'rgba(255,200,0,0.4)') + '">' + (isDefeat ? '탐험 실패...' : '탐험 완료!') + '</div>' +
+        '<div style="font-size:13px;color:#9ca3af;margin-top:4px">' + (isDefeat ? '전리품의 절반만 가지고 귀환합니다' : '모든 구간을 무사히 돌파했어요') + '</div>' +
       '</div>' +
       // 타일 경로
       '<div style="display:flex;align-items:center;justify-content:center;gap:0;padding:8px 16px;overflow-x:auto;flex-wrap:nowrap">' +
@@ -1037,7 +1103,7 @@ function _expShowSummary() {
       '</div>' +
       // 귀환 버튼
       '<div style="padding:0 16px 24px">' +
-        '<button onclick="_expComplete()" style="width:100%;padding:14px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;box-shadow:0 4px 16px rgba(34,197,94,0.3)">🏠 마을로 귀환하기</button>' +
+        '<button onclick="_expFinish(\'' + status + '\')" style="width:100%;padding:14px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,' + (isDefeat ? '#ef4444,#dc2626' : '#22c55e,#16a34a') + ');color:white;box-shadow:0 4px 16px ' + (isDefeat ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)') + '">🏠 마을로 귀환하기</button>' +
       '</div>' +
     '</div>';
 }
