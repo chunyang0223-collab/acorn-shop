@@ -25,10 +25,37 @@ var _sqSettings  = {
 };
 var _sqAudioCtx = null;
 
-// ── 스프라이트 목록 (18종) ──
-var _sqSprites = ['sq_acorn','sq_white','sq_choco','sq_black','sq_beige','sq_gold','sq_pink','sq_gray','sq_darkbrown','sq_stripe','sq_ribbon1','sq_ribbon2','sq_mahogany','sq_cream','sq_mocha','sq_silver','sq_heart','sq_curious'];
+// ── 스프라이트 목록 (17종) ──
+var _sqSprites = ['sq_acorn','sq_white','sq_choco','sq_beige','sq_gold','sq_pink','sq_gray','sq_darkbrown','sq_stripe','sq_ribbon1','sq_ribbon2','sq_mahogany','sq_cream','sq_mocha','sq_silver','sq_heart','sq_curious'];
 function _sqRandomSprite() {
   return _sqSprites[Math.floor(Math.random() * _sqSprites.length)];
+}
+
+// ── 등급 시스템 ──
+// HP/120 + ATK/20 + DEF/14 평균 → 백분율
+function _sqCalcGrade(sq) {
+  var maxHp = _sqSettings.stat_hp_max || 120;
+  var maxAtk = _sqSettings.stat_atk_max || 20;
+  var maxDef = _sqSettings.stat_def_max || 14;
+  var hp = sq.stats?.hp || 60;
+  var atk = sq.stats?.atk || 8;
+  var def = sq.stats?.def || 4;
+  var score = ((hp / maxHp) + (atk / maxAtk) + (def / maxDef)) / 3 * 100;
+  if (score >= 90) return 'legend';
+  if (score >= 80) return 'unique';
+  if (score >= 70) return 'epic';
+  if (score >= 60) return 'rare';
+  return 'normal';
+}
+
+function _sqGradeStyle(grade) {
+  switch(grade) {
+    case 'legend': return { label:'레전드', border:'3px solid #ef4444', shadow:'0 0 12px rgba(239,68,68,.5),0 0 24px rgba(239,68,68,.2)', color:'#dc2626', bg:'#fef2f2' };
+    case 'unique': return { label:'유일', border:'3px solid #eab308', shadow:'0 0 10px rgba(234,179,8,.4)', color:'#ca8a04', bg:'#fefce8' };
+    case 'epic':   return { label:'희귀', border:'3px solid #3b82f6', shadow:'0 0 8px rgba(59,130,246,.3)', color:'#2563eb', bg:'#eff6ff' };
+    case 'rare':   return { label:'레어', border:'3px solid #22c55e', shadow:'0 0 8px rgba(34,197,94,.3)', color:'#16a34a', bg:'#f0fdf4' };
+    default:       return { label:'일반', border:'3px solid #b0b8c0', shadow:'none', color:'#6b7280', bg:'#f3f4f6' };
+  }
 }
 
 // ── 상태 관리 헬퍼 ──
@@ -394,10 +421,17 @@ function sqCardHTML(sq) {
 
   const spriteBase = sq.sprite || 'sq_acorn';
   const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? spriteBase + '_defeat' : spriteBase;
-  const spriteBg = sq.status === 'recovering' ? '#fef3c7' : sq.status === 'pet' ? '#fce7f3' : '#e8f4fd';
-  const imgHTML = sq.status === 'baby'
-    ? `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`
-    : `<img src="images/squirrels/${spriteFile}.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:${spriteBg};padding:4px;flex-shrink:0" onerror="this.outerHTML='<div style=\\'font-size:44px;line-height:1;flex-shrink:0\\'>🦔</div>'">`;
+  const grade = (sq.status !== 'baby') ? _sqCalcGrade(sq) : null;
+  const gs = grade ? _sqGradeStyle(grade) : null;
+
+  let imgHTML;
+  if (sq.status === 'baby') {
+    imgHTML = `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`;
+  } else {
+    imgHTML = `<div style="border-radius:18px;${gs.border};box-shadow:${gs.shadow};padding:2px;flex-shrink:0;background:${gs.bg}">` +
+      `<img src="images/squirrels/${spriteFile}.png" style="width:52px;height:52px;object-fit:contain;border-radius:14px;display:block" onerror="this.outerHTML='<div style=\\'font-size:40px;line-height:52px;text-align:center\\'>🦔</div>'">` +
+    `</div>`;
+  }
 
   let babyHTML = '';
   if (sq.status === 'baby') {
@@ -486,7 +520,7 @@ function sqCardHTML(sq) {
       <div style="display:flex;align-items:center;gap:14px">
         ${imgHTML}
         <div style="flex:1;min-width:0">
-          <div style="font-size:18px;font-weight:900;color:#1f2937;cursor:pointer" onclick="sqEditName('${sq.id}')" title="클릭하여 이름 변경">${sq.name} <span style="font-size:11px;color:#d1d5db">✏️</span></div>
+          <div style="font-size:18px;font-weight:900;color:#1f2937;cursor:pointer" onclick="sqEditName('${sq.id}')" title="클릭하여 이름 변경">${sq.name} <span style="font-size:11px;color:#d1d5db">✏️</span>${gs ? ` <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:1px 6px;border-radius:8px;vertical-align:middle">${gs.label}</span>` : ''}</div>
           <div style="font-size:12px;font-weight:800;color:#9ca3af;margin-top:2px">${typeLabel[sq.status]||sq.status}</div>
         </div>
         <span style="font-size:10px;font-weight:900;padding:3px 10px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
@@ -1145,17 +1179,23 @@ async function sqStartExpeditionFlow() {
       <div class="text-xs text-gray-400 mt-1">최대 3마리를 선택해서 탐험을 떠나요</div>
     </div>
     <div class="space-y-2 mb-4">
-      ${explorers.map(sq => `
+      ${explorers.map(sq => {
+        const _g = _sqCalcGrade(sq);
+        const _gs = _sqGradeStyle(_g);
+        return `
         <div id="expcard-${sq.id}" onclick="sqToggleExpSelect('${sq.id}')" style="background:white;border-radius:16px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:2px solid transparent;cursor:pointer;transition:all .2s">
           <div class="flex items-center gap-3">
-            <img src="images/squirrels/${sq.sprite || 'sq_acorn'}.png" style="width:40px;height:40px;object-fit:contain;border-radius:12px;background:#e8f4fd;padding:3px;flex-shrink:0">
+            <div style="border-radius:14px;${_gs.border};box-shadow:${_gs.shadow};padding:2px;flex-shrink:0;background:${_gs.bg}">
+              <img src="images/squirrels/${sq.sprite || 'sq_acorn'}.png" style="width:36px;height:36px;object-fit:contain;border-radius:10px;display:block">
+            </div>
             <div class="flex-1">
-              <div class="font-black text-gray-700">${sq.name}</div>
+              <div class="font-black text-gray-700">${sq.name} <span style="font-size:9px;color:${_gs.color}">${_gs.label}</span></div>
               <div class="text-xs text-gray-400">❤️${sq.hp_current} ⚔️${sq.stats?.atk||10} 🛡️${sq.stats?.def||5}</div>
             </div>
             <div id="expcheck-${sq.id}" class="text-xl">⬜</div>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>
     <div class="flex gap-2">
       <button class="btn btn-primary flex-1" onclick="sqLaunchExpedition()">⚔️ 출발!</button>
