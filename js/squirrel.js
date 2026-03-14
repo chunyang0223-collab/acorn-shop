@@ -928,7 +928,7 @@ async function sqDoSell(id, price) {
     await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: price, p_reason: '다람쥐 펫샵 판매' });
     await sb.from('squirrels').delete().eq('id', id);
     myProfile.acorns += price;
-    sqSyncAcornBadge();
+    if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
     // 로컬 캐시에서 제거 + DOM 카드 제거
     _sqSquirrels = _sqSquirrels.filter(s => s.id !== id);
     delete _sqState[id];
