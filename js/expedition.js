@@ -31,7 +31,15 @@ var _expConfig = {
   reward_weights: { C: 65, B: 28, A: 7 },
   reward_C: { acorns: [5, 10], itemChance: 0.15, items: ['🍄 버섯', '🌿 풀잎', '🪨 돌멩이'] },
   reward_B: { acorns: [10, 20], itemChance: 0.45, items: ['🍎 사과', '🔮 마석', '🪵 나무'] },
-  reward_A: { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] }
+  reward_A: { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] },
+  // 전투 계수
+  skill_multiplier: 1.65,    // 스킬 데미지 = atk × 배율
+  skill_bonus_max: 9,        // 스킬 랜덤 보너스 (0~N)
+  atk_def_ratio: 0.38,       // 일반공격 방어 감소 비율
+  atk_random_max: 5,         // 일반공격 랜덤 보너스 (0~N)
+  mon_def_ratio: 0.48,       // 몬스터 반격 방어 감소 비율
+  mon_random_max: 5,         // 몬스터 반격 랜덤 보너스 (0~N)
+  heal_percent: 40            // 포션 회복량 (최대HP의 %)
 };
 
 // ── 탐험 설정 DB 로드 ──
@@ -54,6 +62,13 @@ async function expLoadSettings() {
       if (v.reward_A) _expConfig.reward_A = v.reward_A;
       if (v.monsters) _expConfig.monsters = v.monsters;
       if (v.bosses) _expConfig.bosses = v.bosses;
+      if (v.skill_multiplier !== undefined) _expConfig.skill_multiplier = v.skill_multiplier;
+      if (v.skill_bonus_max !== undefined) _expConfig.skill_bonus_max = v.skill_bonus_max;
+      if (v.atk_def_ratio !== undefined) _expConfig.atk_def_ratio = v.atk_def_ratio;
+      if (v.atk_random_max !== undefined) _expConfig.atk_random_max = v.atk_random_max;
+      if (v.mon_def_ratio !== undefined) _expConfig.mon_def_ratio = v.mon_def_ratio;
+      if (v.mon_random_max !== undefined) _expConfig.mon_random_max = v.mon_random_max;
+      if (v.heal_percent !== undefined) _expConfig.heal_percent = v.heal_percent;
     }
   } catch(e) {}
 }
@@ -83,6 +98,14 @@ async function expAdminLoadUI() {
   if (el('expSet_aAcornMin')) el('expSet_aAcornMin').value = c.reward_A.acorns[0];
   if (el('expSet_aAcornMax')) el('expSet_aAcornMax').value = c.reward_A.acorns[1];
   if (el('expSet_aItemChance')) el('expSet_aItemChance').value = Math.round(c.reward_A.itemChance * 100);
+  // 전투 계수
+  if (el('expSet_skillMulti')) el('expSet_skillMulti').value = c.skill_multiplier;
+  if (el('expSet_skillBonus')) el('expSet_skillBonus').value = c.skill_bonus_max;
+  if (el('expSet_atkDefRatio')) el('expSet_atkDefRatio').value = c.atk_def_ratio;
+  if (el('expSet_atkRandom')) el('expSet_atkRandom').value = c.atk_random_max;
+  if (el('expSet_monDefRatio')) el('expSet_monDefRatio').value = c.mon_def_ratio;
+  if (el('expSet_monRandom')) el('expSet_monRandom').value = c.mon_random_max;
+  if (el('expSet_healPct')) el('expSet_healPct').value = c.heal_percent;
 
   // products 테이블에서 상품 목록 로드
   try {
@@ -201,7 +224,15 @@ async function expSaveSettings() {
       acorns: [parseInt(el('expSet_aAcornMin')?.value) || 0, parseInt(el('expSet_aAcornMax')?.value) || 0],
       itemChance: (parseInt(el('expSet_aItemChance')?.value) || 0) / 100,
       items: _expGetSelectedItems('expSet_aItemsWrap')
-    }
+    },
+    // 전투 계수
+    skill_multiplier: parseFloat(el('expSet_skillMulti')?.value) || 1.65,
+    skill_bonus_max: parseInt(el('expSet_skillBonus')?.value) || 9,
+    atk_def_ratio: parseFloat(el('expSet_atkDefRatio')?.value) || 0.38,
+    atk_random_max: parseInt(el('expSet_atkRandom')?.value) || 5,
+    mon_def_ratio: parseFloat(el('expSet_monDefRatio')?.value) || 0.48,
+    mon_random_max: parseInt(el('expSet_monRandom')?.value) || 5,
+    heal_percent: parseInt(el('expSet_healPct')?.value) || 40
   };
 
   var res = await sb.from('app_settings')
@@ -746,12 +777,12 @@ function _btlAction(type) {
       b.sp--;
       _btlUpdateSpBtn();
       _expState.sp = b.sp; // 탐험 상태 동기화
-      dmg = Math.floor(b.attacker.atk * 1.65 + Math.random() * 9);
+      dmg = Math.floor(b.attacker.atk * (_expConfig.skill_multiplier || 1.65) + Math.random() * (_expConfig.skill_bonus_max || 9));
       _btlSound('skill');
       _btlFlash('rgba(255,220,50,.5)');
       _btlLog('✨ <b>' + b.attacker.name + '</b>의 필살기! <b style="color:#f0c030">' + dmg + ' 데미지!</b>', 'skill');
     } else {
-      dmg = Math.max(1, b.attacker.atk - Math.floor(b.mon.def * 0.38) + Math.floor(Math.random() * 5) - 1);
+      dmg = Math.max(1, b.attacker.atk - Math.floor(b.mon.def * (_expConfig.atk_def_ratio || 0.38)) + Math.floor(Math.random() * (_expConfig.atk_random_max || 5)) - 1);
       _btlSound('attack');
       _btlFlash('rgba(255,255,255,.38)');
       _btlLog('⚔️ <b>' + b.attacker.name + '</b>의 공격! <b style="color:#68c568">' + dmg + ' 데미지!</b>', 'atk');
@@ -784,7 +815,7 @@ function _btlAction(type) {
         var aliveNow = b.party.filter(function(p) { return p.hp > 0; });
         var target = aliveNow[Math.floor(Math.random() * aliveNow.length)];
         var tIdx = b.party.indexOf(target);
-        var eDmg = Math.max(1, b.mon.atk - Math.floor(target.def * 0.48) + Math.floor(Math.random() * 5) - 1);
+        var eDmg = Math.max(1, b.mon.atk - Math.floor(target.def * (_expConfig.mon_def_ratio || 0.48)) + Math.floor(Math.random() * (_expConfig.mon_random_max || 5)) - 1);
 
         var tCard = document.getElementById('btlPc' + tIdx);
         if (tCard) { tCard.classList.add('btl-hit'); setTimeout(function() { tCard.classList.remove('btl-hit'); }, 350); }
@@ -817,7 +848,7 @@ function _btlAction(type) {
   } else if (type === 'item') {
     var target = b.party.filter(function(p) { return p.hp > 0; }).reduce(function(a, bb) { return bb.hp / bb.maxHp < a.hp / a.maxHp ? bb : a; });
     var tIdx = b.party.indexOf(target);
-    var heal = Math.floor(target.maxHp * 0.4);
+    var heal = Math.floor(target.maxHp * ((_expConfig.heal_percent || 40) / 100));
     target.hp = Math.min(target.maxHp, target.hp + heal);
     _btlRender();
     _btlSound('heal');
@@ -829,7 +860,7 @@ function _btlAction(type) {
       var aliveNow = b.party.filter(function(p) { return p.hp > 0; });
       var rTarget = aliveNow[Math.floor(Math.random() * aliveNow.length)];
       var rIdx = b.party.indexOf(rTarget);
-      var eDmg = Math.max(1, b.mon.atk - Math.floor(rTarget.def * 0.48) + Math.floor(Math.random() * 5) - 1);
+      var eDmg = Math.max(1, b.mon.atk - Math.floor(rTarget.def * (_expConfig.mon_def_ratio || 0.48)) + Math.floor(Math.random() * (_expConfig.mon_random_max || 5)) - 1);
       var tCard = document.getElementById('btlPc' + rIdx);
       if (tCard) { tCard.classList.add('btl-hit'); setTimeout(function() { tCard.classList.remove('btl-hit'); }, 350); }
       _btlSound('hit');
