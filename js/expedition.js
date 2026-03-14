@@ -869,13 +869,36 @@ async function _expFinish(status) {
     await sb.from('expeditions').update(updateData).eq('id', s.expId);
 
     // 다람쥐 상태 복원 + HP 업데이트
+    // HP가 풀이 아니면 recovering 상태로 전환 (시간 경과 후 자동 회복)
+    var baseMinutes = (_sqSettings && _sqSettings.recovery_base_minutes) || 60;
     for (var i = 0; i < s.party.length; i++) {
       var p = s.party[i];
-      await sb.from('squirrels').update({
-        status: 'explorer',
-        hp_current: Math.max(0, p.hp)
-      }).eq('id', p.id);
-      _sqUpdate(p.id, { status: 'explorer', hp_current: Math.max(0, p.hp) });
+      var maxHp = p.maxHp || 100;
+      var currentHp = Math.max(0, p.hp);
+
+      if (currentHp >= maxHp) {
+        // HP 풀 → 바로 explorer 복귀
+        await sb.from('squirrels').update({
+          status: 'explorer', hp_current: maxHp, recovers_at: null
+        }).eq('id', p.id);
+        _sqUpdate(p.id, { status: 'explorer', hp_current: maxHp, recovers_at: null });
+      } else {
+        // HP 부족 → recovering 상태 + recovers_at 설정
+        var lostPct = 1 - (currentHp / maxHp); // 0~1 (0%~100% 손실)
+        var recoveryMinutes = Math.max(1, Math.round(baseMinutes * lostPct));
+        var recoversAt = new Date(Date.now() + recoveryMinutes * 60000).toISOString();
+        try {
+          await sb.from('squirrels').update({
+            status: 'recovering', hp_current: currentHp, recovers_at: recoversAt
+          }).eq('id', p.id);
+        } catch(e) {
+          // recovers_at 컬럼이 없으면 없이 시도
+          await sb.from('squirrels').update({
+            status: 'recovering', hp_current: currentHp
+          }).eq('id', p.id);
+        }
+        _sqUpdate(p.id, { status: 'recovering', hp_current: currentHp, recovers_at: recoversAt });
+      }
     }
 
     // 도토리 지급
