@@ -1787,43 +1787,66 @@ body {
 [data-theme="dark"] .um-btn-delete:hover { background: rgba(239,68,68,0.1); }
 
 /* ================================================================
-   🗺️ 탐험 맵 시스템
+   🗺️ 탐험 맵 시스템 — 판타지 양피지 테마
    ================================================================ */
-.exp-container{font-family:'Pretendard','Noto Sans KR',sans-serif}
-.exp-header{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1e3a5f,#0f2440);border-radius:16px;padding:14px 18px;margin-bottom:14px;color:#fff}
-.exp-header-title{font-weight:900;font-size:15px}
-.exp-header-sub{font-size:11px;color:#8ab4d8;margin-left:8px}
-.exp-header-right{display:flex;gap:8px}
-.exp-loot-badge,.exp-sp-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
-.exp-loot-badge{background:rgba(255,180,40,.2);color:#ffc040}
-.exp-sp-badge{background:rgba(100,180,255,.2);color:#6ab8ff}
+.exp-container{font-family:'Jua','Pretendard','Noto Sans KR',sans-serif}
+
+/* 헤더 */
+.exp-header{background:linear-gradient(145deg,#3b2e1e,#2a1f14);border-radius:20px;padding:16px 20px;margin-bottom:16px;border:1.5px solid #5c4a34;position:relative;box-shadow:inset 0 1px 0 rgba(255,220,160,.08),0 4px 20px rgba(0,0,0,.4)}
+.exp-header::after{content:'⚜️';position:absolute;top:12px;right:16px;font-size:20px;opacity:.25}
+.exp-header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.exp-header-title{font-size:17px;font-weight:900;color:#e8d5b5;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.exp-header-step{font-size:12px;color:#b89e78;background:rgba(0,0,0,.3);padding:3px 10px;border-radius:20px;border:1px solid rgba(184,158,120,.2)}
+.exp-badges{display:flex;gap:8px}
+.exp-badge{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.25);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:800;border:1px solid rgba(255,255,255,.06)}
+.exp-badge-acorn{color:#f0c040}
+.exp-badge-sp{color:#c4a0e8}
 
 /* 타일 맵 */
-.exp-tiles-wrap{overflow-x:auto;margin-bottom:14px;padding:8px 0;-webkit-overflow-scrolling:touch}
-.exp-tiles{display:flex;align-items:center;min-width:max-content;padding:0 8px}
-.exp-tile{width:56px;height:56px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-.exp-tile-icon{font-size:22px;line-height:1}
-.exp-tile-label{font-size:9px;font-weight:700;margin-top:2px}
-.exp-tile-past{background:rgba(100,180,100,.15);border:2px solid rgba(100,180,100,.3);color:#6ab86a}
-.exp-tile-current{background:rgba(60,130,255,.2);border:2px solid rgba(60,130,255,.5);color:#4a9eff;animation:exp-pulse 1.5s ease-in-out infinite;box-shadow:0 0 12px rgba(60,130,255,.3)}
-.exp-tile-future{background:rgba(150,150,170,.1);border:2px solid rgba(150,150,170,.2);color:#8888a0}
-@keyframes exp-pulse{0%,100%{box-shadow:0 0 8px rgba(60,130,255,.2)}50%{box-shadow:0 0 18px rgba(60,130,255,.45)}}
-.exp-line{width:20px;height:3px;border-radius:2px;flex-shrink:0;background:rgba(150,150,170,.25)}
-.exp-line-past{background:rgba(100,180,100,.4)}
+.exp-map-wrap{background:linear-gradient(160deg,#2e2318,#231a11);border-radius:20px;padding:24px 16px;margin-bottom:16px;border:1.5px solid #4a3828;position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch;box-shadow:inset 0 0 40px rgba(0,0,0,.3)}
+.exp-map-wrap::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(100,80,50,.08) 19px,rgba(100,80,50,.08) 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(100,80,50,.08) 19px,rgba(100,80,50,.08) 20px)}
+.exp-map-path{display:flex;align-items:center;justify-content:center;position:relative;z-index:1;min-width:max-content;padding:0 8px}
+
+.exp-node{width:56px;height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.exp-node-circle{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;transform:rotate(45deg)}
+.exp-node-circle>*{transform:rotate(-45deg);display:flex}
+.exp-node-label{font-size:9px;font-weight:800;margin-top:4px;letter-spacing:-0.3px}
+
+.exp-node-past .exp-node-circle{background:linear-gradient(135deg,#4a3820,#3a2a15);border:2px solid #7a6040;box-shadow:inset 0 2px 4px rgba(0,0,0,.4)}
+.exp-node-past .exp-node-label{color:#a08860}
+
+.exp-node-current .exp-node-circle{background:linear-gradient(135deg,#c8860a,#a06808);border:2.5px solid #f0c040;box-shadow:0 0 20px rgba(240,192,64,.4),0 0 40px rgba(240,192,64,.15);animation:map-pulse 2s ease-in-out infinite}
+.exp-node-current .exp-node-label{color:#f0c040;font-size:10px}
+@keyframes map-pulse{0%,100%{box-shadow:0 0 20px rgba(240,192,64,.4),0 0 40px rgba(240,192,64,.15)}50%{box-shadow:0 0 28px rgba(240,192,64,.6),0 0 56px rgba(240,192,64,.25)}}
+
+.exp-node-future .exp-node-circle{background:rgba(60,50,40,.5);border:2px dashed rgba(120,100,70,.35)}
+.exp-node-future .exp-node-label{color:#6b6050}
+
+.exp-node-boss .exp-node-circle{background:linear-gradient(135deg,#4a1818,#2d0e0e);border:2px solid #8a3030}
+.exp-node-boss.exp-node-future .exp-node-circle{box-shadow:0 0 14px rgba(180,40,40,.25)}
+
+.exp-conn{width:16px;height:3px;flex-shrink:0;border-radius:2px}
+.exp-conn-past{background:#7a6040}
+.exp-conn-current{background:linear-gradient(90deg,#7a6040,#c8860a)}
+.exp-conn-future{background:rgba(100,80,60,.2)}
 
 /* 파티 */
-.exp-party{display:flex;gap:8px;margin-bottom:14px}
-.exp-party-card{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(100,140,200,.2);border-radius:12px;padding:10px 8px;text-align:center}
-.exp-party-dead{opacity:.35}
-.exp-party-emoji{font-size:28px;margin-bottom:4px}
-.exp-party-name{font-size:11px;font-weight:900;color:var(--text-primary,#374151);margin-bottom:3px}
-.exp-party-bar{height:5px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden;margin-bottom:3px}
-.exp-party-hp{height:100%;border-radius:3px;transition:width .4s}
-.exp-party-stats{font-size:9px;color:var(--text-secondary,#9ca3af)}
+.exp-party-grid{display:flex;gap:8px;margin-bottom:16px}
+.exp-pc{flex:1;background:linear-gradient(160deg,#302418,#241a10);border:1.5px solid #4a3828;border-radius:16px;padding:12px 8px 10px;text-align:center}
+.exp-pc-dead{opacity:.4}
+.exp-pc-emoji{font-size:30px;margin-bottom:4px}
+.exp-pc-name{font-size:12px;font-weight:900;color:#d4c4a8;margin-bottom:6px}
+.exp-pc-hpwrap{height:6px;background:rgba(0,0,0,.4);border-radius:4px;overflow:hidden;margin:0 6px 5px;border:1px solid rgba(100,80,50,.2)}
+.exp-pc-hpbar{height:100%;border-radius:3px;transition:width .4s}
+.exp-pc-stats{display:flex;justify-content:center;gap:6px;font-size:10px;color:#9a8a70}
+.exp-pc-stats span{display:flex;align-items:center;gap:2px}
 
-/* 행동 버튼 */
-.exp-actions{display:flex;gap:8px}
-.exp-actions .btn{flex:1}
+/* 행동 버튼 — 3D 효과 */
+.exp-btns{display:flex;gap:10px}
+.exp-btn-advance{flex:1;padding:15px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;color:#1a1000;background:linear-gradient(135deg,#f0c040,#c8960a);box-shadow:0 4px 0 #a07808,0 6px 20px rgba(200,150,10,.25);transition:transform .1s,box-shadow .1s}
+.exp-btn-advance:active{transform:translateY(3px);box-shadow:0 1px 0 #a07808}
+.exp-btn-retreat{flex:1;padding:15px;border-radius:14px;border:1px solid #4a3828;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#9a8a70;background:rgba(40,30,20,.7);box-shadow:0 4px 0 #1a1208;transition:transform .1s,box-shadow .1s}
+.exp-btn-retreat:active{transform:translateY(3px);box-shadow:0 1px 0 #1a1208}
 
 /* ================================================================
    ⚔️ 전투 시스템 (인라인)
