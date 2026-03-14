@@ -1067,6 +1067,9 @@ async function sqAdminInit() {
   document.getElementById('sqSet_sellMax').value     = _sqSettings.sell_price_max    || 80;
   document.getElementById('sqSet_recoveryMinutes').value = _sqSettings.recovery_base_minutes || 60;
   document.getElementById('sqSet_recoveryCost').value    = _sqSettings.recovery_instant_cost || 15;
+  // 탐험 보상 설정 로드
+  await expLoadSettings();
+  expAdminLoadUI();
   await sqAdminLoadList();
 }
 
