@@ -25,6 +25,12 @@ var _sqSettings  = {
 };
 var _sqAudioCtx = null;
 
+// ── 스프라이트 목록 (8종) ──
+var _sqSprites = ['sq_brown','sq_warrior','sq_mage','sq_white','sq_ranger','sq_shadow','sq_cute','sq_ninja'];
+function _sqRandomSprite() {
+  return _sqSprites[Math.floor(Math.random() * _sqSprites.length)];
+}
+
 // ── 상태 관리 헬퍼 ──
 function _sqIsBusy(id) { return _sqState[id] === 'busy'; }
 function _sqSetBusy(id) { _sqState[id] = 'busy'; }
@@ -363,9 +369,10 @@ function sqCardHTML(sq) {
   const typeLabel   = { baby:'아기 다람쥐', explorer:'탐험형 🗺️', pet:'애완형 🏡', exploring:'탐험 중 🗺️', recovering:'회복 중 😴' };
   const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
 
+  const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? 'sq_sleeping' : (sq.sprite || 'sq_brown');
   const imgHTML = sq.status === 'baby'
     ? `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`
-    : `<div style="font-size:44px;line-height:1;flex-shrink:0">${sq.status==='recovering'?'😴':sq.status==='pet'?'🐱':'🦔'}</div>`;
+    : `<img src="images/squirrels/${spriteFile}.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;flex-shrink:0;image-rendering:pixelated" onerror="this.outerHTML='<div style=\\'font-size:44px;line-height:1;flex-shrink:0\\'>🦔</div>'">`;
 
   let babyHTML = '';
   if (sq.status === 'baby') {
@@ -777,12 +784,14 @@ async function sqFeedSquirrel(id) {
     const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
     updates.status = growType;
     updates.grows_at = null;
+    updates.sprite = _sqRandomSprite();
     action = 'grow:' + growType;
   }
   // 4) needs_time 없이 100% 도달 → 성장
   else if (!sq.needs_time && !sq.grows_at && newFed >= sq.acorns_required) {
     const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
     updates.status = growType;
+    updates.sprite = _sqRandomSprite();
     action = 'grow:' + growType;
   }
 
@@ -936,9 +945,10 @@ async function sqRevealGrowth(id) {
   if (!sq || sq.status !== 'baby') return;
 
   const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+  const sprite = _sqRandomSprite();
   try {
-    await sb.from('squirrels').update({ status: growType, grows_at: null }).eq('id', id);
-    _sqUpdate(id, { status: growType, grows_at: null });
+    await sb.from('squirrels').update({ status: growType, grows_at: null, sprite: sprite }).eq('id', id);
+    _sqUpdate(id, { status: growType, grows_at: null, sprite: sprite });
     // 성장 연출 (흔들림 → 페이드 → 새 카드)
     _sqGrowCard(id, sq.name, growType);
   } catch(e) {
