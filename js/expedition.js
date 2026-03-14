@@ -479,83 +479,89 @@ function _expRenderMap() {
   var totalAcorns = 0;
   s.loot.forEach(function(l) { totalAcorns += (l.acorns || 0); });
 
+  // 타일 노드
   var tilesHTML = '';
   for (var i = 0; i < s.tiles.length; i++) {
     var tile = s.tiles[i];
     var isCurrent = (i === s.currentTile);
     var isPast = (i < s.currentTile);
-    var isFuture = (i > s.currentTile);
 
     var icon = '❓';
     var label = '';
-    var tileClass = 'exp-tile';
+    var nodeClass = 'exp-node';
+    var isBoss = (tile.type === 'boss') || (i === s.tiles.length - 1);
 
     if (isPast || tile.cleared) {
-      tileClass += ' exp-tile-past';
+      nodeClass += ' exp-node-past';
       if (tile.type === 'empty') { icon = '🍃'; label = '평화'; }
       else if (tile.type === 'treasure') { icon = '💰'; label = '보물'; }
       else if (tile.type === 'monster') { icon = '⚔️'; label = '승리'; }
       else if (tile.type === 'boss') { icon = '👑'; label = '격파'; }
     } else if (isCurrent) {
-      tileClass += ' exp-tile-current';
+      nodeClass += ' exp-node-current';
       icon = '📍';
-      label = (i === s.tiles.length - 1) ? '보스' : (i + 1) + '칸';
+      label = isBoss ? '보스' : (i + 1) + '칸';
     } else {
-      tileClass += ' exp-tile-future';
-      icon = (i === s.tiles.length - 1) ? '💀' : '❓';
-      label = (i === s.tiles.length - 1) ? '보스' : (i + 1) + '칸';
+      nodeClass += ' exp-node-future';
+      icon = isBoss ? '💀' : '❓';
+      label = isBoss ? '보스' : (i + 1) + '칸';
     }
+    if (isBoss) nodeClass += ' exp-node-boss';
 
-    tilesHTML += '<div class="' + tileClass + '">' +
-      '<div class="exp-tile-icon">' + icon + '</div>' +
-      '<div class="exp-tile-label">' + label + '</div>' +
-      '</div>';
+    tilesHTML += '<div class="' + nodeClass + '">' +
+      '<div class="exp-node-circle"><span>' + icon + '</span></div>' +
+      '<div class="exp-node-label">' + label + '</div>' +
+    '</div>';
 
-    // 타일 사이 연결선
     if (i < s.tiles.length - 1) {
-      var lineClass = isPast ? 'exp-line exp-line-past' : 'exp-line';
-      tilesHTML += '<div class="' + lineClass + '"></div>';
+      var connClass = 'exp-conn';
+      if (isPast && i < s.currentTile - 1) connClass += ' exp-conn-past';
+      else if (isPast || isCurrent) connClass += ' exp-conn-current';
+      else connClass += ' exp-conn-future';
+      tilesHTML += '<div class="' + connClass + '"></div>';
     }
   }
 
   // 파티 상태
   var partyHTML = s.party.map(function(p) {
     var hpPct = Math.max(0, Math.round(p.hp / p.maxHp * 100));
-    var hpColor = hpPct <= 20 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
     var isDead = p.hp <= 0;
-    return '<div class="exp-party-card' + (isDead ? ' exp-party-dead' : '') + '">' +
-      '<div class="exp-party-emoji">' + (isDead ? '😵' : '🦔') + '</div>' +
-      '<div class="exp-party-info">' +
-        '<div class="exp-party-name">' + p.name + '</div>' +
-        '<div class="exp-party-bar"><div class="exp-party-hp" style="width:' + hpPct + '%;background:' + hpColor + '"></div></div>' +
-        '<div class="exp-party-stats">❤️' + Math.max(0, p.hp) + '/' + p.maxHp + ' ⚔️' + p.atk + ' 🛡️' + p.def + '</div>' +
+    var hpColor = isDead ? '#ef4444' : hpPct <= 30 ? 'linear-gradient(90deg,#eab308,#ca8a04)' : 'linear-gradient(90deg,#22c55e,#16a34a)';
+    return '<div class="exp-pc' + (isDead ? ' exp-pc-dead' : '') + '">' +
+      '<div class="exp-pc-emoji">' + (isDead ? '😵' : '🦔') + '</div>' +
+      '<div class="exp-pc-name">' + p.name + '</div>' +
+      '<div class="exp-pc-hpwrap"><div class="exp-pc-hpbar" style="width:' + hpPct + '%;background:' + hpColor + '"></div></div>' +
+      '<div class="exp-pc-stats">' +
+        '<span>❤️ ' + Math.max(0, p.hp) + '/' + p.maxHp + '</span>' +
+        '<span>⚔️ ' + p.atk + '</span>' +
+        '<span>🛡️ ' + p.def + '</span>' +
       '</div>' +
     '</div>';
   }).join('');
 
   container.innerHTML =
     '<div class="exp-container">' +
-      // 상단 정보
+      // 헤더
       '<div class="exp-header">' +
-        '<div class="exp-header-left">' +
-          '<span class="exp-header-title">🗺️ 탐험 진행 중</span>' +
-          '<span class="exp-header-sub">' + s.currentTile + ' / ' + s.tiles.length + ' 칸</span>' +
+        '<div class="exp-header-top">' +
+          '<div class="exp-header-title">📜 탐험 진행 중</div>' +
+          '<div class="exp-header-step">' + s.currentTile + ' / ' + s.tiles.length + ' 칸</div>' +
         '</div>' +
-        '<div class="exp-header-right">' +
-          '<span class="exp-loot-badge">🌰 ' + totalAcorns + '</span>' +
-          '<span class="exp-sp-badge">✨ SP ' + s.sp + '/' + s.spTotal + '</span>' +
+        '<div class="exp-badges">' +
+          '<div class="exp-badge exp-badge-acorn">🌰 ' + totalAcorns + '</div>' +
+          '<div class="exp-badge exp-badge-sp">✨ SP ' + s.sp + '/' + s.spTotal + '</div>' +
         '</div>' +
       '</div>' +
       // 타일 맵
-      '<div class="exp-tiles-wrap">' +
-        '<div class="exp-tiles">' + tilesHTML + '</div>' +
+      '<div class="exp-map-wrap">' +
+        '<div class="exp-map-path">' + tilesHTML + '</div>' +
       '</div>' +
       // 파티
-      '<div class="exp-party">' + partyHTML + '</div>' +
+      '<div class="exp-party-grid">' + partyHTML + '</div>' +
       // 행동 버튼
-      '<div class="exp-actions">' +
-        '<button class="btn btn-primary" id="expAdvanceBtn" onclick="_expAdvance()">▶️ 다음 칸으로 이동</button>' +
-        '<button class="btn btn-gray" onclick="_expRetreat()">🏳️ 귀환하기</button>' +
+      '<div class="exp-btns">' +
+        '<button class="exp-btn-advance" id="expAdvanceBtn" onclick="_expAdvance()">▶️ 다음 칸으로 이동</button>' +
+        '<button class="exp-btn-retreat" onclick="_expRetreat()">🏳️ 귀환하기</button>' +
       '</div>' +
     '</div>';
 }
