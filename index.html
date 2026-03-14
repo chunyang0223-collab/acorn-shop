@@ -1070,6 +1070,23 @@
           </div>
         </div>
 
+        <h3 class="text-sm font-black text-gray-700 mb-2">👑 보스전 카드 등급 확률 (%)</h3>
+        <p class="text-xs text-gray-400 mb-2">보스 처치 시 적용되는 카드 확률 (A + B + C = 100)</p>
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🥉 C등급</label>
+            <input type="number" id="expSet_bossWeightC" class="field" value="30" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🥈 B등급</label>
+            <input type="number" id="expSet_bossWeightB" class="field" value="45" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">🥇 A등급</label>
+            <input type="number" id="expSet_bossWeightA" class="field" value="25" min="0" max="100">
+          </div>
+        </div>
+
         <h3 class="text-sm font-black text-gray-700 mb-2">🥉 C등급 보상</h3>
         <div class="grid grid-cols-2 gap-3 mb-2">
           <div>
@@ -1135,30 +1152,31 @@
             <div class="text-xs text-gray-400 mt-1">데미지 = 공격력 × 배율</div>
           </div>
           <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">스킬 보너스 (0~N)</label>
-            <input type="number" id="expSet_skillBonus" class="field" value="9" min="0">
+            <label class="text-xs font-black text-gray-600 mb-1 block">스킬 랜덤 변동폭 (±)</label>
+            <input type="number" id="expSet_skillSwing" class="field" value="5" min="0">
+            <div class="text-xs text-gray-400 mt-1">5면 -5~+5 변동</div>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">일반공격 방어감소 비율</label>
-            <input type="number" id="expSet_atkDefRatio" class="field" value="0.38" min="0" max="1" step="0.01">
-            <div class="text-xs text-gray-400 mt-1">dmg = 공격-방어×비율</div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">일반공격 랜덤 변동폭 (±)</label>
+            <input type="number" id="expSet_atkSwing" class="field" value="3" min="0">
           </div>
           <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">일반공격 보너스 (0~N)</label>
-            <input type="number" id="expSet_atkRandom" class="field" value="5" min="0">
+            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 공격 랜덤 변동폭 (±)</label>
+            <input type="number" id="expSet_monSwing" class="field" value="3" min="0">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 방어감소 비율</label>
-            <input type="number" id="expSet_monDefRatio" class="field" value="0.48" min="0" max="1" step="0.01">
-            <div class="text-xs text-gray-400 mt-1">몬스터 반격 시 적용</div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 방어력 효과 (%)</label>
+            <input type="number" id="expSet_monDefEffect" class="field" value="38" min="0" max="100">
+            <div class="text-xs text-gray-400 mt-1">높을수록 몬스터가 단단</div>
           </div>
           <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 보너스 (0~N)</label>
-            <input type="number" id="expSet_monRandom" class="field" value="5" min="0">
+            <label class="text-xs font-black text-gray-600 mb-1 block">다람쥐 방어력 효과 (%)</label>
+            <input type="number" id="expSet_sqDefEffect" class="field" value="48" min="0" max="100">
+            <div class="text-xs text-gray-400 mt-1">높을수록 다람쥐가 단단</div>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3 mb-4">
