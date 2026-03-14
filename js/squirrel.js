@@ -20,7 +20,8 @@ var _sqSettings  = {
   stat_atk_min: 8, stat_atk_max: 20,
   stat_def_min: 4, stat_def_max: 14,
   sell_price_base: 20, sell_price_max: 80,
-  recovery_base_minutes: 60, recovery_instant_cost: 15
+  recovery_base_minutes: 60, recovery_instant_cost: 15,
+  time_trigger_min: 40, time_trigger_max: 80
 };
 var _sqAudioCtx = null;
 
@@ -288,13 +289,14 @@ async function sqLoadSquirrels() {
     .select('*').eq('user_id', myProfile.id).order('created_at');
   _sqSquirrels = data || [];
 
-  // grows_at 만료 서버 체크
+  // grows_at 만료 서버 체크 → grows_at만 null로, 성장은 사용자가 버튼으로
   const now = new Date();
   for (const sq of _sqSquirrels) {
     if (sq.status === 'baby' && sq.grows_at && new Date(sq.grows_at) <= now) {
-      const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
-      await sb.from('squirrels').update({ status: growType, grows_at: null }).eq('id', sq.id);
-      sq.status = growType; sq.grows_at = null;
+      // grows_at 만료 → 성장 준비 완료 상태 (acorns_fed를 acorns_required로 세팅)
+      await sb.from('squirrels').update({ grows_at: null, acorns_fed: sq.acorns_required }).eq('id', sq.id);
+      sq.grows_at = null;
+      sq.acorns_fed = sq.acorns_required;
     }
     // recovers_at 만료 체크: 회복 완료 → explorer로 복원, HP 풀회복
     if (sq.status === 'recovering' && sq.recovers_at && new Date(sq.recovers_at) <= now) {
@@ -368,28 +370,41 @@ function sqCardHTML(sq) {
   let babyHTML = '';
   if (sq.status === 'baby') {
     const pct = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
-    // grows_at 있으면 타이머 UI (버튼 없음) — _sqStartTimer가 별도로 채워줌
+    const isReadyToGrow = !sq.grows_at && sq.acorns_fed >= sq.acorns_required;
+
+    let feedAreaHTML = '';
+    if (sq.grows_at) {
+      // 타이머 진행 중
+      feedAreaHTML = `<div style="background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
+        <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
+        <div id="sqTimer-${sq.id}" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
+        <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
+      </div>`;
+    } else if (isReadyToGrow) {
+      // 성장 준비 완료 → 결과 확인 버튼
+      feedAreaHTML = `<div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:16px;text-align:center;border:2px solid rgba(251,191,36,.3)">
+        <div style="font-size:28px;margin-bottom:6px;animation:sqReadyBounce 1s ease-in-out infinite">🎁</div>
+        <div style="font-size:14px;font-weight:900;color:#78350f;margin-bottom:4px">성장 완료!</div>
+        <div style="font-size:11px;color:#92400e;margin-bottom:10px">어떤 다람쥐가 되었을까요?</div>
+        <button onclick="sqRevealGrowth('${sq.id}')" style="width:100%;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #b45309,0 6px 16px rgba(217,119,6,.3);font-family:inherit;transition:transform .1s,box-shadow .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #b45309'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #b45309,0 6px 16px rgba(217,119,6,.3)'">✨ 결과 확인하기!</button>
+      </div>`;
+    } else {
+      // 일반 먹이주기 UI
+      feedAreaHTML = `<div style="display:flex;align-items:center;gap:8px">
+        <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
+        <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
+        <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
+        <button onclick="sqFeedSquirrel('${sq.id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
+      </div>`;
+    }
+
     babyHTML = `
       <div style="margin-top:12px">
         <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지</div>
         <div style="height:12px;border-radius:99px;background:#f3f4f6;overflow:hidden;margin-bottom:12px">
           <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
         </div>
-        <div id="sqFeedArea-${sq.id}">
-          ${sq.grows_at
-            ? `<div style="background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
-                <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
-                <div id="sqTimer-${sq.id}" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
-                <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
-               </div>`
-            : `<div style="display:flex;align-items:center;gap:8px">
-                <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
-                <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
-                <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
-                <button onclick="sqFeedSquirrel('${sq.id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
-               </div>`
-          }
-        </div>
+        <div id="sqFeedArea-${sq.id}">${feedAreaHTML}</div>
       </div>`;
   }
 
@@ -497,11 +512,25 @@ function _sqStartTimer(id, sq) {
 
     if (remaining <= 0) {
       _sqClearTimer(id);
-      // 타이머 완료 → 도토리 주기 버튼 복원
       _sqUpdate(id, { grows_at: null });
       _sqSetIdle(id);
-      _sqShowFeedButtons(id);
-      toast('🌱', `${sq.name}이(가) 쉬었어요! 이제 다시 먹일 수 있어요`);
+
+      // 먹이 다 먹은 상태 → 성장 준비 완료 UI
+      const curSq = _sqSquirrels.find(s => s.id === id);
+      if (curSq && curSq.acorns_fed >= curSq.acorns_required) {
+        // acorns_fed를 확실히 맞추고 카드 교체
+        const cardEl = document.getElementById('sqCard-' + id);
+        if (cardEl) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = sqCardHTML(curSq);
+          cardEl.replaceWith(tmp.firstElementChild);
+        }
+        toast('🎁', `${sq.name}의 성장이 완료되었어요! 결과를 확인해보세요!`);
+      } else {
+        // 중간 쉬는 타이머 → 도토리 주기 버튼 복원
+        _sqShowFeedButtons(id);
+        toast('🌱', `${sq.name}이(가) 쉬었어요! 이제 다시 먹일 수 있어요`);
+      }
     }
   }, 1000);
 }
@@ -842,7 +871,9 @@ async function sqDoBuySquirrel(price) {
   closeModal();
   const acornsNeeded = Math.floor(Math.random() * ((_sqSettings.acorn_max||50) - (_sqSettings.acorn_min||20) + 1)) + (_sqSettings.acorn_min||20);
   const needsTime    = Math.random() * 100 < (_sqSettings.time_chance||40);
-  const timeTriggerPct = needsTime ? (10 + Math.floor(Math.random() * 51)) : null;
+  const trigMin = _sqSettings.time_trigger_min || 40;
+  const trigMax = _sqSettings.time_trigger_max || 80;
+  const timeTriggerPct = needsTime ? (trigMin + Math.floor(Math.random() * (trigMax - trigMin + 1))) : null;
   const baseHp  = (_sqSettings.stat_hp_min||60)  + Math.floor(Math.random() * ((_sqSettings.stat_hp_max||120)  - (_sqSettings.stat_hp_min||60)  + 1));
   const baseAtk = (_sqSettings.stat_atk_min||8)  + Math.floor(Math.random() * ((_sqSettings.stat_atk_max||20)  - (_sqSettings.stat_atk_min||8)  + 1));
   const baseDef = (_sqSettings.stat_def_min||4)  + Math.floor(Math.random() * ((_sqSettings.stat_def_max||14)  - (_sqSettings.stat_def_min||4)  + 1));
@@ -895,6 +926,25 @@ async function sqDoBuySquirrel(price) {
 function sqSyncAcornBadge() {
   const el = document.getElementById('acornBadge');
   if (el) el.textContent = myProfile.acorns.toLocaleString();
+}
+
+// ================================================================
+//  성장 결과 확인 (시간 경과 후 성장 준비 완료된 다람쥐)
+// ================================================================
+async function sqRevealGrowth(id) {
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq || sq.status !== 'baby') return;
+
+  const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+  try {
+    await sb.from('squirrels').update({ status: growType, grows_at: null }).eq('id', id);
+    _sqUpdate(id, { status: growType, grows_at: null });
+    // 성장 연출 (흔들림 → 페이드 → 새 카드)
+    _sqGrowCard(id, sq.name, growType);
+  } catch(e) {
+    console.error(e);
+    toast('❌', '성장 처리 중 오류');
+  }
 }
 
 // ================================================================
@@ -1140,6 +1190,8 @@ async function sqAdminInit() {
   document.getElementById('sqSet_sellMax').value     = _sqSettings.sell_price_max    || 80;
   document.getElementById('sqSet_recoveryMinutes').value = _sqSettings.recovery_base_minutes || 60;
   document.getElementById('sqSet_recoveryCost').value    = _sqSettings.recovery_instant_cost || 15;
+  document.getElementById('sqSet_triggerMin').value       = _sqSettings.time_trigger_min || 40;
+  document.getElementById('sqSet_triggerMax').value       = _sqSettings.time_trigger_max || 80;
   // 탐험 보상 설정 로드
   await expLoadSettings();
   await expAdminLoadUI();
@@ -1166,6 +1218,8 @@ async function sqSaveSettings() {
     sell_price_max:   parseInt(document.getElementById('sqSet_sellMax').value)    || 80,
     recovery_base_minutes: parseInt(document.getElementById('sqSet_recoveryMinutes').value) || 60,
     recovery_instant_cost: parseInt(document.getElementById('sqSet_recoveryCost').value)    || 15,
+    time_trigger_min:      parseInt(document.getElementById('sqSet_triggerMin').value)       || 40,
+    time_trigger_max:      parseInt(document.getElementById('sqSet_triggerMax').value)       || 80,
   };
   const { error } = await sb.from('app_settings')
     .upsert({ key:'squirrel_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict:'key' });
