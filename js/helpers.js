@@ -110,7 +110,7 @@ async function spendAcorns(amount, reason) {
   });
   if (!res.error) {
     myProfile.acorns = (myProfile.acorns || 0) - amount;
-    if (typeof syncAcornBadge === 'function') syncAcornBadge();
+    if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
   }
   return res;
 }
