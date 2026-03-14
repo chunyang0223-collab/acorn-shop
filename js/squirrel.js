@@ -19,7 +19,8 @@ var _sqSettings  = {
   stat_hp_min: 60, stat_hp_max: 120,
   stat_atk_min: 8, stat_atk_max: 20,
   stat_def_min: 4, stat_def_max: 14,
-  sell_price_base: 20, sell_price_max: 80
+  sell_price_base: 20, sell_price_max: 80,
+  recovery_base_minutes: 60, recovery_instant_cost: 15
 };
 var _sqAudioCtx = null;
 
@@ -246,6 +247,21 @@ async function _sqPoll() {
         const gauge = document.getElementById('sqGauge-' + id);
         if (gauge) requestAnimationFrame(() => { gauge.style.width = pct + '%'; });
       }
+      // recovering ↔ explorer 전환 감지 → 카드 교체
+      if ((prev.status === 'recovering' && updated.status === 'explorer') ||
+          (prev.status === 'explorer' && updated.status === 'recovering') ||
+          (prev.status === 'exploring' && updated.status === 'recovering')) {
+        _sqClearTimer(id);
+        const cardEl = document.getElementById('sqCard-' + id);
+        if (cardEl) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = sqCardHTML(updated);
+          cardEl.replaceWith(tmp.firstElementChild);
+          if (updated.status === 'recovering' && updated.recovers_at) {
+            _sqStartRecoverTimer(id, updated);
+          }
+        }
+      }
     });
 
     // 스냅샷 갱신
@@ -279,6 +295,12 @@ async function sqLoadSquirrels() {
       const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
       await sb.from('squirrels').update({ status: growType, grows_at: null }).eq('id', sq.id);
       sq.status = growType; sq.grows_at = null;
+    }
+    // recovers_at 만료 체크: 회복 완료 → explorer로 복원, HP 풀회복
+    if (sq.status === 'recovering' && sq.recovers_at && new Date(sq.recovers_at) <= now) {
+      const fullHp = sq.stats?.hp || 100;
+      await sb.from('squirrels').update({ status: 'explorer', recovers_at: null, hp_current: fullHp }).eq('id', sq.id);
+      sq.status = 'explorer'; sq.recovers_at = null; sq.hp_current = fullHp;
     }
   }
 
@@ -317,6 +339,10 @@ function sqRenderGrid() {
       _sqSetBusy(sq.id);
       _sqStartTimer(sq.id, sq);
     }
+    // 회복 중 타이머도 시작
+    if (sq.status === 'recovering' && sq.recovers_at) {
+      _sqStartRecoverTimer(sq.id, sq);
+    }
   });
 }
 
@@ -326,9 +352,11 @@ function sqRenderGrid() {
 function sqCardHTML(sq) {
   const borderColor = (sq.status === 'explorer' || sq.status === 'exploring') ? '#3b82f6'
                     : sq.status === 'pet' ? '#ec4899'
+                    : sq.status === 'recovering' ? '#f59e0b'
                     : sq.status === 'baby' ? '#fbbf24' : '#a3a3a3';
   const badgeStyle  = (sq.status === 'explorer' || sq.status === 'exploring') ? 'background:#dbeafe;color:#1e40af'
                     : sq.status === 'pet' ? 'background:#fce7f3;color:#9d174d'
+                    : sq.status === 'recovering' ? 'background:#fef3c7;color:#92400e'
                     : 'background:#fef3c7;color:#92400e';
   const typeLabel   = { baby:'아기 다람쥐', explorer:'탐험형 🗺️', pet:'애완형 🏡', exploring:'탐험 중 🗺️', recovering:'회복 중 😴' };
   const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
@@ -384,6 +412,19 @@ function sqCardHTML(sq) {
       </div>`;
   }
 
+  // 회복 중 UI
+  let recoverHTML = '';
+  if (sq.status === 'recovering' && sq.recovers_at) {
+    const cost = _sqSettings.recovery_instant_cost || 15;
+    recoverHTML = `
+      <div id="sqRecoverArea-${sq.id}" style="margin-top:12px;background:#fef3c7;border-radius:14px;padding:14px 16px;text-align:center">
+        <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:4px">😴 회복 중...</div>
+        <div id="sqRecoverTimer-${sq.id}" style="font-size:20px;font-weight:900;color:#b45309;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
+        <div style="font-size:10px;color:#d97706;margin-top:2px;margin-bottom:10px">회복이 끝나면 다시 탐험할 수 있어요</div>
+        <button onclick="sqInstantRecover('${sq.id}')" style="width:100%;height:36px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(217,119,6,0.3);font-family:inherit">🌰 ${cost} 도토리로 즉시 회복</button>
+      </div>`;
+  }
+
   const sellBtn = (sq.status === 'pet' || sq.status === 'explorer')
     ? `<button onclick="sqSellSquirrel('${sq.id}')" style="margin-top:12px;width:100%;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>`
     : '';
@@ -398,7 +439,7 @@ function sqCardHTML(sq) {
         </div>
         <span style="font-size:10px;font-weight:900;padding:3px 10px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
       </div>
-      ${babyHTML}${statsHTML}${sellBtn}
+      ${babyHTML}${statsHTML}${recoverHTML}${sellBtn}
     </div>`;
 }
 
@@ -458,6 +499,96 @@ function _sqStartTimer(id, sq) {
       toast('🌱', `${sq.name}이(가) 쉬었어요! 이제 다시 먹일 수 있어요`);
     }
   }, 1000);
+}
+
+// ================================================================
+//  회복 타이머 (recovers_at 카운트다운)
+// ================================================================
+function _sqStartRecoverTimer(id, sq) {
+  _sqClearTimer(id);
+
+  const recoversAt = new Date(sq.recovers_at);
+
+  function fmt(ms) {
+    if (ms <= 0) return '00:00:00';
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+  }
+
+  _sqTimers[id] = setInterval(async () => {
+    const remaining = recoversAt - Date.now();
+    const el = document.getElementById('sqRecoverTimer-' + id);
+    if (el) el.textContent = fmt(remaining);
+
+    if (remaining <= 0) {
+      _sqClearTimer(id);
+      // 회복 완료 → explorer 복원 + HP 풀회복
+      const fullHp = sq.stats?.hp || 100;
+      try {
+        await sb.from('squirrels').update({ status: 'explorer', recovers_at: null, hp_current: fullHp }).eq('id', id);
+      } catch(e) {}
+      _sqUpdate(id, { status: 'explorer', recovers_at: null, hp_current: fullHp });
+      _sqSetIdle(id);
+      // 카드 교체
+      const cardEl = document.getElementById('sqCard-' + id);
+      if (cardEl) {
+        const updatedSq = _sqSquirrels.find(s => s.id === id);
+        if (updatedSq) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = sqCardHTML(updatedSq);
+          cardEl.replaceWith(tmp.firstElementChild);
+        }
+      }
+      toast('💚', `${sq.name}이(가) 완전히 회복했어요!`);
+    }
+  }, 1000);
+}
+
+// ================================================================
+//  즉시 회복 (도토리 소모)
+// ================================================================
+async function sqInstantRecover(id) {
+  if (_sqIsBusy(id)) return;
+  _sqSetBusy(id);
+
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq || sq.status !== 'recovering') { _sqSetIdle(id); return; }
+
+  const cost = _sqSettings.recovery_instant_cost || 15;
+  if (!canAfford(cost)) {
+    toast('🌰', '도토리가 부족해요 (' + cost + '개 필요)');
+    _sqSetIdle(id);
+    return;
+  }
+
+  try {
+    await spendAcorns(cost, '다람쥐 즉시회복');
+    const fullHp = sq.stats?.hp || 100;
+    await sb.from('squirrels').update({ status: 'explorer', recovers_at: null, hp_current: fullHp }).eq('id', id);
+    _sqClearTimer(id);
+    _sqUpdate(id, { status: 'explorer', recovers_at: null, hp_current: fullHp });
+    _sqSetIdle(id);
+
+    // 카드 교체
+    const cardEl = document.getElementById('sqCard-' + id);
+    if (cardEl) {
+      const updatedSq = _sqSquirrels.find(s => s.id === id);
+      if (updatedSq) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = sqCardHTML(updatedSq);
+        cardEl.replaceWith(tmp.firstElementChild);
+      }
+    }
+
+    _sqPlayFeedSound(true);
+    toast('💚', `${sq.name}이(가) 즉시 회복했어요!`);
+    if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+  } catch(e) {
+    console.error(e);
+    toast('❌', '회복 처리 중 오류');
+    _sqSetIdle(id);
+  }
 }
 
 // ================================================================
@@ -831,9 +962,13 @@ async function sqLoadActiveExpedition() {
 
 async function sqStartExpeditionFlow() {
   const explorers = _sqSquirrels.filter(s => s.status === 'explorer');
+  const recovering = _sqSquirrels.filter(s => s.status === 'recovering');
 
   if (explorers.length === 0) {
-    showModal(`<div class="text-center"><div style="font-size:40px">🗺️</div><div class="title-font text-lg text-gray-800 my-2">탐험형 다람쥐가 없어요</div><div class="text-sm text-gray-500 mb-4">다람쥐를 키워서 탐험형으로 성장시켜보세요!</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
+    const recoverMsg = recovering.length > 0
+      ? `<div class="text-xs text-amber-600 mt-2">😴 회복 중인 다람쥐 ${recovering.length}마리가 있어요</div>`
+      : '';
+    showModal(`<div class="text-center"><div style="font-size:40px">🗺️</div><div class="title-font text-lg text-gray-800 my-2">출발 가능한 다람쥐가 없어요</div><div class="text-sm text-gray-500 mb-2">탐험형 다람쥐를 키우거나 회복을 기다려주세요!</div>${recoverMsg}<button class="btn btn-primary w-full mt-4" onclick="closeModal()">확인</button></div>`);
     return;
   }
 
@@ -930,6 +1065,8 @@ async function sqAdminInit() {
   document.getElementById('sqSet_defMax').value      = _sqSettings.stat_def_max      || 14;
   document.getElementById('sqSet_sellBase').value    = _sqSettings.sell_price_base   || 20;
   document.getElementById('sqSet_sellMax').value     = _sqSettings.sell_price_max    || 80;
+  document.getElementById('sqSet_recoveryMinutes').value = _sqSettings.recovery_base_minutes || 60;
+  document.getElementById('sqSet_recoveryCost').value    = _sqSettings.recovery_instant_cost || 15;
   await sqAdminLoadList();
 }
 
@@ -951,6 +1088,8 @@ async function sqSaveSettings() {
     stat_def_max:     parseInt(document.getElementById('sqSet_defMax').value)     || 14,
     sell_price_base:  parseInt(document.getElementById('sqSet_sellBase').value)   || 20,
     sell_price_max:   parseInt(document.getElementById('sqSet_sellMax').value)    || 80,
+    recovery_base_minutes: parseInt(document.getElementById('sqSet_recoveryMinutes').value) || 60,
+    recovery_instant_cost: parseInt(document.getElementById('sqSet_recoveryCost').value)    || 15,
   };
   const { error } = await sb.from('app_settings')
     .upsert({ key:'squirrel_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict:'key' });
