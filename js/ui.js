@@ -31,7 +31,7 @@ async function initAppUI() {
 
     // 첫 탭(상점)이 점검 중이면 점검 안내 표시, 아니면 정상 렌더
     const maint = window._maintSettings || {};
-    if (maint['shop']) {
+    if (maint['shop'] && !_isMaintBypassed()) {
       const tabEl = document.getElementById('utab-shop');
       Array.from(tabEl.children).forEach(el => {
         el.style.display = 'none';
@@ -349,7 +349,7 @@ function uTab(tab, btn) {
     });
   }
 
-  if (maint[tab] && !myProfile?.is_admin) {
+  if (maint[tab] && !_isMaintBypassed()) {
     // 기존 자식 요소 전부 숨기기
     Array.from(tabEl.children).forEach(el => {
       el.style.display = 'none';
@@ -400,7 +400,20 @@ async function toggleMaintenance(tab) {
 async function loadMaintenanceSettings() {
   const { data } = await sb.from('app_settings').select('value').eq('key', 'maintenance').single();
   window._maintSettings = data?.value || {};
+  // 점검 우회 유저 목록 로드
+  try {
+    const { data: bp } = await sb.from('app_settings').select('value').eq('key', 'maintenance_bypass').maybeSingle();
+    window._maintBypass = bp?.value || [];
+  } catch(e) { window._maintBypass = []; }
   return window._maintSettings;
+}
+
+// 점검 우회 대상인지 확인 (관리자 또는 bypass 목록에 포함)
+function _isMaintBypassed() {
+  if (myProfile?.is_admin) return true;
+  var bypassList = window._maintBypass || [];
+  if (!myProfile?.id) return false;
+  return bypassList.indexOf(myProfile.id) >= 0;
 }
 
 function renderMaintenanceBtns() {
