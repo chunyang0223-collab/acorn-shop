@@ -34,11 +34,11 @@ var _expConfig = {
   reward_A: { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] },
   // 전투 계수
   skill_multiplier: 1.65,    // 스킬 데미지 = atk × 배율
-  skill_bonus_max: 9,        // 스킬 랜덤 보너스 (0~N)
-  atk_def_ratio: 0.38,       // 일반공격 방어 감소 비율
-  atk_random_max: 5,         // 일반공격 랜덤 보너스 (0~N)
-  mon_def_ratio: 0.48,       // 몬스터 반격 방어 감소 비율
-  mon_random_max: 5,         // 몬스터 반격 랜덤 보너스 (0~N)
+  skill_swing: 5,            // 스킬 랜덤 변동폭 (±N)
+  atk_swing: 3,              // 일반공격 랜덤 변동폭 (±N)
+  mon_swing: 3,              // 몬스터 공격 랜덤 변동폭 (±N)
+  mon_def_effect: 38,        // 몬스터 방어력 효과 (%) — 높을수록 몬스터가 단단
+  sq_def_effect: 48,         // 다람쥐 방어력 효과 (%) — 높을수록 다람쥐가 단단
   heal_percent: 40            // 포션 회복량 (최대HP의 %)
 };
 
@@ -63,11 +63,11 @@ async function expLoadSettings() {
       if (v.monsters) _expConfig.monsters = v.monsters;
       if (v.bosses) _expConfig.bosses = v.bosses;
       if (v.skill_multiplier !== undefined) _expConfig.skill_multiplier = v.skill_multiplier;
-      if (v.skill_bonus_max !== undefined) _expConfig.skill_bonus_max = v.skill_bonus_max;
-      if (v.atk_def_ratio !== undefined) _expConfig.atk_def_ratio = v.atk_def_ratio;
-      if (v.atk_random_max !== undefined) _expConfig.atk_random_max = v.atk_random_max;
-      if (v.mon_def_ratio !== undefined) _expConfig.mon_def_ratio = v.mon_def_ratio;
-      if (v.mon_random_max !== undefined) _expConfig.mon_random_max = v.mon_random_max;
+      if (v.skill_swing !== undefined) _expConfig.skill_swing = v.skill_swing;
+      if (v.atk_swing !== undefined) _expConfig.atk_swing = v.atk_swing;
+      if (v.mon_swing !== undefined) _expConfig.mon_swing = v.mon_swing;
+      if (v.mon_def_effect !== undefined) _expConfig.mon_def_effect = v.mon_def_effect;
+      if (v.sq_def_effect !== undefined) _expConfig.sq_def_effect = v.sq_def_effect;
       if (v.heal_percent !== undefined) _expConfig.heal_percent = v.heal_percent;
     }
   } catch(e) {}
@@ -100,11 +100,11 @@ async function expAdminLoadUI() {
   if (el('expSet_aItemChance')) el('expSet_aItemChance').value = Math.round(c.reward_A.itemChance * 100);
   // 전투 계수
   if (el('expSet_skillMulti')) el('expSet_skillMulti').value = c.skill_multiplier;
-  if (el('expSet_skillBonus')) el('expSet_skillBonus').value = c.skill_bonus_max;
-  if (el('expSet_atkDefRatio')) el('expSet_atkDefRatio').value = c.atk_def_ratio;
-  if (el('expSet_atkRandom')) el('expSet_atkRandom').value = c.atk_random_max;
-  if (el('expSet_monDefRatio')) el('expSet_monDefRatio').value = c.mon_def_ratio;
-  if (el('expSet_monRandom')) el('expSet_monRandom').value = c.mon_random_max;
+  if (el('expSet_skillSwing')) el('expSet_skillSwing').value = c.skill_swing;
+  if (el('expSet_atkSwing')) el('expSet_atkSwing').value = c.atk_swing;
+  if (el('expSet_monSwing')) el('expSet_monSwing').value = c.mon_swing;
+  if (el('expSet_monDefEffect')) el('expSet_monDefEffect').value = c.mon_def_effect;
+  if (el('expSet_sqDefEffect')) el('expSet_sqDefEffect').value = c.sq_def_effect;
   if (el('expSet_healPct')) el('expSet_healPct').value = c.heal_percent;
 
   // products 테이블에서 상품 목록 로드
@@ -227,11 +227,11 @@ async function expSaveSettings() {
     },
     // 전투 계수
     skill_multiplier: parseFloat(el('expSet_skillMulti')?.value) || 1.65,
-    skill_bonus_max: parseInt(el('expSet_skillBonus')?.value) || 9,
-    atk_def_ratio: parseFloat(el('expSet_atkDefRatio')?.value) || 0.38,
-    atk_random_max: parseInt(el('expSet_atkRandom')?.value) || 5,
-    mon_def_ratio: parseFloat(el('expSet_monDefRatio')?.value) || 0.48,
-    mon_random_max: parseInt(el('expSet_monRandom')?.value) || 5,
+    skill_swing: parseInt(el('expSet_skillSwing')?.value) || 5,
+    atk_swing: parseInt(el('expSet_atkSwing')?.value) || 3,
+    mon_swing: parseInt(el('expSet_monSwing')?.value) || 3,
+    mon_def_effect: parseInt(el('expSet_monDefEffect')?.value) || 38,
+    sq_def_effect: parseInt(el('expSet_sqDefEffect')?.value) || 48,
     heal_percent: parseInt(el('expSet_healPct')?.value) || 40
   };
 
@@ -269,8 +269,20 @@ async function sqContinueExpedition(expId) {
     // SP 부여 (탐험당 1회)
     const spTotal = Math.floor(Math.random() * (_expConfig.sp_max - _expConfig.sp_min + 1)) + _expConfig.sp_min;
 
-    // 타일 생성 (아직 안 만들어졌으면)
-    const tiles = data.tiles || _expGenerateTiles(data.total_steps);
+    // loot에서 _meta 추출 (tiles, sp 복원용)
+    var savedLoot = data.loot || [];
+    var meta = null;
+    var cleanLoot = [];
+    savedLoot.forEach(function(l) {
+      if (l.type === '_meta') meta = l;
+      else cleanLoot.push(l);
+    });
+
+    // 타일 복원 또는 새로 생성
+    const tiles = (meta && meta.tiles) ? meta.tiles : _expGenerateTiles(data.total_steps);
+    // SP 복원 또는 새로 부여
+    const restoredSp = (meta && meta.sp !== undefined) ? meta.sp : spTotal;
+    const restoredSpTotal = (meta && meta.spTotal !== undefined) ? meta.spTotal : spTotal;
 
     // 상태 초기화
     _expState = {
@@ -283,15 +295,15 @@ async function sqContinueExpedition(expId) {
       })),
       tiles: tiles,
       currentTile: data.current_step || 0,
-      sp: spTotal,
-      spTotal: spTotal,
-      loot: data.loot || [],
+      sp: restoredSp,
+      spTotal: restoredSpTotal,
+      loot: cleanLoot,
       battleOver: false
     };
 
-    // 타일 데이터 DB 저장 (최초 생성 시, 컬럼 없으면 무시)
-    if (!data.tiles) {
-      try { await sb.from('expeditions').update({ tiles: tiles }).eq('id', expId); } catch(e) {}
+    // 최초 생성 시 즉시 저장 (재접속 시 복원 가능하도록)
+    if (!meta) {
+      _expSaveProgress();
     }
 
     // UI 렌더
@@ -777,12 +789,14 @@ function _btlAction(type) {
       b.sp--;
       _btlUpdateSpBtn();
       _expState.sp = b.sp; // 탐험 상태 동기화
-      dmg = Math.floor(b.attacker.atk * (_expConfig.skill_multiplier || 1.65) + Math.random() * (_expConfig.skill_bonus_max || 9));
+      var swing = _expConfig.skill_swing || 5;
+      dmg = Math.floor(b.attacker.atk * (_expConfig.skill_multiplier || 1.65) + (Math.random() * swing * 2 - swing));
       _btlSound('skill');
       _btlFlash('rgba(255,220,50,.5)');
       _btlLog('✨ <b>' + b.attacker.name + '</b>의 필살기! <b style="color:#f0c030">' + dmg + ' 데미지!</b>', 'skill');
     } else {
-      dmg = Math.max(1, b.attacker.atk - Math.floor(b.mon.def * (_expConfig.atk_def_ratio || 0.38)) + Math.floor(Math.random() * (_expConfig.atk_random_max || 5)) - 1);
+      var aSwing = _expConfig.atk_swing || 3;
+      dmg = Math.max(1, b.attacker.atk - Math.floor(b.mon.def * ((_expConfig.mon_def_effect || 38) / 100)) + Math.round(Math.random() * aSwing * 2 - aSwing));
       _btlSound('attack');
       _btlFlash('rgba(255,255,255,.38)');
       _btlLog('⚔️ <b>' + b.attacker.name + '</b>의 공격! <b style="color:#68c568">' + dmg + ' 데미지!</b>', 'atk');
@@ -815,7 +829,8 @@ function _btlAction(type) {
         var aliveNow = b.party.filter(function(p) { return p.hp > 0; });
         var target = aliveNow[Math.floor(Math.random() * aliveNow.length)];
         var tIdx = b.party.indexOf(target);
-        var eDmg = Math.max(1, b.mon.atk - Math.floor(target.def * (_expConfig.mon_def_ratio || 0.48)) + Math.floor(Math.random() * (_expConfig.mon_random_max || 5)) - 1);
+        var mSwing = _expConfig.mon_swing || 3;
+        var eDmg = Math.max(1, b.mon.atk - Math.floor(target.def * ((_expConfig.sq_def_effect || 48) / 100)) + Math.round(Math.random() * mSwing * 2 - mSwing));
 
         var tCard = document.getElementById('btlPc' + tIdx);
         if (tCard) { tCard.classList.add('btl-hit'); setTimeout(function() { tCard.classList.remove('btl-hit'); }, 350); }
@@ -860,7 +875,8 @@ function _btlAction(type) {
       var aliveNow = b.party.filter(function(p) { return p.hp > 0; });
       var rTarget = aliveNow[Math.floor(Math.random() * aliveNow.length)];
       var rIdx = b.party.indexOf(rTarget);
-      var eDmg = Math.max(1, b.mon.atk - Math.floor(rTarget.def * (_expConfig.mon_def_ratio || 0.48)) + Math.floor(Math.random() * (_expConfig.mon_random_max || 5)) - 1);
+      var mSwing2 = _expConfig.mon_swing || 3;
+      var eDmg = Math.max(1, b.mon.atk - Math.floor(rTarget.def * ((_expConfig.sq_def_effect || 48) / 100)) + Math.round(Math.random() * mSwing2 * 2 - mSwing2));
       var tCard = document.getElementById('btlPc' + rIdx);
       if (tCard) { tCard.classList.add('btl-hit'); setTimeout(function() { tCard.classList.remove('btl-hit'); }, 350); }
       _btlSound('hit');
@@ -1199,16 +1215,13 @@ async function _expFinish(status) {
   s.loot.forEach(function(l) { totalAcorns += (l.acorns || 0); });
 
   try {
-    // 탐험 상태 업데이트 (tiles 컬럼이 없을 수 있으므로 분리)
+    // loot에서 _meta 제거 후 최종 저장
+    var finalLoot = s.loot.filter(function(l) { return l.type !== '_meta'; });
     var updateData = {
       status: status,
       current_step: s.currentTile,
-      loot: s.loot
+      loot: finalLoot
     };
-    // tiles 저장 시도 (컬럼 없으면 무시)
-    try {
-      await sb.from('expeditions').update({ tiles: s.tiles }).eq('id', s.expId);
-    } catch(e) {}
     await sb.from('expeditions').update(updateData).eq('id', s.expId);
 
     // 다람쥐 상태 복원 + HP 업데이트
@@ -1332,11 +1345,12 @@ async function _expSaveProgress() {
   var s = _expState;
   if (!s) return;
   try {
+    // tiles와 sp를 loot 배열의 _meta 객체로 함께 저장 (별도 컬럼 불필요)
+    var lootWithMeta = s.loot.filter(function(l) { return l.type !== '_meta'; });
+    lootWithMeta.push({ type: '_meta', tiles: s.tiles, sp: s.sp, spTotal: s.spTotal });
     await sb.from('expeditions').update({
       current_step: s.currentTile,
-      loot: s.loot
+      loot: lootWithMeta
     }).eq('id', s.expId);
-    // tiles 컬럼이 있으면 저장 시도 (없으면 무시)
-    try { await sb.from('expeditions').update({ tiles: s.tiles }).eq('id', s.expId); } catch(e) {}
   } catch (e) {}
 }
