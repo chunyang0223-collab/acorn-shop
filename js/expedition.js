@@ -8,31 +8,143 @@
    - 완료/귀환 시 DB 업데이트 + 탭 복귀
    ================================================================ */
 
-// ── 탐험 설정 (관리자 설정과 연동 예정) ──
+// ── 탐험 설정 (기본값, DB에서 덮어씀) ──
 var _expConfig = {
-  // 타일 이벤트 확률 (%)  — 합산 100
   chance_empty: 25,
   chance_treasure: 30,
   chance_monster: 45,
-  // SP (스킬 포인트) 범위
   sp_min: 1,
   sp_max: 5,
-  // 보물 보상 범위
   treasure_acorn_min: 3,
   treasure_acorn_max: 12,
-  // 몬스터 테이블
   monsters: [
     { name: '숲의 늑대', emoji: '🐺', lv: 6, hp: 80, atk: 16, def: 7 },
     { name: '야생 멧돼지', emoji: '🐗', lv: 7, hp: 100, atk: 18, def: 9 },
     { name: '독 거미', emoji: '🕷️', lv: 5, hp: 60, atk: 20, def: 5 },
     { name: '그림자 박쥐', emoji: '🦇', lv: 5, hp: 55, atk: 17, def: 4 },
   ],
-  // 보스 테이블
   bosses: [
     { name: '숲의 수호자', emoji: '🐻', lv: 10, hp: 180, atk: 24, def: 12 },
     { name: '고대 뱀', emoji: '🐍', lv: 11, hp: 200, atk: 26, def: 10 },
-  ]
+  ],
+  // 보상 카드
+  reward_weights: { C: 65, B: 28, A: 7 },
+  reward_C: { acorns: [5, 10], itemChance: 0.15, items: ['🍄 버섯', '🌿 풀잎', '🪨 돌멩이'] },
+  reward_B: { acorns: [10, 20], itemChance: 0.45, items: ['🍎 사과', '🔮 마석', '🪵 나무'] },
+  reward_A: { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] }
 };
+
+// ── 탐험 설정 DB 로드 ──
+async function expLoadSettings() {
+  try {
+    var res = await sb.from('app_settings').select('value').eq('key', 'expedition_settings').maybeSingle();
+    if (res.data?.value) {
+      var v = res.data.value;
+      // 기본값에 DB값을 덮어씌움 (없는 필드는 기본값 유지)
+      if (v.chance_empty !== undefined) _expConfig.chance_empty = v.chance_empty;
+      if (v.chance_treasure !== undefined) _expConfig.chance_treasure = v.chance_treasure;
+      if (v.chance_monster !== undefined) _expConfig.chance_monster = v.chance_monster;
+      if (v.sp_min !== undefined) _expConfig.sp_min = v.sp_min;
+      if (v.sp_max !== undefined) _expConfig.sp_max = v.sp_max;
+      if (v.treasure_acorn_min !== undefined) _expConfig.treasure_acorn_min = v.treasure_acorn_min;
+      if (v.treasure_acorn_max !== undefined) _expConfig.treasure_acorn_max = v.treasure_acorn_max;
+      if (v.reward_weights) _expConfig.reward_weights = v.reward_weights;
+      if (v.reward_C) _expConfig.reward_C = v.reward_C;
+      if (v.reward_B) _expConfig.reward_B = v.reward_B;
+      if (v.reward_A) _expConfig.reward_A = v.reward_A;
+      if (v.monsters) _expConfig.monsters = v.monsters;
+      if (v.bosses) _expConfig.bosses = v.bosses;
+    }
+  } catch(e) {}
+}
+
+// ── 관리자: 탐험 설정 UI 로드 ──
+function expAdminLoadUI() {
+  var c = _expConfig;
+  var el = function(id) { return document.getElementById(id); };
+  if (el('expSet_chanceEmpty')) el('expSet_chanceEmpty').value = c.chance_empty;
+  if (el('expSet_chanceTreasure')) el('expSet_chanceTreasure').value = c.chance_treasure;
+  if (el('expSet_chanceMonster')) el('expSet_chanceMonster').value = c.chance_monster;
+  if (el('expSet_spMin')) el('expSet_spMin').value = c.sp_min;
+  if (el('expSet_spMax')) el('expSet_spMax').value = c.sp_max;
+  if (el('expSet_treasureMin')) el('expSet_treasureMin').value = c.treasure_acorn_min;
+  if (el('expSet_treasureMax')) el('expSet_treasureMax').value = c.treasure_acorn_max;
+  if (el('expSet_weightC')) el('expSet_weightC').value = c.reward_weights.C;
+  if (el('expSet_weightB')) el('expSet_weightB').value = c.reward_weights.B;
+  if (el('expSet_weightA')) el('expSet_weightA').value = c.reward_weights.A;
+  if (el('expSet_cAcornMin')) el('expSet_cAcornMin').value = c.reward_C.acorns[0];
+  if (el('expSet_cAcornMax')) el('expSet_cAcornMax').value = c.reward_C.acorns[1];
+  if (el('expSet_cItemChance')) el('expSet_cItemChance').value = Math.round(c.reward_C.itemChance * 100);
+  if (el('expSet_cItems')) el('expSet_cItems').value = c.reward_C.items.join(',');
+  if (el('expSet_bAcornMin')) el('expSet_bAcornMin').value = c.reward_B.acorns[0];
+  if (el('expSet_bAcornMax')) el('expSet_bAcornMax').value = c.reward_B.acorns[1];
+  if (el('expSet_bItemChance')) el('expSet_bItemChance').value = Math.round(c.reward_B.itemChance * 100);
+  if (el('expSet_bItems')) el('expSet_bItems').value = c.reward_B.items.join(',');
+  if (el('expSet_aAcornMin')) el('expSet_aAcornMin').value = c.reward_A.acorns[0];
+  if (el('expSet_aAcornMax')) el('expSet_aAcornMax').value = c.reward_A.acorns[1];
+  if (el('expSet_aItemChance')) el('expSet_aItemChance').value = Math.round(c.reward_A.itemChance * 100);
+  if (el('expSet_aItems')) el('expSet_aItems').value = c.reward_A.items.join(',');
+}
+
+// ── 관리자: 탐험 설정 저장 ──
+async function expSaveSettings() {
+  var el = function(id) { return document.getElementById(id); };
+
+  var chE = parseInt(el('expSet_chanceEmpty')?.value) || 0;
+  var chT = parseInt(el('expSet_chanceTreasure')?.value) || 0;
+  var chM = parseInt(el('expSet_chanceMonster')?.value) || 0;
+  if (chE + chT + chM !== 100) {
+    toast('⚠️', '타일 확률의 합이 100이 아닙니다 (현재: ' + (chE + chT + chM) + ')');
+    return;
+  }
+
+  var wC = parseInt(el('expSet_weightC')?.value) || 0;
+  var wB = parseInt(el('expSet_weightB')?.value) || 0;
+  var wA = parseInt(el('expSet_weightA')?.value) || 0;
+  if (wC + wB + wA !== 100) {
+    toast('⚠️', '카드 등급 확률의 합이 100이 아닙니다 (현재: ' + (wC + wB + wA) + ')');
+    return;
+  }
+
+  function parseItems(str) {
+    return (str || '').split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+  }
+
+  var settings = {
+    chance_empty: chE,
+    chance_treasure: chT,
+    chance_monster: chM,
+    sp_min: parseInt(el('expSet_spMin')?.value) || 1,
+    sp_max: parseInt(el('expSet_spMax')?.value) || 5,
+    treasure_acorn_min: parseInt(el('expSet_treasureMin')?.value) || 0,
+    treasure_acorn_max: parseInt(el('expSet_treasureMax')?.value) || 1,
+    reward_weights: { C: wC, B: wB, A: wA },
+    reward_C: {
+      acorns: [parseInt(el('expSet_cAcornMin')?.value) || 0, parseInt(el('expSet_cAcornMax')?.value) || 0],
+      itemChance: (parseInt(el('expSet_cItemChance')?.value) || 0) / 100,
+      items: parseItems(el('expSet_cItems')?.value)
+    },
+    reward_B: {
+      acorns: [parseInt(el('expSet_bAcornMin')?.value) || 0, parseInt(el('expSet_bAcornMax')?.value) || 0],
+      itemChance: (parseInt(el('expSet_bItemChance')?.value) || 0) / 100,
+      items: parseItems(el('expSet_bItems')?.value)
+    },
+    reward_A: {
+      acorns: [parseInt(el('expSet_aAcornMin')?.value) || 0, parseInt(el('expSet_aAcornMax')?.value) || 0],
+      itemChance: (parseInt(el('expSet_aItemChance')?.value) || 0) / 100,
+      items: parseItems(el('expSet_aItems')?.value)
+    }
+  };
+
+  var res = await sb.from('app_settings')
+    .upsert({ key: 'expedition_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (!res.error) {
+    Object.assign(_expConfig, settings);
+    toast('✅', '탐험 보상 설정이 저장되었어요');
+  } else {
+    toast('❌', '저장 실패: ' + (res.error.message || ''));
+  }
+}
 
 // ── 탐험 런타임 상태 ──
 var _expState = null; // { expId, expedition, party, tiles, currentTile, sp, spTotal, loot, ... }
@@ -42,6 +154,9 @@ var _expState = null; // { expId, expedition, party, tiles, currentTile, sp, spT
 // ================================================================
 async function sqContinueExpedition(expId) {
   try {
+    // 설정 로드
+    await expLoadSettings();
+
     // DB에서 탐험 데이터 로드
     const { data } = await sb.from('expeditions')
       .select('*').eq('id', expId).single();
@@ -679,24 +794,29 @@ function _btlAction(type) {
 // ================================================================
 //  전투 결과: 승리
 // ================================================================
-var _btlRewardTable = {
-  weights: { C: 65, B: 28, A: 7 },
-  C: { acorns: [5, 10], itemChance: 0.15, items: ['🍄 버섯', '🌿 풀잎', '🪨 돌멩이'] },
-  B: { acorns: [10, 20], itemChance: 0.45, items: ['🍎 사과', '🔮 마석', '🪵 나무'] },
-  A: { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] }
-};
+// 보상 테이블은 _expConfig에서 읽음
+function _btlGetRewardTable() {
+  return {
+    weights: _expConfig.reward_weights || { C: 65, B: 28, A: 7 },
+    C: _expConfig.reward_C || { acorns: [5, 10], itemChance: 0.15, items: ['🍄 버섯', '🌿 풀잎', '🪨 돌멩이'] },
+    B: _expConfig.reward_B || { acorns: [10, 20], itemChance: 0.45, items: ['🍎 사과', '🔮 마석', '🪵 나무'] },
+    A: _expConfig.reward_A || { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] }
+  };
+}
 
 function _btlPickGrade() {
+  var table = _btlGetRewardTable();
   var r = Math.random() * 100;
-  if (r < _btlRewardTable.weights.A) return 'A';
-  if (r < _btlRewardTable.weights.A + _btlRewardTable.weights.B) return 'B';
+  if (r < table.weights.A) return 'A';
+  if (r < table.weights.A + table.weights.B) return 'B';
   return 'C';
 }
 
 function _btlGenReward(grade) {
-  var t = _btlRewardTable[grade];
+  var table = _btlGetRewardTable();
+  var t = table[grade];
   var acorns = Math.floor(Math.random() * (t.acorns[1] - t.acorns[0] + 1)) + t.acorns[0];
-  var item = Math.random() < t.itemChance ? t.items[Math.floor(Math.random() * t.items.length)] : null;
+  var item = (t.items && t.items.length > 0 && Math.random() < t.itemChance) ? t.items[Math.floor(Math.random() * t.items.length)] : null;
   return { grade: grade, acorns: acorns, item: item };
 }
 
