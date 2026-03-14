@@ -415,13 +415,18 @@ function sqCardHTML(sq) {
   // 회복 중 UI
   let recoverHTML = '';
   if (sq.status === 'recovering' && sq.recovers_at) {
-    const cost = _sqSettings.recovery_instant_cost || 15;
+    const maxCost = _sqSettings.recovery_instant_cost || 15;
+    const baseMinutes = _sqSettings.recovery_base_minutes || 60;
+    // 남은 시간 비율로 현재 비용 계산
+    const remaining = Math.max(0, new Date(sq.recovers_at) - Date.now());
+    const totalMs = baseMinutes * 60000;
+    const currentCost = Math.max(1, Math.ceil(maxCost * (remaining / totalMs)));
     recoverHTML = `
       <div id="sqRecoverArea-${sq.id}" style="margin-top:12px;background:#fef3c7;border-radius:14px;padding:14px 16px;text-align:center">
         <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:4px">😴 회복 중...</div>
         <div id="sqRecoverTimer-${sq.id}" style="font-size:20px;font-weight:900;color:#b45309;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
         <div style="font-size:10px;color:#d97706;margin-top:2px;margin-bottom:10px">회복이 끝나면 다시 탐험할 수 있어요</div>
-        <button onclick="sqInstantRecover('${sq.id}')" style="width:100%;height:36px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(217,119,6,0.3);font-family:inherit">🌰 ${cost} 도토리로 즉시 회복</button>
+        <button id="sqRecoverBtn-${sq.id}" onclick="sqInstantRecover('${sq.id}')" style="width:100%;height:36px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(217,119,6,0.3);font-family:inherit">🌰 ${currentCost} 도토리로 즉시 회복</button>
       </div>`;
   }
 
@@ -521,6 +526,14 @@ function _sqStartRecoverTimer(id, sq) {
     const el = document.getElementById('sqRecoverTimer-' + id);
     if (el) el.textContent = fmt(remaining);
 
+    // 남은 시간 비율에 따라 즉시회복 비용 갱신
+    const maxCost = _sqSettings.recovery_instant_cost || 15;
+    const baseMinutes = _sqSettings.recovery_base_minutes || 60;
+    const totalMs = baseMinutes * 60000;
+    const currentCost = remaining > 0 ? Math.max(1, Math.ceil(maxCost * (remaining / totalMs))) : 0;
+    const btn = document.getElementById('sqRecoverBtn-' + id);
+    if (btn && remaining > 0) btn.textContent = '🌰 ' + currentCost + ' 도토리로 즉시 회복';
+
     if (remaining <= 0) {
       _sqClearTimer(id);
       // 회복 완료 → explorer 복원 + HP 풀회복
@@ -555,7 +568,20 @@ async function sqInstantRecover(id) {
   const sq = _sqSquirrels.find(s => s.id === id);
   if (!sq || sq.status !== 'recovering') { _sqSetIdle(id); return; }
 
-  const cost = _sqSettings.recovery_instant_cost || 15;
+  // 남은 시간 비율로 비용 계산
+  const maxCost = _sqSettings.recovery_instant_cost || 15;
+  const baseMinutes = _sqSettings.recovery_base_minutes || 60;
+  const totalMs = baseMinutes * 60000;
+  const remaining = Math.max(0, new Date(sq.recovers_at) - Date.now());
+  const cost = remaining > 0 ? Math.max(1, Math.ceil(maxCost * (remaining / totalMs))) : 0;
+
+  if (cost <= 0) {
+    // 이미 회복 완료됨
+    _sqSetIdle(id);
+    toast('💚', '이미 회복이 완료되었어요!');
+    return;
+  }
+
   if (!canAfford(cost)) {
     toast('🌰', '도토리가 부족해요 (' + cost + '개 필요)');
     _sqSetIdle(id);
@@ -1069,7 +1095,7 @@ async function sqAdminInit() {
   document.getElementById('sqSet_recoveryCost').value    = _sqSettings.recovery_instant_cost || 15;
   // 탐험 보상 설정 로드
   await expLoadSettings();
-  expAdminLoadUI();
+  await expAdminLoadUI();
   await sqAdminLoadList();
 }
 
