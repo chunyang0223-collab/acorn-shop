@@ -234,7 +234,7 @@ function _expHandleEmpty() {
   _expSaveProgress();
 
   if (s.currentTile >= s.tiles.length) {
-    _expComplete();
+    _expShowSummary();
   } else {
     _expRenderMap();
   }
@@ -250,7 +250,7 @@ function _expHandleTreasure(tile) {
   _expSaveProgress();
 
   if (s.currentTile >= s.tiles.length) {
-    _expComplete();
+    _expShowSummary();
   } else {
     _expRenderMap();
   }
@@ -728,7 +728,9 @@ function _btlShowVictory() {
         '</div>';
       }).join('') +
     '</div>' +
-    '<div id="btlContWrap" style="display:none"><button class="btl-continue-btn" onclick="_btlContinueAfterWin()">🗺️ 탐험 계속하기</button></div>';
+    '<div id="btlContWrap" style="display:none"><button class="btl-continue-btn" onclick="_btlContinueAfterWin()">' +
+      (_btl.isBoss ? '🏠 마을로 귀환' : '🗺️ 탐험 계속하기') +
+    '</button></div>';
 
   wrap.appendChild(ov);
 }
@@ -796,7 +798,7 @@ function _btlContinueAfterWin() {
   _expSaveProgress();
 
   if (s.currentTile >= s.tiles.length) {
-    _expComplete();
+    _expShowSummary();
   } else {
     _expRenderMap();
   }
@@ -834,6 +836,90 @@ function _btlDefeatRetreat() {
   var halfAcorns = Math.floor(totalAcorns / 2);
   s.loot = [{ type: 'penalty', acorns: halfAcorns }];
   _expFinish('retreated');
+}
+
+// ================================================================
+//  탐험 완료 요약 화면
+// ================================================================
+function _expShowSummary() {
+  var s = _expState;
+  if (!s) { _expComplete(); return; }
+
+  var container = document.getElementById('sqcontent-expedition');
+  if (!container) { _expComplete(); return; }
+
+  // 전리품 집계
+  var totalAcorns = 0;
+  var battleCount = 0;
+  var treasureCount = 0;
+  var emptyCount = 0;
+  s.loot.forEach(function(l) {
+    totalAcorns += (l.acorns || 0);
+    if (l.type === 'battle') battleCount++;
+    else if (l.type === 'treasure') treasureCount++;
+  });
+  s.tiles.forEach(function(t) {
+    if (t.type === 'empty' && t.cleared) emptyCount++;
+  });
+
+  // 파티 상태 요약
+  var partyHTML = s.party.map(function(p) {
+    var hpPct = Math.max(0, Math.round(p.hp / p.maxHp * 100));
+    var hpColor = hpPct <= 0 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
+    var statusText = p.hp <= 0 ? '쓰러짐' : 'HP ' + p.hp + '/' + p.maxHp;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:12px">' +
+      '<div style="font-size:28px">' + (p.hp <= 0 ? '😵' : '🦔') + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:13px;font-weight:900;color:#e5e7eb">' + p.name + '</div>' +
+        '<div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;margin-top:4px;overflow:hidden">' +
+          '<div style="height:100%;width:' + hpPct + '%;background:' + hpColor + ';border-radius:3px"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:11px;font-weight:700;color:' + hpColor + '">' + statusText + '</div>' +
+    '</div>';
+  }).join('');
+
+  // 타일 경로 미니맵
+  var miniTilesHTML = s.tiles.map(function(t) {
+    var icon = t.type === 'empty' ? '🍃' : t.type === 'treasure' ? '💰' : t.type === 'monster' ? '⚔️' : '👑';
+    return '<div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;' +
+      'background:rgba(100,180,100,0.15);border:1.5px solid rgba(100,180,100,0.3)">' + icon + '</div>';
+  }).join('<div style="width:8px;height:2px;background:rgba(100,180,100,0.3);flex-shrink:0"></div>');
+
+  container.innerHTML =
+    '<div style="max-width:420px;margin:0 auto">' +
+      // 헤더
+      '<div style="text-align:center;padding:24px 16px 16px">' +
+        '<div style="font-size:48px;margin-bottom:8px">🎉</div>' +
+        '<div style="font-size:22px;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,200,0,0.4)">탐험 완료!</div>' +
+        '<div style="font-size:13px;color:#9ca3af;margin-top:4px">모든 구간을 무사히 돌파했어요</div>' +
+      '</div>' +
+      // 타일 경로
+      '<div style="display:flex;align-items:center;justify-content:center;gap:0;padding:8px 16px;overflow-x:auto;flex-wrap:nowrap">' +
+        miniTilesHTML +
+      '</div>' +
+      // 전리품 요약
+      '<div style="background:linear-gradient(135deg,#1a2a1a,#0f1f0f);border-radius:16px;padding:20px;margin:16px;border:1px solid rgba(100,180,100,0.2)">' +
+        '<div style="font-size:14px;font-weight:900;color:#86efac;margin-bottom:12px;text-align:center">📦 전리품 요약</div>' +
+        '<div style="display:flex;justify-content:center;margin-bottom:16px">' +
+          '<div style="font-size:32px;font-weight:900;color:#fbbf24">🌰 ' + totalAcorns + '<span style="font-size:14px;color:#d97706;margin-left:4px">도토리</span></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;justify-content:center">' +
+          (battleCount > 0 ? '<div style="background:rgba(239,68,68,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#fca5a5">⚔️ 전투 승리 ' + battleCount + '회</div>' : '') +
+          (treasureCount > 0 ? '<div style="background:rgba(251,191,36,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#fde68a">💰 보물 ' + treasureCount + '개</div>' : '') +
+          (emptyCount > 0 ? '<div style="background:rgba(148,163,184,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#cbd5e1">🍃 평화 ' + emptyCount + '칸</div>' : '') +
+        '</div>' +
+      '</div>' +
+      // 파티 상태
+      '<div style="background:rgba(255,255,255,0.03);border-radius:16px;padding:16px;margin:0 16px 16px;border:1px solid rgba(255,255,255,0.06)">' +
+        '<div style="font-size:13px;font-weight:900;color:#9ca3af;margin-bottom:10px;text-align:center">🐿️ 파티 상태</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px">' + partyHTML + '</div>' +
+      '</div>' +
+      // 귀환 버튼
+      '<div style="padding:0 16px 24px">' +
+        '<button onclick="_expComplete()" style="width:100%;padding:14px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;box-shadow:0 4px 16px rgba(34,197,94,0.3)">🏠 마을로 귀환하기</button>' +
+      '</div>' +
+    '</div>';
 }
 
 // ================================================================
