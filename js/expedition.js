@@ -29,6 +29,7 @@ var _expConfig = {
   ],
   // 보상 카드
   reward_weights: { C: 65, B: 28, A: 7 },
+  boss_reward_weights: { C: 30, B: 45, A: 25 },
   reward_C: { acorns: [5, 10], itemChance: 0.15, items: ['🍄 버섯', '🌿 풀잎', '🪨 돌멩이'] },
   reward_B: { acorns: [10, 20], itemChance: 0.45, items: ['🍎 사과', '🔮 마석', '🪵 나무'] },
   reward_A: { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] },
@@ -57,6 +58,7 @@ async function expLoadSettings() {
       if (v.treasure_acorn_min !== undefined) _expConfig.treasure_acorn_min = v.treasure_acorn_min;
       if (v.treasure_acorn_max !== undefined) _expConfig.treasure_acorn_max = v.treasure_acorn_max;
       if (v.reward_weights) _expConfig.reward_weights = v.reward_weights;
+      if (v.boss_reward_weights) _expConfig.boss_reward_weights = v.boss_reward_weights;
       if (v.reward_C) _expConfig.reward_C = v.reward_C;
       if (v.reward_B) _expConfig.reward_B = v.reward_B;
       if (v.reward_A) _expConfig.reward_A = v.reward_A;
@@ -89,6 +91,10 @@ async function expAdminLoadUI() {
   if (el('expSet_weightC')) el('expSet_weightC').value = c.reward_weights.C;
   if (el('expSet_weightB')) el('expSet_weightB').value = c.reward_weights.B;
   if (el('expSet_weightA')) el('expSet_weightA').value = c.reward_weights.A;
+  var bw = c.boss_reward_weights || { C: 30, B: 45, A: 25 };
+  if (el('expSet_bossWeightC')) el('expSet_bossWeightC').value = bw.C;
+  if (el('expSet_bossWeightB')) el('expSet_bossWeightB').value = bw.B;
+  if (el('expSet_bossWeightA')) el('expSet_bossWeightA').value = bw.A;
   if (el('expSet_cAcornMin')) el('expSet_cAcornMin').value = c.reward_C.acorns[0];
   if (el('expSet_cAcornMax')) el('expSet_cAcornMax').value = c.reward_C.acorns[1];
   if (el('expSet_cItemChance')) el('expSet_cItemChance').value = Math.round(c.reward_C.itemChance * 100);
@@ -197,6 +203,14 @@ async function expSaveSettings() {
     return;
   }
 
+  var bwC = parseInt(el('expSet_bossWeightC')?.value) || 0;
+  var bwB = parseInt(el('expSet_bossWeightB')?.value) || 0;
+  var bwA = parseInt(el('expSet_bossWeightA')?.value) || 0;
+  if (bwC + bwB + bwA !== 100) {
+    toast('⚠️', '보스 카드 등급 확률의 합이 100이 아닙니다 (현재: ' + (bwC + bwB + bwA) + ')');
+    return;
+  }
+
   function parseItems(str) {
     return (str || '').split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
   }
@@ -210,6 +224,7 @@ async function expSaveSettings() {
     treasure_acorn_min: parseInt(el('expSet_treasureMin')?.value) || 0,
     treasure_acorn_max: parseInt(el('expSet_treasureMax')?.value) || 1,
     reward_weights: { C: wC, B: wB, A: wA },
+    boss_reward_weights: { C: bwC, B: bwB, A: bwA },
     reward_C: {
       acorns: [parseInt(el('expSet_cAcornMin')?.value) || 0, parseInt(el('expSet_cAcornMax')?.value) || 0],
       itemChance: (parseInt(el('expSet_cItemChance')?.value) || 0) / 100,
@@ -545,7 +560,7 @@ function _expRenderBattle(container, mon, isBoss) {
         '<div class="btl-btn-row">' +
           '<button class="btl-act-btn" id="btlBtnAtk"  onclick="_btlAction(\'attack\')"><span class="btl-btn-icon">⚔️</span>공격</button>' +
           '<button class="btl-act-btn" id="btlBtnSkill" onclick="_btlAction(\'skill\')"><span class="btl-btn-icon">✨</span><span id="btlSpLabel">스킬</span></button>' +
-          '<button class="btl-act-btn" id="btlBtnItem"  onclick="_btlAction(\'item\')"><span class="btl-btn-icon">🎒</span>아이템</button>' +
+          '<button class="btl-act-btn" id="btlBtnItem"  onclick="_btlAction(\'item\')"><span class="btl-btn-icon">🌰</span>회복</button>' +
           '<button class="btl-act-btn" id="btlBtnEsc"   onclick="_btlAction(\'escape\')"><span class="btl-btn-icon">💨</span>도망</button>' +
         '</div>' +
       '</div>' +
@@ -861,6 +876,16 @@ function _btlAction(type) {
     }, 200);
 
   } else if (type === 'item') {
+    // 도토리 1개 소모
+    if (!canAfford(1)) {
+      _btlLog('⚠️ 도토리가 부족해서 회복할 수 없다!', 'em');
+      b.busy = false;
+      _btlLockBtns(false);
+      b.attacker = null;
+      return;
+    }
+    spendAcorns(1, '탐험 전투 중 회복');
+
     var target = b.party.filter(function(p) { return p.hp > 0; }).reduce(function(a, bb) { return bb.hp / bb.maxHp < a.hp / a.maxHp ? bb : a; });
     var tIdx = b.party.indexOf(target);
     var heal = Math.floor(target.maxHp * ((_expConfig.heal_percent || 40) / 100));
@@ -869,7 +894,7 @@ function _btlAction(type) {
     _btlSound('heal');
     _btlFlash('rgba(60,220,120,.28)');
     _btlPopNum('+' + heal, 'btlPc' + tIdx, '#38dd88');
-    _btlLog('🎒 포션! <b>' + target.name + '</b> <b style="color:#48cc88">+' + heal + ' HP</b> 회복!', 'heal');
+    _btlLog('🌰 도토리 1개로 회복! <b>' + target.name + '</b> <b style="color:#48cc88">+' + heal + ' HP</b>', 'heal');
 
     setTimeout(function() {
       var aliveNow = b.party.filter(function(p) { return p.hp > 0; });
@@ -921,9 +946,11 @@ function _btlGetRewardTable() {
 
 function _btlPickGrade() {
   var table = _btlGetRewardTable();
+  // 보스전이면 보스 전용 확률 사용
+  var w = (_btl.isBoss && _expConfig.boss_reward_weights) ? _expConfig.boss_reward_weights : table.weights;
   var r = Math.random() * 100;
-  if (r < table.weights.A) return 'A';
-  if (r < table.weights.A + table.weights.B) return 'B';
+  if (r < w.A) return 'A';
+  if (r < w.A + w.B) return 'B';
   return 'C';
 }
 
