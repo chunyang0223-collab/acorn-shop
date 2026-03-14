@@ -370,9 +370,10 @@ function sqCardHTML(sq) {
   const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
 
   const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? 'sq_sleeping' : (sq.sprite || 'sq_brown');
+  const spriteBg = sq.status === 'recovering' ? '#fef3c7' : sq.status === 'pet' ? '#fce7f3' : '#e8f4fd';
   const imgHTML = sq.status === 'baby'
     ? `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`
-    : `<img src="images/squirrels/${spriteFile}.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;flex-shrink:0;image-rendering:pixelated" onerror="this.outerHTML='<div style=\\'font-size:44px;line-height:1;flex-shrink:0\\'>🦔</div>'">`;
+    : `<img src="images/squirrels/${spriteFile}.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:${spriteBg};padding:4px;flex-shrink:0" onerror="this.outerHTML='<div style=\\'font-size:44px;line-height:1;flex-shrink:0\\'>🦔</div>'">`;
 
   let babyHTML = '';
   if (sq.status === 'baby') {
@@ -1123,7 +1124,7 @@ async function sqStartExpeditionFlow() {
       ${explorers.map(sq => `
         <div id="expcard-${sq.id}" onclick="sqToggleExpSelect('${sq.id}')" style="background:white;border-radius:16px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:2px solid transparent;cursor:pointer;transition:all .2s">
           <div class="flex items-center gap-3">
-            <div style="font-size:28px">🦔</div>
+            <img src="images/squirrels/${sq.sprite || 'sq_brown'}.png" style="width:40px;height:40px;object-fit:contain;border-radius:12px;background:#e8f4fd;padding:3px;flex-shrink:0">
             <div class="flex-1">
               <div class="font-black text-gray-700">${sq.name}</div>
               <div class="text-xs text-gray-400">❤️${sq.hp_current} ⚔️${sq.stats?.atk||10} 🛡️${sq.stats?.def||5}</div>
