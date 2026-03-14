@@ -11,11 +11,11 @@
 // ── 등급 테두리 스타일 (squirrel.js와 동일) ──
 function _expGradeStyle(grade) {
   switch(grade) {
-    case 'legend': return { border:'3px solid #ef4444', shadow:'0 0 10px rgba(239,68,68,.4)', color:'#dc2626' };
-    case 'unique': return { border:'3px solid #eab308', shadow:'0 0 8px rgba(234,179,8,.3)', color:'#ca8a04' };
-    case 'epic':   return { border:'3px solid #3b82f6', shadow:'0 0 6px rgba(59,130,246,.3)', color:'#2563eb' };
-    case 'rare':   return { border:'3px solid #22c55e', shadow:'0 0 6px rgba(34,197,94,.2)', color:'#16a34a' };
-    default:       return { border:'2px solid rgba(255,255,255,.15)', shadow:'none', color:'#9ca3af' };
+    case 'legend': return { border:'border:3px solid #ef4444', shadow:'0 0 10px rgba(239,68,68,.4)', color:'#dc2626' };
+    case 'unique': return { border:'border:3px solid #eab308', shadow:'0 0 8px rgba(234,179,8,.3)', color:'#ca8a04' };
+    case 'epic':   return { border:'border:3px solid #3b82f6', shadow:'0 0 6px rgba(59,130,246,.3)', color:'#2563eb' };
+    case 'rare':   return { border:'border:3px solid #22c55e', shadow:'0 0 6px rgba(34,197,94,.2)', color:'#16a34a' };
+    default:       return { border:'border:2px solid rgba(255,255,255,.15)', shadow:'none', color:'#9ca3af' };
   }
 }
 
