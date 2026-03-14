@@ -25,8 +25,8 @@ var _sqSettings  = {
 };
 var _sqAudioCtx = null;
 
-// ── 스프라이트 목록 (8종) ──
-var _sqSprites = ['sq_brown','sq_warrior','sq_mage','sq_white','sq_ranger','sq_shadow','sq_cute','sq_ninja'];
+// ── 스프라이트 목록 (18종) ──
+var _sqSprites = ['sq_acorn','sq_white','sq_choco','sq_black','sq_beige','sq_gold','sq_pink','sq_gray','sq_darkbrown','sq_stripe','sq_ribbon1','sq_ribbon2','sq_mahogany','sq_cream','sq_mocha','sq_silver','sq_heart','sq_curious'];
 function _sqRandomSprite() {
   return _sqSprites[Math.floor(Math.random() * _sqSprites.length)];
 }
@@ -339,7 +339,30 @@ function sqRenderGrid() {
     return;
   }
 
-  grid.innerHTML = _sqSquirrels.map(sq => sqCardHTML(sq)).join('');
+  // 필터
+  const filter = window._sqFilter || 'all';
+  const filtered = filter === 'all' ? _sqSquirrels : _sqSquirrels.filter(sq => {
+    if (filter === 'baby') return sq.status === 'baby';
+    if (filter === 'pet') return sq.status === 'pet';
+    if (filter === 'explorer') return sq.status === 'explorer' || sq.status === 'exploring' || sq.status === 'recovering';
+    return true;
+  });
+
+  const filterBtn = (val, label) => {
+    const active = filter === val;
+    return `<button onclick="window._sqFilter='${val}';sqRenderGrid()" style="padding:5px 14px;border-radius:20px;border:1.5px solid ${active ? '#f59e0b' : '#e5e7eb'};background:${active ? '#fef3c7' : 'white'};color:${active ? '#92400e' : '#6b7280'};font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s">${label}</button>`;
+  };
+
+  const filterHTML = `<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+    ${filterBtn('all', '전체 ' + _sqSquirrels.length)}
+    ${filterBtn('baby', '🐿️ 아기')}
+    ${filterBtn('explorer', '🗺️ 탐험형')}
+    ${filterBtn('pet', '🏡 애완형')}
+  </div>`;
+
+  grid.innerHTML = filterHTML + (filtered.length > 0
+    ? filtered.map(sq => sqCardHTML(sq)).join('')
+    : '<div class="text-center py-4 text-sm text-gray-400">해당하는 다람쥐가 없어요</div>');
 
   // grows_at 남아있는 카드는 타이머 재개
   _sqSquirrels.forEach(sq => {
@@ -369,7 +392,8 @@ function sqCardHTML(sq) {
   const typeLabel   = { baby:'아기 다람쥐', explorer:'탐험형 🗺️', pet:'애완형 🏡', exploring:'탐험 중 🗺️', recovering:'회복 중 😴' };
   const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
 
-  const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? 'sq_sleeping' : (sq.sprite || 'sq_brown');
+  const spriteBase = sq.sprite || 'sq_acorn';
+  const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? spriteBase + '_defeat' : spriteBase;
   const spriteBg = sq.status === 'recovering' ? '#fef3c7' : sq.status === 'pet' ? '#fce7f3' : '#e8f4fd';
   const imgHTML = sq.status === 'baby'
     ? `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`
@@ -1124,7 +1148,7 @@ async function sqStartExpeditionFlow() {
       ${explorers.map(sq => `
         <div id="expcard-${sq.id}" onclick="sqToggleExpSelect('${sq.id}')" style="background:white;border-radius:16px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:2px solid transparent;cursor:pointer;transition:all .2s">
           <div class="flex items-center gap-3">
-            <img src="images/squirrels/${sq.sprite || 'sq_brown'}.png" style="width:40px;height:40px;object-fit:contain;border-radius:12px;background:#e8f4fd;padding:3px;flex-shrink:0">
+            <img src="images/squirrels/${sq.sprite || 'sq_acorn'}.png" style="width:40px;height:40px;object-fit:contain;border-radius:12px;background:#e8f4fd;padding:3px;flex-shrink:0">
             <div class="flex-1">
               <div class="font-black text-gray-700">${sq.name}</div>
               <div class="text-xs text-gray-400">❤️${sq.hp_current} ⚔️${sq.stats?.atk||10} 🛡️${sq.stats?.def||5}</div>
