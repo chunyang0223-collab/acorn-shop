@@ -1003,6 +1003,18 @@
               <input type="number" id="sqSet_recoveryCost" class="field" value="15" min="1">
             </div>
           </div>
+          <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">⏰ 시간 발동 구간 (%)</h3>
+          <p class="text-xs text-gray-400 mb-2">시간이 필요한 다람쥐의 타이머가 발동되는 성장 게이지 구간</p>
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">최소 (%)</label>
+              <input type="number" id="sqSet_triggerMin" class="field" value="40" min="1" max="99">
+            </div>
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">최대 (%)</label>
+              <input type="number" id="sqSet_triggerMax" class="field" value="80" min="1" max="99">
+            </div>
+          </div>
           <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 설정 저장</button>
         </div>
       </div>
@@ -1051,6 +1063,62 @@
             <label class="text-xs font-black text-gray-600 mb-1 block">최대 도토리</label>
             <input type="number" id="expSet_treasureMax" class="field" value="12" min="1">
           </div>
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">📊 레벨 기반 몬스터 스탯</h3>
+        <p class="text-xs text-gray-400 mb-2">스탯 = 기본값 + (레벨 × 증가량). 보스는 배율 추가 적용</p>
+        <div class="grid grid-cols-3 gap-3 mb-2">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">기본 HP</label>
+            <input type="number" id="expSet_lvBaseHp" class="field" value="30" min="0" step="1">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">기본 공격</label>
+            <input type="number" id="expSet_lvBaseAtk" class="field" value="8" min="0" step="0.5">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">기본 방어</label>
+            <input type="number" id="expSet_lvBaseDef" class="field" value="3" min="0" step="0.5">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 mb-2">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 HP↑</label>
+            <input type="number" id="expSet_lvGrowHp" class="field" value="12" min="0" step="0.5">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 공격↑</label>
+            <input type="number" id="expSet_lvGrowAtk" class="field" value="2" min="0" step="0.5">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 방어↑</label>
+            <input type="number" id="expSet_lvGrowDef" class="field" value="1.5" min="0" step="0.5">
+          </div>
+        </div>
+        <div class="mb-4" style="max-width:200px">
+          <label class="text-xs font-black text-gray-600 mb-1 block">👑 보스 스탯 배율 (×)</label>
+          <input type="number" id="expSet_bossStatMult" class="field" value="1.4" min="1" step="0.1">
+          <div class="text-xs text-gray-400 mt-1">보스의 HP/공/방에 곱셈</div>
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">🐺 일반 몬스터</h3>
+        <div id="expSet_monsterList" class="mb-2">로딩 중...</div>
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="expMonEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
+          <input type="text" id="expMonName" class="field" placeholder="이름" style="flex:1">
+          <input type="number" id="expMonLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
+          <input type="number" id="expMonLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
+          <button class="btn btn-primary btn-sm" onclick="_expAddMonster(false)">추가</button>
+        </div>
+
+        <h3 class="text-sm font-black text-gray-700 mb-2">👑 보스</h3>
+        <div id="expSet_bossList" class="mb-2">로딩 중...</div>
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="expBossEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
+          <input type="text" id="expBossName" class="field" placeholder="이름" style="flex:1">
+          <input type="number" id="expBossLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
+          <input type="number" id="expBossLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
+          <button class="btn btn-primary btn-sm" onclick="_expAddMonster(true)">추가</button>
         </div>
 
         <h3 class="text-sm font-black text-gray-700 mb-2">🃏 보상 카드 등급 확률 (%)</h3>
