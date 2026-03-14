@@ -86,8 +86,12 @@ async function expAdminLoadUI() {
 
   // products 테이블에서 상품 목록 로드
   try {
-    var res = await sb.from('products').select('id,name,icon,item_type').order('sort_order');
-    _expProductsCache = res.data || [];
+    var res = await sb.from('products').select('id,name,icon,item_type,reward_type').order('sort_order');
+    // 도토리류/티켓류 제외 (인벤토리 아이템만 보상으로 선택 가능)
+    _expProductsCache = (res.data || []).filter(function(p) {
+      var rt = p.reward_type || '';
+      return rt !== 'AUTO_ACORN' && rt !== 'ACORN_TICKET' && rt !== 'GACHA_TICKET';
+    });
   } catch(e) { _expProductsCache = []; }
 
   // 각 등급별 아이템 칩 렌더
@@ -469,7 +473,7 @@ function _expRenderBattle(container, mon, isBoss) {
     busy: false,
     battleOver: false,
     isBoss: isBoss,
-    loot: { acorns: 0 }
+    loot: { acorns: 0, items: [] }
   };
 
   // 배경 랜덤
@@ -968,12 +972,13 @@ function _btlSelectCard(idx) {
     hint.style.color = r.grade === 'A' ? '#f0c040' : r.grade === 'B' ? '#60a8f0' : '#60c060';
   }
   _btl.loot.acorns += r.acorns;
+  if (r.item) _btl.loot.items.push(r.item);
 }
 
 function _btlContinueAfterWin() {
   var s = _expState;
   // 전투 보상을 탐험 loot에 추가
-  s.loot.push({ type: 'battle', acorns: _btl.loot.acorns });
+  s.loot.push({ type: 'battle', acorns: _btl.loot.acorns, items: _btl.loot.items || [] });
   // 현재 타일 클리어
   s.tiles[s.currentTile].cleared = true;
   s.currentTile++;
@@ -1016,9 +1021,27 @@ function _btlShowDefeat() {
 function _btlDefeatRetreat() {
   var s = _expState;
   var totalAcorns = 0;
-  s.loot.forEach(function(l) { totalAcorns += (l.acorns || 0); });
+  var allItems = [];
+  s.loot.forEach(function(l) {
+    totalAcorns += (l.acorns || 0);
+    if (l.items && l.items.length) {
+      l.items.forEach(function(item) { allItems.push(item); });
+    }
+  });
   var halfAcorns = Math.floor(totalAcorns / 2);
-  s.loot = [{ type: 'penalty', acorns: halfAcorns }];
+  // 아이템 50% 버림 (소수점 버림: 1개→0개, 2개→1개, 3개→1개)
+  var keepCount = Math.floor(allItems.length / 2);
+  // 랜덤으로 keepCount개만 남기기
+  var keptItems = [];
+  if (keepCount > 0 && allItems.length > 0) {
+    var shuffled = allItems.slice();
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
+    }
+    keptItems = shuffled.slice(0, keepCount);
+  }
+  s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
   _expShowSummary('retreated');
 }
 
@@ -1039,14 +1062,30 @@ function _expShowSummary(finishStatus) {
   var battleCount = 0;
   var treasureCount = 0;
   var emptyCount = 0;
+  var allItems = [];
   s.loot.forEach(function(l) {
     totalAcorns += (l.acorns || 0);
     if (l.type === 'battle') battleCount++;
     else if (l.type === 'treasure') treasureCount++;
+    if (l.items && l.items.length) {
+      l.items.forEach(function(item) { allItems.push(item); });
+    }
   });
   s.tiles.forEach(function(t) {
     if (t.type === 'empty' && t.cleared) emptyCount++;
   });
+
+  // 아이템 목록 HTML
+  var itemsHTML = '';
+  if (allItems.length > 0) {
+    itemsHTML = '<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px">' +
+      '<div style="font-size:11px;font-weight:800;color:#86efac;margin-bottom:8px;text-align:center">🎁 획득 아이템</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">' +
+      allItems.map(function(item) {
+        return '<div style="background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#e5e7eb">' + item + '</div>';
+      }).join('') +
+      '</div></div>';
+  }
 
   // 파티 상태 요약
   var partyHTML = s.party.map(function(p) {
@@ -1095,6 +1134,7 @@ function _expShowSummary(finishStatus) {
           (treasureCount > 0 ? '<div style="background:rgba(251,191,36,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#fde68a">💰 보물 ' + treasureCount + '개</div>' : '') +
           (emptyCount > 0 ? '<div style="background:rgba(148,163,184,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#cbd5e1">🍃 평화 ' + emptyCount + '칸</div>' : '') +
         '</div>' +
+        itemsHTML +
       '</div>' +
       // 파티 상태
       '<div style="background:rgba(255,255,255,0.03);border-radius:16px;padding:16px;margin:0 16px 16px;border:1px solid rgba(255,255,255,0.06)">' +
@@ -1182,6 +1222,47 @@ async function _expFinish(status) {
       });
       myProfile.acorns = (myProfile.acorns || 0) + totalAcorns;
       if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+    }
+
+    // 아이템 인벤토리 지급
+    var allItems = [];
+    s.loot.forEach(function(l) {
+      if (l.items && l.items.length) {
+        l.items.forEach(function(item) { allItems.push(item); });
+      }
+    });
+    if (allItems.length > 0) {
+      // 아이템 이름에서 product_id 찾기 (이름 = "아이콘 상품명" → 상품명 추출)
+      var itemNames = allItems.map(function(s) {
+        return s.replace(/^\S+\s*/, '').trim() || s;
+      });
+      try {
+        var prodRes = await sb.from('products').select('id,name,icon,item_type,reward_type').in('name', itemNames);
+        var prodMap = {};
+        (prodRes.data || []).forEach(function(p) {
+          // 같은 이름이 여러개면 첫 번째 사용
+          if (!prodMap[p.name]) prodMap[p.name] = p;
+        });
+        var insertRows = [];
+        allItems.forEach(function(itemStr) {
+          var name = itemStr.replace(/^\S+\s*/, '').trim() || itemStr;
+          var prod = prodMap[name];
+          if (prod) {
+            insertRows.push({
+              user_id: myProfile.id,
+              product_id: prod.id,
+              product_snapshot: prod,
+              from_gacha: false,
+              status: 'held'
+            });
+          }
+        });
+        if (insertRows.length > 0) {
+          await sb.from('inventory').insert(insertRows);
+        }
+      } catch(e) {
+        console.error('아이템 지급 오류:', e);
+      }
     }
 
     var msg = status === 'completed'
