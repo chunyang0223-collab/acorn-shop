@@ -45,7 +45,8 @@ var _expConfig = {
   mon_swing: 3,
   mon_def_effect: 38,
   sq_def_effect: 48,
-  heal_percent: 40
+  heal_percent: 40,
+  escape_fail_pct: 30          // 도망 실패 확률 (%)
 };
 
 // ── 레벨로 스탯 계산 ──
@@ -108,6 +109,7 @@ async function expLoadSettings() {
       if (v.mon_def_effect !== undefined) _expConfig.mon_def_effect = v.mon_def_effect;
       if (v.sq_def_effect !== undefined) _expConfig.sq_def_effect = v.sq_def_effect;
       if (v.heal_percent !== undefined) _expConfig.heal_percent = v.heal_percent;
+      if (v.escape_fail_pct !== undefined) _expConfig.escape_fail_pct = v.escape_fail_pct;
     }
   } catch(e) {}
 }
@@ -149,6 +151,7 @@ async function expAdminLoadUI() {
   if (el('expSet_monDefEffect')) el('expSet_monDefEffect').value = c.mon_def_effect;
   if (el('expSet_sqDefEffect')) el('expSet_sqDefEffect').value = c.sq_def_effect;
   if (el('expSet_healPct')) el('expSet_healPct').value = c.heal_percent;
+  if (el('expSet_escapeFail')) el('expSet_escapeFail').value = c.escape_fail_pct;
 
   // 레벨 스탯 설정
   if (el('expSet_lvBaseHp')) el('expSet_lvBaseHp').value = c.lv_base_hp;
@@ -349,6 +352,7 @@ async function expSaveSettings() {
     mon_def_effect: parseInt(el('expSet_monDefEffect')?.value) || 38,
     sq_def_effect: parseInt(el('expSet_sqDefEffect')?.value) || 48,
     heal_percent: parseInt(el('expSet_healPct')?.value) || 40,
+    escape_fail_pct: parseInt(el('expSet_escapeFail')?.value) || 30,
     // 레벨 스탯
     lv_base_hp: parseFloat(el('expSet_lvBaseHp')?.value) || 30,
     lv_base_atk: parseFloat(el('expSet_lvBaseAtk')?.value) || 8,
@@ -416,7 +420,7 @@ async function sqContinueExpedition(expId) {
       expId: expId,
       expedition: data,
       party: squirrels.map(sq => ({
-        id: sq.id, name: sq.name,
+        id: sq.id, name: sq.name, sprite: sq.sprite || 'sq_brown',
         hp: sq.hp_current, maxHp: sq.stats?.hp || 80,
         atk: sq.stats?.atk || 12, def: sq.stats?.def || 6
       })),
@@ -528,7 +532,7 @@ function _expRenderMap() {
     var isDead = p.hp <= 0;
     var hpColor = isDead ? '#ef4444' : hpPct <= 30 ? 'linear-gradient(90deg,#eab308,#ca8a04)' : 'linear-gradient(90deg,#22c55e,#16a34a)';
     return '<div class="exp-pc' + (isDead ? ' exp-pc-dead' : '') + '">' +
-      '<div class="exp-pc-emoji">' + (isDead ? '😵' : '🦔') + '</div>' +
+      '<div class="exp-pc-emoji"><img src="images/squirrels/' + (isDead ? 'sq_sleeping' : (p.sprite || 'sq_brown')) + '.png" style="width:48px;height:48px;object-fit:contain;image-rendering:pixelated"></div>' +
       '<div class="exp-pc-name">' + p.name + '</div>' +
       '<div class="exp-pc-hpwrap"><div class="exp-pc-hpbar" style="width:' + hpPct + '%;background:' + hpColor + '"></div></div>' +
       '<div class="exp-pc-stats">' +
@@ -572,6 +576,9 @@ function _expRenderMap() {
 function _expAdvance() {
   var s = _expState;
   if (!s || s.currentTile >= s.tiles.length) return;
+
+  // 이동 사운드
+  _btlSound('cardFlip');
 
   var tile = s.tiles[s.currentTile];
 
@@ -696,7 +703,7 @@ function _btlBuildParty() {
   if (!grid) return;
   grid.innerHTML = _btl.party.map(function(p, i) {
     return '<div class="btl-p-card" id="btlPc' + i + '">' +
-      '<div class="btl-p-emoji">' + (p.hp > 0 ? '🦔' : '😵') + '</div>' +
+      '<div class="btl-p-emoji"><img src="images/squirrels/' + (p.hp > 0 ? (p.sprite || 'sq_brown') : 'sq_sleeping') + '.png" style="width:48px;height:48px;object-fit:contain;image-rendering:pixelated"></div>' +
       '<div class="btl-p-name">' + p.name + '</div>' +
       '<div class="btl-p-stat"><span>⚔️' + p.atk + '</span><span>🛡️' + p.def + '</span></div>' +
       '<div class="btl-p-hptrack"><div class="btl-p-hpbar" id="btlPhp' + i + '" style="width:100%"></div></div>' +
@@ -895,7 +902,79 @@ function _btlAction(type) {
   if (b.busy || b.battleOver) return;
 
   if (type === 'escape') {
-    _btlLog('💦 도망치려 했지만 실패했다!', 'em');
+    b.busy = true;
+    _btlLockBtns(true);
+
+    var failPct = _expConfig.escape_fail_pct || 30;
+    var escaped = Math.random() * 100 >= failPct;
+
+    if (escaped) {
+      // 도망 성공 → 전리품 50%로 귀환
+      _btlSound('cardFlip');
+      _btlLog('💨 도망에 성공했다! 마을로 귀환한다...', 'heal');
+      b.battleOver = true;
+      setTimeout(function() {
+        var s = _expState;
+        var totalAcorns = 0;
+        var allItems = [];
+        s.loot.forEach(function(l) {
+          totalAcorns += (l.acorns || 0);
+          if (l.items && l.items.length) {
+            l.items.forEach(function(item) { allItems.push(item); });
+          }
+        });
+        var halfAcorns = Math.floor(totalAcorns / 2);
+        var keepCount = Math.floor(allItems.length / 2);
+        var keptItems = [];
+        if (keepCount > 0 && allItems.length > 0) {
+          var shuffled = allItems.slice();
+          for (var si = shuffled.length - 1; si > 0; si--) {
+            var sj = Math.floor(Math.random() * (si + 1));
+            var tmp = shuffled[si]; shuffled[si] = shuffled[sj]; shuffled[sj] = tmp;
+          }
+          keptItems = shuffled.slice(0, keepCount);
+        }
+        s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
+        _expShowSummary('retreated');
+      }, 800);
+    } else {
+      // 도망 실패 → 적 1턴 공격
+      _btlLog('💦 도망에 실패했다!', 'em');
+      _btlSound('hit');
+
+      setTimeout(function() {
+        var alive = b.party.filter(function(p) { return p.hp > 0; });
+        if (alive.length === 0) { b.busy = false; _btlLockBtns(false); return; }
+        var rTarget = alive[Math.floor(Math.random() * alive.length)];
+        var rIdx = b.party.indexOf(rTarget);
+        var mSwing = _expConfig.mon_swing || 3;
+        var eDmg = Math.max(1, b.mon.atk - Math.floor(rTarget.def * ((_expConfig.sq_def_effect || 48) / 100)) + Math.round(Math.random() * mSwing * 2 - mSwing));
+
+        var tCard = document.getElementById('btlPc' + rIdx);
+        if (tCard) { tCard.classList.add('btl-hit'); setTimeout(function() { tCard.classList.remove('btl-hit'); }, 350); }
+        _btlFlash('rgba(255,60,60,.22)');
+        _btlPopNum('-' + eDmg, 'btlPc' + rIdx, '#ff5050');
+        rTarget.hp = Math.max(0, rTarget.hp - eDmg);
+        _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + rTarget.name + '</b>에게 <b style="color:#de5e4e">' + eDmg + ' 데미지!</b>', 'em');
+
+        _btlRender();
+
+        var allDead = b.party.every(function(p) { return p.hp <= 0; });
+        if (allDead) {
+          setTimeout(function() {
+            _btlLog('💀 <b>전원 쓰러짐... 패배</b>', 'lose');
+            _btlSound('defeat');
+            b.battleOver = true;
+            _btlLockBtns(true);
+            _btlShowDefeat();
+          }, 300);
+          return;
+        }
+
+        b.busy = false;
+        _btlLockBtns(false);
+      }, 500);
+    }
     return;
   }
   if (type === 'skill' && b.sp <= 0) {
@@ -1298,7 +1377,7 @@ function _expShowSummary(finishStatus) {
     var hpColor = hpPct <= 0 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
     var statusText = p.hp <= 0 ? '쓰러짐' : 'HP ' + p.hp + '/' + p.maxHp;
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:12px">' +
-      '<div style="font-size:28px">' + (p.hp <= 0 ? '😵' : '🦔') + '</div>' +
+      '<div style="font-size:28px"><img src="images/squirrels/' + (p.hp <= 0 ? 'sq_sleeping' : (p.sprite || 'sq_brown')) + '.png" style="width:40px;height:40px;object-fit:contain;image-rendering:pixelated"></div>' +
       '<div style="flex:1">' +
         '<div style="font-size:13px;font-weight:900;color:#e5e7eb">' + p.name + '</div>' +
         '<div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;margin-top:4px;overflow:hidden">' +
