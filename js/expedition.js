@@ -902,79 +902,27 @@ function _btlAction(type) {
   if (b.busy || b.battleOver) return;
 
   if (type === 'escape') {
-    b.busy = true;
-    _btlLockBtns(true);
+    // 현재 전리품 계산 (팝업에 표시)
+    var s = _expState;
+    var previewAcorns = 0;
+    s.loot.forEach(function(l) { previewAcorns += (l.acorns || 0); });
+    var halfPreview = Math.floor(previewAcorns / 2);
 
-    var failPct = _expConfig.escape_fail_pct || 30;
-    var escaped = Math.random() * 100 >= failPct;
-
-    if (escaped) {
-      // 도망 성공 → 전리품 50%로 귀환
-      _btlSound('cardFlip');
-      _btlLog('💨 도망에 성공했다! 마을로 귀환한다...', 'heal');
-      b.battleOver = true;
-      setTimeout(function() {
-        var s = _expState;
-        var totalAcorns = 0;
-        var allItems = [];
-        s.loot.forEach(function(l) {
-          totalAcorns += (l.acorns || 0);
-          if (l.items && l.items.length) {
-            l.items.forEach(function(item) { allItems.push(item); });
-          }
-        });
-        var halfAcorns = Math.floor(totalAcorns / 2);
-        var keepCount = Math.floor(allItems.length / 2);
-        var keptItems = [];
-        if (keepCount > 0 && allItems.length > 0) {
-          var shuffled = allItems.slice();
-          for (var si = shuffled.length - 1; si > 0; si--) {
-            var sj = Math.floor(Math.random() * (si + 1));
-            var tmp = shuffled[si]; shuffled[si] = shuffled[sj]; shuffled[sj] = tmp;
-          }
-          keptItems = shuffled.slice(0, keepCount);
-        }
-        s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
-        _expShowSummary('retreated');
-      }, 800);
-    } else {
-      // 도망 실패 → 적 1턴 공격
-      _btlLog('💦 도망에 실패했다!', 'em');
-      _btlSound('hit');
-
-      setTimeout(function() {
-        var alive = b.party.filter(function(p) { return p.hp > 0; });
-        if (alive.length === 0) { b.busy = false; _btlLockBtns(false); return; }
-        var rTarget = alive[Math.floor(Math.random() * alive.length)];
-        var rIdx = b.party.indexOf(rTarget);
-        var mSwing = _expConfig.mon_swing || 3;
-        var eDmg = Math.max(1, b.mon.atk - Math.floor(rTarget.def * ((_expConfig.sq_def_effect || 48) / 100)) + Math.round(Math.random() * mSwing * 2 - mSwing));
-
-        var tCard = document.getElementById('btlPc' + rIdx);
-        if (tCard) { tCard.classList.add('btl-hit'); setTimeout(function() { tCard.classList.remove('btl-hit'); }, 350); }
-        _btlFlash('rgba(255,60,60,.22)');
-        _btlPopNum('-' + eDmg, 'btlPc' + rIdx, '#ff5050');
-        rTarget.hp = Math.max(0, rTarget.hp - eDmg);
-        _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + rTarget.name + '</b>에게 <b style="color:#de5e4e">' + eDmg + ' 데미지!</b>', 'em');
-
-        _btlRender();
-
-        var allDead = b.party.every(function(p) { return p.hp <= 0; });
-        if (allDead) {
-          setTimeout(function() {
-            _btlLog('💀 <b>전원 쓰러짐... 패배</b>', 'lose');
-            _btlSound('defeat');
-            b.battleOver = true;
-            _btlLockBtns(true);
-            _btlShowDefeat();
-          }, 300);
-          return;
-        }
-
-        b.busy = false;
-        _btlLockBtns(false);
-      }, 500);
-    }
+    showModal(
+      '<div class="text-center">' +
+        '<div style="font-size:40px;margin-bottom:8px">💨</div>' +
+        '<div class="title-font text-lg text-gray-800 mb-1">도망치시겠어요?</div>' +
+        '<div class="text-sm text-gray-500 mb-3">' +
+          '도망에 실패하면 적에게 한 대 맞아요!<br>' +
+          '도망에 성공하면 <b>전리품의 50%</b>만 가지고<br>마을로 돌아가게 됩니다.' +
+          (halfPreview > 0 ? '<br><span style="color:#b45309;font-weight:800">🌰 ' + halfPreview + '개 획득 예상</span>' : '') +
+        '</div>' +
+        '<div class="flex gap-2">' +
+          '<button class="btn btn-primary flex-1" onclick="closeModal();_btlDoEscape()">도망친다!</button>' +
+          '<button class="btn btn-gray flex-1" onclick="closeModal()">안 도망침</button>' +
+        '</div>' +
+      '</div>'
+    );
     return;
   }
   if (type === 'skill' && b.sp <= 0) {
@@ -1279,6 +1227,84 @@ function _btlContinueAfterWin() {
 // ================================================================
 //  전투 결과: 패배
 // ================================================================
+// ── 도망 실행 (팝업에서 확인 후 호출) ──
+function _btlDoEscape() {
+  var b = _btl;
+  if (b.busy || b.battleOver) return;
+
+  b.busy = true;
+  _btlLockBtns(true);
+
+  var failPct = _expConfig.escape_fail_pct || 30;
+  var escaped = Math.random() * 100 >= failPct;
+
+  if (escaped) {
+    _btlSound('cardFlip');
+    _btlLog('💨 도망에 성공했다! 마을로 귀환한다...', 'heal');
+    b.battleOver = true;
+    setTimeout(function() {
+      var s = _expState;
+      var totalAcorns = 0;
+      var allItems = [];
+      s.loot.forEach(function(l) {
+        totalAcorns += (l.acorns || 0);
+        if (l.items && l.items.length) {
+          l.items.forEach(function(item) { allItems.push(item); });
+        }
+      });
+      var halfAcorns = Math.floor(totalAcorns / 2);
+      var keepCount = Math.floor(allItems.length / 2);
+      var keptItems = [];
+      if (keepCount > 0 && allItems.length > 0) {
+        var shuffled = allItems.slice();
+        for (var si = shuffled.length - 1; si > 0; si--) {
+          var sj = Math.floor(Math.random() * (si + 1));
+          var tmp = shuffled[si]; shuffled[si] = shuffled[sj]; shuffled[sj] = tmp;
+        }
+        keptItems = shuffled.slice(0, keepCount);
+      }
+      s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
+      _expShowSummary('retreated');
+    }, 800);
+  } else {
+    _btlLog('💦 도망에 실패했다!', 'em');
+    _btlSound('hit');
+
+    setTimeout(function() {
+      var alive = b.party.filter(function(p) { return p.hp > 0; });
+      if (alive.length === 0) { b.busy = false; _btlLockBtns(false); return; }
+      var rTarget = alive[Math.floor(Math.random() * alive.length)];
+      var rIdx = b.party.indexOf(rTarget);
+      var mSwing = _expConfig.mon_swing || 3;
+      var eDmg = Math.max(1, b.mon.atk - Math.floor(rTarget.def * ((_expConfig.sq_def_effect || 48) / 100)) + Math.round(Math.random() * mSwing * 2 - mSwing));
+
+      var tCard = document.getElementById('btlPc' + rIdx);
+      if (tCard) { tCard.classList.add('btl-hit'); setTimeout(function() { tCard.classList.remove('btl-hit'); }, 350); }
+      _btlFlash('rgba(255,60,60,.22)');
+      _btlPopNum('-' + eDmg, 'btlPc' + rIdx, '#ff5050');
+      rTarget.hp = Math.max(0, rTarget.hp - eDmg);
+      _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + rTarget.name + '</b>에게 <b style="color:#de5e4e">' + eDmg + ' 데미지!</b>', 'em');
+
+      _btlRender();
+
+      var allDead = b.party.every(function(p) { return p.hp <= 0; });
+      if (allDead) {
+        setTimeout(function() {
+          _btlLog('💀 <b>전원 쓰러짐... 패배</b>', 'lose');
+          _btlSound('defeat');
+          b.battleOver = true;
+          _btlLockBtns(true);
+          _btlShowDefeat();
+        }, 300);
+        return;
+      }
+
+      b.busy = false;
+      _btlLockBtns(false);
+    }, 500);
+  }
+}
+
 function _btlShowDefeat() {
   var wrap = document.getElementById('btlWrap');
   if (!wrap) return;
