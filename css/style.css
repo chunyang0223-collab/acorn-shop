@@ -1932,3 +1932,12 @@ body {
 .btl-lb-main{font-size:13px;font-weight:700}
 .btl-lb-sub{font-size:10px;opacity:.75;margin-top:1px}
 .btl-btn-give-up{background:rgba(80,30,30,.7);border:1.5px solid rgba(180,60,60,.35);color:#e08888}
+
+/* ── 탐험 보상 아이템 선택 칩 ── */
+.exp-item-select-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--clay-bg,#f9fafb);border-radius:12px;border:1px solid var(--border-color,#e5e7eb);max-height:180px;overflow-y:auto}
+.exp-item-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;border:2px solid rgba(150,150,150,0.2);background:rgba(255,255,255,0.05);cursor:pointer;transition:all .15s;font-size:12px;user-select:none}
+.exp-item-chip:hover{border-color:rgba(59,130,246,0.4);background:rgba(59,130,246,0.06)}
+.exp-item-chip.selected{border-color:rgba(34,197,94,0.6);background:rgba(34,197,94,0.12);box-shadow:0 0 0 1px rgba(34,197,94,0.3)}
+.exp-item-chip-icon{font-size:16px;line-height:1}
+.exp-item-chip-name{font-weight:800;color:var(--text-primary,#374151)}
+.exp-item-chip-type{font-size:10px;opacity:0.6}
