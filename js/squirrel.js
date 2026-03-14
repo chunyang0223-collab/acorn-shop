@@ -416,8 +416,17 @@ function sqCardHTML(sq) {
                     : sq.status === 'pet' ? 'background:#fce7f3;color:#9d174d'
                     : sq.status === 'recovering' ? 'background:#fef3c7;color:#92400e'
                     : 'background:#fef3c7;color:#92400e';
-  const typeLabel   = { baby:'아기 다람쥐', explorer:'탐험형 🗺️', pet:'애완형 🏡', exploring:'탐험 중 🗺️', recovering:'회복 중 😴' };
-  const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험중', recovering:'회복중' };
+  const typeLabel   = { baby:'아기 다람쥐', explorer:'탐험형', pet:'애완형', exploring:'탐험 중', recovering:'회복 중' };
+  const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험형', recovering:'탐험형' };
+
+  // 상태 텍스트 (이름 아래 표시)
+  const statusText = {
+    baby: '',
+    explorer: '<span style="color:#22c55e">🟢 대기 중</span>',
+    exploring: '<span style="color:#3b82f6">⚔️ 탐험 중</span>',
+    recovering: '<span style="color:#f59e0b">😴 회복 중</span>',
+    pet: '<span style="color:#ec4899">🏡 편안하게 쉬는 중</span>'
+  };
 
   const spriteBase = sq.sprite || 'sq_acorn';
   const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? spriteBase + '_defeat' : spriteBase;
@@ -520,10 +529,10 @@ function sqCardHTML(sq) {
       <div style="display:flex;align-items:center;gap:14px">
         ${imgHTML}
         <div style="flex:1;min-width:0">
-          <div style="font-size:18px;font-weight:900;color:#1f2937;cursor:pointer" onclick="sqEditName('${sq.id}')" title="클릭하여 이름 변경">${sq.name} <span style="font-size:11px;color:#d1d5db">✏️</span>${gs ? ` <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:1px 6px;border-radius:8px;vertical-align:middle">${gs.label}</span>` : ''}</div>
-          <div style="font-size:12px;font-weight:800;color:#9ca3af;margin-top:2px">${typeLabel[sq.status]||sq.status}</div>
+          <div style="font-size:18px;font-weight:900;color:#1f2937;cursor:pointer" onclick="sqEditName('${sq.id}')" title="클릭하여 이름 변경">${sq.name} <span style="font-size:11px;color:#d1d5db">✏️</span>${gs ? ` <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px;vertical-align:middle">${gs.label}</span>` : ''}</div>
+          <div style="font-size:12px;font-weight:700;margin-top:3px">${statusText[sq.status] || ''}</div>
         </div>
-        <span style="font-size:10px;font-weight:900;padding:3px 10px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
+        <span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
       </div>
       ${babyHTML}${statsHTML}${recoverHTML}${sellBtn}
     </div>`;
