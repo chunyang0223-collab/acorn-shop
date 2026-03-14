@@ -1964,3 +1964,6 @@ body {
 .exp-item-chip-icon{font-size:16px;line-height:1}
 .exp-item-chip-name{font-weight:800;color:var(--text-primary,#374151)}
 .exp-item-chip-type{font-size:10px;opacity:0.6}
+
+/* 성장 준비 완료 바운스 */
+@keyframes sqReadyBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
