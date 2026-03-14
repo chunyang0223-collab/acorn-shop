@@ -8,6 +8,17 @@
    - 완료/귀환 시 DB 업데이트 + 탭 복귀
    ================================================================ */
 
+// ── 등급 테두리 스타일 (squirrel.js와 동일) ──
+function _expGradeStyle(grade) {
+  switch(grade) {
+    case 'legend': return { border:'3px solid #ef4444', shadow:'0 0 10px rgba(239,68,68,.4)', color:'#dc2626' };
+    case 'unique': return { border:'3px solid #eab308', shadow:'0 0 8px rgba(234,179,8,.3)', color:'#ca8a04' };
+    case 'epic':   return { border:'3px solid #3b82f6', shadow:'0 0 6px rgba(59,130,246,.3)', color:'#2563eb' };
+    case 'rare':   return { border:'3px solid #22c55e', shadow:'0 0 6px rgba(34,197,94,.2)', color:'#16a34a' };
+    default:       return { border:'2px solid rgba(255,255,255,.15)', shadow:'none', color:'#9ca3af' };
+  }
+}
+
 // ── 탐험 설정 (기본값, DB에서 덮어씀) ──
 var _expConfig = {
   chance_empty: 25,
@@ -419,11 +430,18 @@ async function sqContinueExpedition(expId) {
     _expState = {
       expId: expId,
       expedition: data,
-      party: squirrels.map(sq => ({
-        id: sq.id, name: sq.name, sprite: sq.sprite || 'sq_acorn',
-        hp: sq.hp_current, maxHp: sq.stats?.hp || 80,
-        atk: sq.stats?.atk || 12, def: sq.stats?.def || 6
-      })),
+      party: squirrels.map(sq => {
+        var hp = sq.stats?.hp || 80, atk = sq.stats?.atk || 12, def = sq.stats?.def || 6;
+        var maxHp = (_sqSettings && _sqSettings.stat_hp_max) || 120;
+        var maxAtk = (_sqSettings && _sqSettings.stat_atk_max) || 20;
+        var maxDef = (_sqSettings && _sqSettings.stat_def_max) || 14;
+        var score = ((hp/maxHp) + (atk/maxAtk) + (def/maxDef)) / 3 * 100;
+        var grade = score >= 90 ? 'legend' : score >= 80 ? 'unique' : score >= 70 ? 'epic' : score >= 60 ? 'rare' : 'normal';
+        return {
+          id: sq.id, name: sq.name, sprite: sq.sprite || 'sq_acorn',
+          hp: sq.hp_current, maxHp: hp, atk: atk, def: def, grade: grade
+        };
+      }),
       tiles: tiles,
       currentTile: data.current_step || 0,
       sp: restoredSp,
@@ -531,8 +549,9 @@ function _expRenderMap() {
     var hpPct = Math.max(0, Math.round(p.hp / p.maxHp * 100));
     var isDead = p.hp <= 0;
     var hpColor = isDead ? '#ef4444' : hpPct <= 30 ? 'linear-gradient(90deg,#eab308,#ca8a04)' : 'linear-gradient(90deg,#22c55e,#16a34a)';
+    var gs = _expGradeStyle(p.grade || 'normal');
     return '<div class="exp-pc' + (isDead ? ' exp-pc-dead' : '') + '">' +
-      '<div class="exp-pc-emoji"><img src="images/squirrels/' + (isDead ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:48px;height:48px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,0.08);padding:3px"></div>' +
+      '<div class="exp-pc-emoji"><div style="border-radius:14px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,0.06)"><img src="images/squirrels/' + (isDead ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:56px;height:56px;object-fit:contain;border-radius:12px;display:block"></div></div>' +
       '<div class="exp-pc-name">' + p.name + '</div>' +
       '<div class="exp-pc-hpwrap"><div class="exp-pc-hpbar" style="width:' + hpPct + '%;background:' + hpColor + '"></div></div>' +
       '<div class="exp-pc-stats">' +
@@ -702,8 +721,9 @@ function _btlBuildParty() {
   var grid = document.getElementById('btlPartyGrid');
   if (!grid) return;
   grid.innerHTML = _btl.party.map(function(p, i) {
+    var gs = _expGradeStyle(p.grade || 'normal');
     return '<div class="btl-p-card" id="btlPc' + i + '">' +
-      '<div class="btl-p-emoji"><img src="images/squirrels/' + (p.hp > 0 ? (p.sprite || 'sq_acorn') : ((p.sprite || 'sq_acorn') + '_defeat')) + '.png" style="width:48px;height:48px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,0.08);padding:3px"></div>' +
+      '<div class="btl-p-emoji"><div style="border-radius:14px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,0.06)"><img src="images/squirrels/' + (p.hp > 0 ? (p.sprite || 'sq_acorn') : ((p.sprite || 'sq_acorn') + '_defeat')) + '.png" style="width:56px;height:56px;object-fit:contain;border-radius:12px;display:block"></div></div>' +
       '<div class="btl-p-name">' + p.name + '</div>' +
       '<div class="btl-p-stat"><span>⚔️' + p.atk + '</span><span>🛡️' + p.def + '</span></div>' +
       '<div class="btl-p-hptrack"><div class="btl-p-hpbar" id="btlPhp' + i + '" style="width:100%"></div></div>' +
@@ -1402,8 +1422,9 @@ function _expShowSummary(finishStatus) {
     var hpPct = Math.max(0, Math.round(p.hp / p.maxHp * 100));
     var hpColor = hpPct <= 0 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
     var statusText = p.hp <= 0 ? '쓰러짐' : 'HP ' + p.hp + '/' + p.maxHp;
+    var gs = _expGradeStyle(p.grade || 'normal');
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:12px">' +
-      '<div style="font-size:28px"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:40px;height:40px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,0.08);padding:2px"></div>' +
+      '<div style="border-radius:12px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,0.06)"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px;display:block"></div>' +
       '<div style="flex:1">' +
         '<div style="font-size:13px;font-weight:900;color:#e5e7eb">' + p.name + '</div>' +
         '<div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;margin-top:4px;overflow:hidden">' +
