@@ -17,15 +17,20 @@ var _expConfig = {
   sp_max: 5,
   treasure_acorn_min: 3,
   treasure_acorn_max: 12,
+  // 레벨 기반 스탯 시스템
+  lv_base_hp: 30,   lv_base_atk: 8,   lv_base_def: 3,
+  lv_grow_hp: 12,   lv_grow_atk: 2,   lv_grow_def: 1.5,
+  boss_stat_mult: 1.4,
+  // 몬스터 (이름, 이모지, 최소~최대 레벨)
   monsters: [
-    { name: '숲의 늑대', emoji: '🐺', lv: 6, hp: 80, atk: 16, def: 7 },
-    { name: '야생 멧돼지', emoji: '🐗', lv: 7, hp: 100, atk: 18, def: 9 },
-    { name: '독 거미', emoji: '🕷️', lv: 5, hp: 60, atk: 20, def: 5 },
-    { name: '그림자 박쥐', emoji: '🦇', lv: 5, hp: 55, atk: 17, def: 4 },
+    { name: '그림자 박쥐', emoji: '🦇', lvMin: 1, lvMax: 3 },
+    { name: '독 거미', emoji: '🕷️', lvMin: 2, lvMax: 4 },
+    { name: '숲의 늑대', emoji: '🐺', lvMin: 3, lvMax: 6 },
+    { name: '야생 멧돼지', emoji: '🐗', lvMin: 5, lvMax: 8 },
   ],
   bosses: [
-    { name: '숲의 수호자', emoji: '🐻', lv: 10, hp: 180, atk: 24, def: 12 },
-    { name: '고대 뱀', emoji: '🐍', lv: 11, hp: 200, atk: 26, def: 10 },
+    { name: '숲의 수호자', emoji: '🐻', lvMin: 7, lvMax: 10 },
+    { name: '고대 뱀', emoji: '🐍', lvMin: 8, lvMax: 11 },
   ],
   // 보상 카드
   reward_weights: { C: 65, B: 28, A: 7 },
@@ -34,14 +39,39 @@ var _expConfig = {
   reward_B: { acorns: [10, 20], itemChance: 0.45, items: ['🍎 사과', '🔮 마석', '🪵 나무'] },
   reward_A: { acorns: [20, 40], itemChance: 0.85, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] },
   // 전투 계수
-  skill_multiplier: 1.65,    // 스킬 데미지 = atk × 배율
-  skill_swing: 5,            // 스킬 랜덤 변동폭 (±N)
-  atk_swing: 3,              // 일반공격 랜덤 변동폭 (±N)
-  mon_swing: 3,              // 몬스터 공격 랜덤 변동폭 (±N)
-  mon_def_effect: 38,        // 몬스터 방어력 효과 (%) — 높을수록 몬스터가 단단
-  sq_def_effect: 48,         // 다람쥐 방어력 효과 (%) — 높을수록 다람쥐가 단단
-  heal_percent: 40            // 포션 회복량 (최대HP의 %)
+  skill_multiplier: 1.65,
+  skill_swing: 5,
+  atk_swing: 3,
+  mon_swing: 3,
+  mon_def_effect: 38,
+  sq_def_effect: 48,
+  heal_percent: 40
 };
+
+// ── 레벨로 스탯 계산 ──
+function _expCalcStats(lv, isBoss) {
+  var c = _expConfig;
+  var hp  = Math.round(c.lv_base_hp  + lv * c.lv_grow_hp);
+  var atk = Math.round(c.lv_base_atk + lv * c.lv_grow_atk);
+  var def = Math.round(c.lv_base_def + lv * c.lv_grow_def);
+  if (isBoss) {
+    var m = c.boss_stat_mult || 1.4;
+    hp  = Math.round(hp * m);
+    atk = Math.round(atk * m);
+    def = Math.round(def * m);
+  }
+  return { hp: hp, atk: atk, def: def };
+}
+
+// ── 몬스터 생성 (레벨 랜덤 → 스탯 계산) ──
+function _expSpawnMonster(template, isBoss) {
+  var lv = Math.floor(Math.random() * (template.lvMax - template.lvMin + 1)) + template.lvMin;
+  var stats = _expCalcStats(lv, isBoss);
+  return {
+    name: template.name, emoji: template.emoji, lv: lv,
+    hp: stats.hp, atk: stats.atk, def: stats.def
+  };
+}
 
 // ── 탐험 설정 DB 로드 ──
 async function expLoadSettings() {
@@ -64,6 +94,13 @@ async function expLoadSettings() {
       if (v.reward_A) _expConfig.reward_A = v.reward_A;
       if (v.monsters) _expConfig.monsters = v.monsters;
       if (v.bosses) _expConfig.bosses = v.bosses;
+      if (v.lv_base_hp !== undefined) _expConfig.lv_base_hp = v.lv_base_hp;
+      if (v.lv_base_atk !== undefined) _expConfig.lv_base_atk = v.lv_base_atk;
+      if (v.lv_base_def !== undefined) _expConfig.lv_base_def = v.lv_base_def;
+      if (v.lv_grow_hp !== undefined) _expConfig.lv_grow_hp = v.lv_grow_hp;
+      if (v.lv_grow_atk !== undefined) _expConfig.lv_grow_atk = v.lv_grow_atk;
+      if (v.lv_grow_def !== undefined) _expConfig.lv_grow_def = v.lv_grow_def;
+      if (v.boss_stat_mult !== undefined) _expConfig.boss_stat_mult = v.boss_stat_mult;
       if (v.skill_multiplier !== undefined) _expConfig.skill_multiplier = v.skill_multiplier;
       if (v.skill_swing !== undefined) _expConfig.skill_swing = v.skill_swing;
       if (v.atk_swing !== undefined) _expConfig.atk_swing = v.atk_swing;
@@ -113,6 +150,19 @@ async function expAdminLoadUI() {
   if (el('expSet_sqDefEffect')) el('expSet_sqDefEffect').value = c.sq_def_effect;
   if (el('expSet_healPct')) el('expSet_healPct').value = c.heal_percent;
 
+  // 레벨 스탯 설정
+  if (el('expSet_lvBaseHp')) el('expSet_lvBaseHp').value = c.lv_base_hp;
+  if (el('expSet_lvBaseAtk')) el('expSet_lvBaseAtk').value = c.lv_base_atk;
+  if (el('expSet_lvBaseDef')) el('expSet_lvBaseDef').value = c.lv_base_def;
+  if (el('expSet_lvGrowHp')) el('expSet_lvGrowHp').value = c.lv_grow_hp;
+  if (el('expSet_lvGrowAtk')) el('expSet_lvGrowAtk').value = c.lv_grow_atk;
+  if (el('expSet_lvGrowDef')) el('expSet_lvGrowDef').value = c.lv_grow_def;
+  if (el('expSet_bossStatMult')) el('expSet_bossStatMult').value = c.boss_stat_mult;
+
+  // 몬스터/보스 목록 렌더
+  _expRenderMonsterList('expSet_monsterList', c.monsters, false);
+  _expRenderMonsterList('expSet_bossList', c.bosses, true);
+
   // products 테이블에서 상품 목록 로드
   try {
     var res = await sb.from('products').select('id,name,icon,item_type,reward_type').order('sort_order');
@@ -149,10 +199,11 @@ function _expRenderItemChips(wrapId, selectedItems) {
     return;
   }
 
-  // selectedItems는 "아이콘 이름" 형태의 문자열 배열 → 이름만 추출해서 비교
+  // selectedItems는 {name,icon} 객체 배열 또는 "아이콘 이름" 문자열 배열 (하위 호환)
   var selectedNames = new Set(selectedItems.map(function(s) {
-    // "🍄 버섯" → "버섯", "💎 보석" → "보석" (이모지+공백 제거)
-    return s.replace(/^\S+\s*/, '').trim() || s;
+    if (typeof s === 'object' && s.name) return s.name;
+    // 문자열 하위 호환: "🍄 버섯" → "버섯"
+    return (s + '').replace(/^\S+\s*/, '').trim() || s;
   }));
 
   wrap.innerHTML = unique.map(function(p) {
@@ -178,9 +229,59 @@ function _expGetSelectedItems(wrapId) {
   var chips = wrap.querySelectorAll('.exp-item-chip.selected');
   var items = [];
   chips.forEach(function(chip) {
-    items.push(chip.dataset.icon + ' ' + chip.dataset.name);
+    items.push({ name: chip.dataset.name, icon: chip.dataset.icon || '🎁' });
   });
   return items;
+}
+
+// ── 몬스터/보스 목록 렌더 ──
+function _expRenderMonsterList(containerId, list, isBoss) {
+  var wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  if (!list || list.length === 0) {
+    wrap.innerHTML = '<div style="font-size:12px;color:#9ca3af;padding:8px;text-align:center">등록된 ' + (isBoss ? '보스' : '몬스터') + '가 없어요</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(function(m, i) {
+    var preview = _expCalcStats(m.lvMin, isBoss);
+    var previewMax = _expCalcStats(m.lvMax, isBoss);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:4px">' +
+      '<span style="font-size:22px">' + m.emoji + '</span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;font-weight:900;color:var(--text-primary,#374151)">' + m.name + '</div>' +
+        '<div style="font-size:10px;color:#9ca3af">Lv.' + m.lvMin + '~' + m.lvMax +
+          ' | HP ' + preview.hp + '~' + previewMax.hp +
+          ' 공 ' + preview.atk + '~' + previewMax.atk +
+          ' 방 ' + preview.def + '~' + previewMax.def + '</div>' +
+      '</div>' +
+      '<button onclick="_expRemoveMonster(\'' + containerId + '\',' + i + ',' + isBoss + ')" style="width:24px;height:24px;border-radius:6px;border:none;background:#fee2e2;color:#dc2626;font-size:12px;cursor:pointer;font-family:inherit">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function _expAddMonster(isBoss) {
+  var prefix = isBoss ? 'expBoss' : 'expMon';
+  var name = document.getElementById(prefix + 'Name')?.value?.trim();
+  var emoji = document.getElementById(prefix + 'Emoji')?.value?.trim() || '👾';
+  var lvMin = parseInt(document.getElementById(prefix + 'LvMin')?.value) || 1;
+  var lvMax = parseInt(document.getElementById(prefix + 'LvMax')?.value) || 5;
+  if (!name) { toast('⚠️', '이름을 입력해주세요'); return; }
+  if (lvMin > lvMax) { toast('⚠️', '최소 레벨이 최대보다 높습니다'); return; }
+
+  var listId = isBoss ? 'expSet_bossList' : 'expSet_monsterList';
+  var configKey = isBoss ? 'bosses' : 'monsters';
+  _expConfig[configKey].push({ name: name, emoji: emoji, lvMin: lvMin, lvMax: lvMax });
+  _expRenderMonsterList(listId, _expConfig[configKey], isBoss);
+
+  // 입력 초기화
+  if (document.getElementById(prefix + 'Name')) document.getElementById(prefix + 'Name').value = '';
+  if (document.getElementById(prefix + 'Emoji')) document.getElementById(prefix + 'Emoji').value = '';
+}
+
+function _expRemoveMonster(containerId, index, isBoss) {
+  var configKey = isBoss ? 'bosses' : 'monsters';
+  _expConfig[configKey].splice(index, 1);
+  _expRenderMonsterList(containerId, _expConfig[configKey], isBoss);
 }
 
 // ── 관리자: 탐험 설정 저장 ──
@@ -247,7 +348,18 @@ async function expSaveSettings() {
     mon_swing: parseInt(el('expSet_monSwing')?.value) || 3,
     mon_def_effect: parseInt(el('expSet_monDefEffect')?.value) || 38,
     sq_def_effect: parseInt(el('expSet_sqDefEffect')?.value) || 48,
-    heal_percent: parseInt(el('expSet_healPct')?.value) || 40
+    heal_percent: parseInt(el('expSet_healPct')?.value) || 40,
+    // 레벨 스탯
+    lv_base_hp: parseFloat(el('expSet_lvBaseHp')?.value) || 30,
+    lv_base_atk: parseFloat(el('expSet_lvBaseAtk')?.value) || 8,
+    lv_base_def: parseFloat(el('expSet_lvBaseDef')?.value) || 3,
+    lv_grow_hp: parseFloat(el('expSet_lvGrowHp')?.value) || 12,
+    lv_grow_atk: parseFloat(el('expSet_lvGrowAtk')?.value) || 2,
+    lv_grow_def: parseFloat(el('expSet_lvGrowDef')?.value) || 1.5,
+    boss_stat_mult: parseFloat(el('expSet_bossStatMult')?.value) || 1.4,
+    // 몬스터/보스 (현재 _expConfig에서 읽기 — UI에서 추가/삭제 시 이미 반영됨)
+    monsters: _expConfig.monsters,
+    bosses: _expConfig.bosses
   };
 
   var res = await sb.from('app_settings')
@@ -338,8 +450,8 @@ function _expGenerateTiles(total) {
   for (var i = 0; i < total; i++) {
     if (i === total - 1) {
       // 마지막 칸: 보스
-      var boss = _expConfig.bosses[Math.floor(Math.random() * _expConfig.bosses.length)];
-      tiles.push({ type: 'boss', monster: { ...boss }, cleared: false });
+      var bossTemplate = _expConfig.bosses[Math.floor(Math.random() * _expConfig.bosses.length)];
+      tiles.push({ type: 'boss', monster: _expSpawnMonster(bossTemplate, true), cleared: false });
     } else {
       var roll = Math.random() * 100;
       if (roll < _expConfig.chance_empty) {
@@ -348,8 +460,8 @@ function _expGenerateTiles(total) {
         var acorns = Math.floor(Math.random() * (_expConfig.treasure_acorn_max - _expConfig.treasure_acorn_min + 1)) + _expConfig.treasure_acorn_min;
         tiles.push({ type: 'treasure', acorns: acorns, cleared: false });
       } else {
-        var mon = _expConfig.monsters[Math.floor(Math.random() * _expConfig.monsters.length)];
-        tiles.push({ type: 'monster', monster: { ...mon }, cleared: false });
+        var monTemplate = _expConfig.monsters[Math.floor(Math.random() * _expConfig.monsters.length)];
+        tiles.push({ type: 'monster', monster: _expSpawnMonster(monTemplate, false), cleared: false });
       }
     }
   }
@@ -958,13 +1070,25 @@ function _btlGenReward(grade) {
   var table = _btlGetRewardTable();
   var t = table[grade];
   var acorns = Math.floor(Math.random() * (t.acorns[1] - t.acorns[0] + 1)) + t.acorns[0];
-  var item = (t.items && t.items.length > 0 && Math.random() < t.itemChance) ? t.items[Math.floor(Math.random() * t.items.length)] : null;
+  var item = null;
+  if (t.items && t.items.length > 0 && Math.random() < t.itemChance) {
+    var picked = t.items[Math.floor(Math.random() * t.items.length)];
+    // 객체 또는 문자열 하위 호환
+    if (typeof picked === 'object' && picked.name) {
+      item = { name: picked.name, icon: picked.icon || '🎁' };
+    } else {
+      // 문자열 "🍄 버섯" → 분리
+      var parts = (picked + '').match(/^(\S+)\s+(.+)$/);
+      item = parts ? { name: parts[2], icon: parts[1] } : { name: picked, icon: '🎁' };
+    }
+  }
   return { grade: grade, acorns: acorns, item: item };
 }
 
 function _btlRewardText(r) {
-  if (r.item && r.acorns > 0) return '🌰 ' + r.acorns + '개 + ' + r.item;
-  if (r.item) return r.item;
+  var itemLabel = r.item ? (r.item.icon + ' ' + r.item.name) : null;
+  if (itemLabel && r.acorns > 0) return '🌰 ' + r.acorns + '개 + ' + itemLabel;
+  if (itemLabel) return itemLabel;
   return '🌰 ' + r.acorns + '개';
 }
 
@@ -1001,7 +1125,7 @@ function _btlBuildFront(r, chosen) {
   var gradeClass = 'btl-grade-' + r.grade.toLowerCase();
   return '<div class="btl-card-front ' + gradeClass + (chosen ? ' btl-chosen-front' : ' btl-unchosen-front') + '">' +
     '<div class="btl-card-grade">' + r.grade + '등급</div>' +
-    '<div class="btl-card-reward-icon">' + (r.item ? r.item.split(' ')[0] : '🌰') + '</div>' +
+    '<div class="btl-card-reward-icon">' + (r.item ? r.item.icon : '🌰') + '</div>' +
     '<div class="btl-card-reward-txt">' + _btlRewardText(r) + '</div>' +
   '</div>';
 }
@@ -1156,7 +1280,8 @@ function _expShowSummary(finishStatus) {
       '<div style="font-size:11px;font-weight:800;color:#86efac;margin-bottom:8px;text-align:center">🎁 획득 아이템</div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">' +
       allItems.map(function(item) {
-        return '<div style="background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#e5e7eb">' + item + '</div>';
+        var label = (typeof item === 'object' && item.name) ? (item.icon + ' ' + item.name) : item;
+        return '<div style="background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#e5e7eb">' + label + '</div>';
       }).join('') +
       '</div></div>';
   }
@@ -1230,8 +1355,33 @@ function _expComplete() {
 }
 
 function _expRetreat() {
-  if (!confirm('정말 귀환하시겠어요? 현재까지의 전리품을 가지고 돌아갑니다.')) return;
-  _expFinish('retreated');
+  var s = _expState;
+  if (!s) return;
+
+  var totalAcorns = 0;
+  var allItems = [];
+  s.loot.forEach(function(l) {
+    totalAcorns += (l.acorns || 0);
+    if (l.items && l.items.length) {
+      l.items.forEach(function(item) { allItems.push(item); });
+    }
+  });
+  var halfAcorns = Math.floor(totalAcorns / 2);
+  var keepCount = Math.floor(allItems.length / 2);
+  var keptItems = [];
+  if (keepCount > 0 && allItems.length > 0) {
+    var shuffled = allItems.slice();
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
+    }
+    keptItems = shuffled.slice(0, keepCount);
+  }
+
+  if (!confirm('정말 귀환하시겠어요?\n전리품의 50%만 가지고 돌아갑니다.\n🌰 ' + halfAcorns + '개' + (keptItems.length > 0 ? ', 아이템 ' + keptItems.length + '개' : '') + ' 획득')) return;
+
+  s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
+  _expShowSummary('retreated');
 }
 
 async function _expFinish(status) {
@@ -1303,20 +1453,22 @@ async function _expFinish(status) {
       }
     });
     if (allItems.length > 0) {
-      // 아이템 이름에서 product_id 찾기 (이름 = "아이콘 상품명" → 상품명 추출)
-      var itemNames = allItems.map(function(s) {
-        return s.replace(/^\S+\s*/, '').trim() || s;
+      // 아이템에서 이름 추출 (객체 또는 문자열 하위 호환)
+      var itemNames = allItems.map(function(item) {
+        if (typeof item === 'object' && item.name) return item.name;
+        return (item + '').replace(/^\S+\s*/, '').trim() || item;
       });
+      // 중복 제거 후 DB 조회
+      var uniqueNames = [];
+      itemNames.forEach(function(n) { if (uniqueNames.indexOf(n) < 0) uniqueNames.push(n); });
       try {
-        var prodRes = await sb.from('products').select('id,name,icon,item_type,reward_type').in('name', itemNames);
+        var prodRes = await sb.from('products').select('id,name,icon,item_type,reward_type').in('name', uniqueNames);
         var prodMap = {};
         (prodRes.data || []).forEach(function(p) {
-          // 같은 이름이 여러개면 첫 번째 사용
           if (!prodMap[p.name]) prodMap[p.name] = p;
         });
         var insertRows = [];
-        allItems.forEach(function(itemStr) {
-          var name = itemStr.replace(/^\S+\s*/, '').trim() || itemStr;
+        itemNames.forEach(function(name) {
           var prod = prodMap[name];
           if (prod) {
             insertRows.push({
