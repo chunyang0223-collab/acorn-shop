@@ -420,7 +420,7 @@ async function sqContinueExpedition(expId) {
       expId: expId,
       expedition: data,
       party: squirrels.map(sq => ({
-        id: sq.id, name: sq.name, sprite: sq.sprite || 'sq_brown',
+        id: sq.id, name: sq.name, sprite: sq.sprite || 'sq_acorn',
         hp: sq.hp_current, maxHp: sq.stats?.hp || 80,
         atk: sq.stats?.atk || 12, def: sq.stats?.def || 6
       })),
@@ -532,7 +532,7 @@ function _expRenderMap() {
     var isDead = p.hp <= 0;
     var hpColor = isDead ? '#ef4444' : hpPct <= 30 ? 'linear-gradient(90deg,#eab308,#ca8a04)' : 'linear-gradient(90deg,#22c55e,#16a34a)';
     return '<div class="exp-pc' + (isDead ? ' exp-pc-dead' : '') + '">' +
-      '<div class="exp-pc-emoji"><img src="images/squirrels/' + (isDead ? 'sq_sleeping' : (p.sprite || 'sq_brown')) + '.png" style="width:48px;height:48px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,0.08);padding:3px"></div>' +
+      '<div class="exp-pc-emoji"><img src="images/squirrels/' + (isDead ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:48px;height:48px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,0.08);padding:3px"></div>' +
       '<div class="exp-pc-name">' + p.name + '</div>' +
       '<div class="exp-pc-hpwrap"><div class="exp-pc-hpbar" style="width:' + hpPct + '%;background:' + hpColor + '"></div></div>' +
       '<div class="exp-pc-stats">' +
@@ -703,7 +703,7 @@ function _btlBuildParty() {
   if (!grid) return;
   grid.innerHTML = _btl.party.map(function(p, i) {
     return '<div class="btl-p-card" id="btlPc' + i + '">' +
-      '<div class="btl-p-emoji"><img src="images/squirrels/' + (p.hp > 0 ? (p.sprite || 'sq_brown') : 'sq_sleeping') + '.png" style="width:48px;height:48px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,0.08);padding:3px"></div>' +
+      '<div class="btl-p-emoji"><img src="images/squirrels/' + (p.hp > 0 ? (p.sprite || 'sq_acorn') : ((p.sprite || 'sq_acorn') + '_defeat')) + '.png" style="width:48px;height:48px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,0.08);padding:3px"></div>' +
       '<div class="btl-p-name">' + p.name + '</div>' +
       '<div class="btl-p-stat"><span>⚔️' + p.atk + '</span><span>🛡️' + p.def + '</span></div>' +
       '<div class="btl-p-hptrack"><div class="btl-p-hpbar" id="btlPhp' + i + '" style="width:100%"></div></div>' +
@@ -919,7 +919,7 @@ function _btlAction(type) {
         '</div>' +
         '<div class="flex gap-2">' +
           '<button class="btn btn-primary flex-1" onclick="closeModal();_btlDoEscape()">도망친다!</button>' +
-          '<button class="btn btn-gray flex-1" onclick="closeModal()">안 도망침</button>' +
+          '<button class="btn btn-gray flex-1" onclick="closeModal()">포기한다</button>' +
         '</div>' +
       '</div>'
     );
@@ -1403,7 +1403,7 @@ function _expShowSummary(finishStatus) {
     var hpColor = hpPct <= 0 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
     var statusText = p.hp <= 0 ? '쓰러짐' : 'HP ' + p.hp + '/' + p.maxHp;
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:12px">' +
-      '<div style="font-size:28px"><img src="images/squirrels/' + (p.hp <= 0 ? 'sq_sleeping' : (p.sprite || 'sq_brown')) + '.png" style="width:40px;height:40px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,0.08);padding:2px"></div>' +
+      '<div style="font-size:28px"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:40px;height:40px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,0.08);padding:2px"></div>' +
       '<div style="flex:1">' +
         '<div style="font-size:13px;font-weight:900;color:#e5e7eb">' + p.name + '</div>' +
         '<div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;margin-top:4px;overflow:hidden">' +
