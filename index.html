@@ -269,6 +269,25 @@
             </div>
           </div>
         </div>
+        <div class="clay-card p-4 mt-4">
+          <div class="title-font text-sm text-gray-600 mb-3">💡 알아두면 좋아요</div>
+          <details class="sq-help-acc">
+            <summary>🐿️ 다람쥐는 어떻게 키우나요?</summary>
+            <div class="sq-help-body">분양받은 아기 다람쥐에게 도토리를 먹이면 성장 게이지가 올라가요. 게이지가 다 차면 <b>탐험형</b> 또는 <b>애완형</b> 중 하나로 성장합니다!</div>
+          </details>
+          <details class="sq-help-acc">
+            <summary>⚔️ 탐험형은 뭘 할 수 있나요?</summary>
+            <div class="sq-help-body">탐험형 다람쥐는 탐험에 보낼 수 있어요. 몬스터와 싸우고, 보물을 찾아 도토리와 아이템을 가져옵니다. 스탯이 높을수록 유리해요!</div>
+          </details>
+          <details class="sq-help-acc">
+            <summary>🏡 애완형은 어떤 다람쥐인가요?</summary>
+            <div class="sq-help-body">애완형 다람쥐는 탐험에는 나갈 수 없지만, 함께할 수 있어요. 필요 없다면 <b>펫샵에 팔아</b> 도토리를 돌려받을 수도 있습니다.</div>
+          </details>
+          <details class="sq-help-acc">
+            <summary>⭐ 등급은 어떻게 정해지나요?</summary>
+            <div class="sq-help-body">다람쥐의 HP, 공격, 방어 스탯에 따라 일반 → 레어 → 희귀 → 유일 → 레전드 등급이 결정돼요. 등급이 높을수록 테두리가 화려합니다!</div>
+          </details>
+        </div>
       </div>
       <!-- 탐험 -->
       <div id="sqcontent-expedition" class="hidden">
@@ -279,6 +298,31 @@
           <button class="btn btn-primary" onclick="sqStartExpeditionFlow()">탐험 출발 →</button>
         </div>
         <div id="sqActiveExpeditionArea"></div>
+        <div class="clay-card p-4 mt-4">
+          <div class="title-font text-sm text-gray-600 mb-3">💡 탐험 가이드</div>
+          <div class="sq-help-grid">
+            <div class="sq-help-card">
+              <div style="font-size:24px;margin-bottom:4px">✨</div>
+              <div class="sq-help-card-title">SP 전략</div>
+              <div class="sq-help-card-desc">스킬 포인트(SP)는 탐험마다 랜덤 횟수가 부여돼요. 보스전을 위해 아껴두세요!</div>
+            </div>
+            <div class="sq-help-card">
+              <div style="font-size:24px;margin-bottom:4px">💨</div>
+              <div class="sq-help-card-title">도망치기</div>
+              <div class="sq-help-card-desc">위험하면 도망! 단, 전리품의 50%만 가져가요</div>
+            </div>
+            <div class="sq-help-card">
+              <div style="font-size:24px;margin-bottom:4px">🌰</div>
+              <div class="sq-help-card-title">포션 사용</div>
+              <div class="sq-help-card-desc">전투 중 도토리 1개로 HP를 회복할 수 있어요</div>
+            </div>
+            <div class="sq-help-card">
+              <div style="font-size:24px;margin-bottom:4px">🎁</div>
+              <div class="sq-help-card-title">보상 획득</div>
+              <div class="sq-help-card-desc">전투 승리 시 카드 뽑기! 등급(C/B/A)에 따라 보상이 달라요</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1252,6 +1296,11 @@
             <label class="text-xs font-black text-gray-600 mb-1 block">🧪 포션 회복량 (%)</label>
             <input type="number" id="expSet_healPct" class="field" value="40" min="1" max="100">
             <div class="text-xs text-gray-400 mt-1">최대HP의 N%</div>
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">💨 도망 실패 확률 (%)</label>
+            <input type="number" id="expSet_escapeFail" class="field" value="30" min="0" max="100">
+            <div class="text-xs text-gray-400 mt-1">0이면 항상 성공</div>
           </div>
         </div>
 
