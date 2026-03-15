@@ -1967,3 +1967,17 @@ body {
 
 /* 성장 준비 완료 바운스 */
 @keyframes sqReadyBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* 도움말: 아코디언 */
+.sq-help-acc{background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.06);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.sq-help-acc summary{padding:12px 14px;font-size:13px;font-weight:900;color:#4b5563;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+.sq-help-acc summary::after{content:'▸';margin-left:auto;color:#9ca3af;transition:transform .2s;font-size:12px}
+.sq-help-acc[open] summary::after{transform:rotate(90deg)}
+.sq-help-acc .sq-help-body{padding:0 14px 12px;font-size:12px;color:#6b7280;line-height:1.7}
+.sq-help-acc .sq-help-body b{color:#4b5563}
+
+/* 도움말: 카드 그리드 */
+.sq-help-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sq-help-card{background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:14px;text-align:center}
+.sq-help-card-title{font-size:12px;font-weight:900;color:#4b5563;margin-bottom:4px}
+.sq-help-card-desc{font-size:10px;color:#9ca3af;line-height:1.5}
