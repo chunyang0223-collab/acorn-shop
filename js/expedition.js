@@ -596,18 +596,83 @@ function _expAdvance() {
   var s = _expState;
   if (!s || s.currentTile >= s.tiles.length) return;
 
+  // 버튼 비활성화 (연출 중 중복 클릭 방지)
+  var advBtn = document.getElementById('expAdvanceBtn');
+  if (advBtn) advBtn.disabled = true;
+
   // 이동 사운드
   _btlSound('cardFlip');
 
   var tile = s.tiles[s.currentTile];
 
   if (tile.type === 'empty') {
-    _expHandleEmpty();
+    // 빈 칸: 짧은 딜레이 + 바람 사운드
+    setTimeout(function() {
+      _btlSound('wind');
+      _expHandleEmpty();
+    }, 600);
   } else if (tile.type === 'treasure') {
-    _expHandleTreasure(tile);
+    // 보물: 딜레이 후 처리
+    setTimeout(function() {
+      _btlSound('treasure');
+      _expHandleTreasure(tile);
+    }, 600);
   } else if (tile.type === 'monster' || tile.type === 'boss') {
-    _expHandleBattle(tile);
+    // 전투: 딜레이 → 화면 흔들림 → 팝업
+    var isBoss = tile.type === 'boss';
+    setTimeout(function() {
+      _btlSound(isBoss ? 'bossAlert' : 'battleAlert');
+      _expShakeScreen();
+      setTimeout(function() {
+        _expShowBattlePopup(tile, isBoss);
+      }, isBoss ? 600 : 400);
+    }, isBoss ? 1000 : 700);
   }
+}
+
+// ── 화면 흔들림 ──
+function _expShakeScreen() {
+  var el = document.getElementById('sqcontent-expedition');
+  if (!el) return;
+  el.style.animation = 'expShake 0.4s ease-in-out';
+  setTimeout(function() { el.style.animation = ''; }, 500);
+}
+
+// ── 전투 진입 팝업 ──
+function _expShowBattlePopup(tile, isBoss) {
+  var mon = tile.monster;
+  var bgColor = isBoss ? 'rgba(80,0,0,.85)' : 'rgba(20,20,40,.85)';
+  var borderColor = isBoss ? '#ef4444' : '#6366f1';
+  var titleColor = isBoss ? '#fef2f2' : '#e0e7ff';
+  var subColor = isBoss ? '#fca5a5' : '#a5b4fc';
+  var btnBg = isBoss ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : 'linear-gradient(135deg,#ef4444,#dc2626)';
+  var btnColor = isBoss ? '#78350f' : 'white';
+  var btnShadow = isBoss ? '0 4px 0 #b45309' : '0 4px 0 #991b1b';
+  var topLabel = isBoss
+    ? '<div style="font-size:11px;color:#fca5a5;letter-spacing:4px;margin-bottom:8px;font-weight:900">⚡ BOSS BATTLE ⚡</div>'
+    : '<div style="font-size:11px;color:#a5b4fc;letter-spacing:3px;margin-bottom:8px;font-weight:900">⚔️ BATTLE ⚔️</div>';
+  var pulseStyle = isBoss ? ';animation:expPulse 1.5s ease-in-out infinite' : '';
+
+  showModal(
+    '<div style="text-align:center;padding:10px 0">' +
+      '<div style="font-size:56px;margin-bottom:6px;animation:expBounceIn .5s ease">' + mon.emoji + '</div>' +
+      topLabel +
+      '<div style="font-size:20px;font-weight:900;color:' + titleColor + ';text-shadow:0 0 10px ' + borderColor + '80">' + mon.name + (isBoss ? '' : '') + '</div>' +
+      '<div style="font-size:12px;color:' + subColor + ';margin-top:4px">Lv.' + mon.lv + (isBoss ? ' — 최종 전투!' : '') + '</div>' +
+      '<button onclick="closeModal();_expDoBattle()" style="margin-top:20px;padding:12px 44px;border-radius:14px;border:none;background:' + btnBg + ';color:' + btnColor + ';font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:' + btnShadow + pulseStyle + '">⚔️ 전투 시작!</button>' +
+    '</div>'
+  );
+
+  // 전투 데이터를 임시 저장
+  window._expPendingBattle = { tile: tile, isBoss: isBoss };
+}
+
+// ── 팝업 확인 후 실제 전투 시작 ──
+function _expDoBattle() {
+  var pending = window._expPendingBattle;
+  if (!pending) return;
+  window._expPendingBattle = null;
+  _expHandleBattle(pending.tile);
 }
 
 // ── 빈 칸 ──
@@ -909,6 +974,47 @@ function _btlSound(type) {
         sg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + delay + .2);
         o.connect(sg); sg.connect(ctx.destination);
         o.start(ctx.currentTime + delay); o.stop(ctx.currentTime + delay + .25);
+      });
+    } else if (type === 'wind') {
+      // 바람 소리 (화이트노이즈 + 필터)
+      var bufLen = ctx.sampleRate * 0.6;
+      var buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufLen, 1.5) * 0.3;
+      var noise = ctx.createBufferSource(); noise.buffer = buf;
+      var flt = ctx.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 800;
+      g.gain.setValueAtTime(.15, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .6);
+      noise.connect(flt); flt.connect(g); noise.start(); noise.stop(ctx.currentTime + .65);
+    } else if (type === 'treasure') {
+      // 보물 발견 (밝은 차임)
+      [[659,0],[784,.08],[1047,.16],[1319,.28]].forEach(function(p) {
+        var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = p[0];
+        var tg = ctx.createGain();
+        tg.gain.setValueAtTime(.14, ctx.currentTime + p[1]);
+        tg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + p[1] + .2);
+        o.connect(tg); tg.connect(ctx.destination);
+        o.start(ctx.currentTime + p[1]); o.stop(ctx.currentTime + p[1] + .25);
+      });
+    } else if (type === 'battleAlert') {
+      // 전투 경고음 (긴장감)
+      [[220,0],[277,.12],[220,.24]].forEach(function(p) {
+        var o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = p[0];
+        var bg = ctx.createGain();
+        bg.gain.setValueAtTime(.12, ctx.currentTime + p[1]);
+        bg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + p[1] + .14);
+        o.connect(bg); bg.connect(ctx.destination);
+        o.start(ctx.currentTime + p[1]); o.stop(ctx.currentTime + p[1] + .16);
+      });
+    } else if (type === 'bossAlert') {
+      // 보스 경고음 (더 강렬, 낮은음)
+      [[110,0],[138,.15],[110,.3],[82,.45]].forEach(function(p) {
+        var o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = p[0];
+        var bg = ctx.createGain();
+        bg.gain.setValueAtTime(.16, ctx.currentTime + p[1]);
+        bg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + p[1] + .18);
+        o.connect(bg); bg.connect(ctx.destination);
+        o.start(ctx.currentTime + p[1]); o.stop(ctx.currentTime + p[1] + .2);
       });
     }
   } catch (e) {}
