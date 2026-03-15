@@ -1981,3 +1981,8 @@ body {
 .sq-help-card{background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:14px;text-align:center}
 .sq-help-card-title{font-size:12px;font-weight:900;color:#4b5563;margin-bottom:4px}
 .sq-help-card-desc{font-size:10px;color:#9ca3af;line-height:1.5}
+
+/* 전투 진입 연출 */
+@keyframes expShake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}20%{transform:translateX(6px)}30%{transform:translateX(-4px)}40%{transform:translateX(4px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}}
+@keyframes expBounceIn{0%{transform:scale(0) rotate(-10deg);opacity:0}50%{transform:scale(1.15) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes expPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
