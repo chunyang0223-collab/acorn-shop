@@ -529,7 +529,7 @@ function sqCardHTML(sq) {
       <div style="display:flex;align-items:center;gap:14px">
         ${imgHTML}
         <div style="flex:1;min-width:0">
-          <div style="font-size:18px;font-weight:900;color:#1f2937;cursor:pointer" onclick="sqEditName('${sq.id}')" title="클릭하여 이름 변경">${sq.name} <span style="font-size:11px;color:#d1d5db">✏️</span>${gs ? ` <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px;vertical-align:middle">${gs.label}</span>` : ''}</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:18px;font-weight:900;color:#1f2937">${sq.name}<span onclick="sqEditName('${sq.id}')" style="font-size:13px;cursor:pointer;padding:2px 6px;display:inline-flex;align-items:center" title="클릭하여 이름 변경">✏️</span>${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}</div>
           <div style="font-size:12px;font-weight:700;margin-top:3px">${statusText[sq.status] || ''}</div>
         </div>
         <span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
