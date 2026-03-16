@@ -923,7 +923,7 @@ function _btlSound(type) {
       'skill':       ['sounds/skill_1.mp3', 'sounds/skill_2.mp3'],
       'heal':        ['sounds/heal.mp3'],
       'victory':     ['sounds/explorer_complete_victory.mp3'],
-      'defeat':      ['sounds/button_normal.mp3'],  // 패배 효과음은 짧은 것, BGM은 별도
+      'defeat':      ['sounds/explorer_complete_defeat.mp3'],
       'reward':      ['sounds/explorer_card_reward.mp3'],
       'cardFlip':    ['sounds/button_normal.mp3'],
       'button':      ['sounds/button_normal.mp3'],
@@ -1474,7 +1474,8 @@ function _expShowSummary(finishStatus) {
   var s = _expState;
   if (!s) { _expFinish(status); return; }
 
-  // 효과음 1회 재생 (루프 아님)
+  // 전투 BGM 정지 + 효과음 1회 재생
+  _sndStopBGM();
   _btlSound(isDefeat ? 'defeat' : 'victory');
 
   var container = document.getElementById('sqcontent-expedition');
