@@ -26,7 +26,7 @@ var _sqSettings  = {
 var _sqAudioCtx = null;
 
 // ── 스프라이트 목록 (17종) ──
-var _sqSprites = ['sq_acorn','sq_white','sq_choco','sq_beige','sq_gold','sq_pink','sq_gray','sq_darkbrown','sq_stripe','sq_ribbon1','sq_ribbon2','sq_mahogany','sq_cream','sq_mocha','sq_silver','sq_heart','sq_curious'];
+var _sqSprites = ['sq_acorn','sq_white','sq_choco','sq_black','sq_beige','sq_gold','sq_pink','sq_gray','sq_darkbrown','sq_stripe','sq_ribbon1','sq_ribbon2','sq_mahogany','sq_cream','sq_mocha','sq_silver','sq_heart','sq_curious'];
 function _sqRandomSprite() {
   return _sqSprites[Math.floor(Math.random() * _sqSprites.length)];
 }
@@ -272,6 +272,8 @@ async function _sqPoll() {
       const idx = _sqSquirrels.findIndex(s => s.id === id);
       if (idx < 0) return;
       const prev = _sqSquirrels[idx];
+      // sprite가 DB에 없으면(null) 기존 로컬 값 보존
+      if (!updated.sprite && prev.sprite) updated.sprite = prev.sprite;
       _sqSquirrels[idx] = updated;
 
       if (prev.status === 'baby' && updated.status !== 'baby') {
@@ -335,16 +337,25 @@ async function sqLoadSquirrels() {
   const now = new Date();
   for (const sq of _sqSquirrels) {
     if (sq.status === 'baby' && sq.grows_at && new Date(sq.grows_at) <= now) {
-      // grows_at 만료 → 성장 준비 완료 상태 (acorns_fed를 acorns_required로 세팅)
       await sb.from('squirrels').update({ grows_at: null, acorns_fed: sq.acorns_required }).eq('id', sq.id);
       sq.grows_at = null;
       sq.acorns_fed = sq.acorns_required;
     }
-    // recovers_at 만료 체크: 회복 완료 → explorer로 복원, HP 풀회복
     if (sq.status === 'recovering' && sq.recovers_at && new Date(sq.recovers_at) <= now) {
       const fullHp = sq.stats?.hp || 100;
       await sb.from('squirrels').update({ status: 'explorer', recovers_at: null, hp_current: fullHp }).eq('id', sq.id);
       sq.status = 'explorer'; sq.recovers_at = null; sq.hp_current = fullHp;
+    }
+    // 성체인데 sprite가 없으면 1회만 배정 (이전 버전 호환)
+    if (sq.status !== 'baby' && !sq.sprite) {
+      const newSprite = _sqRandomSprite();
+      try {
+        const { error } = await sb.from('squirrels').update({ sprite: newSprite }).eq('id', sq.id);
+        if (!error) sq.sprite = newSprite;
+        else sq.sprite = newSprite; // DB 실패해도 로컬에는 고정
+      } catch(e) {
+        sq.sprite = newSprite; // 에러나도 로컬에 고정
+      }
     }
   }
 
