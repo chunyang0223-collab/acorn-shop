@@ -176,6 +176,7 @@ function sqTab(tab) {
   if (typeof _sndPlayBGM === 'function') {
     if (tab === 'shop') _sndPlayBGM('shop');
     else if (tab === 'expedition') _sndPlayBGM('explorer');
+    else if (tab === 'my') _sndPlayBGM('my');
     else _sndStopBGM();
   }
 }
