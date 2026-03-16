@@ -618,10 +618,11 @@ function _expAdvance() {
       _expHandleTreasure(tile);
     }, 600);
   } else if (tile.type === 'monster' || tile.type === 'boss') {
-    // 전투: 딜레이 → 화면 흔들림 → 팝업
+    // 전투: 딜레이 → BGM 정지 → 경고 효과음 → 화면 흔들림 → 팝업
     var isBoss = tile.type === 'boss';
     setTimeout(function() {
-      _btlSound(isBoss ? 'bossAlert' : 'battleAlert');
+      _sndStopBGM(); // 탐험 BGM 정지
+      _btlSound('battleStart'); // battle_start.mp3
       _expShakeScreen();
       setTimeout(function() {
         _expShowBattlePopup(tile, isBoss);
@@ -927,8 +928,7 @@ function _btlSound(type) {
       'cardFlip':    ['sounds/button_normal.mp3'],
       'button':      ['sounds/button_normal.mp3'],
       'buy':         ['sounds/squirrel_buy.mp3'],
-      'battleAlert': ['sounds/button_normal.mp3'],   // 팝업 등장 시 짧은 효과음
-      'bossAlert':   ['sounds/button_normal.mp3'],   // 팝업 등장 시 짧은 효과음
+      'battleStart':  ['sounds/battle_start.mp3'],
       'wind':        [],  // Web Audio 유지 (파일 없음)
       'treasure':    ['sounds/explorer_card_reward.mp3']
     };
@@ -949,6 +949,7 @@ function _btlSound(type) {
 function _sndPlayBGM(type) {
   _sndStopBGM();
   var bgmMap = {
+    'my':       ['sounds/menu_bgm_my_squirrels.mp3'],
     'shop':     ['sounds/menu_bgm_squirrel_shop.mp3'],
     'explorer': ['sounds/menu_bgm_explorer.mp3'],
     'battle':   ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
