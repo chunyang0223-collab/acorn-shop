@@ -1474,8 +1474,8 @@ function _expShowSummary(finishStatus) {
   var s = _expState;
   if (!s) { _expFinish(status); return; }
 
-  // 배경음 전환
-  _sndPlayBGM(isDefeat ? 'defeat' : 'victory');
+  // 효과음 1회 재생 (루프 아님)
+  _btlSound(isDefeat ? 'defeat' : 'victory');
 
   var container = document.getElementById('sqcontent-expedition');
   if (!container) { _expFinish(status); return; }
