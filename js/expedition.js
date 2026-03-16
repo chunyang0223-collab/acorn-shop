@@ -631,6 +631,60 @@ function _expAdvance() {
   }
 }
 
+// ── 탐험 전용 토스트 (B형 하단 슬라이드) ──
+function _expToast(emoji, text) {
+  var container = document.getElementById('sqcontent-expedition');
+  if (!container) { toast(emoji, text); return; }
+
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:20px;left:16px;right:16px;z-index:9998;display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.75);border:1px solid rgba(184,158,120,.2);border-radius:12px;padding:10px 16px;backdrop-filter:blur(8px);animation:expToastIn .3s ease;max-width:440px;margin:0 auto;pointer-events:none';
+  el.innerHTML = '<span style="font-size:22px;flex-shrink:0">' + emoji + '</span><div style="font-size:13px;font-weight:800;color:#e8d5b5">' + text + '</div>';
+  document.body.appendChild(el);
+
+  setTimeout(function() {
+    el.style.animation = 'expToastOut .3s ease forwards';
+    setTimeout(function() { el.remove(); }, 350);
+  }, 2000);
+}
+
+// ── 탐험 전용 오버레이 모달 (C형) ──
+function _expShowOverlay(emoji, title, body, btn1Text, btn1Fn, btn2Text, btn2Fn) {
+  // 기존 오버레이 제거
+  var prev = document.getElementById('expOverlay');
+  if (prev) prev.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'expOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);animation:expFadeIn .3s ease';
+
+  var btn1Style = 'flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#d97706);color:#78350f;box-shadow:0 3px 0 #b45309';
+  var btn2Style = 'flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:transparent;color:#a5b4fc';
+
+  overlay.innerHTML =
+    '<div style="background:rgba(15,15,25,.92);border:1.5px solid rgba(99,102,241,.2);border-radius:20px;padding:28px 24px;box-shadow:0 0 40px rgba(99,102,241,.1);max-width:340px;width:90%;animation:expScaleIn .4s ease;text-align:center">' +
+      '<div style="font-size:36px;margin-bottom:8px">' + emoji + '</div>' +
+      '<div style="font-size:18px;font-weight:900;color:#e0e7ff;margin-bottom:6px">' + title + '</div>' +
+      '<div style="font-size:12px;color:#818cf8;line-height:1.7;margin-bottom:18px">' + body + '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button id="expOvBtn1" style="' + btn1Style + '">' + btn1Text + '</button>' +
+        (btn2Text ? '<button id="expOvBtn2" style="' + btn2Style + '">' + btn2Text + '</button>' : '') +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('expOvBtn1').onclick = function() {
+    overlay.remove();
+    if (btn1Fn) btn1Fn();
+  };
+  if (btn2Text) {
+    document.getElementById('expOvBtn2').onclick = function() {
+      overlay.remove();
+      if (btn2Fn) btn2Fn();
+    };
+  }
+}
+
 // ── 화면 흔들림 ──
 function _expShakeScreen() {
   var el = document.getElementById('sqcontent-expedition');
@@ -690,7 +744,7 @@ function _expHandleEmpty() {
   var s = _expState;
   s.tiles[s.currentTile].cleared = true;
   s.currentTile++;
-  toast('🍃', '아무 일도 일어나지 않았다...');
+  _expToast('🍃', '아무 일도 일어나지 않았다...');
   _expSaveProgress();
 
   if (s.currentTile >= s.tiles.length) {
@@ -706,7 +760,7 @@ function _expHandleTreasure(tile) {
   s.loot.push({ type: 'treasure', acorns: tile.acorns });
   s.tiles[s.currentTile].cleared = true;
   s.currentTile++;
-  toast('💰', '보물 발견! 🌰 ' + tile.acorns + '개 획득!');
+  _expToast('💰', '작년에 묻어둔 도토리를 발견했어요! 🌰 ' + tile.acorns + '개 획득!');
   _expSaveProgress();
 
   if (s.currentTile >= s.tiles.length) {
@@ -1014,20 +1068,13 @@ function _btlAction(type) {
     s.loot.forEach(function(l) { previewAcorns += (l.acorns || 0); });
     var halfPreview = Math.floor(previewAcorns / 2);
 
-    showModal(
-      '<div class="text-center">' +
-        '<div style="font-size:40px;margin-bottom:8px">💨</div>' +
-        '<div class="title-font text-lg text-gray-800 mb-1">도망치시겠어요?</div>' +
-        '<div class="text-sm text-gray-500 mb-3">' +
-          '도망에 실패하면 적에게 한 대 맞아요!<br>' +
-          '도망에 성공하면 <b>전리품의 50%</b>만 가지고<br>마을로 돌아가게 됩니다.' +
-          (halfPreview > 0 ? '<br><span style="color:#b45309;font-weight:800">🌰 ' + halfPreview + '개 획득 예상</span>' : '') +
-        '</div>' +
-        '<div class="flex gap-2">' +
-          '<button class="btn btn-primary flex-1" onclick="closeModal();_btlDoEscape()">도망친다!</button>' +
-          '<button class="btn btn-gray flex-1" onclick="closeModal()">포기한다</button>' +
-        '</div>' +
-      '</div>'
+    _expShowOverlay(
+      '💨',
+      '정말 포기하시겠어요?',
+      '도망에 성공해도 전리품의 50%만 가지고<br>돌아갈 수 있어요.' +
+      (halfPreview > 0 ? '<br><span style="color:#fbbf24;font-weight:800">🌰 ' + halfPreview + '개 획득 예상</span>' : ''),
+      '도망친다!', function() { _btlDoEscape(); },
+      '포기한다', null
     );
     return;
   }
@@ -1632,10 +1679,16 @@ function _expRetreat() {
     keptItems = shuffled.slice(0, keepCount);
   }
 
-  if (!confirm('정말 귀환하시겠어요?\n전리품의 50%만 가지고 돌아갑니다.\n🌰 ' + halfAcorns + '개' + (keptItems.length > 0 ? ', 아이템 ' + keptItems.length + '개' : '') + ' 획득')) return;
-
-  s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
-  _expShowSummary('retreated');
+  _expShowOverlay(
+    '🏳️',
+    '정말 귀환하시겠어요?',
+    '지금 돌아가면 전리품의 50%만 가져갈 수 있어요.<br><span style="color:#fbbf24;font-weight:800">🌰 ' + halfAcorns + '개 획득 예상</span>',
+    '귀환한다', function() {
+      s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
+      _expShowSummary('retreated');
+    },
+    '계속 탐험', null
+  );
 }
 
 async function _expFinish(status) {
