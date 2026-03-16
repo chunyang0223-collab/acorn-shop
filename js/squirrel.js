@@ -916,7 +916,7 @@ async function sqFeedSquirrel(id) {
 
     } else if (action.startsWith('grow:')) {
       const growType = action.split(':')[1];
-      _sqUpdate(id, { status: growType, grows_at: null });
+      _sqUpdate(id, { status: growType, grows_at: null, sprite: updates.sprite });
       // 게이지 100% 보여주고 성장 연출 (busy는 _sqGrowCard 완료 시 풀림)
       if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
       setTimeout(() => _sqGrowCard(id, sq.name, growType), 1200);
