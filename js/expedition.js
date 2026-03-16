@@ -1517,58 +1517,85 @@ function _expShowSummary(finishStatus) {
     var hpColor = hpPct <= 0 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
     var statusText = p.hp <= 0 ? '쓰러짐' : 'HP ' + p.hp + '/' + p.maxHp;
     var gs = _expGradeStyle(p.grade || 'normal');
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,0,0,0.35);border-radius:14px;backdrop-filter:blur(4px)">' +
-      '<div style="border-radius:12px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,0.08)"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px;display:block"></div>' +
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(139,111,71,0.1);border-radius:14px;border:1px solid rgba(139,111,71,0.15)">' +
+      '<div style="border-radius:12px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,0.5)"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px;display:block"></div>' +
       '<div style="flex:1">' +
-        '<div style="font-size:13px;font-weight:900;color:#f5f5f5;text-shadow:0 1px 3px rgba(0,0,0,.5)">' + p.name + '</div>' +
-        '<div style="height:5px;background:rgba(255,255,255,0.15);border-radius:3px;margin-top:4px;overflow:hidden">' +
+        '<div style="font-size:13px;font-weight:900;color:#5c4a32">' + p.name + '</div>' +
+        '<div style="height:5px;background:rgba(0,0,0,0.1);border-radius:3px;margin-top:4px;overflow:hidden">' +
           '<div style="height:100%;width:' + hpPct + '%;background:' + hpColor + ';border-radius:3px"></div>' +
         '</div>' +
       '</div>' +
-      '<div style="font-size:11px;font-weight:800;color:' + hpColor + ';text-shadow:0 1px 2px rgba(0,0,0,.4)">' + statusText + '</div>' +
+      '<div style="font-size:11px;font-weight:800;color:' + hpColor + '">' + statusText + '</div>' +
     '</div>';
   }).join('');
 
   // 타일 경로 미니맵
   var miniTilesHTML = s.tiles.map(function(t) {
     var icon = t.type === 'empty' ? '🍃' : t.type === 'treasure' ? '💰' : t.type === 'monster' ? '⚔️' : '👑';
-    return '<div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;' +
-      'background:rgba(100,180,100,0.15);border:1.5px solid rgba(100,180,100,0.3)">' + icon + '</div>';
-  }).join('<div style="width:8px;height:2px;background:rgba(100,180,100,0.3);flex-shrink:0"></div>');
+    var tileBg = t.type === 'boss' ? 'rgba(168,85,247,.12)' : t.cleared === false ? 'rgba(239,68,68,.15)' : 'rgba(100,180,100,.12)';
+    var tileBorder = t.type === 'boss' ? 'rgba(168,85,247,.25)' : t.cleared === false ? 'rgba(239,68,68,.25)' : 'rgba(100,180,100,.2)';
+    return '<div style="width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;background:' + tileBg + ';border:1px solid ' + tileBorder + '">' + icon + '</div>';
+  }).join('<div style="width:6px;height:1px;background:rgba(100,180,100,.2);flex-shrink:0"></div>');
+
+  // 파티 가로 카드 HTML
+  var partyCardsHTML = s.party.map(function(p) {
+    var hpPct = Math.max(0, Math.round(p.hp / p.maxHp * 100));
+    var hpColor = hpPct <= 0 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
+    var statusText = p.hp <= 0 ? '쓰러짐' : 'HP ' + p.hp + '/' + p.maxHp;
+    var gs = _expGradeStyle(p.grade || 'normal');
+    return '<div style="flex:1;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid rgba(255,255,255,.06);padding:10px 8px;text-align:center">' +
+      '<div style="border-radius:10px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,.05)"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:36px;height:36px;object-fit:contain;border-radius:7px;display:block"></div>' +
+      '<div style="font-size:11px;font-weight:900;color:#e8d5b5;margin-top:4px">' + p.name + '</div>' +
+      '<div style="height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin:4px 4px 2px"><div style="height:100%;width:' + hpPct + '%;background:' + hpColor + ';border-radius:2px"></div></div>' +
+      '<div style="font-size:9px;color:' + hpColor + ';font-weight:700">' + statusText + '</div>' +
+    '</div>';
+  }).join('');
+
+  // 뱃지 HTML
+  var badgesHTML = '';
+  if (battleCount > 0) badgesHTML += '<div style="background:rgba(239,68,68,.12);padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800;color:#fca5a5">⚔️' + battleCount + '</div>';
+  if (treasureCount > 0) badgesHTML += '<div style="background:rgba(251,191,36,.12);padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800;color:#fde68a">💰' + treasureCount + '</div>';
+  if (emptyCount > 0) badgesHTML += '<div style="background:rgba(148,163,184,.12);padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800;color:#cbd5e1">🍃' + emptyCount + '</div>';
 
   container.innerHTML =
     '<div style="max-width:420px;margin:0 auto">' +
-      // 헤더
-      '<div style="text-align:center;padding:24px 16px 16px">' +
-        '<div style="font-size:48px;margin-bottom:8px">' + (isDefeat ? '💀' : '🎉') + '</div>' +
-        '<div style="font-size:22px;font-weight:900;color:' + (isDefeat ? '#ef4444' : '#ffd700') + ';text-shadow:0 0 20px ' + (isDefeat ? 'rgba(239,68,68,0.4)' : 'rgba(255,200,0,0.4)') + '">' + (isDefeat ? '탐험 실패...' : '탐험 완료!') + '</div>' +
-        '<div style="font-size:13px;color:#9ca3af;margin-top:4px">' + (isDefeat ? '전리품의 절반만 가지고 귀환합니다' : '모든 구간을 무사히 돌파했어요') + '</div>' +
-      '</div>' +
-      // 타일 경로
-      '<div style="display:flex;align-items:center;justify-content:center;gap:0;padding:8px 16px;overflow-x:auto;flex-wrap:nowrap">' +
-        miniTilesHTML +
-      '</div>' +
-      // 전리품 요약
-      '<div style="background:linear-gradient(135deg,#1a2a1a,#0f1f0f);border-radius:16px;padding:20px;margin:16px;border:1px solid rgba(100,180,100,0.2)">' +
-        '<div style="font-size:14px;font-weight:900;color:#86efac;margin-bottom:12px;text-align:center">📦 전리품 요약</div>' +
-        '<div style="display:flex;justify-content:center;margin-bottom:16px">' +
-          '<div style="font-size:32px;font-weight:900;color:#fbbf24">🌰 ' + totalAcorns + '<span style="font-size:14px;color:#d97706;margin-left:4px">도토리</span></div>' +
+      '<div style="background:linear-gradient(160deg,#2e2318,#231a11);border-radius:20px;padding:20px 16px;border:1.5px solid #5c4a34;box-shadow:inset 0 0 40px rgba(0,0,0,.3),0 4px 20px rgba(0,0,0,.4);position:relative;overflow:hidden">' +
+        '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent 5%,#c9a44a 30%,#e8c87a 50%,#c9a44a 70%,transparent 95%)"></div>' +
+        // 헤더: 아이콘 + 결과 + 도토리
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-top:4px">' +
+          '<div style="font-size:44px">' + (isDefeat ? '💀' : '🎉') + '</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-size:20px;font-weight:900;color:' + (isDefeat ? '#ef4444' : '#fbbf24') + '">' + (isDefeat ? '탐험 실패...' : '탐험 완료!') + '</div>' +
+            '<div style="font-size:11px;color:#8a7a60">' + (isDefeat ? '전리품 50%만 획득' : '모든 구간 돌파!') + '</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<div style="font-size:28px;font-weight:900;color:#fbbf24">🌰 ' + totalAcorns + '</div>' +
+            '<div style="font-size:10px;color:#b89e78">도토리 획득</div>' +
+          '</div>' +
         '</div>' +
-        '<div style="display:flex;gap:8px;justify-content:center">' +
-          (battleCount > 0 ? '<div style="background:rgba(239,68,68,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#fca5a5">⚔️ 전투 승리 ' + battleCount + '회</div>' : '') +
-          (treasureCount > 0 ? '<div style="background:rgba(251,191,36,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#fde68a">💰 보물 ' + treasureCount + '개</div>' : '') +
-          (emptyCount > 0 ? '<div style="background:rgba(148,163,184,0.15);padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#cbd5e1">🍃 평화 ' + emptyCount + '칸</div>' : '') +
+        // 타일 + 뱃지
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px">' +
+          '<div style="display:flex;align-items:center;gap:0">' + miniTilesHTML + '</div>' +
+          '<div style="display:flex;gap:4px">' + badgesHTML + '</div>' +
         '</div>' +
-        itemsHTML +
-      '</div>' +
-      // 파티 상태
-      '<div style="background:rgba(255,255,255,0.03);border-radius:16px;padding:16px;margin:0 16px 16px;border:1px solid rgba(255,255,255,0.06)">' +
-        '<div style="font-size:13px;font-weight:900;color:#9ca3af;margin-bottom:10px;text-align:center">🐿️ 파티 상태</div>' +
-        '<div style="display:flex;flex-direction:column;gap:6px">' + partyHTML + '</div>' +
-      '</div>' +
-      // 귀환 버튼
-      '<div style="padding:0 16px 24px">' +
-        '<button onclick="_expFinish(\'' + status + '\')" style="width:100%;padding:14px;border-radius:14px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,' + (isDefeat ? '#ef4444,#dc2626' : '#22c55e,#16a34a') + ');color:white;box-shadow:0 4px 16px ' + (isDefeat ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)') + '">🏠 마을로 귀환하기</button>' +
+        // 아이템
+        (allItems.length > 0 ?
+          '<div style="border-top:1px solid rgba(184,158,120,.12);padding:10px 0;margin-bottom:10px">' +
+            '<div style="font-size:10px;font-weight:800;color:#86efac;margin-bottom:6px">🎁 획득 아이템</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:4px">' +
+            allItems.map(function(item) {
+              var label = (typeof item === 'object' && item.name) ? (item.icon + ' ' + item.name) : item;
+              return '<div style="background:rgba(255,255,255,.06);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;color:#e5e7eb">' + label + '</div>';
+            }).join('') +
+            '</div></div>' : '') +
+        // 구분선
+        '<div style="border-top:1px solid rgba(184,158,120,.12);margin-bottom:14px"></div>' +
+        // 파티: 가로 카드
+        '<div style="font-size:11px;font-weight:900;color:#b89e78;margin-bottom:8px;letter-spacing:1px">🐿️ 파티</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:16px">' + partyCardsHTML + '</div>' +
+        // 귀환 버튼
+        '<button onclick="_expFinish(\'' + status + '\')" style="width:100%;padding:13px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,' + (isDefeat ? '#ef4444,#dc2626' : '#22c55e,#16a34a') + ');color:white;box-shadow:0 3px 0 ' + (isDefeat ? '#991b1b' : '#15803d') + ',0 4px 16px ' + (isDefeat ? 'rgba(239,68,68,.25)' : 'rgba(34,197,94,.25)') + '">🏠 마을로 귀환하기</button>' +
+        '<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent 5%,#c9a44a 30%,#e8c87a 50%,#c9a44a 70%,transparent 95%)"></div>' +
       '</div>' +
     '</div>';
 }
