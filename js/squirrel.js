@@ -189,6 +189,8 @@ async function sqInit() {
   await sqLoadSquirrels();
   await sqLoadActiveExpedition();
   _sqSubscribe();
+  // 최초 진입 시 배경음 (기본 탭이 '내 다람쥐')
+  if (typeof _sndPlayBGM === 'function') _sndPlayBGM('my');
 }
 
 // ================================================================
