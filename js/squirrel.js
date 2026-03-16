@@ -620,11 +620,11 @@ function _sqStartTimer(id, sq) {
           tmp.innerHTML = sqCardHTML(curSq);
           cardEl.replaceWith(tmp.firstElementChild);
         }
-        toast('🎁', `${sq.name}의 성장이 완료되었어요! 결과를 확인해보세요!`);
+        toast('🎁', `${sq.name}이(가) 털갈이를 합니다! 이번 다람쥐는...?`);
       } else {
         // 중간 쉬는 타이머 → 도토리 주기 버튼 복원
         _sqShowFeedButtons(id);
-        toast('🌱', `${sq.name}이(가) 쉬었어요! 이제 다시 먹일 수 있어요`);
+        toast('🌱', `${sq.name}이(가) 다시 배가 고파졌어요!`);
       }
     }
   }, 1000);
@@ -677,7 +677,7 @@ function _sqStartRecoverTimer(id, sq) {
           cardEl.replaceWith(tmp.firstElementChild);
         }
       }
-      toast('💚', `${sq.name}이(가) 완전히 회복했어요!`);
+      toast('💚', `${sq.name}이(가) 회복되었어요!`);
     }
   }, 1000);
 }
