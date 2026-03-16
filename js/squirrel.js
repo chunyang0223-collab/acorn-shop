@@ -172,6 +172,12 @@ function sqTab(tab) {
     document.getElementById('sqcontent-' + t)?.classList.toggle('hidden', t !== tab);
     document.getElementById('sqtab-' + t)?.classList.toggle('active', t === tab);
   });
+  // 탭별 배경음
+  if (typeof _sndPlayBGM === 'function') {
+    if (tab === 'shop') _sndPlayBGM('shop');
+    else if (tab === 'expedition') _sndPlayBGM('explorer');
+    else _sndStopBGM();
+  }
 }
 
 // ================================================================
@@ -979,6 +985,7 @@ async function sqDoBuySquirrel(price) {
     // 로컬 캐시에 추가 + 카드만 DOM에 append (전체 재렌더 없음)
     _sqSquirrels.push(inserted);
     _sqState[inserted.id] = 'idle';
+    if (typeof _btlSound === 'function') _btlSound('buy');
     sqTab('my');
 
     const grid = document.getElementById('squirrelGrid');
