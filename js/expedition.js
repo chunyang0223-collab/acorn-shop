@@ -641,7 +641,8 @@ function _expShakeScreen() {
 // ── 전투 진입 팝업 ──
 function _expShowBattlePopup(tile, isBoss) {
   var mon = tile.monster;
-  var bgColor = isBoss ? 'rgba(80,0,0,.85)' : 'rgba(20,20,40,.85)';
+
+  var overlayBg = isBoss ? 'rgba(60,0,0,.92)' : 'rgba(15,15,35,.92)';
   var borderColor = isBoss ? '#ef4444' : '#6366f1';
   var titleColor = isBoss ? '#fef2f2' : '#e0e7ff';
   var subColor = isBoss ? '#fca5a5' : '#a5b4fc';
@@ -651,17 +652,25 @@ function _expShowBattlePopup(tile, isBoss) {
   var topLabel = isBoss
     ? '<div style="font-size:11px;color:#fca5a5;letter-spacing:4px;margin-bottom:8px;font-weight:900">⚡ BOSS BATTLE ⚡</div>'
     : '<div style="font-size:11px;color:#a5b4fc;letter-spacing:3px;margin-bottom:8px;font-weight:900">⚔️ BATTLE ⚔️</div>';
-  var pulseStyle = isBoss ? ';animation:expPulse 1.5s ease-in-out infinite' : '';
+  var pulseStyle = isBoss ? 'animation:expPulse 1.5s ease-in-out infinite;' : '';
+  var glowStyle = isBoss ? 'box-shadow:0 0 40px rgba(239,68,68,.3),inset 0 0 60px rgba(239,68,68,.1);' : 'box-shadow:0 0 40px rgba(99,102,241,.2),inset 0 0 60px rgba(99,102,241,.08);';
+  var borderCSS = isBoss ? 'border:2px solid rgba(239,68,68,.4);' : 'border:2px solid rgba(99,102,241,.3);';
 
-  showModal(
-    '<div style="text-align:center;padding:10px 0">' +
-      '<div style="font-size:56px;margin-bottom:6px;animation:expBounceIn .5s ease">' + mon.emoji + '</div>' +
+  // 전용 오버레이 생성
+  var overlay = document.createElement('div');
+  overlay.id = 'expBattleOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);animation:expFadeIn .3s ease';
+
+  overlay.innerHTML =
+    '<div style="background:' + overlayBg + ';' + borderCSS + glowStyle + 'border-radius:24px;padding:36px 28px;text-align:center;max-width:340px;width:90%;animation:expScaleIn .4s ease">' +
+      '<div style="font-size:56px;margin-bottom:8px;animation:expBounceIn .5s ease">' + mon.emoji + '</div>' +
       topLabel +
-      '<div style="font-size:20px;font-weight:900;color:' + titleColor + ';text-shadow:0 0 10px ' + borderColor + '80">' + mon.name + (isBoss ? '' : '') + '</div>' +
-      '<div style="font-size:12px;color:' + subColor + ';margin-top:4px">Lv.' + mon.lv + (isBoss ? ' — 최종 전투!' : '') + '</div>' +
-      '<button onclick="closeModal();_expDoBattle()" style="margin-top:20px;padding:12px 44px;border-radius:14px;border:none;background:' + btnBg + ';color:' + btnColor + ';font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:' + btnShadow + pulseStyle + '">⚔️ 전투 시작!</button>' +
-    '</div>'
-  );
+      '<div style="font-size:22px;font-weight:900;color:' + titleColor + ';text-shadow:0 0 12px ' + borderColor + '60">' + mon.name + '</div>' +
+      '<div style="font-size:12px;color:' + subColor + ';margin-top:6px">Lv.' + mon.lv + (isBoss ? ' — 최종 전투!' : '') + '</div>' +
+      '<button onclick="document.getElementById(\'expBattleOverlay\').remove();_expDoBattle()" style="margin-top:22px;padding:13px 48px;border-radius:14px;border:none;background:' + btnBg + ';color:' + btnColor + ';font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:' + btnShadow + ';' + pulseStyle + '">⚔️ 전투 시작!</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
 
   // 전투 데이터를 임시 저장
   window._expPendingBattle = { tile: tile, isBoss: isBoss };
