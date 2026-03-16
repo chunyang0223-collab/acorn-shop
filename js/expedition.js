@@ -1516,15 +1516,15 @@ function _expShowSummary(finishStatus) {
     var hpColor = hpPct <= 0 ? '#ef4444' : hpPct <= 50 ? '#eab308' : '#22c55e';
     var statusText = p.hp <= 0 ? '쓰러짐' : 'HP ' + p.hp + '/' + p.maxHp;
     var gs = _expGradeStyle(p.grade || 'normal');
-    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:12px">' +
-      '<div style="border-radius:12px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,0.06)"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px;display:block"></div>' +
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,0,0,0.35);border-radius:14px;backdrop-filter:blur(4px)">' +
+      '<div style="border-radius:12px;' + gs.border + ';box-shadow:' + gs.shadow + ';padding:2px;display:inline-block;background:rgba(255,255,255,0.08)"><img src="images/squirrels/' + (p.hp <= 0 ? ((p.sprite || 'sq_acorn') + '_defeat') : (p.sprite || 'sq_acorn')) + '.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px;display:block"></div>' +
       '<div style="flex:1">' +
-        '<div style="font-size:13px;font-weight:900;color:#e5e7eb">' + p.name + '</div>' +
-        '<div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;margin-top:4px;overflow:hidden">' +
+        '<div style="font-size:13px;font-weight:900;color:#f5f5f5;text-shadow:0 1px 3px rgba(0,0,0,.5)">' + p.name + '</div>' +
+        '<div style="height:5px;background:rgba(255,255,255,0.15);border-radius:3px;margin-top:4px;overflow:hidden">' +
           '<div style="height:100%;width:' + hpPct + '%;background:' + hpColor + ';border-radius:3px"></div>' +
         '</div>' +
       '</div>' +
-      '<div style="font-size:11px;font-weight:700;color:' + hpColor + '">' + statusText + '</div>' +
+      '<div style="font-size:11px;font-weight:800;color:' + hpColor + ';text-shadow:0 1px 2px rgba(0,0,0,.4)">' + statusText + '</div>' +
     '</div>';
   }).join('');
 
@@ -1729,7 +1729,7 @@ async function _expFinish(status) {
   // 항상 복귀 (에러가 나도)
   _expState = null;
 
-  // expedition 탭 HTML을 원래 상태로 복원
+  // expedition 탭 HTML을 원래 상태로 복원 (도움말 포함)
   var container = document.getElementById('sqcontent-expedition');
   if (container) {
     container.innerHTML =
@@ -1739,12 +1739,21 @@ async function _expFinish(status) {
         '<div class="text-sm text-gray-400 mb-4">탐험형 다람쥐를 보유해야 출발할 수 있어요</div>' +
         '<button class="btn btn-primary" onclick="sqStartExpeditionFlow()">탐험 출발 →</button>' +
       '</div>' +
-      '<div id="sqActiveExpeditionArea"></div>';
+      '<div id="sqActiveExpeditionArea"></div>' +
+      '<div class="clay-card p-4 mt-4">' +
+        '<div class="title-font text-sm text-gray-600 mb-3">💡 탐험 가이드</div>' +
+        '<div class="sq-help-grid">' +
+          '<div class="sq-help-card"><div style="font-size:24px;margin-bottom:4px">✨</div><div class="sq-help-card-title">SP 전략</div><div class="sq-help-card-desc">스킬 포인트(SP)는 탐험마다 랜덤 횟수가 부여돼요. 보스전을 위해 아껴두세요!</div></div>' +
+          '<div class="sq-help-card"><div style="font-size:24px;margin-bottom:4px">💨</div><div class="sq-help-card-title">도망치기</div><div class="sq-help-card-desc">위험하면 도망! 단, 전리품의 50%만 가져가요</div></div>' +
+          '<div class="sq-help-card"><div style="font-size:24px;margin-bottom:4px">🌰</div><div class="sq-help-card-title">포션 사용</div><div class="sq-help-card-desc">전투 중 도토리 1개로 HP를 회복할 수 있어요</div></div>' +
+          '<div class="sq-help-card"><div style="font-size:24px;margin-bottom:4px">🎁</div><div class="sq-help-card-title">보상 획득</div><div class="sq-help-card-desc">전투 승리 시 카드 뽑기! 등급(C/B/A)에 따라 보상이 달라요</div></div>' +
+        '</div>' +
+      '</div>';
   }
 
   await sqLoadSquirrels();
   await sqLoadActiveExpedition();
-  sqTab('expedition');
+  sqTab('my');
 }
 
 // ── DB 진행 저장 ──
