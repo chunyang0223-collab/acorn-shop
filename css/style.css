@@ -1986,3 +1986,7 @@ body {
 @keyframes expShake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}20%{transform:translateX(6px)}30%{transform:translateX(-4px)}40%{transform:translateX(4px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}}
 @keyframes expBounceIn{0%{transform:scale(0) rotate(-10deg);opacity:0}50%{transform:scale(1.15) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
 @keyframes expPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* 전투 팝업 오버레이 애니메이션 */
+@keyframes expFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes expScaleIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
