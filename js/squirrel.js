@@ -985,11 +985,10 @@ async function sqDoBuySquirrel(price) {
     const { data: inserted, error: e2 } = await sb.from('squirrels').insert(insertData).select().single();
     if (e2) throw e2;
 
-    // 로컬 캐시에 추가 + 카드만 DOM에 append (전체 재렌더 없음)
+    // 로컬 캐시에 추가
     _sqSquirrels.push(inserted);
     _sqState[inserted.id] = 'idle';
     if (typeof _btlSound === 'function') _btlSound('buy');
-    sqTab('my');
 
     const grid = document.getElementById('squirrelGrid');
     const countEl = document.getElementById('squirrelCount');
