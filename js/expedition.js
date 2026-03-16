@@ -721,6 +721,11 @@ function _expHandleBattle(tile) {
   var container = document.getElementById('sqcontent-expedition');
   if (!container) return;
 
+  var isBoss = tile.type === 'boss';
+
+  // 전투 배경음 전환
+  _sndPlayBGM(isBoss ? 'boss' : 'battle');
+
   // 전투용 몬스터 데이터 (HP 복사본)
   var mon = {
     name: tile.monster.name, emoji: tile.monster.emoji, lv: tile.monster.lv,
@@ -729,7 +734,7 @@ function _expHandleBattle(tile) {
   };
 
   // 전투 UI 렌더
-  _expRenderBattle(container, mon, tile.type === 'boss');
+  _expRenderBattle(container, mon, isBoss);
 }
 
 // ================================================================
@@ -902,90 +907,85 @@ function _btlShakeMonster() {
   }, 350);
 }
 
-// ── Web Audio (전투 사운드) ──
+// ── 사운드 시스템 (mp3 파일 기반) ──
+var _sndBGM = null; // 현재 재생 중인 배경음
+var _sndVolSFX = 0.7;
+var _sndVolBGM = 0.3;
+
+// 효과음 재생 (1회)
+function _btlSound(type) {
+  try {
+    var fileMap = {
+      'attack':      ['sounds/punch_small_hit.mp3'],
+      'bigHit':      ['sounds/punch_big_hit.mp3'],
+      'hit':         ['sounds/punch_small_hit.mp3'],
+      'skill':       ['sounds/skill_1.mp3', 'sounds/skill_2.mp3'],
+      'heal':        ['sounds/heal.mp3'],
+      'victory':     ['sounds/explorer_complete_victory.mp3'],
+      'defeat':      ['sounds/explorer_complete_defeat.mp3'],
+      'reward':      ['sounds/explorer_card_reward.mp3'],
+      'cardFlip':    ['sounds/button_normal.mp3'],
+      'button':      ['sounds/button_normal.mp3'],
+      'buy':         ['sounds/squirrel_buy.mp3'],
+      'battleAlert': ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
+      'bossAlert':   ['sounds/battle_boss_1.mp3','sounds/battle_boss_2.mp3','sounds/battle_boss_3.mp3'],
+      'wind':        [],  // Web Audio 유지 (파일 없음)
+      'treasure':    ['sounds/explorer_card_reward.mp3']
+    };
+    var files = fileMap[type];
+    if (!files || files.length === 0) {
+      // 파일 없는 것은 기존 Web Audio 폴백
+      _btlSoundFallback(type);
+      return;
+    }
+    var file = files[Math.floor(Math.random() * files.length)];
+    var audio = new Audio(file);
+    audio.volume = _sndVolSFX;
+    audio.play().catch(function(){});
+  } catch(e) {}
+}
+
+// 배경음 재생 (루프)
+function _sndPlayBGM(type) {
+  _sndStopBGM();
+  var bgmMap = {
+    'shop':     ['sounds/menu_bgm_squirrel_shop.mp3'],
+    'explorer': ['sounds/menu_bgm_explorer.mp3'],
+    'battle':   ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
+    'boss':     ['sounds/battle_boss_1.mp3','sounds/battle_boss_2.mp3','sounds/battle_boss_3.mp3'],
+    'defeat':   ['sounds/explorer_complete_defeat.mp3'],
+    'victory':  ['sounds/explorer_complete_victory.mp3']
+  };
+  var files = bgmMap[type];
+  if (!files || files.length === 0) return;
+  var file = files[Math.floor(Math.random() * files.length)];
+  _sndBGM = new Audio(file);
+  _sndBGM.volume = _sndVolBGM;
+  _sndBGM.loop = true;
+  _sndBGM.play().catch(function(){});
+}
+
+// 배경음 정지
+function _sndStopBGM() {
+  if (_sndBGM) {
+    _sndBGM.pause();
+    _sndBGM.currentTime = 0;
+    _sndBGM = null;
+  }
+}
+
+// Web Audio 폴백 (파일 없는 사운드용)
 var _btlAC = null;
 function _btlGetAC() {
   if (!_btlAC) _btlAC = new (window.AudioContext || window.webkitAudioContext)();
   if (_btlAC.state === 'suspended') _btlAC.resume();
   return _btlAC;
 }
-
-function _btlSound(type) {
+function _btlSoundFallback(type) {
   try {
     var ctx = _btlGetAC();
     var g = ctx.createGain(); g.connect(ctx.destination);
-    if (type === 'attack') {
-      var o1 = ctx.createOscillator(); o1.type = 'triangle';
-      o1.frequency.setValueAtTime(260, ctx.currentTime);
-      o1.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + .16);
-      g.gain.setValueAtTime(.22, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .18);
-      o1.connect(g); o1.start(); o1.stop(ctx.currentTime + .2);
-    } else if (type === 'hit') {
-      var o = ctx.createOscillator(); o.type = 'sine';
-      o.frequency.setValueAtTime(140, ctx.currentTime);
-      o.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + .22);
-      g.gain.setValueAtTime(.24, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .25);
-      o.connect(g); o.start(); o.stop(ctx.currentTime + .28);
-    } else if (type === 'skill') {
-      [0, .1, .2].forEach(function(delay, i) {
-        var o = ctx.createOscillator(); o.type = 'sine';
-        o.frequency.setValueAtTime([440, 554, 659][i], ctx.currentTime + delay);
-        var sg = ctx.createGain();
-        sg.gain.setValueAtTime(.18, ctx.currentTime + delay);
-        sg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + delay + .22);
-        o.connect(sg); sg.connect(ctx.destination);
-        o.start(ctx.currentTime + delay); o.stop(ctx.currentTime + delay + .25);
-      });
-    } else if (type === 'heal') {
-      [0, .1, .2].forEach(function(delay, i) {
-        var o = ctx.createOscillator(); o.type = 'sine';
-        o.frequency.setValueAtTime([523, 659, 784][i], ctx.currentTime + delay);
-        var hg = ctx.createGain();
-        hg.gain.setValueAtTime(.16, ctx.currentTime + delay);
-        hg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + delay + .32);
-        o.connect(hg); hg.connect(ctx.destination);
-        o.start(ctx.currentTime + delay); o.stop(ctx.currentTime + delay + .35);
-      });
-    } else if (type === 'victory') {
-      [[523, 0], [659, .13], [784, .26], [1047, .42], [784, .56], [1047, .68]].forEach(function(p) {
-        var o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = p[0];
-        var vg = ctx.createGain();
-        vg.gain.setValueAtTime(.16, ctx.currentTime + p[1]);
-        vg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + p[1] + .16);
-        o.connect(vg); vg.connect(ctx.destination);
-        o.start(ctx.currentTime + p[1]); o.stop(ctx.currentTime + p[1] + .18);
-      });
-    } else if (type === 'defeat') {
-      var od = ctx.createOscillator(); od.type = 'sine';
-      od.frequency.setValueAtTime(380, ctx.currentTime);
-      od.frequency.exponentialRampToValueAtTime(95, ctx.currentTime + .7);
-      g.gain.setValueAtTime(.19, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .75);
-      od.connect(g); od.start(); od.stop(ctx.currentTime + .8);
-    } else if (type === 'cardFlip') {
-      var bufLen = ctx.sampleRate * 0.08;
-      var buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-      var data = buf.getChannelData(0);
-      for (var i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufLen, 3);
-      var noise = ctx.createBufferSource(); noise.buffer = buf;
-      var flt = ctx.createBiquadFilter(); flt.type = 'bandpass'; flt.frequency.value = 3500; flt.Q.value = 1.2;
-      g.gain.setValueAtTime(.22, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .1);
-      noise.connect(flt); flt.connect(g); noise.start(); noise.stop(ctx.currentTime + .12);
-    } else if (type === 'reward') {
-      [0, .07, .14].forEach(function(delay, i) {
-        var o = ctx.createOscillator(); o.type = 'sine';
-        o.frequency.setValueAtTime([880, 1109, 1319][i], ctx.currentTime + delay);
-        var sg = ctx.createGain();
-        sg.gain.setValueAtTime(.17, ctx.currentTime + delay);
-        sg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + delay + .2);
-        o.connect(sg); sg.connect(ctx.destination);
-        o.start(ctx.currentTime + delay); o.stop(ctx.currentTime + delay + .25);
-      });
-    } else if (type === 'wind') {
-      // 바람 소리 (화이트노이즈 + 필터)
+    if (type === 'wind') {
       var bufLen = ctx.sampleRate * 0.6;
       var buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
       var data = buf.getChannelData(0);
@@ -995,38 +995,8 @@ function _btlSound(type) {
       g.gain.setValueAtTime(.15, ctx.currentTime);
       g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .6);
       noise.connect(flt); flt.connect(g); noise.start(); noise.stop(ctx.currentTime + .65);
-    } else if (type === 'treasure') {
-      // 보물 발견 (밝은 차임)
-      [[659,0],[784,.08],[1047,.16],[1319,.28]].forEach(function(p) {
-        var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = p[0];
-        var tg = ctx.createGain();
-        tg.gain.setValueAtTime(.14, ctx.currentTime + p[1]);
-        tg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + p[1] + .2);
-        o.connect(tg); tg.connect(ctx.destination);
-        o.start(ctx.currentTime + p[1]); o.stop(ctx.currentTime + p[1] + .25);
-      });
-    } else if (type === 'battleAlert') {
-      // 전투 경고음 (긴장감)
-      [[220,0],[277,.12],[220,.24]].forEach(function(p) {
-        var o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = p[0];
-        var bg = ctx.createGain();
-        bg.gain.setValueAtTime(.12, ctx.currentTime + p[1]);
-        bg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + p[1] + .14);
-        o.connect(bg); bg.connect(ctx.destination);
-        o.start(ctx.currentTime + p[1]); o.stop(ctx.currentTime + p[1] + .16);
-      });
-    } else if (type === 'bossAlert') {
-      // 보스 경고음 (더 강렬, 낮은음)
-      [[110,0],[138,.15],[110,.3],[82,.45]].forEach(function(p) {
-        var o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = p[0];
-        var bg = ctx.createGain();
-        bg.gain.setValueAtTime(.16, ctx.currentTime + p[1]);
-        bg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + p[1] + .18);
-        o.connect(bg); bg.connect(ctx.destination);
-        o.start(ctx.currentTime + p[1]); o.stop(ctx.currentTime + p[1] + .2);
-      });
     }
-  } catch (e) {}
+  } catch(e) {}
 }
 
 // ================================================================
@@ -1092,9 +1062,13 @@ function _btlAction(type) {
     } else {
       var aSwing = _expConfig.atk_swing || 3;
       dmg = Math.max(1, b.attacker.atk - Math.floor(b.mon.def * ((_expConfig.mon_def_effect || 38) / 100)) + Math.round(Math.random() * aSwing * 2 - aSwing));
-      _btlSound('attack');
-      _btlFlash('rgba(255,255,255,.38)');
-      _btlLog('⚔️ <b>' + b.attacker.name + '</b>의 공격! <b style="color:#68c568">' + dmg + ' 데미지!</b>', 'atk');
+      // big hit: 데미지가 공격력의 90% 이상이면
+      var isBigHit = dmg >= b.attacker.atk * 0.9;
+      _btlSound(isBigHit ? 'bigHit' : 'attack');
+      _btlFlash(isBigHit ? 'rgba(255,200,50,.45)' : 'rgba(255,255,255,.38)');
+      _btlLog(isBigHit
+        ? '💥 <b>' + b.attacker.name + '</b>의 강타! <b style="color:#fbbf24">' + dmg + ' 데미지!</b>'
+        : '⚔️ <b>' + b.attacker.name + '</b>의 공격! <b style="color:#68c568">' + dmg + ' 데미지!</b>', 'atk');
     }
 
     setTimeout(function() {
@@ -1111,6 +1085,7 @@ function _btlAction(type) {
         _btlRender();
         setTimeout(function() {
           _btlLog('🎉 <b>' + b.mon.name + ' 격파!</b>', 'win');
+          _sndStopBGM(); // 전투 배경음 정지
           _btlSound('victory');
           b.battleOver = true;
           _btlLockBtns(true);
@@ -1142,7 +1117,7 @@ function _btlAction(type) {
         if (allDead) {
           setTimeout(function() {
             _btlLog('💀 <b>전원 쓰러짐... 패배</b>', 'lose');
-            _btlSound('defeat');
+            _sndStopBGM(); _btlSound('defeat');
             b.battleOver = true;
             _btlLockBtns(true);
             _btlShowDefeat();
@@ -1197,7 +1172,7 @@ function _btlAction(type) {
       if (allDead) {
         setTimeout(function() {
           _btlLog('💀 <b>전원 쓰러짐... 패배</b>', 'lose');
-          _btlSound('defeat');
+          _sndStopBGM(); _btlSound('defeat');
           b.battleOver = true;
           _btlLockBtns(true);
           _btlShowDefeat();
@@ -1426,7 +1401,7 @@ function _btlDoEscape() {
       if (allDead) {
         setTimeout(function() {
           _btlLog('💀 <b>전원 쓰러짐... 패배</b>', 'lose');
-          _btlSound('defeat');
+          _sndStopBGM(); _btlSound('defeat');
           b.battleOver = true;
           _btlLockBtns(true);
           _btlShowDefeat();
@@ -1497,6 +1472,9 @@ function _expShowSummary(finishStatus) {
   var isDefeat = (status === 'retreated');
   var s = _expState;
   if (!s) { _expFinish(status); return; }
+
+  // 배경음 전환
+  _sndPlayBGM(isDefeat ? 'defeat' : 'victory');
 
   var container = document.getElementById('sqcontent-expedition');
   if (!container) { _expFinish(status); return; }
@@ -1634,6 +1612,9 @@ function _expRetreat() {
 async function _expFinish(status) {
   var s = _expState;
   if (!s) return;
+
+  // 배경음 정지
+  _sndStopBGM();
 
   var totalAcorns = 0;
   s.loot.forEach(function(l) { totalAcorns += (l.acorns || 0); });
