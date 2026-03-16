@@ -922,13 +922,13 @@ function _btlSound(type) {
       'skill':       ['sounds/skill_1.mp3', 'sounds/skill_2.mp3'],
       'heal':        ['sounds/heal.mp3'],
       'victory':     ['sounds/explorer_complete_victory.mp3'],
-      'defeat':      ['sounds/explorer_complete_defeat.mp3'],
+      'defeat':      ['sounds/button_normal.mp3'],  // 패배 효과음은 짧은 것, BGM은 별도
       'reward':      ['sounds/explorer_card_reward.mp3'],
       'cardFlip':    ['sounds/button_normal.mp3'],
       'button':      ['sounds/button_normal.mp3'],
       'buy':         ['sounds/squirrel_buy.mp3'],
-      'battleAlert': ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
-      'bossAlert':   ['sounds/battle_boss_1.mp3','sounds/battle_boss_2.mp3','sounds/battle_boss_3.mp3'],
+      'battleAlert': ['sounds/button_normal.mp3'],   // 팝업 등장 시 짧은 효과음
+      'bossAlert':   ['sounds/button_normal.mp3'],   // 팝업 등장 시 짧은 효과음
       'wind':        [],  // Web Audio 유지 (파일 없음)
       'treasure':    ['sounds/explorer_card_reward.mp3']
     };
