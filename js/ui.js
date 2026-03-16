@@ -334,6 +334,11 @@ function uTab(tab, btn) {
   btn.classList.add('active');
   playSound('tab');
 
+  // 다람쥐 탭이 아닌 곳으로 이동 시 배경음 정지
+  if (tab !== 'squirrel' && typeof _sndStopBGM === 'function') {
+    _sndStopBGM();
+  }
+
   // 점검 중 확인
   const maint = window._maintSettings || {};
   const tabEl = document.getElementById('utab-'+tab);
