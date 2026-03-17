@@ -130,7 +130,7 @@ async function recordPlay(gameId, score, rewarded) {
 const MINIGAMES = [
   { id: 'catch',    name: '🌰 도토리 캐치',   desc: '하늘에서 떨어지는 도토리를 바구니로 받아요!', icon: '🧺', color: 'linear-gradient(135deg, #87CEEB, #90EE90)', ready: true },
   { id: '2048',     name: '🧩 2048 도토리',   desc: '같은 숫자를 합쳐서 큰 수를 만들어요!',        icon: '🧩', color: 'linear-gradient(135deg, #fef3c7, #fed7aa)', ready: false },
-  { id: 'roulette', name: '🎡 행운의 룰렛',   desc: '도토리를 걸고 룰렛을 돌려보세요!',            icon: '🎡', color: 'linear-gradient(135deg, #fce4ff, #dbeafe)', ready: false }
+  { id: 'roulette', name: '🎡 행운의 룰렛',   desc: '도토리를 걸고 룰렛을 돌려보세요!',            icon: '🎡', color: 'linear-gradient(135deg, #fce4ff, #dbeafe)', ready: true }
 ];
 
 // ──────────────────────────────────────────────
@@ -196,6 +196,13 @@ async function startMinigame(id) {
   }
 
   const fee = getMgSetting(id, 'entryFee');
+
+  // 룰렛은 배수 선택 화면으로 진입
+  if (id === 'roulette') {
+    startRouletteGame();
+    return;
+  }
+
   if (fee > 0) {
     if ((myProfile?.acorns || 0) < fee) {
       toast('❌', `참가비가 부족해요! (필요: 🌰${fee}, 보유: 🌰${myProfile?.acorns || 0})`);
@@ -231,6 +238,7 @@ async function _confirmStartGame(id, fee) {
     } catch(e) { toast('❌', '참가비 차감 중 오류'); return; }
   }
   if (id === 'catch') startCatchGame();
+  else if (id === 'roulette') startRouletteGame();
 }
 
 function exitMinigame() {
@@ -1144,4 +1152,276 @@ function _renderLogRows(data, nameMap) {
       <span class="mg-log-time">${timeStr}</span>
     </div>`;
   }).join('');
+}
+
+
+// ══════════════════════════════════════════════
+//  행운의 룰렛
+// ══════════════════════════════════════════════
+
+const ROULETTE_SLICES = [
+  { label: '꽝',     mult: 0,   color: '#4a4a4a', prob: 38 },
+  { label: '×1',     mult: 1,   color: '#6b8e5a', prob: 30 },
+  { label: '×1.5',   mult: 1.5, color: '#5a7eb8', prob: 20 },
+  { label: '×3',     mult: 3,   color: '#c07030', prob: 10 },
+  { label: '×10',    mult: 10,  color: '#c04040', prob: 2  }
+];
+
+// 시각용 12칸 배열 (확률 비례 배치)
+const ROULETTE_WHEEL = [
+  0, 1, 0, 2, 1, 0, 1, 2, 3, 1, 2, 4
+];
+
+let _roulette = null;
+
+function startRouletteGame() {
+  const hub = document.getElementById('minigame-hub');
+  const play = document.getElementById('minigame-play');
+  hub.classList.add('hidden');
+  play.classList.remove('hidden');
+
+  const baseFee = getMgSetting('roulette', 'entryFee') || 5;
+  const pLimit = getPlayLimit('roulette');
+  const rLimit = getRewardLimit('roulette');
+  const played = _mgTodayPlays['roulette'] || 0;
+  const rewarded = _mgTodayRewards['roulette'] || 0;
+
+  _roulette = { baseFee: baseFee, multiplier: 1, spinning: false, angle: 0 };
+
+  play.innerHTML = `
+    <div class="rlt-container">
+      <div class="rlt-header">
+        <button class="rlt-back-btn" onclick="confirmExitRoulette()">← 돌아가기</button>
+        <div class="rlt-title">🎡 행운의 룰렛</div>
+        <div class="rlt-info">도전 ${pLimit - played}/${pLimit} · 보상 ${rLimit - rewarded}/${rLimit}</div>
+      </div>
+
+      <div class="rlt-wheel-wrap">
+        <div class="rlt-pointer">▼</div>
+        <canvas id="rltCanvas" width="300" height="300"></canvas>
+      </div>
+
+      <div class="rlt-bet-section">
+        <div class="rlt-bet-label">배수 선택</div>
+        <div class="rlt-bet-row">
+          <button class="rlt-bet-btn rlt-bet-active" onclick="_rltSetMult(1)">×1<span class="rlt-bet-fee">${baseFee}🌰</span></button>
+          <button class="rlt-bet-btn" onclick="_rltSetMult(2)">×2<span class="rlt-bet-fee">${baseFee*2}🌰</span></button>
+          <button class="rlt-bet-btn" onclick="_rltSetMult(3)">×3<span class="rlt-bet-fee">${baseFee*3}🌰</span></button>
+          <button class="rlt-bet-btn" onclick="_rltSetMult(4)">×4<span class="rlt-bet-fee">${baseFee*4}🌰</span></button>
+          <button class="rlt-bet-btn" onclick="_rltSetMult(5)">×5<span class="rlt-bet-fee">${baseFee*5}🌰</span></button>
+        </div>
+        <div class="rlt-bet-total" id="rltBetTotal">참가비: 🌰 ${baseFee}</div>
+      </div>
+
+      <button class="rlt-spin-btn" id="rltSpinBtn" onclick="_rltSpin()">돌리기!</button>
+      <div class="rlt-result" id="rltResult"></div>
+    </div>`;
+
+  _rltDrawWheel(0);
+}
+
+function _rltSetMult(m) {
+  if (_roulette.spinning) return;
+  _roulette.multiplier = m;
+  var btns = document.querySelectorAll('.rlt-bet-btn');
+  btns.forEach(function(b, i) {
+    b.classList.toggle('rlt-bet-active', i === m - 1);
+  });
+  var totalFee = _roulette.baseFee * m;
+  document.getElementById('rltBetTotal').textContent = '참가비: 🌰 ' + totalFee;
+}
+
+function _rltDrawWheel(rotation) {
+  var canvas = document.getElementById('rltCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var cx = 150, cy = 150, r = 140;
+  var sliceCount = ROULETTE_WHEEL.length;
+  var sliceAngle = (Math.PI * 2) / sliceCount;
+
+  ctx.clearRect(0, 0, 300, 300);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+
+  for (var i = 0; i < sliceCount; i++) {
+    var slice = ROULETTE_SLICES[ROULETTE_WHEEL[i]];
+    var startA = i * sliceAngle;
+    var endA = startA + sliceAngle;
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r, startA, endA);
+    ctx.closePath();
+    ctx.fillStyle = slice.color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.rotate(startA + sliceAngle / 2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(slice.label, r * 0.65, 0);
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.arc(0, 0, 22, 0, Math.PI * 2);
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fill();
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = '#ffd700';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SPIN', 0, 0);
+
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function _rltPickResult() {
+  var roll = Math.random() * 100;
+  var cumul = 0;
+  for (var i = 0; i < ROULETTE_SLICES.length; i++) {
+    cumul += ROULETTE_SLICES[i].prob;
+    if (roll < cumul) return i;
+  }
+  return 0;
+}
+
+async function _rltSpin() {
+  if (!_roulette || _roulette.spinning) return;
+
+  var totalFee = _roulette.baseFee * _roulette.multiplier;
+
+  if ((myProfile?.acorns || 0) < totalFee) {
+    toast('❌', '도토리가 부족해요! (필요: 🌰' + totalFee + ', 보유: 🌰' + (myProfile?.acorns || 0) + ')');
+    return;
+  }
+
+  var pLimit = getPlayLimit('roulette');
+  var played = _mgTodayPlays['roulette'] || 0;
+  if (played >= pLimit) {
+    toast('⚠️', '오늘 도전 횟수를 모두 사용했어요!');
+    return;
+  }
+
+  _roulette.spinning = true;
+  document.getElementById('rltSpinBtn').disabled = true;
+  document.getElementById('rltSpinBtn').textContent = '돌리는 중...';
+  document.getElementById('rltResult').innerHTML = '';
+
+  try {
+    var res = await sb.rpc('adjust_acorns', {
+      p_user_id: myProfile.id, p_amount: -totalFee,
+      p_reason: '미니게임 [행운의 룰렛] 참가비 -' + totalFee + '🌰 (×' + _roulette.multiplier + ')'
+    });
+    if (!res.data?.success) { toast('❌', '참가비 차감 실패!'); _roulette.spinning = false; _rltResetBtn(); return; }
+    myProfile.acorns = res.data.balance;
+    updateAcornDisplay();
+  } catch(e) { toast('❌', '참가비 차감 중 오류'); _roulette.spinning = false; _rltResetBtn(); return; }
+
+  var resultIdx = _rltPickResult();
+  var resultSlice = ROULETTE_SLICES[resultIdx];
+
+  var targetPositions = [];
+  for (var i = 0; i < ROULETTE_WHEEL.length; i++) {
+    if (ROULETTE_WHEEL[i] === resultIdx) targetPositions.push(i);
+  }
+  var targetPos = targetPositions[Math.floor(Math.random() * targetPositions.length)];
+
+  var sliceAngle = (Math.PI * 2) / ROULETTE_WHEEL.length;
+  var targetAngle = -(targetPos * sliceAngle + sliceAngle / 2) + Math.PI / 2;
+  var totalRotation = Math.PI * 2 * (5 + Math.random() * 3) + targetAngle - (_roulette.angle % (Math.PI * 2));
+
+  var startAngle = _roulette.angle;
+  var endAngle = startAngle + totalRotation;
+  var duration = 4000;
+  var startTime = Date.now();
+
+  function animate() {
+    var elapsed = Date.now() - startTime;
+    var t = Math.min(1, elapsed / duration);
+    var ease = 1 - Math.pow(1 - t, 3);
+    var currentAngle = startAngle + totalRotation * ease;
+    _rltDrawWheel(currentAngle);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      _roulette.angle = endAngle;
+      _roulette.spinning = false;
+      _rltShowResult(resultSlice, totalFee);
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+async function _rltShowResult(slice, totalFee) {
+  var reward = Math.floor(totalFee * slice.mult);
+  var maxReward = (getMgSetting('roulette', 'maxReward') || 50) * _roulette.multiplier;
+  reward = Math.min(reward, maxReward);
+
+  var rLimit = getRewardLimit('roulette');
+  var rUsed = _mgTodayRewards['roulette'] || 0;
+  var canClaim = rUsed < rLimit && reward > 0;
+
+  await recordPlay('roulette', reward, canClaim && reward > 0);
+
+  if (canClaim && reward > 0) {
+    await _giveMinigameReward(reward, reward, 'roulette');
+  }
+
+  var resultDiv = document.getElementById('rltResult');
+  var emoji = slice.mult === 0 ? '😢' : slice.mult >= 10 ? '🎉🎉🎉' : slice.mult >= 3 ? '🎉' : '😊';
+  var colorClass = slice.mult === 0 ? 'rlt-result-lose' : slice.mult >= 3 ? 'rlt-result-big' : 'rlt-result-win';
+
+  if (slice.mult === 0) {
+    resultDiv.innerHTML = '<div class="rlt-result-box ' + colorClass + '">' +
+      '<div class="rlt-result-emoji">' + emoji + '</div>' +
+      '<div class="rlt-result-text">꽝! 다음 기회에...</div>' +
+      '<div class="rlt-result-amount">-' + totalFee + ' 🌰</div>' +
+    '</div>';
+  } else {
+    var net = reward - totalFee;
+    var netText = net > 0 ? '+' + net : '' + net;
+    resultDiv.innerHTML = '<div class="rlt-result-box ' + colorClass + '">' +
+      '<div class="rlt-result-emoji">' + emoji + '</div>' +
+      '<div class="rlt-result-text">' + slice.label + ' 당첨!</div>' +
+      '<div class="rlt-result-amount">+' + reward + ' 🌰' + (canClaim ? '' : ' (보상 소진)') + '</div>' +
+      '<div class="rlt-result-net">순이익: ' + netText + ' 🌰</div>' +
+    '</div>';
+    if (canClaim) toast('🌰', '+' + reward + ' 도토리를 받았어요!');
+  }
+
+  _rltResetBtn();
+  updateAcornDisplay();
+
+  var pLimit = getPlayLimit('roulette');
+  var played = _mgTodayPlays['roulette'] || 0;
+  var rRem = rLimit - (_mgTodayRewards['roulette'] || 0);
+  var infoEl = document.querySelector('.rlt-info');
+  if (infoEl) infoEl.textContent = '도전 ' + (pLimit - played) + '/' + pLimit + ' · 보상 ' + rRem + '/' + rLimit;
+}
+
+function _rltResetBtn() {
+  var btn = document.getElementById('rltSpinBtn');
+  if (btn) { btn.disabled = false; btn.textContent = '돌리기!'; }
+}
+
+function confirmExitRoulette() {
+  if (_roulette?.spinning) { toast('⚠️', '룰렛이 돌아가는 중이에요!'); return; }
+  exitMinigame();
 }
