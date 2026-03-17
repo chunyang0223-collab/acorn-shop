@@ -1332,7 +1332,7 @@ function _btlShowVictory() {
     '<div class="btl-card-row" id="btlCardRow">' +
       cards.map(function(c, i) {
         return '<div class="btl-reward-card" id="btlRcard' + i + '" onclick="_btlSelectCard(' + i + ')">' +
-          '<div class="btl-card-back"><div class="btl-card-back-icon">🌰</div><div class="btl-card-back-lbl">보상</div></div>' +
+          '<div class="btl-card-back"><img src="images/baby-squirrel.png" class="btl-card-baby-bounce"></div>' +
         '</div>';
       }).join('') +
     '</div>' +
@@ -1345,7 +1345,8 @@ function _btlShowVictory() {
 
 function _btlBuildFront(r, chosen) {
   var gradeClass = 'btl-grade-' + r.grade.toLowerCase();
-  return '<div class="btl-card-front ' + gradeClass + (chosen ? ' btl-chosen-front' : ' btl-unchosen-front') + '">' +
+  var frontClass = chosen ? 'btl-card-front-chosen' : 'btl-card-front-unchosen';
+  return '<div class="btl-card-front ' + frontClass + ' ' + gradeClass + (chosen ? ' btl-chosen-front' : ' btl-unchosen-front') + '">' +
     '<div class="btl-card-grade">' + r.grade + '등급</div>' +
     '<div class="btl-card-reward-icon">' + (r.item ? r.item.icon : '🌰') + '</div>' +
     '<div class="btl-card-reward-txt">' + _btlRewardText(r) + '</div>' +
