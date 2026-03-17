@@ -662,8 +662,8 @@ function _expToast(emoji, text) {
 
   var el = document.createElement('div');
   el.className = 'exp-toast';
-  el.style.cssText = 'position:absolute;top:4px;left:4px;right:4px;z-index:10;display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.78);border:1px solid rgba(184,158,120,.2);border-radius:12px;padding:10px 14px;backdrop-filter:blur(6px);animation:expToastIn .3s ease;pointer-events:none';
-  el.innerHTML = '<span style="font-size:22px;flex-shrink:0">' + emoji + '</span><div style="font-size:13px;font-weight:800;color:#e8d5b5">' + text + '</div>';
+  el.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);border:1px solid rgba(184,158,120,.15);border-radius:12px;backdrop-filter:blur(6px);animation:expToastIn .3s ease;pointer-events:none';
+  el.innerHTML = '<span style="font-size:16px;font-weight:800;color:#e8d5b5;letter-spacing:0.5px">' + emoji + '  ' + text + '</span>';
 
   // 파티 그리드를 relative로 만들고 토스트 삽입
   partyGrid.style.position = 'relative';
