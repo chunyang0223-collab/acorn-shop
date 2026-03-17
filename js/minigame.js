@@ -597,6 +597,76 @@ async function renderMinigameAdmin() {
     const def = MG_DEFAULTS[id];
     const s   = _mgSettings[id] || {};
     const val = (key) => s[key] ?? def[key];
+
+    // 룰렛은 전용 UI
+    if (id === 'roulette') {
+      var rProb = s.probs || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
+      var rWidth = s.widths || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
+      return `
+      <div class="clay-card p-4">
+        <h3 class="font-black text-gray-800 text-base mb-3">${def.icon} ${def.name}</h3>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
+            <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-roulette-playLimit" value="${val('playLimit')}">
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 1일 보상 횟수</label>
+            <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-roulette-rewardLimit" value="${val('rewardLimit')}">
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 참가비 (기본)</label>
+            <input class="field text-center" type="number" min="1" max="1000" style="width:80px" id="mg-roulette-entryFee" value="${val('entryFee')}">
+          </div>
+          <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
+          <div class="text-xs font-black text-gray-600 mb-1">🎯 당첨 확률 (합계 100%)</div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">꽝 (0배)</label>
+            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-miss" value="${rProb.miss}"><span class="text-xs text-gray-400">%</span></div>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1 (본전)</label>
+            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-x1" value="${rProb.x1}"><span class="text-xs text-gray-400">%</span></div>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1.5 (소당첨)</label>
+            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-x15" value="${rProb.x15}"><span class="text-xs text-gray-400">%</span></div>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×3 (당첨)</label>
+            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-x3" value="${rProb.x3}"><span class="text-xs text-gray-400">%</span></div>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×10 (대박)</label>
+            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" step="0.1" style="width:60px" id="mg-roulette-prob-x10" value="${rProb.x10}"><span class="text-xs text-gray-400">%</span></div>
+          </div>
+          <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
+          <div class="text-xs font-black text-gray-600 mb-1">🎡 룰렛 칸 너비 (보이는 비율, 합계 100)</div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">꽝</label>
+            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-miss" value="${rWidth.miss}">
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1</label>
+            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x1" value="${rWidth.x1}">
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1.5</label>
+            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x15" value="${rWidth.x15}">
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×3</label>
+            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x3" value="${rWidth.x3}">
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×10</label>
+            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x10" value="${rWidth.x10}">
+          </div>
+        </div>
+        <button class="btn btn-primary w-full py-2 mt-3 text-sm" onclick="saveMinigameSetting('roulette')">💾 저장</button>
+      </div>`;
+    }
+
     return `
     <div class="clay-card p-4">
       <h3 class="font-black text-gray-800 text-base mb-3">${def.icon} ${def.name}</h3>
@@ -654,6 +724,26 @@ async function saveMinigameSetting(gameId) {
     const el = document.getElementById(`mg-${gameId}-${key}`);
     if (el) updated[key] = parseFloat(el.value) || 0;
   }
+
+  // 룰렛 전용: 확률 + 칸 너비
+  if (gameId === 'roulette') {
+    var probKeys = ['miss','x1','x15','x3','x10'];
+    var probs = {}, widths = {};
+    probKeys.forEach(function(k) {
+      var pEl = document.getElementById('mg-roulette-prob-' + k);
+      var wEl = document.getElementById('mg-roulette-width-' + k);
+      probs[k] = pEl ? parseFloat(pEl.value) || 0 : 0;
+      widths[k] = wEl ? parseFloat(wEl.value) || 1 : 1;
+    });
+    var probSum = probKeys.reduce(function(s, k) { return s + probs[k]; }, 0);
+    if (Math.abs(probSum - 100) > 0.5) {
+      toast('⚠️', '확률 합계가 100%가 아닙니다 (현재: ' + probSum.toFixed(1) + '%)');
+      return;
+    }
+    updated.probs = probs;
+    updated.widths = widths;
+  }
+
   _mgSettings[gameId] = { ...(_mgSettings[gameId] || {}), ...updated };
   delete _mgSettings[gameId].dailyLimit; // v1→v2 마이그레이션
 
@@ -1156,22 +1246,45 @@ function _renderLogRows(data, nameMap) {
 
 
 
+
+
 // ══════════════════════════════════════════════
-//  행운의 룰렛 v2
+//  행운의 룰렛 v3 (가변 칸 너비 + DB 확률)
 // ══════════════════════════════════════════════
 
-const ROULETTE_SLICES = [
-  { label: '꽝',   mult: 0,   color: '#5a5a5a', prob: 38 },
-  { label: '×1',   mult: 1,   color: '#5a8a4a', prob: 30 },
-  { label: '×1.5', mult: 1.5, color: '#4a6ea8', prob: 20 },
-  { label: '×3',   mult: 3,   color: '#b86828', prob: 10 },
-  { label: '×10',  mult: 10,  color: '#b83838', prob: 2  }
+var _rltSlices = [
+  { key: 'miss', label: '꽝',   mult: 0,   color: '#5a5a5a' },
+  { key: 'x1',   label: '×1',   mult: 1,   color: '#5a8a4a' },
+  { key: 'x15',  label: '×1.5', mult: 1.5, color: '#4a6ea8' },
+  { key: 'x3',   label: '×3',   mult: 3,   color: '#b86828' },
+  { key: 'x10',  label: '×10',  mult: 10,  color: '#b83838' }
 ];
 
-// 시각용 12칸 (꽝3, ×1 4, ×1.5 3, ×3 1, ×10 1)
-var ROULETTE_WHEEL = [0,1,2,1,0,3,1,2,0,1,2,4];
-
 var _roulette = null;
+
+function _rltGetProbs() {
+  var s = _mgSettings['roulette'] || {};
+  var p = s.probs || {};
+  return {
+    miss: p.miss !== undefined ? p.miss : 38,
+    x1:   p.x1   !== undefined ? p.x1   : 30,
+    x15:  p.x15  !== undefined ? p.x15  : 20,
+    x3:   p.x3   !== undefined ? p.x3   : 10,
+    x10:  p.x10  !== undefined ? p.x10  : 2
+  };
+}
+
+function _rltGetWidths() {
+  var s = _mgSettings['roulette'] || {};
+  var w = s.widths || {};
+  return {
+    miss: w.miss !== undefined ? w.miss : 38,
+    x1:   w.x1   !== undefined ? w.x1   : 30,
+    x15:  w.x15  !== undefined ? w.x15  : 20,
+    x3:   w.x3   !== undefined ? w.x3   : 10,
+    x10:  w.x10  !== undefined ? w.x10  : 2
+  };
+}
 
 function startRouletteGame() {
   var hub = document.getElementById('minigame-hub');
@@ -1226,25 +1339,42 @@ function _rltSetMult(m) {
   document.getElementById('rltBetTotal').textContent = '참가비: 🌰 ' + (_roulette.baseFee * m);
 }
 
+// 칸 너비(비율) 기반으로 각 슬라이스의 시작각도와 크기를 계산
+function _rltCalcAngles() {
+  var widths = _rltGetWidths();
+  var keys = ['miss','x1','x15','x3','x10'];
+  var total = 0;
+  keys.forEach(function(k) { total += (widths[k] || 1); });
+
+  var angles = [];
+  var currentAngle = -Math.PI / 2; // 12시에서 시작
+  for (var i = 0; i < keys.length; i++) {
+    var w = (widths[keys[i]] || 1) / total;
+    var sweep = w * Math.PI * 2;
+    angles.push({ start: currentAngle, sweep: sweep, idx: i });
+    currentAngle += sweep;
+  }
+  return angles;
+}
+
 function _rltDrawWheel(rotation) {
   var canvas = document.getElementById('rltCanvas');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
   var size = canvas.width;
   var cx = size / 2, cy = size / 2, r = size / 2 - 4;
-  var count = ROULETTE_WHEEL.length;
-  var sliceAngle = (Math.PI * 2) / count;
+  var angles = _rltCalcAngles();
 
   ctx.clearRect(0, 0, size, size);
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(rotation);
 
-  for (var i = 0; i < count; i++) {
-    var slice = ROULETTE_SLICES[ROULETTE_WHEEL[i]];
-    // 0번 슬라이스를 12시 방향(상단)에서 시작
-    var startA = -Math.PI / 2 + i * sliceAngle;
-    var endA = startA + sliceAngle;
+  for (var i = 0; i < angles.length; i++) {
+    var a = angles[i];
+    var slice = _rltSlices[a.idx];
+    var startA = a.start;
+    var endA = startA + a.sweep;
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -1256,13 +1386,14 @@ function _rltDrawWheel(rotation) {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // 텍스트
+    // 텍스트 - 칸 중앙에 배치, 항상 읽기 좋은 방향
     ctx.save();
-    ctx.rotate(startA + sliceAngle / 2 + Math.PI / 2);
+    var midAngle = startA + a.sweep / 2;
+    ctx.rotate(midAngle + Math.PI / 2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold ' + Math.round(size * 0.055) + 'px sans-serif';
+    ctx.font = 'bold ' + Math.max(10, Math.round(size * 0.055)) + 'px sans-serif';
     ctx.fillText(slice.label, 0, -r * 0.62);
     ctx.restore();
   }
@@ -1292,10 +1423,12 @@ function _rltDrawWheel(rotation) {
 }
 
 function _rltPickResult() {
+  var probs = _rltGetProbs();
+  var keys = ['miss','x1','x15','x3','x10'];
   var roll = Math.random() * 100;
   var cumul = 0;
-  for (var i = 0; i < ROULETTE_SLICES.length; i++) {
-    cumul += ROULETTE_SLICES[i].prob;
+  for (var i = 0; i < keys.length; i++) {
+    cumul += (probs[keys[i]] || 0);
     if (roll < cumul) return i;
   }
   return 0;
@@ -1336,24 +1469,18 @@ async function _rltSpin() {
 
   // 확률 기반 결과 결정
   var resultIdx = _rltPickResult();
-  var resultSlice = ROULETTE_SLICES[resultIdx];
+  var resultSlice = _rltSlices[resultIdx];
 
-  // 해당 결과가 있는 휠 칸 중 하나 랜덤 선택
-  var targetPositions = [];
-  for (var i = 0; i < ROULETTE_WHEEL.length; i++) {
-    if (ROULETTE_WHEEL[i] === resultIdx) targetPositions.push(i);
-  }
-  var targetPos = targetPositions[Math.floor(Math.random() * targetPositions.length)];
-
-  // 포인터는 상단(12시)에 고정, 휠이 시계방향으로 회전
-  // 0번 슬라이스가 12시에서 시작하므로, targetPos번 슬라이스가 12시에 오려면
-  // 휠을 -(targetPos * sliceAngle + sliceAngle/2) 만큼 회전 (슬라이스 중앙에 멈추도록)
-  var sliceAngle = (Math.PI * 2) / ROULETTE_WHEEL.length;
-  var stopAngle = -(targetPos * sliceAngle + sliceAngle / 2);
-  // stopAngle을 0~2π 범위로 정규화
+  // 해당 칸의 중앙 각도 계산 (칸 너비 기반)
+  var angles = _rltCalcAngles();
+  var targetA = angles[resultIdx];
+  // 칸 중앙에서 살짝 랜덤 오프셋 (칸 안에서 자연스럽게)
+  var jitter = (Math.random() - 0.5) * targetA.sweep * 0.6;
+  var stopAngle = -(targetA.start + targetA.sweep / 2 + jitter);
+  // 정규화 0~2π
   stopAngle = ((stopAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 
-  // 최소 5~8바퀴 회전 후 목표 각도에 정확히 멈춤
+  // 최소 5~8바퀴 회전
   var fullSpins = Math.PI * 2 * (5 + Math.floor(Math.random() * 3));
   var currentNorm = ((_roulette.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
   var delta = stopAngle - currentNorm;
@@ -1368,7 +1495,6 @@ async function _rltSpin() {
   function animate() {
     var elapsed = Date.now() - startTime;
     var t = Math.min(1, elapsed / duration);
-    // easeOutQuart for smoother stop
     var ease = 1 - Math.pow(1 - t, 4);
     var currentAngle = startAngle + totalRotation * ease;
     _rltDrawWheel(currentAngle);
@@ -1386,8 +1512,6 @@ async function _rltSpin() {
 
 async function _rltShowResult(slice, totalFee) {
   var reward = Math.floor(totalFee * slice.mult);
-  var maxReward = (getMgSetting('roulette', 'maxReward') || 50) * _roulette.multiplier;
-  reward = Math.min(reward, maxReward);
 
   var rLimit = getRewardLimit('roulette');
   var rUsed = _mgTodayRewards['roulette'] || 0;
