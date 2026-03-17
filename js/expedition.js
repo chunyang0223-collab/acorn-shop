@@ -983,7 +983,7 @@ function _btlSound(type) {
       'button':      ['sounds/button_normal.mp3'],
       'buy':         ['sounds/squirrel_buy.mp3'],
       'battleStart':  ['sounds/battle_start.mp3'],
-      'wind':        [],  // Web Audio 유지 (파일 없음)
+      'wind':        ['sounds/explorer_empty.wav'],
       'treasure':    ['sounds/explorer_card_reward.mp3']
     };
     var files = fileMap[type];
