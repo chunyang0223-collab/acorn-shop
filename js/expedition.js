@@ -503,10 +503,19 @@ function _expRenderMap() {
 
   // 타일 노드
   var tilesHTML = '';
+  // 0칸 완료 시 출발 칸 추가
+  if (s.currentTile === 0) {
+    tilesHTML += '<div class="exp-node exp-node-start">' +
+      '<div class="exp-node-circle"><span>🐿️</span></div>' +
+      '<div class="exp-node-label">출발</div>' +
+    '</div>';
+    tilesHTML += '<div class="exp-conn exp-conn-arrow"><span>›</span><span>›</span><span>›</span></div>';
+  }
+
   for (var i = 0; i < s.tiles.length; i++) {
     var tile = s.tiles[i];
-    var isCurrent = (i === s.currentTile);
     var isPast = (i < s.currentTile);
+    var isLastCleared = (i === s.currentTile - 1); // 마지막 완료 칸
 
     var icon = '❓';
     var label = '';
@@ -514,15 +523,15 @@ function _expRenderMap() {
     var isBoss = (tile.type === 'boss') || (i === s.tiles.length - 1);
 
     if (isPast || tile.cleared) {
-      nodeClass += ' exp-node-past';
-      if (tile.type === 'empty') { icon = '🍃'; label = '평화'; }
-      else if (tile.type === 'treasure') { icon = '💰'; label = '보물'; }
-      else if (tile.type === 'monster') { icon = '⚔️'; label = '승리'; }
+      if (isLastCleared && s.currentTile < s.tiles.length) {
+        nodeClass += ' exp-node-here'; // 현위치 강조
+      } else {
+        nodeClass += ' exp-node-past';
+      }
+      if (tile.type === 'empty') { icon = '🍃'; label = isLastCleared ? '현위치' : '평화'; }
+      else if (tile.type === 'treasure') { icon = '💰'; label = isLastCleared ? '현위치' : '보물'; }
+      else if (tile.type === 'monster') { icon = '⚔️'; label = isLastCleared ? '현위치' : '승리'; }
       else if (tile.type === 'boss') { icon = '👑'; label = '격파'; }
-    } else if (isCurrent) {
-      nodeClass += ' exp-node-current';
-      icon = '📍';
-      label = isBoss ? '보스' : (i + 1) + '칸';
     } else {
       nodeClass += ' exp-node-future';
       icon = isBoss ? '💀' : '❓';
@@ -537,10 +546,17 @@ function _expRenderMap() {
 
     if (i < s.tiles.length - 1) {
       var connClass = 'exp-conn';
-      if (isPast && i < s.currentTile - 1) connClass += ' exp-conn-past';
-      else if (isPast || isCurrent) connClass += ' exp-conn-current';
-      else connClass += ' exp-conn-future';
-      tilesHTML += '<div class="' + connClass + '"></div>';
+      if (isLastCleared && s.currentTile < s.tiles.length) {
+        // 마지막 완료 칸 → 다음 칸: 깜빡이는 화살표
+        connClass = 'exp-conn exp-conn-arrow';
+        tilesHTML += '<div class="' + connClass + '"><span>›</span><span>›</span><span>›</span></div>';
+      } else if (isPast) {
+        connClass += ' exp-conn-past';
+        tilesHTML += '<div class="' + connClass + '"></div>';
+      } else {
+        connClass += ' exp-conn-future';
+        tilesHTML += '<div class="' + connClass + '"></div>';
+      }
     }
   }
 
@@ -636,10 +652,22 @@ function _expToast(emoji, text) {
   var container = document.getElementById('sqcontent-expedition');
   if (!container) { toast(emoji, text); return; }
 
+  // 파티 그리드 위에 겹쳐서 표시
+  var partyGrid = container.querySelector('.exp-party-grid');
+  if (!partyGrid) { toast(emoji, text); return; }
+
+  // 기존 토스트 제거
+  var prev = container.querySelector('.exp-toast');
+  if (prev) prev.remove();
+
   var el = document.createElement('div');
-  el.style.cssText = 'position:fixed;bottom:20px;left:16px;right:16px;z-index:9998;display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.75);border:1px solid rgba(184,158,120,.2);border-radius:12px;padding:10px 16px;backdrop-filter:blur(8px);animation:expToastIn .3s ease;max-width:440px;margin:0 auto;pointer-events:none';
+  el.className = 'exp-toast';
+  el.style.cssText = 'position:absolute;top:4px;left:4px;right:4px;z-index:10;display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.78);border:1px solid rgba(184,158,120,.2);border-radius:12px;padding:10px 14px;backdrop-filter:blur(6px);animation:expToastIn .3s ease;pointer-events:none';
   el.innerHTML = '<span style="font-size:22px;flex-shrink:0">' + emoji + '</span><div style="font-size:13px;font-weight:800;color:#e8d5b5">' + text + '</div>';
-  document.body.appendChild(el);
+
+  // 파티 그리드를 relative로 만들고 토스트 삽입
+  partyGrid.style.position = 'relative';
+  partyGrid.appendChild(el);
 
   setTimeout(function() {
     el.style.animation = 'expToastOut .3s ease forwards';
@@ -1521,9 +1549,8 @@ function _expShowSummary(finishStatus) {
   var s = _expState;
   if (!s) { _expFinish(status); return; }
 
-  // 전투 BGM 정지 + 효과음 1회 재생
+  // 전투 BGM 정지 (패배/승리 효과음은 전투 종료 시점에서 이미 재생됨)
   _sndStopBGM();
-  _btlSound(isDefeat ? 'defeat' : 'victory');
 
   var container = document.getElementById('sqcontent-expedition');
   if (!container) { _expFinish(status); return; }
