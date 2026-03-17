@@ -620,7 +620,7 @@ function _sqStartTimer(id, sq) {
           tmp.innerHTML = sqCardHTML(curSq);
           cardEl.replaceWith(tmp.firstElementChild);
         }
-        toast('🎁', `${sq.name}이(가) 털갈이를 합니다! 이번 다람쥐는...?`);
+        toast('🎁', `${sq.name}이(가) 털갈이를 합니다! 어떤 털 색깔을 가지고 있을까요?`);
       } else {
         // 중간 쉬는 타이머 → 도토리 주기 버튼 복원
         _sqShowFeedButtons(id);
@@ -952,16 +952,26 @@ async function sqBuySquirrel(from) {
     showModal(`<div class="text-center"><div style="font-size:40px">🌰</div><div class="title-font text-lg text-gray-800 my-2">도토리 부족</div><div class="text-sm text-gray-500 mb-4">${price} 도토리가 필요해요.</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
     return;
   }
-  showModal(`
-    <div class="text-center">
-      <img src="images/baby-squirrel.png" style="width:80px;height:80px;object-fit:contain" class="mx-auto mb-2">
-      <div class="title-font text-lg text-gray-800 mb-1">아기 다람쥐 분양</div>
-      <div class="text-sm text-gray-500 mb-4">${myProfile?.is_admin ? '관리자 테스트 모드 — 도토리 차감 없이 분양합니다' : `<strong>${price} 🌰</strong>에 분양받을까요?`}</div>
-      <div class="flex gap-2">
-        <button class="btn btn-primary flex-1" onclick="sqDoBuySquirrel(${price})">분양받기</button>
-        <button class="btn btn-gray flex-1" onclick="closeModal()">취소</button>
-      </div>
-    </div>`);
+  if (typeof _expShowOverlay === 'function') {
+    _expShowOverlay(
+      '🐿️',
+      '다람쥐를 분양받으시겠어요?',
+      myProfile?.is_admin ? '관리자 테스트 모드 — 도토리 차감 없이 분양합니다' : '🌰 ' + price + ' 도토리가 필요합니다',
+      '분양받기', function() { sqDoBuySquirrel(price); },
+      '취소', null
+    );
+  } else {
+    showModal(`
+      <div class="text-center">
+        <img src="images/baby-squirrel.png" style="width:80px;height:80px;object-fit:contain" class="mx-auto mb-2">
+        <div class="title-font text-lg text-gray-800 mb-1">아기 다람쥐 분양</div>
+        <div class="text-sm text-gray-500 mb-4">${myProfile?.is_admin ? '관리자 테스트 모드 — 도토리 차감 없이 분양합니다' : `<strong>${price} 🌰</strong>에 분양받을까요?`}</div>
+        <div class="flex gap-2">
+          <button class="btn btn-primary flex-1" onclick="sqDoBuySquirrel(${price})">분양받기</button>
+          <button class="btn btn-gray flex-1" onclick="closeModal()">취소</button>
+        </div>
+      </div>`);
+  }
 }
 
 async function sqDoBuySquirrel(price) {
@@ -1011,10 +1021,36 @@ async function sqDoBuySquirrel(price) {
       grid.appendChild(tmp.firstElementChild);
     }
     toast('🎉', '새 다람쥐를 분양받았어요!');
+    // B형 소환 카드 연출
+    _sqShowSummonEffect();
   } catch(e) {
     console.error(e);
     toast('❌', '오류가 발생했어요');
   }
+}
+
+// ================================================================
+//  소환 카드 연출 (B형)
+// ================================================================
+function _sqShowSummonEffect() {
+  var overlay = document.createElement('div');
+  overlay.id = 'sqSummonOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(8,8,24,.7);backdrop-filter:blur(3px);animation:expFadeIn .3s ease;cursor:pointer';
+  overlay.innerHTML =
+    '<div style="text-align:center;animation:expScaleIn .5s ease;width:85%;max-width:340px">' +
+      '<div style="width:110px;height:110px;margin:0 auto 14px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.25),transparent 70%);display:flex;align-items:center;justify-content:center">' +
+        '<div style="width:88px;height:88px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.12),transparent 70%);display:flex;align-items:center;justify-content:center;border:2px solid rgba(251,191,36,.3)">' +
+          '<span style="font-size:48px">🐿️</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:11px;letter-spacing:3px;color:#fbbf24;margin-bottom:6px">✦ NEW SQUIRREL ✦</div>' +
+      '<div style="font-size:22px;font-weight:900;color:white;text-shadow:0 0 20px rgba(251,191,36,.4)">아기 다람쥐 등장!</div>' +
+      '<div style="font-size:12px;color:#a5b4fc;margin-top:6px;line-height:1.5">도토리를 먹여서 어떤 다람쥐로<br>성장할지 확인해보세요</div>' +
+    '</div>';
+  overlay.onclick = function() { overlay.remove(); };
+  document.body.appendChild(overlay);
+  // 3초 후 자동 닫힘
+  setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 3000);
 }
 
 // ================================================================
