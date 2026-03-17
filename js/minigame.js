@@ -1155,67 +1155,63 @@ function _renderLogRows(data, nameMap) {
 }
 
 
+
 // ══════════════════════════════════════════════
-//  행운의 룰렛
+//  행운의 룰렛 v2
 // ══════════════════════════════════════════════
 
 const ROULETTE_SLICES = [
-  { label: '꽝',     mult: 0,   color: '#4a4a4a', prob: 38 },
-  { label: '×1',     mult: 1,   color: '#6b8e5a', prob: 30 },
-  { label: '×1.5',   mult: 1.5, color: '#5a7eb8', prob: 20 },
-  { label: '×3',     mult: 3,   color: '#c07030', prob: 10 },
-  { label: '×10',    mult: 10,  color: '#c04040', prob: 2  }
+  { label: '꽝',   mult: 0,   color: '#5a5a5a', prob: 38 },
+  { label: '×1',   mult: 1,   color: '#5a8a4a', prob: 30 },
+  { label: '×1.5', mult: 1.5, color: '#4a6ea8', prob: 20 },
+  { label: '×3',   mult: 3,   color: '#b86828', prob: 10 },
+  { label: '×10',  mult: 10,  color: '#b83838', prob: 2  }
 ];
 
-// 시각용 12칸 배열 (확률 비례 배치)
-const ROULETTE_WHEEL = [
-  0, 1, 0, 2, 1, 0, 1, 2, 3, 1, 2, 4
-];
+// 시각용 12칸 (꽝3, ×1 4, ×1.5 3, ×3 1, ×10 1)
+var ROULETTE_WHEEL = [0,1,2,1,0,3,1,2,0,1,2,4];
 
-let _roulette = null;
+var _roulette = null;
 
 function startRouletteGame() {
-  const hub = document.getElementById('minigame-hub');
-  const play = document.getElementById('minigame-play');
+  var hub = document.getElementById('minigame-hub');
+  var play = document.getElementById('minigame-play');
   hub.classList.add('hidden');
   play.classList.remove('hidden');
 
-  const baseFee = getMgSetting('roulette', 'entryFee') || 5;
-  const pLimit = getPlayLimit('roulette');
-  const rLimit = getRewardLimit('roulette');
-  const played = _mgTodayPlays['roulette'] || 0;
-  const rewarded = _mgTodayRewards['roulette'] || 0;
+  var baseFee = getMgSetting('roulette', 'entryFee') || 5;
+  var pLimit = getPlayLimit('roulette');
+  var rLimit = getRewardLimit('roulette');
+  var played = _mgTodayPlays['roulette'] || 0;
+  var rewarded = _mgTodayRewards['roulette'] || 0;
 
   _roulette = { baseFee: baseFee, multiplier: 1, spinning: false, angle: 0 };
 
-  play.innerHTML = `
-    <div class="rlt-container">
-      <div class="rlt-header">
-        <button class="rlt-back-btn" onclick="confirmExitRoulette()">← 돌아가기</button>
-        <div class="rlt-title">🎡 행운의 룰렛</div>
-        <div class="rlt-info">도전 ${pLimit - played}/${pLimit} · 보상 ${rLimit - rewarded}/${rLimit}</div>
-      </div>
-
-      <div class="rlt-wheel-wrap">
-        <div class="rlt-pointer">▼</div>
-        <canvas id="rltCanvas" width="300" height="300"></canvas>
-      </div>
-
-      <div class="rlt-bet-section">
-        <div class="rlt-bet-label">배수 선택</div>
-        <div class="rlt-bet-row">
-          <button class="rlt-bet-btn rlt-bet-active" onclick="_rltSetMult(1)">×1<span class="rlt-bet-fee">${baseFee}🌰</span></button>
-          <button class="rlt-bet-btn" onclick="_rltSetMult(2)">×2<span class="rlt-bet-fee">${baseFee*2}🌰</span></button>
-          <button class="rlt-bet-btn" onclick="_rltSetMult(3)">×3<span class="rlt-bet-fee">${baseFee*3}🌰</span></button>
-          <button class="rlt-bet-btn" onclick="_rltSetMult(4)">×4<span class="rlt-bet-fee">${baseFee*4}🌰</span></button>
-          <button class="rlt-bet-btn" onclick="_rltSetMult(5)">×5<span class="rlt-bet-fee">${baseFee*5}🌰</span></button>
-        </div>
-        <div class="rlt-bet-total" id="rltBetTotal">참가비: 🌰 ${baseFee}</div>
-      </div>
-
-      <button class="rlt-spin-btn" id="rltSpinBtn" onclick="_rltSpin()">돌리기!</button>
-      <div class="rlt-result" id="rltResult"></div>
-    </div>`;
+  play.innerHTML =
+    '<div class="rlt-container">' +
+      '<div class="rlt-header">' +
+        '<button class="rlt-back-btn" onclick="confirmExitRoulette()">← 돌아가기</button>' +
+        '<div class="rlt-title">🎡 행운의 룰렛</div>' +
+        '<div class="rlt-info">도전 ' + (pLimit - played) + '/' + pLimit + ' · 보상 ' + (rLimit - rewarded) + '/' + rLimit + '</div>' +
+      '</div>' +
+      '<div class="rlt-wheel-wrap">' +
+        '<div class="rlt-pointer">▼</div>' +
+        '<canvas id="rltCanvas" width="240" height="240"></canvas>' +
+      '</div>' +
+      '<div class="rlt-bet-section">' +
+        '<div class="rlt-bet-label">배수 선택</div>' +
+        '<div class="rlt-bet-row">' +
+          '<button class="rlt-bet-btn rlt-bet-active" onclick="_rltSetMult(1)">×1<span class="rlt-bet-fee">' + baseFee + '🌰</span></button>' +
+          '<button class="rlt-bet-btn" onclick="_rltSetMult(2)">×2<span class="rlt-bet-fee">' + baseFee*2 + '🌰</span></button>' +
+          '<button class="rlt-bet-btn" onclick="_rltSetMult(3)">×3<span class="rlt-bet-fee">' + baseFee*3 + '🌰</span></button>' +
+          '<button class="rlt-bet-btn" onclick="_rltSetMult(4)">×4<span class="rlt-bet-fee">' + baseFee*4 + '🌰</span></button>' +
+          '<button class="rlt-bet-btn" onclick="_rltSetMult(5)">×5<span class="rlt-bet-fee">' + baseFee*5 + '🌰</span></button>' +
+        '</div>' +
+        '<div class="rlt-bet-total" id="rltBetTotal">참가비: 🌰 ' + baseFee + '</div>' +
+      '</div>' +
+      '<button class="rlt-spin-btn" id="rltSpinBtn" onclick="_rltSpin()">돌리기!</button>' +
+      '<div class="rlt-result" id="rltResult"></div>' +
+    '</div>';
 
   _rltDrawWheel(0);
 }
@@ -1227,26 +1223,27 @@ function _rltSetMult(m) {
   btns.forEach(function(b, i) {
     b.classList.toggle('rlt-bet-active', i === m - 1);
   });
-  var totalFee = _roulette.baseFee * m;
-  document.getElementById('rltBetTotal').textContent = '참가비: 🌰 ' + totalFee;
+  document.getElementById('rltBetTotal').textContent = '참가비: 🌰 ' + (_roulette.baseFee * m);
 }
 
 function _rltDrawWheel(rotation) {
   var canvas = document.getElementById('rltCanvas');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
-  var cx = 150, cy = 150, r = 140;
-  var sliceCount = ROULETTE_WHEEL.length;
-  var sliceAngle = (Math.PI * 2) / sliceCount;
+  var size = canvas.width;
+  var cx = size / 2, cy = size / 2, r = size / 2 - 4;
+  var count = ROULETTE_WHEEL.length;
+  var sliceAngle = (Math.PI * 2) / count;
 
-  ctx.clearRect(0, 0, 300, 300);
+  ctx.clearRect(0, 0, size, size);
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(rotation);
 
-  for (var i = 0; i < sliceCount; i++) {
+  for (var i = 0; i < count; i++) {
     var slice = ROULETTE_SLICES[ROULETTE_WHEEL[i]];
-    var startA = i * sliceAngle;
+    // 0번 슬라이스를 12시 방향(상단)에서 시작
+    var startA = -Math.PI / 2 + i * sliceAngle;
     var endA = startA + sliceAngle;
 
     ctx.beginPath();
@@ -1255,35 +1252,38 @@ function _rltDrawWheel(rotation) {
     ctx.closePath();
     ctx.fillStyle = slice.color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
+    // 텍스트
     ctx.save();
-    ctx.rotate(startA + sliceAngle / 2);
+    ctx.rotate(startA + sliceAngle / 2 + Math.PI / 2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.fillText(slice.label, r * 0.65, 0);
+    ctx.font = 'bold ' + Math.round(size * 0.055) + 'px sans-serif';
+    ctx.fillText(slice.label, 0, -r * 0.62);
     ctx.restore();
   }
 
+  // 가운데 원
   ctx.beginPath();
-  ctx.arc(0, 0, 22, 0, Math.PI * 2);
+  ctx.arc(0, 0, size * 0.09, 0, Math.PI * 2);
   ctx.fillStyle = '#2a2a2a';
   ctx.fill();
   ctx.strokeStyle = '#ffd700';
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 11px sans-serif';
+  ctx.font = 'bold ' + Math.round(size * 0.04) + 'px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('SPIN', 0, 0);
 
   ctx.restore();
 
+  // 외곽 테두리
   ctx.beginPath();
   ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
   ctx.strokeStyle = '#ffd700';
@@ -1323,6 +1323,7 @@ async function _rltSpin() {
   document.getElementById('rltSpinBtn').textContent = '돌리는 중...';
   document.getElementById('rltResult').innerHTML = '';
 
+  // 참가비 차감
   try {
     var res = await sb.rpc('adjust_acorns', {
       p_user_id: myProfile.id, p_amount: -totalFee,
@@ -1333,28 +1334,42 @@ async function _rltSpin() {
     updateAcornDisplay();
   } catch(e) { toast('❌', '참가비 차감 중 오류'); _roulette.spinning = false; _rltResetBtn(); return; }
 
+  // 확률 기반 결과 결정
   var resultIdx = _rltPickResult();
   var resultSlice = ROULETTE_SLICES[resultIdx];
 
+  // 해당 결과가 있는 휠 칸 중 하나 랜덤 선택
   var targetPositions = [];
   for (var i = 0; i < ROULETTE_WHEEL.length; i++) {
     if (ROULETTE_WHEEL[i] === resultIdx) targetPositions.push(i);
   }
   var targetPos = targetPositions[Math.floor(Math.random() * targetPositions.length)];
 
+  // 포인터는 상단(12시)에 고정, 휠이 시계방향으로 회전
+  // 0번 슬라이스가 12시에서 시작하므로, targetPos번 슬라이스가 12시에 오려면
+  // 휠을 -(targetPos * sliceAngle + sliceAngle/2) 만큼 회전 (슬라이스 중앙에 멈추도록)
   var sliceAngle = (Math.PI * 2) / ROULETTE_WHEEL.length;
-  var targetAngle = -(targetPos * sliceAngle + sliceAngle / 2) + Math.PI / 2;
-  var totalRotation = Math.PI * 2 * (5 + Math.random() * 3) + targetAngle - (_roulette.angle % (Math.PI * 2));
+  var stopAngle = -(targetPos * sliceAngle + sliceAngle / 2);
+  // stopAngle을 0~2π 범위로 정규화
+  stopAngle = ((stopAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+
+  // 최소 5~8바퀴 회전 후 목표 각도에 정확히 멈춤
+  var fullSpins = Math.PI * 2 * (5 + Math.floor(Math.random() * 3));
+  var currentNorm = ((_roulette.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  var delta = stopAngle - currentNorm;
+  if (delta <= 0) delta += Math.PI * 2;
+  var totalRotation = fullSpins + delta;
 
   var startAngle = _roulette.angle;
   var endAngle = startAngle + totalRotation;
-  var duration = 4000;
+  var duration = 4500;
   var startTime = Date.now();
 
   function animate() {
     var elapsed = Date.now() - startTime;
     var t = Math.min(1, elapsed / duration);
-    var ease = 1 - Math.pow(1 - t, 3);
+    // easeOutQuart for smoother stop
+    var ease = 1 - Math.pow(1 - t, 4);
     var currentAngle = startAngle + totalRotation * ease;
     _rltDrawWheel(currentAngle);
 
@@ -1385,8 +1400,11 @@ async function _rltShowResult(slice, totalFee) {
   }
 
   var resultDiv = document.getElementById('rltResult');
-  var emoji = slice.mult === 0 ? '😢' : slice.mult >= 10 ? '🎉🎉🎉' : slice.mult >= 3 ? '🎉' : '😊';
-  var colorClass = slice.mult === 0 ? 'rlt-result-lose' : slice.mult >= 3 ? 'rlt-result-big' : 'rlt-result-win';
+  var emoji, colorClass;
+  if (slice.mult === 0) { emoji = '😢'; colorClass = 'rlt-result-lose'; }
+  else if (slice.mult >= 10) { emoji = '🎉🎉🎉'; colorClass = 'rlt-result-big'; }
+  else if (slice.mult >= 3) { emoji = '🎉'; colorClass = 'rlt-result-big'; }
+  else { emoji = '😊'; colorClass = 'rlt-result-win'; }
 
   if (slice.mult === 0) {
     resultDiv.innerHTML = '<div class="rlt-result-box ' + colorClass + '">' +
