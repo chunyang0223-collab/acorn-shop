@@ -992,6 +992,7 @@ function _btlShakeMonster() {
 
 // ── 사운드 시스템 (mp3 파일 기반) ──
 var _sndBGM = null; // 현재 재생 중인 배경음
+var _sndLastSFX = null; // 마지막 재생 SFX (정리용)
 var _sndVolSFX = 0.7;
 var _sndVolBGM = 0.3;
 
@@ -1023,6 +1024,7 @@ function _btlSound(type) {
     var file = files[Math.floor(Math.random() * files.length)];
     var audio = new Audio(file);
     audio.volume = _sndVolSFX;
+    _sndLastSFX = audio;
     audio.play().catch(function(){});
   } catch(e) {}
 }
@@ -1722,8 +1724,12 @@ async function _expFinish(status) {
   var s = _expState;
   if (!s) return;
 
-  // 배경음 정지
+  // 배경음 정지 + 잔여 SFX 정지
   _sndStopBGM();
+  if (_sndLastSFX) {
+    try { _sndLastSFX.pause(); _sndLastSFX.currentTime = 0; } catch(e) {}
+    _sndLastSFX = null;
+  }
 
   var totalAcorns = 0;
   s.loot.forEach(function(l) { totalAcorns += (l.acorns || 0); });
