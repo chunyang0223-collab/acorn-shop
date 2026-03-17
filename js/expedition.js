@@ -1325,7 +1325,8 @@ function _btlShowVictory() {
   ov.className = 'btl-result-overlay btl-result-win';
   ov.id = 'btlResultOv';
   ov.innerHTML =
-    '<div class="btl-win-title">🎉 전투 승리!</div>' +
+    '<div class="btl-win-emoji">🎉</div>' +
+    '<div class="btl-win-title">전투 승리!</div>' +
     '<div class="btl-win-sub">' + _btl.mon.name + '을(를) 물리쳤다!</div>' +
     '<div class="btl-card-hint" id="btlCardHint">카드 1장을 선택하세요</div>' +
     '<div class="btl-card-row" id="btlCardRow">' +
@@ -1336,7 +1337,7 @@ function _btlShowVictory() {
       }).join('') +
     '</div>' +
     '<div id="btlContWrap" style="display:none"><button class="btl-continue-btn" onclick="_btlContinueAfterWin()">' +
-      (_btl.isBoss ? '🏠 마을로 귀환' : '🗺️ 탐험 계속하기') +
+      (_btl.isBoss ? '마을로 귀환' : '탐험 계속하기') +
     '</button></div>';
 
   wrap.appendChild(ov);
@@ -1505,7 +1506,8 @@ function _btlShowDefeat() {
   ov.className = 'btl-result-overlay btl-result-lose';
   ov.id = 'btlResultOv';
   ov.innerHTML =
-    '<div class="btl-lose-title">💀 전투 패배...</div>' +
+    '<div class="btl-lose-emoji">💀</div>' +
+    '<div class="btl-lose-title">전투 패배...</div>' +
     '<div class="btl-lose-sub">다람쥐들이 모두 쓰러졌다</div>' +
     '<div class="btl-lose-options">' +
       '<button class="btl-lose-btn btl-btn-give-up" onclick="_btlDefeatRetreat()">' +
