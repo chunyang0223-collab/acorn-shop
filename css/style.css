@@ -1921,12 +1921,12 @@ body {
 .btl-card-row{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
 .btl-reward-card{width:100px;height:134px;cursor:pointer;position:relative;border-radius:14px;overflow:visible}
 .btl-card-disabled{cursor:default}
-.btl-card-back{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;background:url('images/card_active.png') center/cover no-repeat;box-shadow:0 0 16px rgba(255,195,50,.35),0 4px 12px rgba(0,0,0,.4)}
+.btl-card-back{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;background:url('../images/card_active.png') center/cover no-repeat;box-shadow:0 0 16px rgba(255,195,50,.35),0 4px 12px rgba(0,0,0,.4)}
 .btl-card-baby-bounce{width:60px;height:60px;object-fit:contain;animation:btlBabyBounce 1.8s ease-in-out infinite;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
 @keyframes btlBabyBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .btl-card-front{position:absolute;inset:0;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.btl-card-front-chosen{background:url('images/card_active.png') center/cover no-repeat;box-shadow:0 0 16px rgba(255,195,50,.35),0 4px 12px rgba(0,0,0,.4)}
-.btl-card-front-unchosen{background:url('images/card_inactive.png') center/cover no-repeat;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.btl-card-front-chosen{background:url('../images/card_active.png') center/cover no-repeat;box-shadow:0 0 16px rgba(255,195,50,.35),0 4px 12px rgba(0,0,0,.4)}
+.btl-card-front-unchosen{background:url('../images/card_inactive.png') center/cover no-repeat;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 .btl-grade-c{border:none}
 .btl-grade-b{border:none}
 .btl-grade-a{border:none}
