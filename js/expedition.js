@@ -772,13 +772,13 @@ function _expHandleEmpty() {
   var s = _expState;
   s.tiles[s.currentTile].cleared = true;
   s.currentTile++;
-  _expToast('🍃', '아무 일도 일어나지 않았다...');
   _expSaveProgress();
 
   if (s.currentTile >= s.tiles.length) {
     _expShowSummary();
   } else {
     _expRenderMap();
+    _expToast('🍃', '아무 일도 일어나지 않았다...');
   }
 }
 
@@ -788,13 +788,13 @@ function _expHandleTreasure(tile) {
   s.loot.push({ type: 'treasure', acorns: tile.acorns });
   s.tiles[s.currentTile].cleared = true;
   s.currentTile++;
-  _expToast('💰', '작년에 묻어둔 도토리를 발견했어요! 🌰 ' + tile.acorns + '개 획득!');
   _expSaveProgress();
 
   if (s.currentTile >= s.tiles.length) {
     _expShowSummary();
   } else {
     _expRenderMap();
+    _expToast('💰', '작년에 묻어둔 도토리를 발견했어요! 🌰 ' + tile.acorns + '개 획득!');
   }
 }
 
