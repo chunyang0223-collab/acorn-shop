@@ -2020,33 +2020,33 @@ body {
 @keyframes expArrowBlink{0%,100%{opacity:.2}50%{opacity:1}}
 
 /* ── 행운의 룰렛 ── */
-.rlt-container{max-width:400px;margin:0 auto;padding:16px;text-align:center}
-.rlt-header{margin-bottom:16px}
-.rlt-back-btn{background:none;border:1px solid rgba(255,255,255,.15);color:#9ca3af;font-size:12px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;font-family:inherit}
-.rlt-title{font-size:20px;font-weight:900;color:#e0e0e0;margin:8px 0 4px}
+.rlt-container{max-width:340px;margin:0 auto;padding:12px;text-align:center}
+.rlt-header{margin-bottom:10px}
+.rlt-back-btn{background:none;border:1px solid rgba(255,255,255,.15);color:#9ca3af;font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:inherit}
+.rlt-title{font-size:17px;font-weight:900;color:#e0e0e0;margin:6px 0 2px}
 .rlt-info{font-size:11px;color:#9ca3af;font-weight:700}
-.rlt-wheel-wrap{position:relative;display:inline-block;margin:12px 0 16px}
-.rlt-pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:24px;color:#ffd700;z-index:2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));line-height:1}
+.rlt-wheel-wrap{position:relative;display:inline-block;margin:8px 0 12px}
+.rlt-pointer{position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:20px;color:#ffd700;z-index:2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));line-height:1}
 #rltCanvas{display:block;border-radius:50%}
-.rlt-bet-section{margin:12px 0 16px}
-.rlt-bet-label{font-size:12px;font-weight:800;color:#a0a0a0;margin-bottom:8px}
-.rlt-bet-row{display:flex;gap:6px;justify-content:center}
-.rlt-bet-btn{flex:1;max-width:64px;padding:8px 4px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#ccc;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.rlt-bet-section{margin:8px 0 12px}
+.rlt-bet-label{font-size:11px;font-weight:800;color:#a0a0a0;margin-bottom:6px}
+.rlt-bet-row{display:flex;gap:5px;justify-content:center}
+.rlt-bet-btn{flex:1;max-width:56px;padding:6px 3px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#ccc;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px}
 .rlt-bet-btn:hover{border-color:rgba(255,200,50,.3);background:rgba(255,200,50,.08)}
-.rlt-bet-active{border-color:#ffd700!important;background:rgba(255,200,50,.15)!important;color:#ffd700!important;box-shadow:0 0 12px rgba(255,200,50,.2)}
+.rlt-bet-active{border-color:#ffd700!important;background:rgba(255,200,50,.15)!important;color:#ffd700!important;box-shadow:0 0 10px rgba(255,200,50,.2)}
 .rlt-bet-fee{font-size:9px;font-weight:700;opacity:.7}
-.rlt-bet-total{font-size:13px;font-weight:900;color:#fbbf24;margin-top:10px}
-.rlt-spin-btn{width:100%;max-width:280px;padding:14px;border-radius:14px;border:none;font-family:inherit;font-size:16px;font-weight:900;cursor:pointer;color:#1a1000;background:linear-gradient(135deg,#f0c040,#c8960a);box-shadow:0 4px 0 #a07808,0 6px 20px rgba(200,150,10,.25);transition:transform .1s,box-shadow .1s}
+.rlt-bet-total{font-size:12px;font-weight:900;color:#fbbf24;margin-top:8px}
+.rlt-spin-btn{width:100%;max-width:240px;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;color:#1a1000;background:linear-gradient(135deg,#f0c040,#c8960a);box-shadow:0 4px 0 #a07808,0 6px 20px rgba(200,150,10,.25);transition:transform .1s,box-shadow .1s}
 .rlt-spin-btn:hover{transform:translateY(-1px);box-shadow:0 5px 0 #a07808,0 8px 24px rgba(200,150,10,.3)}
 .rlt-spin-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #a07808,0 2px 8px rgba(200,150,10,.2)}
 .rlt-spin-btn:disabled{opacity:.5;cursor:default;transform:none;box-shadow:0 4px 0 #a07808}
-.rlt-result{margin-top:16px;min-height:20px}
-.rlt-result-box{padding:14px;border-radius:14px;animation:rltResultIn .4s ease}
+.rlt-result{margin-top:12px;min-height:16px}
+.rlt-result-box{padding:12px;border-radius:12px;animation:rltResultIn .4s ease}
 .rlt-result-lose{background:rgba(80,40,40,.5);border:1px solid rgba(200,60,60,.2)}
 .rlt-result-win{background:rgba(40,60,40,.5);border:1px solid rgba(60,200,60,.2)}
 .rlt-result-big{background:rgba(60,50,20,.6);border:1px solid rgba(255,200,50,.3);box-shadow:0 0 20px rgba(255,200,50,.15)}
-.rlt-result-emoji{font-size:28px;margin-bottom:4px}
-.rlt-result-text{font-size:15px;font-weight:900;color:#e0e0e0;margin-bottom:2px}
-.rlt-result-amount{font-size:18px;font-weight:900;color:#fbbf24}
-.rlt-result-net{font-size:11px;color:#9ca3af;font-weight:700;margin-top:4px}
+.rlt-result-emoji{font-size:24px;margin-bottom:2px}
+.rlt-result-text{font-size:14px;font-weight:900;color:#e0e0e0;margin-bottom:2px}
+.rlt-result-amount{font-size:16px;font-weight:900;color:#fbbf24}
+.rlt-result-net{font-size:11px;color:#9ca3af;font-weight:700;margin-top:3px}
 @keyframes rltResultIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
