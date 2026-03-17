@@ -1914,10 +1914,11 @@ body {
 @keyframes btl-ov-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 .btl-result-win{background:linear-gradient(160deg,rgba(10,22,10,.97),rgba(8,18,8,.99))}
 .btl-result-lose{background:linear-gradient(160deg,rgba(22,6,6,.97),rgba(16,4,4,.99))}
-.btl-win-title{font-size:24px;color:#ffd700;text-shadow:0 0 18px rgba(255,200,0,.6);margin-bottom:2px;font-weight:900}
-.btl-win-sub{font-size:12px;color:#80a868;margin-bottom:10px}
-.btl-card-hint{font-size:11px;color:#506050;margin-bottom:10px;min-height:16px}
-.btl-card-row{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.btl-win-emoji{font-size:36px;margin-bottom:6px}
+.btl-win-title{font-size:24px;color:#ffd700;text-shadow:0 0 18px rgba(255,200,0,.6);margin-bottom:6px;font-weight:900}
+.btl-win-sub{font-size:12px;color:#80a868;margin-bottom:16px}
+.btl-card-hint{font-size:11px;color:#506050;margin-bottom:16px;min-height:16px}
+.btl-card-row{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
 .btl-reward-card{width:90px;height:120px;cursor:pointer;position:relative;border-radius:12px;overflow:hidden}
 .btl-card-disabled{cursor:default}
 .btl-card-back{position:absolute;inset:0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(135deg,#1a2a4a,#0e1828);border:1.5px solid rgba(80,120,220,.4);box-shadow:0 4px 16px rgba(0,0,0,.5)}
@@ -1942,12 +1943,14 @@ body {
 .btl-unchosen-front{animation:btl-flip-unchosen .5s ease-out}
 @keyframes btl-flip-in{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @keyframes btl-flip-unchosen{from{opacity:0}to{opacity:1}}
-.btl-continue-btn{padding:11px 26px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;background:rgba(30,60,30,.7);border:1.5px solid rgba(80,180,80,.35);color:#88d888;transition:filter .15s,transform .12s}
-.btl-continue-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.btl-continue-btn{padding:13px 36px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#50c050,#38a038);color:#0a2a0a;box-shadow:0 4px 0 #2a802a,0 6px 16px rgba(50,160,50,.25);transition:transform .1s,box-shadow .1s}
+.btl-continue-btn:hover{transform:translateY(-1px);box-shadow:0 5px 0 #2a802a,0 8px 20px rgba(50,160,50,.3)}
+.btl-continue-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #2a802a,0 2px 6px rgba(50,160,50,.2)}
 
 /* 패배 */
-.btl-lose-title{font-size:24px;color:#e05050;text-shadow:0 0 16px rgba(220,60,60,.5);margin-bottom:4px;font-weight:900}
-.btl-lose-sub{font-size:12px;color:#906060;margin-bottom:14px}
+.btl-lose-emoji{font-size:36px;margin-bottom:6px}
+.btl-lose-title{font-size:24px;color:#e05050;text-shadow:0 0 16px rgba(220,60,60,.5);margin-bottom:6px;font-weight:900}
+.btl-lose-sub{font-size:12px;color:#906060;margin-bottom:18px}
 .btl-lose-options{display:flex;flex-direction:column;gap:8px;width:100%}
 .btl-lose-btn{width:100%;padding:11px 14px;border-radius:10px;border:none;font-family:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;transition:filter .15s,transform .12s}
 .btl-lose-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
