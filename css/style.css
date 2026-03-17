@@ -1918,27 +1918,32 @@ body {
 .btl-win-title{font-size:24px;color:#ffd700;text-shadow:0 0 18px rgba(255,200,0,.6);margin-bottom:6px;font-weight:900}
 .btl-win-sub{font-size:12px;color:#80a868;margin-bottom:16px}
 .btl-card-hint{font-size:11px;color:#506050;margin-bottom:16px;min-height:16px}
-.btl-card-row{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
-.btl-reward-card{width:90px;height:120px;cursor:pointer;position:relative;border-radius:12px;overflow:hidden}
+.btl-card-row{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.btl-reward-card{width:100px;height:134px;cursor:pointer;position:relative;border-radius:14px;overflow:visible}
 .btl-card-disabled{cursor:default}
-.btl-card-back{position:absolute;inset:0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(135deg,#1a2a4a,#0e1828);border:1.5px solid rgba(80,120,220,.4);box-shadow:0 4px 16px rgba(0,0,0,.5)}
-.btl-card-back-icon{font-size:28px;opacity:.5}
-.btl-card-back-lbl{font-size:10px;color:rgba(100,150,200,.5)}
-.btl-card-front{position:absolute;inset:0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 4px 20px rgba(0,0,0,.6)}
-.btl-grade-c{background:linear-gradient(135deg,#1e2e1e,#162016);border:1.5px solid rgba(80,160,80,.5)}
-.btl-grade-b{background:linear-gradient(135deg,#1e2a3e,#121e30);border:1.5px solid rgba(80,140,220,.55)}
-.btl-grade-a{background:linear-gradient(135deg,#2e2010,#201408);border:1.5px solid rgba(220,160,40,.6);box-shadow:0 4px 20px rgba(220,140,20,.25)}
-.btl-card-grade{font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:8px}
-.btl-grade-c .btl-card-grade{color:#60c060;background:rgba(60,160,60,.15)}
-.btl-grade-b .btl-card-grade{color:#60a8f0;background:rgba(60,120,220,.15)}
-.btl-grade-a .btl-card-grade{color:#f0c040;background:rgba(200,140,20,.2)}
-.btl-card-reward-icon{font-size:22px}
-.btl-card-reward-txt{font-size:10px;text-align:center;line-height:1.4;padding:0 4px}
-.btl-grade-c .btl-card-reward-txt{color:#80c080}
-.btl-grade-b .btl-card-reward-txt{color:#80b0e8}
-.btl-grade-a .btl-card-reward-txt{color:#e0b840}
-.btl-card-chosen{box-shadow:0 0 0 2.5px #ffd700,0 4px 24px rgba(255,200,0,.4)!important}
-.btl-card-unchosen{opacity:.45;filter:saturate(.3)}
+.btl-card-back{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;background:url('images/card_active.png') center/cover no-repeat;box-shadow:0 0 16px rgba(255,195,50,.35),0 4px 12px rgba(0,0,0,.4)}
+.btl-card-baby-bounce{width:60px;height:60px;object-fit:contain;animation:btlBabyBounce 1.8s ease-in-out infinite;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+@keyframes btlBabyBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.btl-card-front{position:absolute;inset:0;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.btl-card-front-chosen{background:url('images/card_active.png') center/cover no-repeat;box-shadow:0 0 16px rgba(255,195,50,.35),0 4px 12px rgba(0,0,0,.4)}
+.btl-card-front-unchosen{background:url('images/card_inactive.png') center/cover no-repeat;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.btl-grade-c{border:none}
+.btl-grade-b{border:none}
+.btl-grade-a{border:none}
+.btl-card-grade{font-size:11px;font-weight:800;letter-spacing:1px;padding:3px 8px;border-radius:8px}
+.btl-grade-c .btl-card-grade{color:#fff;background:rgba(80,160,80,.7)}
+.btl-grade-b .btl-card-grade{color:#fff;background:rgba(60,120,220,.7)}
+.btl-grade-a .btl-card-grade{color:#fff;background:rgba(200,140,20,.8)}
+.btl-card-reward-icon{font-size:24px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
+.btl-card-reward-txt{font-size:10px;text-align:center;line-height:1.4;padding:0 6px;font-weight:700}
+.btl-grade-c .btl-card-reward-txt{color:#1a3a1a}
+.btl-grade-b .btl-card-reward-txt{color:#1a2a3a}
+.btl-grade-a .btl-card-reward-txt{color:#3a2a0a}
+.btl-card-front-unchosen .btl-card-grade{opacity:.7}
+.btl-card-front-unchosen .btl-card-reward-icon{opacity:.6}
+.btl-card-front-unchosen .btl-card-reward-txt{opacity:.6}
+.btl-card-chosen{box-shadow:0 0 0 2.5px #ffd700,0 0 20px rgba(255,200,0,.5),0 4px 12px rgba(0,0,0,.3)!important}
+.btl-card-unchosen{opacity:.55}
 .btl-chosen-front{animation:btl-flip-in .4s ease-out}
 .btl-unchosen-front{animation:btl-flip-unchosen .5s ease-out}
 @keyframes btl-flip-in{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
