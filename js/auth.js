@@ -190,10 +190,46 @@ function setupRealtime() {
     if (document.visibilityState === 'visible') _pollSync();
   }, 15000);
 
-  // 탭 복귀 시 즉시 동기화
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && myProfile) _pollSync();
+  // 탭 복귀 시 세션 체크 → 성공: 현재 탭 갱신 / 실패: 전체 새로고침
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || !myProfile) return;
+    try {
+      var { data } = await sb.auth.getSession();
+      if (data?.session) {
+        // 세션 유효 → 현재 탭만 갱신
+        _pollSync();
+        _refreshActiveTab();
+      } else {
+        // 세션 만료 → 전체 새로고침
+        console.warn('[visibility] 세션 만료 → 새로고침');
+        window.location.reload();
+      }
+    } catch(e) {
+      console.warn('[visibility] 세션 체크 실패 → 새로고침');
+      window.location.reload();
+    }
   });
+}
+
+// 현재 활성 탭의 데이터를 다시 로드
+function _refreshActiveTab() {
+  try {
+    var tabs = ['shop','gacha','quest','mypage','recycle','minigame','ranking','squirrel'];
+    var activeTab = null;
+    for (var i = 0; i < tabs.length; i++) {
+      var el = document.getElementById('utab-' + tabs[i]);
+      if (el && !el.classList.contains('hidden')) { activeTab = tabs[i]; break; }
+    }
+    if (!activeTab) return;
+
+    if (activeTab === 'shop' && typeof renderShop === 'function') renderShop();
+    else if (activeTab === 'gacha' && typeof renderGachaProbTable === 'function') { renderGachaProbTable(); checkFreeGacha(); }
+    else if (activeTab === 'quest' && typeof renderQuests === 'function') renderQuests();
+    else if (activeTab === 'mypage' && typeof renderMypage === 'function') renderMypage();
+    else if (activeTab === 'recycle' && typeof renderRecycleTab === 'function') renderRecycleTab();
+    else if (activeTab === 'minigame' && typeof renderMinigameHub === 'function') renderMinigameHub();
+    else if (activeTab === 'squirrel' && typeof sqInit === 'function') sqInit();
+  } catch(e) { console.warn('[refreshTab]', e); }
 }
 
 //  AUTH
