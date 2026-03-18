@@ -1,7 +1,7 @@
 /* =====================================================
    🌰 도토리 상점 v5 — Service Worker
    ===================================================== */
-const CACHE_NAME = 'acorn-shop-v28';
+const CACHE_NAME = 'acorn-shop-v29';
 const CACHE_URLS = [
   './index.html',
   './manifest.json',
@@ -21,6 +21,8 @@ const CACHE_URLS = [
   './js/recycle.js',
   './js/admin.js',
   './js/minigame.js',
+  './js/squirrel.js',
+  './js/expedition.js',
   './js/app.js'
 ];
 
