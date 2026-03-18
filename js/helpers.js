@@ -117,7 +117,26 @@ async function spendAcorns(amount, reason) {
 // ──────────────────────────────────────────────
 let _deferredInstall = null;
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // 새 서비스워커가 설치되면 자동으로 활성화
+      reg.addEventListener('updatefound', () => {
+        var newSW = reg.installing;
+        if (!newSW) return;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'activated') {
+            // 첫 설치가 아닌 업데이트일 때만 새로고침
+            if (navigator.serviceWorker.controller) {
+              console.log('[SW] 새 버전 감지 → 자동 새로고침');
+              window.location.reload();
+            }
+          }
+        });
+      });
+      // 주기적으로 업데이트 확인 (30분마다)
+      setInterval(() => { reg.update(); }, 30 * 60 * 1000);
+    }).catch(() => {});
+  });
 }
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); _deferredInstall = e;
