@@ -257,6 +257,7 @@ async function doKakaoLogin() {
 
 async function doLogout() {
   playSound('click');
+  if (typeof _sndStopBGM === 'function') _sndStopBGM();
   await sb.auth.signOut();
 }
 
