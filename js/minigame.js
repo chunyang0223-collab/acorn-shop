@@ -1472,18 +1472,25 @@ async function _rltSpin() {
   var resultSlice = _rltSlices[resultIdx];
 
   // 해당 칸의 중앙 각도 계산 (칸 너비 기반)
+  // angles[i].start는 12시(-π/2)부터 시계방향으로 배치된 각 칸의 시작 각도(회전 전 기준)
+  // 포인터는 12시(상단)에 고정, 휠을 시계방향으로 돌림
+  // 포인터 위치(12시 = -π/2)에 칸 중앙이 오려면:
+  //   rotation + (칸 중앙 각도) = -π/2 (+ 2πn)
+  //   rotation = -π/2 - 칸 중앙 각도
   var angles = _rltCalcAngles();
   var targetA = angles[resultIdx];
-  // 칸 중앙에서 살짝 랜덤 오프셋 (칸 안에서 자연스럽게)
-  var jitter = (Math.random() - 0.5) * targetA.sweep * 0.6;
-  var stopAngle = -(targetA.start + targetA.sweep / 2 + jitter);
-  // 정규화 0~2π
-  stopAngle = ((stopAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  var sliceMid = targetA.start + targetA.sweep / 2; // 칸 중앙의 절대 각도
+  var jitter = (Math.random() - 0.5) * targetA.sweep * 0.5; // 칸 안에서 랜덤 오프셋
 
-  // 최소 5~8바퀴 회전
+  // 목표 회전 각도: 포인터(-π/2)에 칸 중앙이 오도록
+  var desiredRotation = -Math.PI / 2 - (sliceMid + jitter);
+  // 0~2π 범위로 정규화
+  desiredRotation = ((desiredRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+
+  // 현재 누적 각도에서 목표까지 + 최소 5~8바퀴
   var fullSpins = Math.PI * 2 * (5 + Math.floor(Math.random() * 3));
   var currentNorm = ((_roulette.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  var delta = stopAngle - currentNorm;
+  var delta = desiredRotation - currentNorm;
   if (delta <= 0) delta += Math.PI * 2;
   var totalRotation = fullSpins + delta;
 
