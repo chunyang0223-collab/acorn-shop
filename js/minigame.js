@@ -14,8 +14,9 @@ const MG_DEFAULTS = {
   },
   '2048': {
     name: '2048 하드코어', icon: '💀',
-    playLimit: 10, rewardLimit: 3,
-    entryFee: 0, rewardRate: 50, maxReward: 30, duration: 30,
+    playLimit: 10, rewardLimit: 3, unlimitedPlays: false,
+    entryFee: 0, duration: 30,
+    dropChance: 20, dropAmount: 1,
     bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5
   },
   roulette: {
@@ -159,7 +160,8 @@ async function renderMinigameHub() {
     const maxReward = getMgSetting(g.id, 'maxReward');
     const duration  = getMgSetting(g.id, 'duration');
     const maint     = getMgSetting(g.id, 'maintenance');
-    const exhausted = pRemain <= 0 && g.ready;
+    const unlimited = getMgSetting(g.id, 'unlimitedPlays');
+    const exhausted = !unlimited && pRemain <= 0 && g.ready;
     const blocked   = !g.ready || maint || exhausted;
 
     return `
@@ -178,9 +180,9 @@ async function renderMinigameHub() {
         <div class="flex gap-1 flex-wrap">
           ${duration > 0 ? `<span class="mg-tag">⏱ ${duration}초</span>` : ''}
           ${fee > 0 ? `<span class="mg-tag">🌰 ${fee} 참가비</span>` : '<span class="mg-tag">무료</span>'}
-          <span class="mg-tag">🎁 최대 ${maxReward}</span>
-          ${g.ready && !maint ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
-          ${g.ready && !maint ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
+          ${maxReward && !unlimited ? `<span class="mg-tag">🎁 최대 ${maxReward}</span>` : ''}
+          ${g.ready && !maint && !unlimited ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
+          ${g.ready && !maint && !unlimited ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -198,7 +200,8 @@ async function startMinigame(id) {
 
   const pLimit = getPlayLimit(id);
   const played = _mgTodayPlays[id] || 0;
-  if (played >= pLimit) {
+  const unlimited = getMgSetting(id, 'unlimitedPlays');
+  if (!unlimited && played >= pLimit) {
     toast('⚠️', `오늘 도전 횟수를 모두 사용했어요! (${pLimit}/${pLimit}회)`);
     renderMinigameHub();
     return;
@@ -361,16 +364,24 @@ async function renderMinigameAdmin() {
       <div class="space-y-2">
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
-          <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-${id}-playLimit" value="${val('playLimit')}">
+          <div class="flex items-center gap-2">
+            <input class="field text-center" type="number" min="0" max="100" style="width:70px" id="mg-${id}-playLimit" value="${val('playLimit')}" ${val('unlimitedPlays') ? 'disabled style="width:70px;opacity:0.4"' : ''}>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" id="mg-${id}-unlimitedPlays" ${val('unlimitedPlays') ? 'checked' : ''} onchange="document.getElementById('mg-${id}-playLimit').disabled=this.checked;document.getElementById('mg-${id}-playLimit').style.opacity=this.checked?'0.4':'1'" style="width:16px;height:16px">
+              <span class="text-xs font-bold text-gray-400">무제한</span>
+            </label>
+          </div>
         </div>
+        ${id !== '2048' ? `
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 1일 보상 횟수</label>
           <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-${id}-rewardLimit" value="${val('rewardLimit')}">
-        </div>
+        </div>` : ''}
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 참가비</label>
           <input class="field text-center" type="number" min="0" max="1000" style="width:80px" id="mg-${id}-entryFee" value="${val('entryFee')}">
         </div>
+        ${id !== '2048' ? `
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">📊 N점당 1도토리</label>
           <input class="field text-center" type="number" min="1" max="1000" style="width:80px" id="mg-${id}-rewardRate" value="${val('rewardRate')}">
@@ -378,7 +389,18 @@ async function renderMinigameAdmin() {
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎁 최대 보상</label>
           <input class="field text-center" type="number" min="0" max="1000" style="width:80px" id="mg-${id}-maxReward" value="${val('maxReward')}">
+        </div>` : ''}
+        ${id === '2048' ? `
+        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
+        <div class="text-xs font-black text-gray-600 mb-1">🌰 도토리 드롭</div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">합칠 때 드롭 확률(%)</label>
+          <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-2048-dropChance" value="${val('dropChance') ?? 20}">
         </div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">드롭 시 도토리 개수</label>
+          <input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropAmount" value="${val('dropAmount') ?? 1}">
+        </div>` : ''}
         ${def.duration > 0 || id === 'catch' || id === '2048' ? `
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">⏱ 게임 시간(초)</label>
@@ -422,7 +444,7 @@ async function renderMinigameAdmin() {
 }
 
 async function saveMinigameSetting(gameId) {
-  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance'];
+  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropAmount'];
   const floatKeys = ['baseSpeed', 'maxSpeed', 'defuseBonus', 'comboBonus'];
   const updated = {};
   for (const key of intKeys) {
@@ -435,6 +457,8 @@ async function saveMinigameSetting(gameId) {
   }
   const maintEl = document.getElementById(`mg-${gameId}-maintenance`);
   if (maintEl) updated.maintenance = maintEl.checked;
+  const unlimEl = document.getElementById(`mg-${gameId}-unlimitedPlays`);
+  if (unlimEl) updated.unlimitedPlays = unlimEl.checked;
 
   // 룰렛 전용: 확률 + 칸 너비
   if (gameId === 'roulette') {
