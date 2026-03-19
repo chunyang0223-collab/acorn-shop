@@ -34,6 +34,8 @@ function _2048_bgmPlay() {
   _2048_bgmInit();
   const a = _2048.bgm;
   if (!a) return;
+  const v = typeof getAppVolume === 'function' ? getAppVolume() : 1;
+  a.volume = v * 0.5;
   a.currentTime = 0;
   const p = a.play();
   if (p && p.catch) p.catch(() => {});
@@ -49,7 +51,14 @@ function stop2048Bgm() { _2048_bgmStop(); }
 
 // ── Audio ──
 function _2048_initAudio() {
-  if (!_2048.audioCtx) _2048.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!_2048.audioCtx) {
+    _2048.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // masterGain으로 전체 효과음 볼륨 제어
+    _2048._masterGain = _2048.audioCtx.createGain();
+    _2048._masterGain.connect(_2048.audioCtx.destination);
+    const v = typeof getAppVolume === 'function' ? getAppVolume() : 1;
+    _2048._masterGain.gain.setValueAtTime(v, _2048.audioCtx.currentTime);
+  }
   if (_2048.audioCtx.state === 'suspended') _2048.audioCtx.resume();
 }
 function _2048_tone(freq, dur, type = 'sine', vol = 0.12) {
@@ -58,7 +67,7 @@ function _2048_tone(freq, dur, type = 'sine', vol = 0.12) {
   o.type = type; o.frequency.setValueAtTime(freq, ctx.currentTime);
   g.gain.setValueAtTime(vol, ctx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-  o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
+  o.connect(g).connect(_2048._masterGain || ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
 }
 function _2048_noise(dur, vol = 0.1) {
   if (!_2048.audioCtx) return;
@@ -68,7 +77,7 @@ function _2048_noise(dur, vol = 0.1) {
   const src = ctx.createBufferSource(), g = ctx.createGain();
   src.buffer = buf; g.gain.setValueAtTime(vol, ctx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-  src.connect(g).connect(ctx.destination); src.start();
+  src.connect(g).connect(_2048._masterGain || ctx.destination); src.start();
 }
 const _2048_sfx = {
   move()    { _2048_tone(220, .07, 'triangle', .07); },
