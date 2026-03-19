@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-layout="a3">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -94,7 +94,8 @@
   <!-- 헤더 -->
   <div class="mb-5">
     <!-- 로그아웃: 최상단 우측 -->
-    <div class="flex justify-end mb-1">
+    <div class="flex justify-end mb-1 gap-2 items-center">
+      <button class="btn-logout-sm" id="layoutToggle" onclick="toggleLayout()" title="레이아웃 전환" style="color:rgba(192,132,252,0.7);font-size:12px">🎨 A3</button>
       <button class="btn-logout-sm hidden" id="logoutBtn" onclick="doLogout()">로그아웃</button>
     </div>
     <!-- 메인 헤더 -->
@@ -125,7 +126,7 @@
 
   <!-- ── 사용자 모드 ── -->
   <div id="userMode" class="hidden">
-    <div class="tab-bar-wrap"><div id="userTabBar" class="flex gap-1 mb-5 clay-card p-2" style="overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;cursor:grab">
+    <div class="tab-bar-wrap"><div id="userTabBar" class="flex gap-1 clay-card p-2" style="overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;cursor:grab">
       <button class="tab-btn active" onclick="uTab('shop',this)" style="flex-shrink:0">🛍️ 상점</button>
       <button class="tab-btn" onclick="uTab('gacha',this)" style="flex-shrink:0">🎲 뽑기</button>
       <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0">📋 퀘스트</button>
@@ -135,6 +136,7 @@
       <button class="tab-btn" onclick="uTab('ranking',this)" style="flex-shrink:0">🏆 랭킹</button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0">👤 마이</button>
     </div></div>
+    <div id="contentPanel" class="content-panel">
     <div id="utab-shop">
       <p class="text-sm font-bold text-amber-700 mb-3 px-1">🛒 구매 가능한 상품</p>
       <div id="shopGrid" class="grid grid-cols-2 gap-3"></div>
@@ -238,7 +240,7 @@
         <button onclick="sqAdminBack()" class="btn btn-gray btn-sm">← 관리자 화면으로</button>
       </div>
       <!-- 서브탭 -->
-      <div class="clay-card p-2 flex gap-1 mb-4">
+      <div class="clay-card no-accent p-2 flex gap-1 mb-4">
         <button class="tab-btn active flex-1" onclick="sqTab('my')"         id="sqtab-my">🏠 내 다람쥐</button>
         <button class="tab-btn flex-1"        onclick="sqTab('shop')"       id="sqtab-shop">🛒 상점</button>
         <button class="tab-btn flex-1"        onclick="sqTab('expedition')" id="sqtab-expedition">⚔️ 탐험</button>
@@ -415,6 +417,7 @@
         <div id="myTxList" class="space-y-2"></div>
       </div>
     </div>
+    </div><!-- /contentPanel -->
   </div>
 
   <!-- ── 관리자 모드 ── -->
@@ -1393,5 +1396,25 @@
 <script src="js/expedition.js"></script>
 <script src="js/app.js"></script>
 
+<script>
+/* ── 레이아웃 토글 (A3 ↔ A4 비교용) ── */
+function toggleLayout() {
+  const html = document.documentElement;
+  const btn = document.getElementById('layoutToggle');
+  const cur = html.getAttribute('data-layout');
+  const next = cur === 'a3' ? 'a4' : 'a3';
+  html.setAttribute('data-layout', next);
+  btn.textContent = '🎨 ' + next.toUpperCase();
+  localStorage.setItem('acorn-layout', next);
+}
+(function(){
+  const saved = localStorage.getItem('acorn-layout');
+  if (saved && (saved === 'a3' || saved === 'a4')) {
+    document.documentElement.setAttribute('data-layout', saved);
+    const btn = document.getElementById('layoutToggle');
+    if (btn) btn.textContent = '🎨 ' + saved.toUpperCase();
+  }
+})();
+</script>
 </body>
 </html>
