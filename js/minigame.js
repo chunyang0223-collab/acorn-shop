@@ -13,9 +13,10 @@ const MG_DEFAULTS = {
     duration: 30
   },
   '2048': {
-    name: '2048 도토리', icon: '🧩',
+    name: '2048 하드코어', icon: '💀',
     playLimit: 10, rewardLimit: 3,
-    entryFee: 0, rewardRate: 50, maxReward: 30, duration: 0
+    entryFee: 0, rewardRate: 50, maxReward: 30, duration: 30,
+    bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5
   },
   roulette: {
     name: '행운의 룰렛', icon: '🎡',
@@ -129,7 +130,7 @@ async function recordPlay(gameId, score, rewarded) {
 
 const MINIGAMES = [
   { id: 'catch',    name: '🌰 도토리 캐치',   desc: '하늘에서 떨어지는 도토리를 바구니로 받아요!', icon: '🧺', color: 'linear-gradient(135deg, #87CEEB, #90EE90)', ready: true },
-  { id: '2048',     name: '🧩 2048 도토리',   desc: '같은 숫자를 합쳐서 큰 수를 만들어요!',        icon: '🧩', color: 'linear-gradient(135deg, #fef3c7, #fed7aa)', ready: false },
+  { id: '2048',     name: '⚡ 2048 하드코어',  desc: '30초 생존! 폭탄을 피하고 콤보를 터뜨려라!', icon: '💀', color: 'linear-gradient(135deg, #fecaca, #fde68a)', ready: true },
   { id: 'roulette', name: '🎡 행운의 룰렛',   desc: '도토리를 걸고 룰렛을 돌려보세요!',            icon: '🎡', color: 'linear-gradient(135deg, #fce4ff, #dbeafe)', ready: true }
 ];
 
@@ -157,16 +158,19 @@ async function renderMinigameHub() {
     const fee       = getMgSetting(g.id, 'entryFee');
     const maxReward = getMgSetting(g.id, 'maxReward');
     const duration  = getMgSetting(g.id, 'duration');
+    const maint     = getMgSetting(g.id, 'maintenance');
     const exhausted = pRemain <= 0 && g.ready;
+    const blocked   = !g.ready || maint || exhausted;
 
     return `
-    <div class="mg-card clay-card ${g.ready && !exhausted ? 'card-hover' : ''}"
-         ${g.ready && !exhausted ? `onclick="startMinigame('${g.id}')"` : ''}
-         style="cursor:${g.ready && !exhausted ? 'pointer' : 'default'}">
+    <div class="mg-card clay-card ${!blocked ? 'card-hover' : ''}"
+         ${!blocked ? `onclick="startMinigame('${g.id}')"` : ''}
+         style="cursor:${!blocked ? 'pointer' : 'default'}">
       <div class="mg-card-preview" style="background:${g.color}">
         <span class="mg-card-icon">${g.icon}</span>
         ${!g.ready   ? '<div class="mg-coming-soon">COMING SOON</div>' : ''}
-        ${exhausted  ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
+        ${maint      ? '<div class="mg-coming-soon">🔧 점검중</div>' : ''}
+        ${exhausted && !maint ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
       </div>
       <div class="p-4">
         <h3 class="font-black text-gray-800 text-base mb-1">${g.name}</h3>
@@ -175,8 +179,8 @@ async function renderMinigameHub() {
           ${duration > 0 ? `<span class="mg-tag">⏱ ${duration}초</span>` : ''}
           ${fee > 0 ? `<span class="mg-tag">🌰 ${fee} 참가비</span>` : '<span class="mg-tag">무료</span>'}
           <span class="mg-tag">🎁 최대 ${maxReward}</span>
-          ${g.ready ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
-          ${g.ready ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
+          ${g.ready && !maint ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
+          ${g.ready && !maint ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -186,6 +190,12 @@ async function renderMinigameHub() {
 async function startMinigame(id) {
   await loadMinigameSettings();
   await loadTodayPlays();
+
+  // 개별 점검 모드 체크
+  if (getMgSetting(id, 'maintenance')) {
+    toast('🔧', '이 게임은 현재 점검중이에요!');
+    return;
+  }
 
   const pLimit = getPlayLimit(id);
   const played = _mgTodayPlays[id] || 0;
@@ -238,6 +248,7 @@ async function _confirmStartGame(id, fee) {
     } catch(e) { toast('❌', '참가비 차감 중 오류'); return; }
   }
   if (id === 'catch') startCatchGame();
+  else if (id === '2048') start2048Game();
   else if (id === 'roulette') startRouletteGame();
 }
 
@@ -246,341 +257,6 @@ function exitMinigame() {
   document.getElementById('minigame-play').classList.add('hidden');
   document.getElementById('minigame-play').innerHTML = '';
   renderMinigameHub();
-}
-
-
-// ══════════════════════════════════════════════
-//  도토리 캐치 게임
-// ══════════════════════════════════════════════
-
-const CATCH_CONFIG = {
-  spawnInterval: 600, minSpawnInterval: 280,
-  basketWidth: 64, itemSize: 36,
-  baseSpeed: 2.2, maxSpeed: 5.5,
-  items: [
-    { emoji: '🌰', points: 1,  weight: 50, type: 'acorn' },
-    { emoji: '🌰', points: 2,  weight: 20, type: 'acorn2' },
-    { emoji: '✨', points: 5,  weight: 10, type: 'golden' },
-    { emoji: '🍄', points: 10, weight: 4,  type: 'mushroom' },
-    { emoji: '💣', points: -8, weight: 12, type: 'bomb' },
-    { emoji: '🌧️', points: -3, weight: 4,  type: 'rain' },
-  ]
-};
-
-// 관리자 설정에서 속도 읽기
-function getCatchSpeed(key) {
-  const s = _mgSettings?.catch || {};
-  if (key === 'baseSpeed') return s.baseSpeed ?? CATCH_CONFIG.baseSpeed;
-  if (key === 'maxSpeed')  return s.maxSpeed  ?? CATCH_CONFIG.maxSpeed;
-  return CATCH_CONFIG[key];
-}
-
-let _catch = null;
-
-function startCatchGame() {
-  const hub  = document.getElementById('minigame-hub');
-  const play = document.getElementById('minigame-play');
-  hub.classList.add('hidden');
-  play.classList.remove('hidden');
-  const gameDuration = getMgSetting('catch', 'duration');
-
-  play.innerHTML = `
-    <div class="catch-container" id="catchContainer">
-      <div class="catch-hud">
-        <div class="catch-hud-item">
-          <span class="catch-hud-label">점수</span>
-          <span class="catch-hud-value" id="catchScore">0</span>
-        </div>
-        <div class="catch-hud-item catch-hud-timer">
-          <span class="catch-hud-label">남은 시간</span>
-          <span class="catch-hud-value" id="catchTimer">${gameDuration}</span>
-        </div>
-        <button class="catch-exit-btn" onclick="confirmExitCatch()">✕</button>
-      </div>
-      <div class="catch-field" id="catchField">
-        <div class="catch-bg-cloud" style="top:15%;left:8%">☁️</div>
-        <div class="catch-bg-cloud" style="top:25%;left:65%;animation-delay:2s;font-size:28px">☁️</div>
-        <div class="catch-bg-cloud" style="top:8%;left:40%;animation-delay:4s;font-size:20px">☁️</div>
-        <div class="catch-basket" id="catchBasket">🧺</div>
-      </div>
-      <div class="catch-overlay" id="catchOverlay">
-        <div class="catch-overlay-content">
-          <div style="font-size:4rem;margin-bottom:12px">🌰</div>
-          <h2 class="font-black text-xl mb-2" style="color:#78350f">도토리 캐치</h2>
-          <p class="text-sm mb-1" style="color:#92400e;font-weight:700">바구니를 움직여 도토리를 받으세요!</p>
-          <div class="catch-legend">
-            <span>🌰 +1~2점</span><span>✨ +5점</span><span>🍄 +10점</span><span>💣 -8점</span>
-          </div>
-          <button class="btn btn-primary px-8 py-3 text-base mt-3" onclick="beginCatchGame()">🎮 시작!</button>
-        </div>
-      </div>
-    </div>`;
-
-  _catch = {
-    score: 0, timeLeft: gameDuration, duration: gameDuration,
-    basketX: 0.5, basketXCurrent: 0.5,
-    items: [], running: false,
-    timerId: null, spawnId: null, frameId: null,
-    combo: 0, maxCombo: 0, caught: 0, missed: 0,
-    fieldEl: null, basketEl: null, fieldW: 0
-  };
-  _initCatchControls();
-}
-
-function _initCatchControls() {
-  const field = document.getElementById('catchField');
-  if (!field) return;
-  _catch.fieldEl  = field;
-  _catch.basketEl = document.getElementById('catchBasket');
-  _catch.fieldW   = field.offsetWidth;
-  const ro = new ResizeObserver(() => { if (_catch.fieldEl) _catch.fieldW = _catch.fieldEl.offsetWidth; });
-  ro.observe(field);
-
-  field.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (!_catch?.running) return;
-    const t = e.touches[0], r = field.getBoundingClientRect();
-    _catch.basketX = Math.max(0, Math.min(1, (t.clientX - r.left) / r.width));
-  }, { passive: false });
-  field.addEventListener('touchstart', e => {
-    if (!_catch?.running) return;
-    const t = e.touches[0], r = field.getBoundingClientRect();
-    _catch.basketX = Math.max(0, Math.min(1, (t.clientX - r.left) / r.width));
-  }, { passive: true });
-  field.addEventListener('mousemove', e => {
-    if (!_catch?.running) return;
-    const r = field.getBoundingClientRect();
-    _catch.basketX = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-  });
-  document.addEventListener('keydown', _catchKeyHandler);
-}
-
-function _catchKeyHandler(e) {
-  if (!_catch?.running) return;
-  if (e.key === 'ArrowLeft'  || e.key === 'a') _catch.basketX = Math.max(0, _catch.basketX - 0.06);
-  else if (e.key === 'ArrowRight' || e.key === 'd') _catch.basketX = Math.min(1, _catch.basketX + 0.06);
-}
-
-function beginCatchGame() {
-  document.getElementById('catchOverlay').classList.add('hidden');
-  _catch.running = true;
-  _catch.score   = 0; _catch.timeLeft = _catch.duration;
-  _catch.combo   = 0; _catch.maxCombo = 0;
-  _catch.caught  = 0; _catch.missed   = 0;
-  _catch.basketXCurrent = _catch.basketX;
-  playSound('gacha');
-
-  _catch.timerId = setInterval(() => {
-    _catch.timeLeft--;
-    document.getElementById('catchTimer').textContent = _catch.timeLeft;
-    if (_catch.timeLeft <= 5) document.getElementById('catchTimer').parentElement.classList.add('catch-hud-danger');
-    if (_catch.timeLeft <= 0) endCatchGame();
-  }, 1000);
-  _scheduleSpawn();
-  _catch.frameId = requestAnimationFrame(_catchGameLoop);
-}
-
-function _scheduleSpawn() {
-  if (!_catch?.running) return;
-  const progress = (_catch.duration - _catch.timeLeft) / _catch.duration;
-  const interval = CATCH_CONFIG.spawnInterval - (CATCH_CONFIG.spawnInterval - CATCH_CONFIG.minSpawnInterval) * progress;
-  _catch.spawnId = setTimeout(() => { _spawnItem(); _scheduleSpawn(); }, interval);
-}
-
-function _spawnItem() {
-  if (!_catch?.running) return;
-  const field = _catch.fieldEl;
-  if (!field) return;
-  const totalW = CATCH_CONFIG.items.reduce((s, i) => s + i.weight, 0);
-  let r = Math.random() * totalW, chosen = CATCH_CONFIG.items[0];
-  for (const item of CATCH_CONFIG.items) { r -= item.weight; if (r <= 0) { chosen = item; break; } }
-  const fw = _catch.fieldW, x = Math.random() * (fw - CATCH_CONFIG.itemSize);
-  const progress = (_catch.duration - _catch.timeLeft) / _catch.duration;
-  const speed = getCatchSpeed('baseSpeed') + (getCatchSpeed('maxSpeed') - getCatchSpeed('baseSpeed')) * progress;
-  const el = document.createElement('div');
-  el.className = 'catch-item'; el.textContent = chosen.emoji;
-  el.dataset.x = x; el.dataset.y = -40;
-  el.style.left = x + 'px'; el.style.transform = 'translateY(-40px)';
-  el.dataset.points = chosen.points; el.dataset.type = chosen.type;
-  el.dataset.speed  = speed + (Math.random() * 0.8 - 0.4);
-  field.appendChild(el); _catch.items.push(el);
-}
-
-function _catchGameLoop() {
-  if (!_catch?.running) return;
-  const basket = _catch.basketEl, field = _catch.fieldEl;
-  if (!field || !basket) return;
-  const fw = _catch.fieldW, fh = field.offsetHeight, bw = CATCH_CONFIG.basketWidth;
-  _catch.basketXCurrent += (_catch.basketX - _catch.basketXCurrent) * 0.25;
-  const bx = _catch.basketXCurrent * (fw - bw);
-  basket.style.transform = `translateX(${bx}px)`;
-  const basketLeft = bx, basketRight = bx + bw, basketTop = fh - 60;
-  const toRemove = [];
-  for (const el of _catch.items) {
-    const y     = parseFloat(el.dataset.y)     || 0;
-    const speed = parseFloat(el.dataset.speed) || getCatchSpeed('baseSpeed');
-    const newY  = y + speed;
-    el.dataset.y = newY; el.style.transform = `translateY(${newY}px)`;
-    const itemX      = parseFloat(el.dataset.x) + CATCH_CONFIG.itemSize / 2;
-    const itemBottom = newY + CATCH_CONFIG.itemSize;
-    if (itemBottom >= basketTop && itemBottom <= basketTop + 30 && itemX >= basketLeft - 10 && itemX <= basketRight + 10) {
-      _catchCollect(parseInt(el.dataset.points), el.dataset.type, el);
-      toRemove.push(el); continue;
-    }
-    if (newY > fh + 10) {
-      if (parseInt(el.dataset.points) > 0) { _catch.missed++; _catch.combo = 0; }
-      toRemove.push(el);
-    }
-  }
-  for (const el of toRemove) { el.remove(); _catch.items = _catch.items.filter(i => i !== el); }
-  _catch.frameId = requestAnimationFrame(_catchGameLoop);
-}
-
-function _catchCollect(points, type, el) {
-  const field = _catch.fieldEl, x = parseFloat(el.dataset.x), y = parseFloat(el.dataset.y);
-  if (points > 0) {
-    _catch.combo++;
-    if (_catch.combo > _catch.maxCombo) _catch.maxCombo = _catch.combo;
-    _catch.caught++;
-    const bonus = _catch.combo >= 10 ? 3 : _catch.combo >= 5 ? 1 : 0;
-    const total = points + bonus;
-    _catch.score += total;
-    _showCatchEffect(field, x, y, `+${total}`, type === 'golden' ? '#d97706' : type === 'mushroom' ? '#7c3aed' : '#059669');
-    if (_catch.combo >= 5 && _catch.combo % 5 === 0) _showCatchEffect(field, x - 10, y - 20, `🔥 ${_catch.combo}콤보!`, '#dc2626');
-    playSound('click');
-  } else {
-    _catch.score = Math.max(0, _catch.score + points);
-    _catch.combo = 0;
-    _showCatchEffect(field, x, y, `${points}`, '#dc2626');
-    const basket = document.getElementById('catchBasket');
-    basket.classList.add('shake-anim');
-    setTimeout(() => basket.classList.remove('shake-anim'), 400);
-    playSound('reject');
-  }
-  document.getElementById('catchScore').textContent = _catch.score;
-}
-
-function _showCatchEffect(parent, x, y, text, color) {
-  const el = document.createElement('div');
-  el.className = 'catch-float-text';
-  el.textContent = text;
-  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.color = color;
-  parent.appendChild(el);
-  setTimeout(() => el.remove(), 800);
-}
-
-function endCatchGame() {
-  if (!_catch) return;
-  _catch.running = false;
-  clearInterval(_catch.timerId); clearTimeout(_catch.spawnId);
-  cancelAnimationFrame(_catch.frameId);
-  document.removeEventListener('keydown', _catchKeyHandler);
-  _catch.items.forEach(el => el.remove());
-  _catch.items = [];
-
-  const score     = _catch.score, maxCombo = _catch.maxCombo, caught = _catch.caught;
-  const rewardRate = getMgSetting('catch', 'rewardRate');
-  const maxReward  = getMgSetting('catch', 'maxReward');
-  const reward     = Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate)));
-  const rLimit     = getRewardLimit('catch');
-  const rUsed      = _mgTodayRewards['catch'] || 0;
-  const canClaim   = rUsed < rLimit && reward > 0;
-
-  playSound('gachaResult');
-
-  document.getElementById('minigame-play').innerHTML = `
-    <div class="catch-result-screen">
-      <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
-        <div style="font-size:4rem;margin-bottom:8px">🎉</div>
-        <h2 class="font-black text-xl mb-4" style="color:#78350f">게임 종료!</h2>
-        <div class="catch-result-stats">
-          <div class="catch-result-stat">
-            <span class="catch-result-num" style="color:#d97706">${score}</span>
-            <span class="catch-result-label">최종 점수</span>
-          </div>
-          <div class="catch-result-stat">
-            <span class="catch-result-num" style="color:#dc2626">${maxCombo}</span>
-            <span class="catch-result-label">최대 콤보</span>
-          </div>
-          <div class="catch-result-stat">
-            <span class="catch-result-num" style="color:#059669">${caught}</span>
-            <span class="catch-result-label">캐치 성공</span>
-          </div>
-        </div>
-        <div class="catch-reward-box">
-          <span style="font-size:1.8rem">🌰</span>
-          <div>
-            <p class="font-black" style="color:#78350f;font-size:18px">${reward} 도토리 획득 가능</p>
-            <p class="text-xs" style="color:#b45309;font-weight:700">${rewardRate}점당 1도토리 (최대 ${maxReward})</p>
-            ${canClaim ? `<p class="text-xs mt-1" style="color:#7c3aed;font-weight:700">보상 수령 남은 횟수: ${rLimit - rUsed}/${rLimit}회</p>` : ''}
-          </div>
-        </div>
-        ${canClaim ? `
-        <div class="flex gap-2 mt-4">
-          <button class="btn btn-gray flex-1 py-3" onclick="_finishCatch(${score},false)">넘기기</button>
-          <button class="btn btn-primary flex-1 py-3" onclick="_finishCatch(${score},true)">🌰 보상 받기</button>
-        </div>
-        <p class="text-xs text-gray-400 mt-2">보상을 넘기면 도전 횟수만 차감됩니다</p>
-        ` : `
-        <div class="mt-4">
-          ${reward > 0 ? '<p class="text-sm text-gray-400 mb-2">오늘 보상 수령 횟수를 모두 사용했어요</p>' : ''}
-          <button class="btn btn-gray w-full py-3" onclick="_finishCatch(${score},false)">확인</button>
-        </div>
-        `}
-      </div>
-    </div>`;
-}
-
-async function _finishCatch(score, claimReward) {
-  const rewardRate = getMgSetting('catch', 'rewardRate');
-  const maxReward  = getMgSetting('catch', 'maxReward');
-  const reward     = claimReward ? Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate))) : 0;
-
-  await recordPlay('catch', score, claimReward);
-
-  if (claimReward && reward > 0) {
-    await _giveMinigameReward(reward, score, 'catch');
-    toast('🌰', `+${reward} 도토리를 받았어요!`);
-  } else {
-    toast('🎮', '기록이 저장되었습니다');
-  }
-
-  document.getElementById('minigame-play').innerHTML = `
-    <div class="catch-result-screen">
-      <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
-        <div style="font-size:3rem;margin-bottom:8px">${claimReward ? '🌰' : '✅'}</div>
-        <h2 class="font-black text-lg mb-2" style="color:#78350f">${claimReward ? `+${reward} 도토리 획득!` : '기록 저장 완료'}</h2>
-        <div class="flex gap-2 mt-4">
-          <button class="btn btn-gray flex-1 py-3" onclick="exitMinigame()">돌아가기</button>
-          <button class="btn btn-primary flex-1 py-3" onclick="startMinigame('catch')">다시하기</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-async function _giveMinigameReward(reward, score, gameId) {
-  if (!myProfile || reward <= 0) return;
-  try {
-    const res = await sb.rpc('adjust_acorns', {
-      p_user_id: myProfile.id, p_amount: reward,
-      p_reason: `미니게임 [${MG_DEFAULTS[gameId]?.name || gameId}] 점수 ${score} — 보상 ${reward}🌰`
-    });
-    if (res.data?.success) { myProfile.acorns = res.data.balance; updateAcornDisplay(); }
-  } catch(e) { console.warn('[minigame] 보상 지급 실패:', e); }
-}
-
-function confirmExitCatch() {
-  if (_catch?.running) {
-    showModal(`<div class="text-center">
-      <div style="font-size:2.5rem;margin-bottom:8px">⚠️</div>
-      <h2 class="text-lg font-black text-gray-800 mb-2">게임을 종료할까요?</h2>
-      <p class="text-sm text-gray-500 mb-4">현재 진행 중인 게임이 끝나고<br>결과 화면으로 이동합니다.</p>
-      <div class="flex gap-2">
-        <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">계속하기</button>
-        <button class="btn btn-primary flex-1 py-2" onclick="closeModal();endCatchGame()">종료하기</button>
-      </div>
-    </div>`);
-  } else { exitMinigame(); }
 }
 
 
@@ -604,7 +280,13 @@ async function renderMinigameAdmin() {
       var rWidth = s.widths || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
       return `
       <div class="clay-card p-4">
-        <h3 class="font-black text-gray-800 text-base mb-3">${def.icon} ${def.name}</h3>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-black text-gray-800 text-base">${def.icon} ${def.name}</h3>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <span class="text-xs font-bold ${val('maintenance') ? 'text-red-500' : 'text-gray-400'}">🔧 점검</span>
+            <input type="checkbox" id="mg-roulette-maintenance" ${val('maintenance') ? 'checked' : ''} style="width:18px;height:18px;accent-color:#ef4444">
+          </label>
+        </div>
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-3">
             <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
@@ -669,7 +351,13 @@ async function renderMinigameAdmin() {
 
     return `
     <div class="clay-card p-4">
-      <h3 class="font-black text-gray-800 text-base mb-3">${def.icon} ${def.name}</h3>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-black text-gray-800 text-base">${def.icon} ${def.name}</h3>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <span class="text-xs font-bold ${val('maintenance') ? 'text-red-500' : 'text-gray-400'}">🔧 점검</span>
+          <input type="checkbox" id="mg-${id}-maintenance" ${val('maintenance') ? 'checked' : ''} style="width:18px;height:18px;accent-color:#ef4444">
+        </label>
+      </div>
       <div class="space-y-2">
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
@@ -705,6 +393,27 @@ async function renderMinigameAdmin() {
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🚀 최대 속도</label>
           <input class="field text-center" type="number" min="1" max="20" step="0.1" style="width:80px" id="mg-${id}-maxSpeed" value="${val('maxSpeed') ?? 5.5}">
         </div>` : ''}
+        ${id === '2048' ? `
+        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
+        <div class="text-xs font-black text-gray-600 mb-1">💀 폭탄 설정</div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">폭탄 시작 턴</label>
+          <input class="field text-center" type="number" min="1" max="20" style="width:80px" id="mg-2048-bombStartTurn" value="${val('bombStartTurn') ?? 3}">
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">최대 등장 확률(%)</label>
+          <input class="field text-center" type="number" min="5" max="100" style="width:80px" id="mg-2048-bombMaxChance" value="${val('bombMaxChance') ?? 60}">
+        </div>
+        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
+        <div class="text-xs font-black text-gray-600 mb-1">🔥 보너스 설정</div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">💥 상쇄 보너스(초)</label>
+          <input class="field text-center" type="number" min="0" max="10" step="0.1" style="width:80px" id="mg-2048-defuseBonus" value="${val('defuseBonus') ?? 1.2}">
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">🔥 콤보당 보너스(초)</label>
+          <input class="field text-center" type="number" min="0" max="5" step="0.1" style="width:80px" id="mg-2048-comboBonus" value="${val('comboBonus') ?? 0.5}">
+        </div>` : ''}
       </div>
       <button class="btn btn-primary w-full py-2 mt-3 text-sm" onclick="saveMinigameSetting('${id}')">💾 저장</button>
     </div>`;
@@ -713,8 +422,8 @@ async function renderMinigameAdmin() {
 }
 
 async function saveMinigameSetting(gameId) {
-  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration'];
-  const floatKeys = ['baseSpeed', 'maxSpeed'];
+  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance'];
+  const floatKeys = ['baseSpeed', 'maxSpeed', 'defuseBonus', 'comboBonus'];
   const updated = {};
   for (const key of intKeys) {
     const el = document.getElementById(`mg-${gameId}-${key}`);
@@ -724,6 +433,9 @@ async function saveMinigameSetting(gameId) {
     const el = document.getElementById(`mg-${gameId}-${key}`);
     if (el) updated[key] = parseFloat(el.value) || 0;
   }
+  // 점검 모드 체크박스
+  const maintEl = document.getElementById(`mg-${gameId}-maintenance`);
+  if (maintEl) updated.maintenance = maintEl.checked;
 
   // 룰렛 전용: 확률 + 칸 너비
   if (gameId === 'roulette') {
@@ -1014,10 +726,6 @@ async function _renderMinigameStats() {
             <span>🌰 총 ${s.totalReward} 지급</span>
           </div>
         </div>`).join('')}`;
-  } catch(e) { area.innerHTML = '<p class="text-sm text-gray-400">통계 조회 실패</p>'; }
-}
-
-
 // ══════════════════════════════════════════════
 //  랭킹 시스템
 // ══════════════════════════════════════════════
@@ -1242,335 +950,4 @@ function _renderLogRows(data, nameMap) {
       <span class="mg-log-time">${timeStr}</span>
     </div>`;
   }).join('');
-}
-
-
-
-
-
-// ══════════════════════════════════════════════
-//  행운의 룰렛 v3 (가변 칸 너비 + DB 확률)
-// ══════════════════════════════════════════════
-
-var _rltSlices = [
-  { key: 'miss', label: '꽝',   mult: 0,   color: '#5a5a5a' },
-  { key: 'x1',   label: '×1',   mult: 1,   color: '#5a8a4a' },
-  { key: 'x15',  label: '×1.5', mult: 1.5, color: '#4a6ea8' },
-  { key: 'x3',   label: '×3',   mult: 3,   color: '#b86828' },
-  { key: 'x10',  label: '×10',  mult: 10,  color: '#b83838' }
-];
-
-var _roulette = null;
-
-function _rltGetProbs() {
-  var s = _mgSettings['roulette'] || {};
-  var p = s.probs || {};
-  return {
-    miss: p.miss !== undefined ? p.miss : 38,
-    x1:   p.x1   !== undefined ? p.x1   : 30,
-    x15:  p.x15  !== undefined ? p.x15  : 20,
-    x3:   p.x3   !== undefined ? p.x3   : 10,
-    x10:  p.x10  !== undefined ? p.x10  : 2
-  };
-}
-
-function _rltGetWidths() {
-  var s = _mgSettings['roulette'] || {};
-  var w = s.widths || {};
-  return {
-    miss: w.miss !== undefined ? w.miss : 38,
-    x1:   w.x1   !== undefined ? w.x1   : 30,
-    x15:  w.x15  !== undefined ? w.x15  : 20,
-    x3:   w.x3   !== undefined ? w.x3   : 10,
-    x10:  w.x10  !== undefined ? w.x10  : 2
-  };
-}
-
-function startRouletteGame() {
-  var hub = document.getElementById('minigame-hub');
-  var play = document.getElementById('minigame-play');
-  hub.classList.add('hidden');
-  play.classList.remove('hidden');
-
-  var baseFee = getMgSetting('roulette', 'entryFee') || 5;
-  var pLimit = getPlayLimit('roulette');
-  var rLimit = getRewardLimit('roulette');
-  var played = _mgTodayPlays['roulette'] || 0;
-  var rewarded = _mgTodayRewards['roulette'] || 0;
-
-  _roulette = { baseFee: baseFee, multiplier: 1, spinning: false, angle: 0 };
-
-  play.innerHTML =
-    '<div class="rlt-container">' +
-      '<div class="rlt-header">' +
-        '<button class="rlt-back-btn" onclick="confirmExitRoulette()">← 돌아가기</button>' +
-        '<div class="rlt-title">🎡 행운의 룰렛</div>' +
-        '<div class="rlt-info">도전 ' + (pLimit - played) + '/' + pLimit + ' · 보상 ' + (rLimit - rewarded) + '/' + rLimit + '</div>' +
-      '</div>' +
-      '<div class="rlt-wheel-wrap">' +
-        '<div class="rlt-pointer">▼</div>' +
-        '<canvas id="rltCanvas" width="240" height="240"></canvas>' +
-      '</div>' +
-      '<div class="rlt-bet-section">' +
-        '<div class="rlt-bet-label">배수 선택</div>' +
-        '<div class="rlt-bet-row">' +
-          '<button class="rlt-bet-btn rlt-bet-active" onclick="_rltSetMult(1)">×1<span class="rlt-bet-fee">' + baseFee + '🌰</span></button>' +
-          '<button class="rlt-bet-btn" onclick="_rltSetMult(2)">×2<span class="rlt-bet-fee">' + baseFee*2 + '🌰</span></button>' +
-          '<button class="rlt-bet-btn" onclick="_rltSetMult(3)">×3<span class="rlt-bet-fee">' + baseFee*3 + '🌰</span></button>' +
-          '<button class="rlt-bet-btn" onclick="_rltSetMult(4)">×4<span class="rlt-bet-fee">' + baseFee*4 + '🌰</span></button>' +
-          '<button class="rlt-bet-btn" onclick="_rltSetMult(5)">×5<span class="rlt-bet-fee">' + baseFee*5 + '🌰</span></button>' +
-        '</div>' +
-        '<div class="rlt-bet-total" id="rltBetTotal">참가비: 🌰 ' + baseFee + '</div>' +
-      '</div>' +
-      '<button class="rlt-spin-btn" id="rltSpinBtn" onclick="_rltSpin()">돌리기!</button>' +
-      '<div class="rlt-result" id="rltResult"></div>' +
-    '</div>';
-
-  _rltDrawWheel(0);
-}
-
-function _rltSetMult(m) {
-  if (_roulette.spinning) return;
-  _roulette.multiplier = m;
-  var btns = document.querySelectorAll('.rlt-bet-btn');
-  btns.forEach(function(b, i) {
-    b.classList.toggle('rlt-bet-active', i === m - 1);
-  });
-  document.getElementById('rltBetTotal').textContent = '참가비: 🌰 ' + (_roulette.baseFee * m);
-}
-
-// 칸 너비(비율) 기반으로 각 슬라이스의 시작각도와 크기를 계산
-function _rltCalcAngles() {
-  var widths = _rltGetWidths();
-  var keys = ['miss','x1','x15','x3','x10'];
-  var total = 0;
-  keys.forEach(function(k) { total += (widths[k] || 1); });
-
-  var angles = [];
-  var currentAngle = -Math.PI / 2; // 12시에서 시작
-  for (var i = 0; i < keys.length; i++) {
-    var w = (widths[keys[i]] || 1) / total;
-    var sweep = w * Math.PI * 2;
-    angles.push({ start: currentAngle, sweep: sweep, idx: i });
-    currentAngle += sweep;
-  }
-  return angles;
-}
-
-function _rltDrawWheel(rotation) {
-  var canvas = document.getElementById('rltCanvas');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  var size = canvas.width;
-  var cx = size / 2, cy = size / 2, r = size / 2 - 4;
-  var angles = _rltCalcAngles();
-
-  ctx.clearRect(0, 0, size, size);
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation);
-
-  for (var i = 0; i < angles.length; i++) {
-    var a = angles[i];
-    var slice = _rltSlices[a.idx];
-    var startA = a.start;
-    var endA = startA + a.sweep;
-
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, r, startA, endA);
-    ctx.closePath();
-    ctx.fillStyle = slice.color;
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // 텍스트 - 칸 중앙에 배치, 항상 읽기 좋은 방향
-    ctx.save();
-    var midAngle = startA + a.sweep / 2;
-    ctx.rotate(midAngle + Math.PI / 2);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold ' + Math.max(10, Math.round(size * 0.055)) + 'px sans-serif';
-    ctx.fillText(slice.label, 0, -r * 0.62);
-    ctx.restore();
-  }
-
-  // 가운데 원
-  ctx.beginPath();
-  ctx.arc(0, 0, size * 0.09, 0, Math.PI * 2);
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fill();
-  ctx.strokeStyle = '#ffd700';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold ' + Math.round(size * 0.04) + 'px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('SPIN', 0, 0);
-
-  ctx.restore();
-
-  // 외곽 테두리
-  ctx.beginPath();
-  ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
-  ctx.strokeStyle = '#ffd700';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-}
-
-function _rltPickResult() {
-  var probs = _rltGetProbs();
-  var keys = ['miss','x1','x15','x3','x10'];
-  var roll = Math.random() * 100;
-  var cumul = 0;
-  for (var i = 0; i < keys.length; i++) {
-    cumul += (probs[keys[i]] || 0);
-    if (roll < cumul) return i;
-  }
-  return 0;
-}
-
-async function _rltSpin() {
-  if (!_roulette || _roulette.spinning) return;
-
-  var totalFee = _roulette.baseFee * _roulette.multiplier;
-
-  if ((myProfile?.acorns || 0) < totalFee) {
-    toast('❌', '도토리가 부족해요! (필요: 🌰' + totalFee + ', 보유: 🌰' + (myProfile?.acorns || 0) + ')');
-    return;
-  }
-
-  var pLimit = getPlayLimit('roulette');
-  var played = _mgTodayPlays['roulette'] || 0;
-  if (played >= pLimit) {
-    toast('⚠️', '오늘 도전 횟수를 모두 사용했어요!');
-    return;
-  }
-
-  _roulette.spinning = true;
-  document.getElementById('rltSpinBtn').disabled = true;
-  document.getElementById('rltSpinBtn').textContent = '돌리는 중...';
-  document.getElementById('rltResult').innerHTML = '';
-
-  // 참가비 차감
-  try {
-    var res = await sb.rpc('adjust_acorns', {
-      p_user_id: myProfile.id, p_amount: -totalFee,
-      p_reason: '미니게임 [행운의 룰렛] 참가비 -' + totalFee + '🌰 (×' + _roulette.multiplier + ')'
-    });
-    if (!res.data?.success) { toast('❌', '참가비 차감 실패!'); _roulette.spinning = false; _rltResetBtn(); return; }
-    myProfile.acorns = res.data.balance;
-    updateAcornDisplay();
-  } catch(e) { toast('❌', '참가비 차감 중 오류'); _roulette.spinning = false; _rltResetBtn(); return; }
-
-  // 확률 기반 결과 결정
-  var resultIdx = _rltPickResult();
-  var resultSlice = _rltSlices[resultIdx];
-
-  // 해당 칸의 중앙 각도 계산 (칸 너비 기반)
-  // angles[i].start는 12시(-π/2)부터 시계방향으로 배치된 각 칸의 시작 각도(회전 전 기준)
-  // 포인터는 12시(상단)에 고정, 휠을 시계방향으로 돌림
-  // 포인터 위치(12시 = -π/2)에 칸 중앙이 오려면:
-  //   rotation + (칸 중앙 각도) = -π/2 (+ 2πn)
-  //   rotation = -π/2 - 칸 중앙 각도
-  var angles = _rltCalcAngles();
-  var targetA = angles[resultIdx];
-  var sliceMid = targetA.start + targetA.sweep / 2; // 칸 중앙의 절대 각도
-  var jitter = (Math.random() - 0.5) * targetA.sweep * 0.5; // 칸 안에서 랜덤 오프셋
-
-  // 목표 회전 각도: 포인터(-π/2)에 칸 중앙이 오도록
-  var desiredRotation = -Math.PI / 2 - (sliceMid + jitter);
-  // 0~2π 범위로 정규화
-  desiredRotation = ((desiredRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-
-  // 현재 누적 각도에서 목표까지 + 최소 5~8바퀴
-  var fullSpins = Math.PI * 2 * (5 + Math.floor(Math.random() * 3));
-  var currentNorm = ((_roulette.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  var delta = desiredRotation - currentNorm;
-  if (delta <= 0) delta += Math.PI * 2;
-  var totalRotation = fullSpins + delta;
-
-  var startAngle = _roulette.angle;
-  var endAngle = startAngle + totalRotation;
-  var duration = 4500;
-  var startTime = Date.now();
-
-  function animate() {
-    var elapsed = Date.now() - startTime;
-    var t = Math.min(1, elapsed / duration);
-    var ease = 1 - Math.pow(1 - t, 4);
-    var currentAngle = startAngle + totalRotation * ease;
-    _rltDrawWheel(currentAngle);
-
-    if (t < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      _roulette.angle = endAngle;
-      _roulette.spinning = false;
-      _rltShowResult(resultSlice, totalFee);
-    }
-  }
-  requestAnimationFrame(animate);
-}
-
-async function _rltShowResult(slice, totalFee) {
-  var reward = Math.floor(totalFee * slice.mult);
-
-  var rLimit = getRewardLimit('roulette');
-  var rUsed = _mgTodayRewards['roulette'] || 0;
-  var canClaim = rUsed < rLimit && reward > 0;
-
-  await recordPlay('roulette', reward, canClaim && reward > 0);
-
-  if (canClaim && reward > 0) {
-    await _giveMinigameReward(reward, reward, 'roulette');
-  }
-
-  var resultDiv = document.getElementById('rltResult');
-  var emoji, colorClass;
-  if (slice.mult === 0) { emoji = '😢'; colorClass = 'rlt-result-lose'; }
-  else if (slice.mult >= 10) { emoji = '🎉🎉🎉'; colorClass = 'rlt-result-big'; }
-  else if (slice.mult >= 3) { emoji = '🎉'; colorClass = 'rlt-result-big'; }
-  else { emoji = '😊'; colorClass = 'rlt-result-win'; }
-
-  if (slice.mult === 0) {
-    resultDiv.innerHTML = '<div class="rlt-result-box ' + colorClass + '">' +
-      '<div class="rlt-result-emoji">' + emoji + '</div>' +
-      '<div class="rlt-result-text">꽝! 다음 기회에...</div>' +
-      '<div class="rlt-result-amount">-' + totalFee + ' 🌰</div>' +
-    '</div>';
-  } else {
-    var net = reward - totalFee;
-    var netText = net > 0 ? '+' + net : '' + net;
-    resultDiv.innerHTML = '<div class="rlt-result-box ' + colorClass + '">' +
-      '<div class="rlt-result-emoji">' + emoji + '</div>' +
-      '<div class="rlt-result-text">' + slice.label + ' 당첨!</div>' +
-      '<div class="rlt-result-amount">+' + reward + ' 🌰' + (canClaim ? '' : ' (보상 소진)') + '</div>' +
-      '<div class="rlt-result-net">순이익: ' + netText + ' 🌰</div>' +
-    '</div>';
-    if (canClaim) toast('🌰', '+' + reward + ' 도토리를 받았어요!');
-  }
-
-  _rltResetBtn();
-  updateAcornDisplay();
-
-  var pLimit = getPlayLimit('roulette');
-  var played = _mgTodayPlays['roulette'] || 0;
-  var rRem = rLimit - (_mgTodayRewards['roulette'] || 0);
-  var infoEl = document.querySelector('.rlt-info');
-  if (infoEl) infoEl.textContent = '도전 ' + (pLimit - played) + '/' + pLimit + ' · 보상 ' + rRem + '/' + rLimit;
-}
-
-function _rltResetBtn() {
-  var btn = document.getElementById('rltSpinBtn');
-  if (btn) { btn.disabled = false; btn.textContent = '돌리기!'; }
-}
-
-function confirmExitRoulette() {
-  if (_roulette?.spinning) { toast('⚠️', '룰렛이 돌아가는 중이에요!'); return; }
-  exitMinigame();
 }
