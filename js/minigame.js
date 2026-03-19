@@ -149,6 +149,20 @@ async function renderMinigameHub() {
   await loadTodayPlays();
 
   const grid = document.getElementById('minigameGrid');
+
+  // SVG illustrations per game
+  const _mgSvg = {
+    catch: `<svg viewBox="0 0 200 80" style="display:block;width:100%;border-radius:16px 16px 0 0" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="mgsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#90daf4"/><stop offset="100%" stop-color="#c8f0d8"/></linearGradient></defs><rect width="200" height="80" fill="url(#mgsky)"/><ellipse cx="45" cy="18" rx="22" ry="10" fill="#fff" opacity=".6"/><ellipse cx="140" cy="14" rx="18" ry="8" fill="#fff" opacity=".45"/><ellipse cx="170" cy="26" rx="12" ry="6" fill="#fff" opacity=".3"/><circle cx="60" cy="38" r="3.5" fill="#a0724a"/><circle cx="100" cy="30" r="3" fill="#b8845a"/><circle cx="140" cy="44" r="3.5" fill="#a0724a"/><circle cx="80" cy="52" r="2.5" fill="#c8965a"/><path d="M90 68 Q95 56 100 68 Q105 56 110 68Z" fill="#6ab04c" opacity=".5"/><path d="M30 72 Q38 58 46 72 Q54 58 62 72Z" fill="#78c850" opacity=".4"/><path d="M150 74 Q156 62 162 74Z" fill="#6ab04c" opacity=".35"/><rect x="96" y="68" width="8" height="12" rx="2" fill="#8B6F47" opacity=".4"/></svg>`,
+    '2048': `<svg viewBox="0 0 200 80" style="display:block;width:100%;border-radius:16px 16px 0 0" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="mgpurp" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b2070"/><stop offset="100%" stop-color="#5b30a0"/></linearGradient><radialGradient id="mgpglow" cx="50%" cy="50%"><stop offset="0%" stop-color="#a78bfa" stop-opacity=".15"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><rect width="200" height="80" fill="url(#mgpurp)"/><rect width="200" height="80" fill="url(#mgpglow)"/><line x1="28" y1="5" x2="55" y2="42" stroke="#c4b5fd" stroke-width="1" opacity=".5"/><line x1="55" y1="42" x2="44" y2="60" stroke="#a78bfa" stroke-width=".7" opacity=".4"/><line x1="55" y1="42" x2="72" y2="54" stroke="#c4b5fd" stroke-width=".6" opacity=".35"/><line x1="142" y1="8" x2="160" y2="48" stroke="#c4b5fd" stroke-width=".9" opacity=".45"/><line x1="160" y1="48" x2="150" y2="68" stroke="#a78bfa" stroke-width=".6" opacity=".35"/><line x1="160" y1="48" x2="178" y2="58" stroke="#c4b5fd" stroke-width=".5" opacity=".3"/><circle cx="55" cy="42" r="3" fill="#e9d5ff" opacity=".7"/><circle cx="160" cy="48" r="2.5" fill="#e9d5ff" opacity=".6"/><circle cx="100" cy="18" r="1.5" fill="#e9d5ff" opacity=".4"/><circle cx="80" cy="62" r="1.2" fill="#e9d5ff" opacity=".35"/><circle cx="175" cy="22" r="1" fill="#f5f0ff" opacity=".3"/><circle cx="35" cy="68" r=".8" fill="#f5f0ff" opacity=".25"/><text x="100" y="50" text-anchor="middle" font-family="Outfit,sans-serif" font-size="26" font-weight="900" fill="#e9d5ff" opacity=".08">2048</text></svg>`,
+    roulette: `<svg viewBox="0 0 200 80" style="display:block;width:100%;border-radius:16px 16px 0 0" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="mgcasino" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5c3a12"/><stop offset="100%" stop-color="#7a4e1a"/></linearGradient><radialGradient id="mggglow" cx="50%" cy="50%"><stop offset="0%" stop-color="#ffd780" stop-opacity=".12"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><rect width="200" height="80" fill="url(#mgcasino)"/><rect width="200" height="80" fill="url(#mggglow)"/><rect x="10" y="8" width="180" height="64" rx="6" fill="none" stroke="#d4a520" stroke-width=".8" opacity=".35"/><rect x="16" y="14" width="168" height="52" rx="4" fill="none" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="10" y1="8" x2="16" y2="14" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="190" y1="8" x2="184" y2="14" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="10" y1="72" x2="16" y2="66" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="190" y1="72" x2="184" y2="66" stroke="#d4a520" stroke-width=".4" opacity=".25"/><circle cx="100" cy="40" r="20" fill="none" stroke="#e8b830" stroke-width="1" opacity=".25"/><circle cx="100" cy="40" r="13" fill="none" stroke="#e8b830" stroke-width=".6" opacity=".2"/><circle cx="100" cy="40" r="4" fill="#e8b830" opacity=".18"/><text x="38" y="38" font-size="16" fill="#e8b830" opacity=".2" font-weight="700" font-family="serif">♠</text><text x="158" y="38" font-size="16" fill="#e8b830" opacity=".2" font-weight="700" font-family="serif">♦</text><text x="38" y="64" font-size="14" fill="#e8b830" opacity=".15" font-weight="700" font-family="serif">♥</text><text x="158" y="64" font-size="14" fill="#e8b830" opacity=".15" font-weight="700" font-family="serif">♣</text><circle cx="30" cy="20" r="2" fill="#e8c840" opacity=".25"/><circle cx="170" cy="20" r="2" fill="#e8c840" opacity=".25"/><circle cx="30" cy="60" r="2" fill="#e8c840" opacity=".2"/><circle cx="170" cy="60" r="2" fill="#e8c840" opacity=".2"/></svg>`
+  };
+
+  const _mgStyle = {
+    catch:    { card:'background:#e6f9f0;border-top:1.5px solid rgba(255,255,255,.7);border-left:1.5px solid rgba(255,255,255,.5);border-right:1.5px solid rgba(16,185,129,.15);border-bottom:5px solid rgba(4,120,87,.35);box-shadow:0 6px 0 rgba(4,120,87,.18),0 8px 16px rgba(16,185,129,.14)', active:'border-bottom-width:1px;box-shadow:0 0 0 transparent,0 1px 4px rgba(16,185,129,.1)', title:'#065f46', sub:'#047857', tagBg:'rgba(4,120,87,.08)', tagColor:'#065f46' },
+    '2048':   { card:'background:#2a1e50;border-top:1.5px solid rgba(200,160,255,.15);border-left:1.5px solid rgba(200,160,255,.1);border-right:1.5px solid rgba(160,100,255,.15);border-bottom:5px solid rgba(60,30,120,.7);box-shadow:0 6px 0 rgba(80,40,160,.3),0 8px 16px rgba(139,92,246,.2)', active:'border-bottom-width:1px;box-shadow:0 0 0 transparent,0 1px 4px rgba(139,92,246,.1)', title:'#e8d8ff', sub:'#c4b0e8', tagBg:'rgba(167,139,250,.15)', tagColor:'#d8c4f8' },
+    roulette: { card:'background:#3d2810;border-top:1.5px solid rgba(255,200,80,.18);border-left:1.5px solid rgba(255,200,80,.12);border-right:1.5px solid rgba(220,160,60,.2);border-bottom:5px solid rgba(140,80,15,.6);box-shadow:0 6px 0 rgba(120,65,10,.3),0 8px 16px rgba(220,160,50,.15)', active:'border-bottom-width:1px;box-shadow:0 0 0 transparent,0 1px 4px rgba(220,160,50,.08)', title:'#fad080', sub:'#d8b060', tagBg:'rgba(232,184,48,.12)', tagColor:'#f0c868' }
+  };
+
   grid.innerHTML = MINIGAMES.map(g => {
     const pLimit    = getPlayLimit(g.id);
     const rLimit    = getRewardLimit(g.id);
@@ -163,27 +177,39 @@ async function renderMinigameHub() {
     const unlimited = getMgSetting(g.id, 'unlimitedPlays');
     const exhausted = !unlimited && pRemain <= 0 && g.ready;
     const blocked   = !g.ready || maint || exhausted;
+    const s = _mgStyle[g.id] || _mgStyle.catch;
+    const svg = _mgSvg[g.id] || '';
+
+    // overlay for blocked states
+    let overlayHtml = '';
+    if (!g.ready) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:4px 12px;border-radius:8px">COMING SOON</span></div>';
+    else if (maint) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:4px 12px;border-radius:8px">🔧 점검중</span></div>';
+    else if (exhausted) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.45);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:4px 12px;border-radius:8px">오늘 도전 횟수 소진</span></div>';
+
+    // tags
+    let tags = [];
+    if (duration > 0) tags.push(`⏱ ${duration}초`);
+    if (fee > 0) tags.push(`🌰 ${fee} 참가비`); else tags.push('무료');
+    if (g.id === '2048') tags.push('🌰 드롭');
+    else if (maxReward) tags.push(`🎁 최대 ${maxReward}`);
+    if (g.ready && !maint && !unlimited && g.id !== '2048') {
+      tags.push(`🎮 ${pRemain}/${pLimit}`);
+      tags.push(`🌰 ${rRemain}/${rLimit}`);
+    }
+    const tagsHtml = tags.map(t => `<span style="font-size:10px;padding:2px 7px;border-radius:6px;background:${s.tagBg};color:${s.tagColor};font-weight:600">${t}</span>`).join('');
 
     return `
-    <div class="mg-card clay-card ${!blocked ? 'card-hover' : ''}"
-         ${!blocked ? `onclick="startMinigame('${g.id}')"` : ''}
-         style="cursor:${!blocked ? 'pointer' : 'default'}">
-      <div class="mg-card-preview" style="background:${g.color}">
-        <span class="mg-card-icon">${g.icon}</span>
-        ${!g.ready   ? '<div class="mg-coming-soon">COMING SOON</div>' : ''}
-        ${maint      ? '<div class="mg-coming-soon">🔧 점검중</div>' : ''}
-        ${exhausted && !maint ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
-      </div>
-      <div class="p-4">
-        <h3 class="font-black text-gray-800 text-base mb-1">${g.name}</h3>
-        <p class="text-xs text-gray-400 font-semibold mb-3">${g.desc}</p>
-        <div class="flex gap-1 flex-wrap">
-          ${duration > 0 ? `<span class="mg-tag">⏱ ${duration}초</span>` : ''}
-          ${fee > 0 ? `<span class="mg-tag">🌰 ${fee} 참가비</span>` : '<span class="mg-tag">무료</span>'}
-          ${g.id === '2048' ? `<span class="mg-tag">🌰 드롭</span>` : maxReward ? `<span class="mg-tag">🎁 최대 ${maxReward}</span>` : ''}
-          ${g.ready && !maint && !unlimited && g.id !== '2048' ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
-          ${g.ready && !maint && !unlimited && g.id !== '2048' ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
+    <div style="position:relative;border-radius:16px;overflow:hidden;cursor:${blocked?'default':'pointer'};${s.card};transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent"
+         class="mg-hub-card"
+         ${!blocked ? `onclick="startMinigame('${g.id}')"` : ''}>
+      ${overlayHtml}
+      ${svg}
+      <div style="padding:12px 14px 11px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+          <span style="font-size:13.5px;font-weight:700;color:${s.title}">${g.name}</span>
         </div>
+        <p style="font-size:11px;color:${s.sub};margin:0 0 7px;line-height:1.3">${g.desc}</p>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${tagsHtml}</div>
       </div>
     </div>`;
   }).join('');
