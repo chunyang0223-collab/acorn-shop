@@ -180,9 +180,9 @@ async function renderMinigameHub() {
         <div class="flex gap-1 flex-wrap">
           ${duration > 0 ? `<span class="mg-tag">⏱ ${duration}초</span>` : ''}
           ${fee > 0 ? `<span class="mg-tag">🌰 ${fee} 참가비</span>` : '<span class="mg-tag">무료</span>'}
-          ${maxReward && !unlimited ? `<span class="mg-tag">🎁 최대 ${maxReward}</span>` : ''}
-          ${g.ready && !maint && !unlimited ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
-          ${g.ready && !maint && !unlimited ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
+          ${g.id === '2048' ? `<span class="mg-tag">🌰 드롭</span>` : maxReward ? `<span class="mg-tag">🎁 최대 ${maxReward}</span>` : ''}
+          ${g.ready && !maint && !unlimited && g.id !== '2048' ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
+          ${g.ready && !maint && !unlimited && g.id !== '2048' ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -226,7 +226,7 @@ async function startMinigame(id) {
       <div style="font-size:2.5rem;margin-bottom:8px">🎮</div>
       <h2 class="text-lg font-black text-gray-800 mb-2">게임 시작</h2>
       <p class="text-sm text-gray-500 mb-1">참가비 <span class="font-black text-amber-600">🌰 ${fee}</span>이 차감됩니다.</p>
-      <p class="text-xs text-gray-400 mb-1">도전: ${pLimit - played}/${pLimit}회 · 보상: ${rLimit - rewarded}/${rLimit}회</p>
+      ${!unlimited && id !== '2048' ? `<p class="text-xs text-gray-400 mb-1">도전: ${pLimit - played}/${pLimit}회 · 보상: ${rLimit - rewarded}/${rLimit}회</p>` : ''}
       <div class="flex gap-2 mt-3">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
         <button class="btn btn-primary flex-1 py-2" onclick="closeModal();_confirmStartGame('${id}',${fee})">시작하기</button>
