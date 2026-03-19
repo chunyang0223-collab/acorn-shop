@@ -16,7 +16,7 @@ const MG_DEFAULTS = {
     name: '2048 하드코어', icon: '💀',
     playLimit: 10, rewardLimit: 3, unlimitedPlays: false,
     entryFee: 0, duration: 30,
-    dropChance: 20, dropAmount: 1,
+    dropChance: 20, dropMin: 1, dropMax: 1,
     bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5
   },
   roulette: {
@@ -398,8 +398,12 @@ async function renderMinigameAdmin() {
           <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-2048-dropChance" value="${val('dropChance') ?? 20}">
         </div>
         <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">드롭 시 도토리 개수</label>
-          <input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropAmount" value="${val('dropAmount') ?? 1}">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">최소 드롭 개수</label>
+          <input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropMin" value="${val('dropMin') ?? 1}">
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">최대 드롭 개수</label>
+          <input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropMax" value="${val('dropMax') ?? 1}">
         </div>` : ''}
         ${def.duration > 0 || id === 'catch' || id === '2048' ? `
         <div class="flex items-center justify-between gap-3">
@@ -444,7 +448,7 @@ async function renderMinigameAdmin() {
 }
 
 async function saveMinigameSetting(gameId) {
-  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropAmount'];
+  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropMin', 'dropMax'];
   const floatKeys = ['baseSpeed', 'maxSpeed', 'defuseBonus', 'comboBonus'];
   const updated = {};
   for (const key of intKeys) {
