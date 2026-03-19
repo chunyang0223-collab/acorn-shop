@@ -14,7 +14,7 @@ const _2048 = {
   combo: 0, lastMergeTime: 0, bombCounter: 0,
   acornDropped: 0,
   audioCtx: null, maxTime: 30,
-  cfg: { bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5, dropChance: 20, dropAmount: 1 },
+  cfg: { bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5, dropChance: 20, dropMin: 1, dropMax: 1 },
   tileLayer: null, boardEl: null, timerBar: null, timerText: null,
   timerWrap: null, overlayEl: null, scoreEl: null, bestEl: null,
   _keyHandler: null, _touchSX: 0, _touchSY: 0, _mouseDown: false, _mouseX: 0, _mouseY: 0,
@@ -86,10 +86,11 @@ function start2048Game() {
   const defuseBonus   = getMgSetting('2048', 'defuseBonus') ?? 1.2;
   const comboBonus    = getMgSetting('2048', 'comboBonus') ?? 0.5;
   const dropChance    = getMgSetting('2048', 'dropChance') ?? 20;
-  const dropAmount    = getMgSetting('2048', 'dropAmount') ?? 1;
+  const dropMin       = getMgSetting('2048', 'dropMin') ?? 1;
+  const dropMax       = getMgSetting('2048', 'dropMax') ?? 1;
   _2048.maxTime = maxTime;
   _2048.acornDropped = 0;
-  _2048.cfg = { bombStartTurn, bombMaxChance, defuseBonus, comboBonus, dropChance, dropAmount };
+  _2048.cfg = { bombStartTurn, bombMaxChance, defuseBonus, comboBonus, dropChance, dropMin, dropMax };
 
   play.innerHTML = `
     <style>
@@ -203,17 +204,37 @@ function _2048_bindInput() {
   };
   document.addEventListener('keydown', _2048._keyHandler);
   const b = _2048.boardEl;
-  b.addEventListener('touchstart', e => { _2048._touchSX = e.touches[0].clientX; _2048._touchSY = e.touches[0].clientY; }, { passive: true });
+
+  // ── Touch: track during move, fire early on sufficient delta ──
+  let _tActive = false, _tSX = 0, _tSY = 0, _tFired = false;
+  b.addEventListener('touchstart', e => {
+    _tSX = e.touches[0].clientX; _tSY = e.touches[0].clientY;
+    _tActive = true; _tFired = false;
+  }, { passive: true });
+  b.addEventListener('touchmove', e => {
+    if (!_tActive || _tFired) return;
+    e.preventDefault(); // 스크롤 방지
+    const dx = e.touches[0].clientX - _tSX, dy = e.touches[0].clientY - _tSY;
+    const adx = Math.abs(dx), ady = Math.abs(dy);
+    if (Math.max(adx, ady) < 20) return; // 임계값 20px
+    _tFired = true;
+    adx > ady ? _2048_move(dx > 0 ? 'right' : 'left') : _2048_move(dy > 0 ? 'down' : 'up');
+  }, { passive: false });
   b.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - _2048._touchSX, dy = e.changedTouches[0].clientY - _2048._touchSY;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 30) return;
+    if (!_tActive || _tFired) { _tActive = false; return; }
+    _tActive = false;
+    // touchmove에서 못 잡은 짧은 스와이프 보완
+    const dx = e.changedTouches[0].clientX - _tSX, dy = e.changedTouches[0].clientY - _tSY;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 15) return;
     Math.abs(dx) > Math.abs(dy) ? _2048_move(dx > 0 ? 'right' : 'left') : _2048_move(dy > 0 ? 'down' : 'up');
   });
+
+  // ── Mouse drag ──
   b.addEventListener('mousedown', e => { _2048._mouseX = e.clientX; _2048._mouseY = e.clientY; _2048._mouseDown = true; });
   b.addEventListener('mouseup', e => {
     if (!_2048._mouseDown) return; _2048._mouseDown = false;
     const dx = e.clientX - _2048._mouseX, dy = e.clientY - _2048._mouseY;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 30) return;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
     Math.abs(dx) > Math.abs(dy) ? _2048_move(dx > 0 ? 'right' : 'left') : _2048_move(dy > 0 ? 'down' : 'up');
   });
 }
@@ -374,8 +395,9 @@ function _2048_move(dir) {
         _2048_sfx.merge(t.value); _2048_particles(r, c, t.value, 'merge'); _2048_scoreFloat(r, c, t.value);
         // 🌰 도토리 드롭 확률 체크
         if (Math.random() * 100 < _2048.cfg.dropChance) {
-          _2048.acornDropped += _2048.cfg.dropAmount;
-          _2048_acornFloat(r, c, _2048.cfg.dropAmount);
+          const drop = _2048.cfg.dropMin + Math.floor(Math.random() * (_2048.cfg.dropMax - _2048.cfg.dropMin + 1));
+          _2048.acornDropped += drop;
+          _2048_acornFloat(r, c, drop);
         }
       }
       _2048.tileLayer.appendChild(el);
