@@ -541,8 +541,127 @@ body {
 [data-theme="dark"] .evt-day-btn input:checked + span { background: linear-gradient(135deg,#b05878,#7c6bbf) !important; border-color: transparent !important; }
 
 /* ── 탭 콘텐츠 상단 여백 통일 ── */
-[id^="utab-"] { padding-top: 12px; }
+[id^="utab-"] { padding-top: 4px; }
 [id^="atab-"] { padding-top: 12px; }
+
+/* ══════════════════════════════════════════════
+   콘텐츠 패널 레이아웃 시스템 (A3 / A4)
+   ══════════════════════════════════════════════ */
+
+/* ── 공통: 콘텐츠 패널 ── */
+.content-panel {
+  padding: 16px 12px 24px;
+  min-height: 60vh;
+}
+
+/* ── A3: 탭바 직결형 ── */
+[data-layout="a3"] .tab-bar-wrap .clay-card {
+  border-radius: 24px 24px 0 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+[data-layout="a3"] .content-panel {
+  background: rgba(255,255,255,0.50);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-left: 1.5px solid rgba(255,255,255,0.7);
+  border-right: 1.5px solid rgba(255,255,255,0.7);
+  border-bottom: 1.5px solid rgba(255,255,255,0.7);
+  border-radius: 0 0 24px 24px;
+  margin-bottom: 16px;
+}
+/* A3: 안쪽 카드 — 상단 악센트바 스타일 */
+[data-layout="a3"] .content-panel .clay-card {
+  background: rgba(255,255,255,0.40);
+  border: 1px solid rgba(255,255,255,0.55);
+  box-shadow: 0 2px 8px rgba(180,140,200,0.06);
+  position: relative;
+  overflow: hidden;
+}
+[data-layout="a3"] .content-panel .clay-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff8fab, #c084fc);
+  border-radius: 24px 24px 0 0;
+}
+/* A3: 상점 카드 */
+[data-layout="a3"] #shopGrid .clay-card::before {
+  border-radius: 24px 24px 0 0;
+}
+
+/* ── A4: 둥근 글라스 패널형 ── */
+[data-layout="a4"] .tab-bar-wrap .clay-card {
+  margin-bottom: 8px;
+}
+[data-layout="a4"] .content-panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(255,240,245,0.38) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 24px;
+  border: 1.5px solid rgba(255,255,255,0.7);
+  margin-bottom: 16px;
+}
+/* A4: 안쪽 카드 — 그림자만, 보더 없음 */
+[data-layout="a4"] .content-panel .clay-card {
+  background: rgba(255,255,255,0.55);
+  border: none;
+  box-shadow: 0 2px 10px rgba(180,140,200,0.08);
+}
+
+/* ── 공통: 탭바 스크롤힌트 배경을 패널에 맞게 ── */
+[data-layout="a3"] .tab-bar-wrap::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.72) 40%);
+}
+
+/* ── 공통: 안쪽 clay-card의 중복 backdrop-filter 제거 (성능) ── */
+.content-panel .clay-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ── 다크모드: A3 ── */
+[data-theme="dark"][data-layout="a3"] .content-panel {
+  background: rgba(38,36,58,0.65) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"][data-layout="a3"] .content-panel .clay-card {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"][data-layout="a3"] .content-panel .clay-card::before {
+  background: linear-gradient(90deg, #b05878, #8050b8) !important;
+}
+[data-theme="dark"][data-layout="a3"] .tab-bar-wrap::after {
+  background: linear-gradient(90deg, transparent, rgba(38,36,58,0.9) 40%) !important;
+}
+
+/* ── 다크모드: A4 ── */
+[data-theme="dark"][data-layout="a4"] .content-panel {
+  background: linear-gradient(180deg, rgba(38,36,58,0.6) 0%, rgba(50,30,60,0.4) 100%) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"][data-layout="a4"] .content-panel .clay-card {
+  background: rgba(255,255,255,0.05) !important;
+  border: none !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+}
+
+/* ── 재활용센터 히어로는 패널 내에서 자체 배경 유지 ── */
+.content-panel .recycle-hero {
+  background: linear-gradient(135deg, rgba(209,250,229,0.9), rgba(167,243,208,0.7)) !important;
+  border: 2px solid rgba(52,211,153,0.3) !important;
+}
+[data-theme="dark"] .content-panel .recycle-hero {
+  background: linear-gradient(135deg,rgba(6,78,59,0.7),rgba(4,120,87,0.5)) !important;
+}
+
+/* 패널 안에서 clay-card 전의 ::before 상속 방지 (재활용/다람쥐 서브탭 등) */
+.content-panel .clay-card.no-accent::before { display: none; }
+.content-panel .recycle-hero::before { display: none; }
+.content-panel .recycle-item-card::before { display: none; }
+.content-panel .recycle-inv-card::before { display: none; }
 
 /* ── 페이지네이션 버튼 ── */
 .page-nav-btn {
