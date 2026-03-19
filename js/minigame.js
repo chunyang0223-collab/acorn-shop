@@ -186,17 +186,20 @@ async function renderMinigameHub() {
     else if (maint) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:14px;font-weight:800;color:#fff;background:rgba(0,0,0,.5);padding:8px 18px;border-radius:10px">🔧 점검중</span></div>';
     else if (exhausted) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:10px">오늘 도전 횟수 소진</span></div>';
 
-    // tags
-    let tags = [];
-    if (duration > 0) tags.push(`⏱ ${duration}초`);
-    if (fee > 0) tags.push(`🌰 ${fee} 참가비`); else tags.push('무료');
-    if (g.id === '2048') tags.push('🌰 드롭');
-    else if (maxReward) tags.push(`🎁 최대 ${maxReward}`);
+    // tags — 상단: 게임 정보, 하단: 횟수
+    let infoTags = [];
+    let countTags = [];
+    if (duration > 0) infoTags.push(`⏱ ${duration}초`);
+    if (fee > 0) infoTags.push(`🌰 ${fee} 참가비`); else infoTags.push('무료');
+    if (g.id === '2048') infoTags.push('🌰 드롭');
+    else if (maxReward) infoTags.push(`🎁 최대 ${maxReward}`);
     if (g.ready && !maint && !unlimited) {
-      tags.push(`🎮 ${pRemain}/${pLimit}`);
-      tags.push(`🌰 ${rRemain}/${rLimit}`);
+      countTags.push(`🎮 ${pRemain}/${pLimit}`);
+      if (g.id !== '2048') countTags.push(`🌰 ${rRemain}/${rLimit}`);
     }
-    const tagsHtml = tags.map(t => `<span style="font-size:10px;padding:2px 7px;border-radius:6px;background:${s.tagBg};color:${s.tagColor};font-weight:600">${t}</span>`).join('');
+    const _tagSpan = t => `<span style="font-size:10px;padding:2px 7px;border-radius:6px;background:${s.tagBg};color:${s.tagColor};font-weight:600">${t}</span>`;
+    const tagsHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap">${infoTags.map(_tagSpan).join('')}</div>`
+      + (countTags.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${countTags.map(_tagSpan).join('')}</div>` : '');
 
     return `
     <div style="position:relative;border-radius:16px;overflow:hidden;cursor:${blocked?'default':'pointer'};${s.card};transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent"
@@ -209,7 +212,7 @@ async function renderMinigameHub() {
           <span style="font-size:13.5px;font-weight:700;color:${s.title}">${g.name}</span>
         </div>
         <p style="font-size:11px;color:${s.sub};margin:0 0 7px;line-height:1.3">${g.desc}</p>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">${tagsHtml}</div>
+        ${tagsHtml}
       </div>
     </div>`;
   }).join('');
