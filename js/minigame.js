@@ -158,16 +158,19 @@ async function renderMinigameHub() {
     const fee       = getMgSetting(g.id, 'entryFee');
     const maxReward = getMgSetting(g.id, 'maxReward');
     const duration  = getMgSetting(g.id, 'duration');
+    const maint     = getMgSetting(g.id, 'maintenance');
     const exhausted = pRemain <= 0 && g.ready;
+    const blocked   = !g.ready || maint || exhausted;
 
     return `
-    <div class="mg-card clay-card ${g.ready && !exhausted ? 'card-hover' : ''}"
-         ${g.ready && !exhausted ? `onclick="startMinigame('${g.id}')"` : ''}
-         style="cursor:${g.ready && !exhausted ? 'pointer' : 'default'}">
+    <div class="mg-card clay-card ${!blocked ? 'card-hover' : ''}"
+         ${!blocked ? `onclick="startMinigame('${g.id}')"` : ''}
+         style="cursor:${!blocked ? 'pointer' : 'default'}">
       <div class="mg-card-preview" style="background:${g.color}">
         <span class="mg-card-icon">${g.icon}</span>
         ${!g.ready   ? '<div class="mg-coming-soon">COMING SOON</div>' : ''}
-        ${exhausted  ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
+        ${maint      ? '<div class="mg-coming-soon">🔧 점검중</div>' : ''}
+        ${exhausted && !maint ? '<div class="mg-coming-soon">오늘 도전 횟수 소진</div>' : ''}
       </div>
       <div class="p-4">
         <h3 class="font-black text-gray-800 text-base mb-1">${g.name}</h3>
@@ -176,8 +179,8 @@ async function renderMinigameHub() {
           ${duration > 0 ? `<span class="mg-tag">⏱ ${duration}초</span>` : ''}
           ${fee > 0 ? `<span class="mg-tag">🌰 ${fee} 참가비</span>` : '<span class="mg-tag">무료</span>'}
           <span class="mg-tag">🎁 최대 ${maxReward}</span>
-          ${g.ready ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
-          ${g.ready ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
+          ${g.ready && !maint ? `<span class="mg-tag ${exhausted ? 'mg-tag-danger' : ''}">🎮 도전 ${pRemain}/${pLimit}</span>` : ''}
+          ${g.ready && !maint ? `<span class="mg-tag ${rRemain <= 0 ? 'mg-tag-danger' : 'mg-tag-reward'}">🌰 보상 ${rRemain}/${rLimit}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -187,6 +190,11 @@ async function renderMinigameHub() {
 async function startMinigame(id) {
   await loadMinigameSettings();
   await loadTodayPlays();
+
+  if (getMgSetting(id, 'maintenance')) {
+    toast('🔧', '이 게임은 현재 점검중이에요!');
+    return;
+  }
 
   const pLimit = getPlayLimit(id);
   const played = _mgTodayPlays[id] || 0;
@@ -272,7 +280,13 @@ async function renderMinigameAdmin() {
       var rWidth = s.widths || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
       return `
       <div class="clay-card p-4">
-        <h3 class="font-black text-gray-800 text-base mb-3">${def.icon} ${def.name}</h3>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-black text-gray-800 text-base">${def.icon} ${def.name}</h3>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <span class="text-xs font-bold ${val('maintenance') ? 'text-red-500' : 'text-gray-400'}">🔧 점검</span>
+            <input type="checkbox" id="mg-roulette-maintenance" ${val('maintenance') ? 'checked' : ''} style="width:18px;height:18px;accent-color:#ef4444">
+          </label>
+        </div>
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-3">
             <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
@@ -337,7 +351,13 @@ async function renderMinigameAdmin() {
 
     return `
     <div class="clay-card p-4">
-      <h3 class="font-black text-gray-800 text-base mb-3">${def.icon} ${def.name}</h3>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-black text-gray-800 text-base">${def.icon} ${def.name}</h3>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <span class="text-xs font-bold ${val('maintenance') ? 'text-red-500' : 'text-gray-400'}">🔧 점검</span>
+          <input type="checkbox" id="mg-${id}-maintenance" ${val('maintenance') ? 'checked' : ''} style="width:18px;height:18px;accent-color:#ef4444">
+        </label>
+      </div>
       <div class="space-y-2">
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
@@ -413,6 +433,8 @@ async function saveMinigameSetting(gameId) {
     const el = document.getElementById(`mg-${gameId}-${key}`);
     if (el) updated[key] = parseFloat(el.value) || 0;
   }
+  const maintEl = document.getElementById(`mg-${gameId}-maintenance`);
+  if (maintEl) updated.maintenance = maintEl.checked;
 
   // 룰렛 전용: 확률 + 칸 너비
   if (gameId === 'roulette') {
