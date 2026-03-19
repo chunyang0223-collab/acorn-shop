@@ -1398,6 +1398,17 @@
 <script src="js/squirrel.js"></script>
 <script src="js/expedition.js"></script>
 <script src="js/app.js"></script>
+<script>
+// 탭 전환 시 2048 BGM 정지
+(function() {
+  if (typeof uTab !== 'function') return;
+  const _origUTab = uTab;
+  uTab = function() {
+    if (typeof stop2048Bgm === 'function') stop2048Bgm();
+    return _origUTab.apply(this, arguments);
+  };
+})();
+</script>
 
 </body>
 </html>
