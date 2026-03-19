@@ -182,9 +182,9 @@ async function renderMinigameHub() {
 
     // overlay for blocked states
     let overlayHtml = '';
-    if (!g.ready) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:4px 12px;border-radius:8px">COMING SOON</span></div>';
-    else if (maint) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:4px 12px;border-radius:8px">🔧 점검중</span></div>';
-    else if (exhausted) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.45);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:4px 12px;border-radius:8px">오늘 도전 횟수 소진</span></div>';
+    if (!g.ready) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:13px;font-weight:800;color:#fff;background:rgba(0,0,0,.5);padding:6px 16px;border-radius:10px;letter-spacing:1px">COMING SOON</span></div>';
+    else if (maint) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:14px;font-weight:800;color:#fff;background:rgba(0,0,0,.5);padding:8px 18px;border-radius:10px">🔧 점검중</span></div>';
+    else if (exhausted) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:10px">오늘 도전 횟수 소진</span></div>';
 
     // tags
     let tags = [];
