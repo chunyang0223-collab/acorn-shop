@@ -200,7 +200,7 @@ async function renderMinigameHub() {
 
     return `
     <div style="position:relative;border-radius:16px;overflow:hidden;cursor:${blocked?'default':'pointer'};${s.card};transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent"
-         class="mg-hub-card"
+         class="mg-hub-card ${blocked ? 'mg-hub-blocked' : 'mg-hub-active'}"
          ${!blocked ? `onclick="startMinigame('${g.id}')"` : ''}>
       ${overlayHtml}
       ${svg}
@@ -213,6 +213,61 @@ async function renderMinigameHub() {
       </div>
     </div>`;
   }).join('');
+
+  // 최근 플레이 기록 렌더링
+  _renderRecentPlays();
+}
+
+async function _renderRecentPlays() {
+  const wrap = document.getElementById('mgRecentPlays');
+  const list = document.getElementById('mgRecentList');
+  if (!wrap || !list || !myProfile) return;
+
+  try {
+    const { data } = await sb.from('minigame_plays')
+      .select('game_id, score, reward, rewarded, played_at')
+      .eq('user_id', myProfile.id)
+      .order('played_at', { ascending: false })
+      .limit(5);
+
+    if (!data?.length) {
+      wrap.style.display = 'none';
+      return;
+    }
+
+    wrap.style.display = '';
+    list.innerHTML = data.map(r => {
+      const t = new Date(r.played_at);
+      const now = new Date();
+      const diffMs = now - t;
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHr = Math.floor(diffMs / 3600000);
+      let timeStr;
+      if (diffMin < 1) timeStr = '방금';
+      else if (diffMin < 60) timeStr = `${diffMin}분 전`;
+      else if (diffHr < 24) timeStr = `${diffHr}시간 전`;
+      else {
+        const days = Math.floor(diffHr / 24);
+        timeStr = days === 1 ? '어제' : `${days}일 전`;
+      }
+
+      const gameIcon = MG_DEFAULTS[r.game_id]?.icon || '🎮';
+      const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
+      const rewardStr = r.rewarded
+        ? `<span style="color:#059669;font-weight:800">+${r.reward}🌰</span>`
+        : '<span style="color:#9ca3af">—</span>';
+
+      return `<div class="mg-recent-row">
+        <span class="mg-recent-game">${gameIcon}</span>
+        <span class="mg-recent-name">${gameName}</span>
+        <span class="mg-recent-score">${r.score.toLocaleString()}점</span>
+        <span class="mg-recent-reward">${rewardStr}</span>
+        <span class="mg-recent-time">${timeStr}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    wrap.style.display = 'none';
+  }
 }
 
 async function startMinigame(id) {
