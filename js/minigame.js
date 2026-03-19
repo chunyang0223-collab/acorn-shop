@@ -336,6 +336,8 @@ async function _confirmStartGame(id, fee) {
 }
 
 function exitMinigame() {
+  // 2048 BGM 정지 (안전장치)
+  if (typeof stop2048Bgm === 'function') stop2048Bgm();
   document.getElementById('minigame-hub').classList.remove('hidden');
   document.getElementById('minigame-play').classList.add('hidden');
   document.getElementById('minigame-play').innerHTML = '';

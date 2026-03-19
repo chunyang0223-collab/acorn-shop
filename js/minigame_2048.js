@@ -14,11 +14,38 @@ const _2048 = {
   combo: 0, lastMergeTime: 0, bombCounter: 0,
   acornDropped: 0,
   audioCtx: null, maxTime: 30,
+  bgm: null, bgmReady: false,
   cfg: { bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5, dropChance: 20, dropMin: 1, dropMax: 1 },
   tileLayer: null, boardEl: null, timerBar: null, timerText: null,
   timerWrap: null, overlayEl: null, scoreEl: null, bestEl: null,
   _keyHandler: null, _touchSX: 0, _touchSY: 0, _mouseDown: false, _mouseX: 0, _mouseY: 0,
 };
+
+// ── BGM ──
+function _2048_bgmInit() {
+  if (_2048.bgm) return;
+  const a = new Audio('sounds/menu_bgm_2048.mp3');
+  a.loop = true;
+  a.volume = 0.25;
+  a.preload = 'auto';
+  _2048.bgm = a;
+}
+function _2048_bgmPlay() {
+  _2048_bgmInit();
+  const a = _2048.bgm;
+  if (!a) return;
+  a.currentTime = 0;
+  const p = a.play();
+  if (p && p.catch) p.catch(() => {});
+}
+function _2048_bgmStop() {
+  const a = _2048.bgm;
+  if (!a) return;
+  a.pause();
+  a.currentTime = 0;
+}
+// 글로벌 stop (탭 전환 등 외부에서 호출)
+function stop2048Bgm() { _2048_bgmStop(); }
 
 // ── Audio ──
 function _2048_initAudio() {
@@ -266,6 +293,7 @@ function _2048_unbindInput() { if (_2048._keyHandler) document.removeEventListen
 // ── Begin ──
 function _2048_begin() {
   _2048_initAudio();
+  _2048_bgmPlay();
   const S = _2048.SIZE;
   _2048.grid = Array.from({ length: S }, () => Array(S).fill(0));
   _2048.tiles = Array.from({ length: S }, () => Array(S).fill(null));
@@ -492,7 +520,7 @@ function _2048_isGameOver() {
 //  END → 도토리 상점 보상 연동
 // ══════════════════════════════════════════════
 function _2048_endGame(title, msg) {
-  _2048.running = false; clearInterval(_2048.timerInterval); _2048_sfx.timeUp(); _2048_unbindInput();
+  _2048.running = false; clearInterval(_2048.timerInterval); _2048_bgmStop(); _2048_sfx.timeUp(); _2048_unbindInput();
   const score = _2048.score;
   const reward = _2048.acornDropped;
   try { playSound('gachaResult'); } catch (e) {}
