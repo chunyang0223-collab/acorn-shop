@@ -12,8 +12,9 @@ const _2048 = {
   prevState: null, animating: false,
   timeLeft: 30, timerInterval: null, running: false,
   combo: 0, lastMergeTime: 0, bombCounter: 0,
+  acornDropped: 0,
   audioCtx: null, maxTime: 30,
-  cfg: { bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5 },
+  cfg: { bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5, dropChance: 20, dropAmount: 1 },
   tileLayer: null, boardEl: null, timerBar: null, timerText: null,
   timerWrap: null, overlayEl: null, scoreEl: null, bestEl: null,
   _keyHandler: null, _touchSX: 0, _touchSY: 0, _mouseDown: false, _mouseX: 0, _mouseY: 0,
@@ -84,8 +85,11 @@ function start2048Game() {
   const bombMaxChance = getMgSetting('2048', 'bombMaxChance') ?? 60;
   const defuseBonus   = getMgSetting('2048', 'defuseBonus') ?? 1.2;
   const comboBonus    = getMgSetting('2048', 'comboBonus') ?? 0.5;
+  const dropChance    = getMgSetting('2048', 'dropChance') ?? 20;
+  const dropAmount    = getMgSetting('2048', 'dropAmount') ?? 1;
   _2048.maxTime = maxTime;
-  _2048.cfg = { bombStartTurn, bombMaxChance, defuseBonus, comboBonus };
+  _2048.acornDropped = 0;
+  _2048.cfg = { bombStartTurn, bombMaxChance, defuseBonus, comboBonus, dropChance, dropAmount };
 
   play.innerHTML = `
     <style>
@@ -119,6 +123,8 @@ function start2048Game() {
       .mg2048-particle{position:absolute;border-radius:50%;pointer-events:none;z-index:5;animation:mg2048-pfly var(--dur,450ms) ease-out forwards}
       @keyframes mg2048-pfly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)}}
       .mg2048-float{position:absolute;font-weight:800;color:#ef4444;pointer-events:none;z-index:20;font-size:.9rem;animation:mg2048-floatUp 600ms ease forwards}
+      .mg2048-acorn-drop{position:absolute;font-weight:900;color:#d97706;pointer-events:none;z-index:21;font-size:.85rem;text-shadow:0 0 8px rgba(217,119,6,.4);animation:mg2048-acornDrop 800ms ease forwards}
+      @keyframes mg2048-acornDrop{0%{opacity:0;transform:scale(.5) translateY(5px)}20%{opacity:1;transform:scale(1.15) translateY(-8px)}100%{opacity:0;transform:scale(1) translateY(-28px)}}
       .mg2048-combo{position:absolute;font-weight:900;color:#f59e0b;pointer-events:none;z-index:20;font-size:1.2rem;text-shadow:0 0 12px rgba(245,158,11,.4);animation:mg2048-comboAnim 800ms ease forwards}
       @keyframes mg2048-comboAnim{0%{opacity:0;transform:scale(.5) translateY(10px)}30%{opacity:1;transform:scale(1.2) translateY(-5px)}100%{opacity:0;transform:scale(1) translateY(-30px)}}
       .mg2048-defuse{position:absolute;font-weight:900;color:#06b6d4;pointer-events:none;z-index:20;font-size:1.1rem;text-shadow:0 0 12px rgba(6,182,212,.4);animation:mg2048-comboAnim 900ms ease forwards}
@@ -363,7 +369,15 @@ function _2048_move(dir) {
     for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) {
       const t = _2048.tiles[r][c]; if (!t) continue;
       const el = _2048_makeTileEl(t, r, c, cs);
-      if (t.merged) { el.classList.add('merging'); t.merged = false; _2048_sfx.merge(t.value); _2048_particles(r, c, t.value, 'merge'); _2048_scoreFloat(r, c, t.value); }
+      if (t.merged) {
+        el.classList.add('merging'); t.merged = false;
+        _2048_sfx.merge(t.value); _2048_particles(r, c, t.value, 'merge'); _2048_scoreFloat(r, c, t.value);
+        // 🌰 도토리 드롭 확률 체크
+        if (Math.random() * 100 < _2048.cfg.dropChance) {
+          _2048.acornDropped += _2048.cfg.dropAmount;
+          _2048_acornFloat(r, c, _2048.cfg.dropAmount);
+        }
+      }
       _2048.tileLayer.appendChild(el);
     }
     _2048.scoreEl.textContent = _2048.score; _2048_updateBest();
@@ -399,6 +413,16 @@ function _2048_particles(r, c, value, type) {
 }
 function _2048_ring(r, c) { const { left, top, size } = _2048_cellPos(r, c); const ring = document.createElement('div'); ring.className = 'mg2048-ring'; ring.style.left = (left + size / 2) + 'px'; ring.style.top = (top + size / 2) + 'px'; _2048.tileLayer.appendChild(ring); setTimeout(() => ring.remove(), 500); }
 function _2048_scoreFloat(r, c, v) { const { left, top, size } = _2048_cellPos(r, c); const el = document.createElement('div'); el.className = 'mg2048-float'; el.textContent = '+' + v; el.style.left = (left + size / 2 - 16) + 'px'; el.style.top = (top - 4) + 'px'; _2048.tileLayer.appendChild(el); setTimeout(() => el.remove(), 600); }
+function _2048_acornFloat(r, c, amount) {
+  const { left, top, size } = _2048_cellPos(r, c);
+  const el = document.createElement('div');
+  el.className = 'mg2048-acorn-drop';
+  el.textContent = '🌰+' + amount;
+  el.style.left = (left + size / 2 - 20) + 'px';
+  el.style.top = (top - 18) + 'px';
+  _2048.tileLayer.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+}
 function _2048_comboText(n) { const el = document.createElement('div'); el.className = 'mg2048-combo'; el.textContent = n + 'x COMBO!'; el.style.left = '50%'; el.style.top = '45%'; el.style.transform = 'translate(-50%,-50%)'; _2048.tileLayer.appendChild(el); setTimeout(() => el.remove(), 800); }
 function _2048_defuseText(r, c) { const { left, top, size } = _2048_cellPos(r, c); const el = document.createElement('div'); el.className = 'mg2048-defuse'; el.textContent = '💥 DEFUSE!'; el.style.left = (left + size / 2 - 36) + 'px'; el.style.top = (top - 4) + 'px'; _2048.tileLayer.appendChild(el); setTimeout(() => el.remove(), 900); }
 
@@ -421,11 +445,7 @@ function _2048_isGameOver() {
 function _2048_endGame(title, msg) {
   _2048.running = false; clearInterval(_2048.timerInterval); _2048_sfx.timeUp(); _2048_unbindInput();
   const score = _2048.score;
-  const rewardRate = getMgSetting('2048', 'rewardRate') || 50;
-  const maxReward = getMgSetting('2048', 'maxReward') || 30;
-  const reward = Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate)));
-  const rLimit = getRewardLimit('2048'), rUsed = _mgTodayRewards['2048'] || 0;
-  const canClaim = rUsed < rLimit && reward > 0;
+  const reward = _2048.acornDropped;
   try { playSound('gachaResult'); } catch (e) {}
 
   document.getElementById('minigame-play').innerHTML = `
@@ -437,43 +457,38 @@ function _2048_endGame(title, msg) {
         <div class="catch-result-stats">
           <div class="catch-result-stat"><span class="catch-result-num" style="color:#d97706">${score}</span><span class="catch-result-label">최종 점수</span></div>
           <div class="catch-result-stat"><span class="catch-result-num" style="color:#059669">${Math.max(score, _2048_getBest())}</span><span class="catch-result-label">최고 기록</span></div>
+          <div class="catch-result-stat"><span class="catch-result-num" style="color:#b45309">${reward}</span><span class="catch-result-label">🌰 획득</span></div>
         </div>
+        ${reward > 0 ? `
         <div class="catch-reward-box">
           <span style="font-size:1.8rem">🌰</span>
           <div>
-            <p class="font-black" style="color:#78350f;font-size:18px">${reward} 도토리 획득 가능</p>
-            <p class="text-xs" style="color:#b45309;font-weight:700">${rewardRate}점당 1도토리 (최대 ${maxReward})</p>
-            ${canClaim ? `<p class="text-xs mt-1" style="color:#7c3aed;font-weight:700">보상 수령 남은 횟수: ${rLimit - rUsed}/${rLimit}회</p>` : ''}
+            <p class="font-black" style="color:#78350f;font-size:18px">${reward} 도토리 획득!</p>
+            <p class="text-xs" style="color:#b45309;font-weight:700">블록 합칠 때마다 확률적으로 드롭</p>
           </div>
-        </div>
-        ${canClaim ? `
-        <div class="flex gap-2 mt-4">
-          <button class="btn btn-gray flex-1 py-3" onclick="_2048_finish(${score},false)">넘기기</button>
-          <button class="btn btn-primary flex-1 py-3" onclick="_2048_finish(${score},true)">🌰 보상 받기</button>
-        </div>
-        <p class="text-xs text-gray-400 mt-2">보상을 넘기면 도전 횟수만 차감됩니다</p>
-        ` : `
+        </div>` : ''}
         <div class="mt-4">
-          ${reward > 0 ? '<p class="text-sm text-gray-400 mb-2">오늘 보상 수령 횟수를 모두 사용했어요</p>' : ''}
-          <button class="btn btn-gray w-full py-3" onclick="_2048_finish(${score},false)">확인</button>
-        </div>`}
+          <button class="btn btn-primary w-full py-3" onclick="_2048_finish(${score},${reward})">확인</button>
+        </div>
       </div>
     </div>`;
 }
 
-async function _2048_finish(score, claimReward) {
-  const rewardRate = getMgSetting('2048', 'rewardRate') || 50;
-  const maxReward = getMgSetting('2048', 'maxReward') || 30;
-  const reward = claimReward ? Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate))) : 0;
-  await recordPlay('2048', score, claimReward);
-  if (claimReward && reward > 0) { await _giveMinigameReward(reward, score, '2048'); toast('🌰', `+${reward} 도토리를 받았어요!`); }
-  else toast('🎮', '기록이 저장되었습니다');
+async function _2048_finish(score, reward) {
+  await recordPlay('2048', score, reward > 0);
+
+  if (reward > 0) {
+    await _giveMinigameReward(reward, score, '2048');
+    toast('🌰', `+${reward} 도토리를 받았어요!`);
+  } else {
+    toast('🎮', '기록이 저장되었습니다');
+  }
 
   document.getElementById('minigame-play').innerHTML = `
     <div class="catch-result-screen">
       <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
-        <div style="font-size:3rem;margin-bottom:8px">${claimReward ? '🌰' : '✅'}</div>
-        <h2 class="font-black text-lg mb-2" style="color:#78350f">${claimReward ? `+${reward} 도토리 획득!` : '기록 저장 완료'}</h2>
+        <div style="font-size:3rem;margin-bottom:8px">${reward > 0 ? '🌰' : '✅'}</div>
+        <h2 class="font-black text-lg mb-2" style="color:#78350f">${reward > 0 ? `+${reward} 도토리 획득!` : '기록 저장 완료'}</h2>
         <div class="flex gap-2 mt-4">
           <button class="btn btn-gray flex-1 py-3" onclick="exitMinigame()">돌아가기</button>
           <button class="btn btn-primary flex-1 py-3" onclick="startMinigame('2048')">다시하기</button>
