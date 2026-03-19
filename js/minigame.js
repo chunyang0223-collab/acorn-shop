@@ -192,7 +192,7 @@ async function renderMinigameHub() {
     if (fee > 0) tags.push(`🌰 ${fee} 참가비`); else tags.push('무료');
     if (g.id === '2048') tags.push('🌰 드롭');
     else if (maxReward) tags.push(`🎁 최대 ${maxReward}`);
-    if (g.ready && !maint && !unlimited && g.id !== '2048') {
+    if (g.ready && !maint && !unlimited) {
       tags.push(`🎮 ${pRemain}/${pLimit}`);
       tags.push(`🌰 ${rRemain}/${rLimit}`);
     }
