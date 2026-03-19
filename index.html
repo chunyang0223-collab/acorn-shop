@@ -106,7 +106,13 @@
           onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">🌰</div>
         <div>
           <h1 class="font-black text-amber-900" style="font-size:1.35rem;line-height:1.2">도토리 상점</h1>
-          <p class="text-xs text-amber-500 font-bold mt-0.5" id="headerUserLabel">Acorn Shop ✨</p>
+          <div class="flex items-center gap-2 mt-0.5">
+            <p class="text-xs text-amber-500 font-bold" id="headerUserLabel">Acorn Shop ✨</p>
+            <div class="vol-control" id="volControl" style="display:none">
+              <button class="vol-icon-btn" id="volIconBtn" onclick="toggleMute()" title="음소거 토글">🔊</button>
+              <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="50" oninput="setAppVolume(this.value)">
+            </div>
+          </div>
         </div>
       </div>
       <!-- 우측: 도토리 + 티켓 + 종 -->
@@ -1399,6 +1405,69 @@
 <script src="js/expedition.js"></script>
 <script src="js/app.js"></script>
 <script>
+// ── 앱 볼륨 시스템 ──
+let _appVolume = +(localStorage.getItem('acorn-volume') ?? 50);
+let _appMuted = localStorage.getItem('acorn-muted') === '1';
+
+function _initVolControl() {
+  const slider = document.getElementById('volSlider');
+  const icon = document.getElementById('volIconBtn');
+  const wrap = document.getElementById('volControl');
+  if (!slider) return;
+  slider.value = _appVolume;
+  _updateVolIcon();
+  // 로그인 후 표시 (headerRight와 동기)
+  const obs = new MutationObserver(() => {
+    const hr = document.getElementById('headerRight');
+    if (hr && hr.style.display !== 'none') { wrap.style.display = ''; obs.disconnect(); }
+  });
+  obs.observe(document.body, { subtree: true, attributes: true, childList: true });
+}
+
+function setAppVolume(val) {
+  _appVolume = +val;
+  _appMuted = (_appVolume === 0);
+  localStorage.setItem('acorn-volume', _appVolume);
+  localStorage.setItem('acorn-muted', _appMuted ? '1' : '0');
+  _applyVolume();
+  _updateVolIcon();
+}
+
+function toggleMute() {
+  _appMuted = !_appMuted;
+  localStorage.setItem('acorn-muted', _appMuted ? '1' : '0');
+  _applyVolume();
+  _updateVolIcon();
+  const slider = document.getElementById('volSlider');
+  if (slider && !_appMuted && _appVolume === 0) {
+    _appVolume = 50;
+    slider.value = 50;
+    localStorage.setItem('acorn-volume', 50);
+    _applyVolume();
+  }
+}
+
+function _updateVolIcon() {
+  const btn = document.getElementById('volIconBtn');
+  if (!btn) return;
+  if (_appMuted || _appVolume === 0) btn.textContent = '🔇';
+  else if (_appVolume < 35) btn.textContent = '🔈';
+  else if (_appVolume < 70) btn.textContent = '🔉';
+  else btn.textContent = '🔊';
+}
+
+function _applyVolume() {
+  const v = _appMuted ? 0 : _appVolume / 100;
+  // 2048 BGM
+  if (typeof _2048 !== 'undefined' && _2048.bgm) _2048.bgm.volume = v * 0.5;
+  // 2048 AudioContext (효과음) — masterGain 사용
+  if (typeof _2048 !== 'undefined' && _2048.audioCtx && _2048._masterGain) {
+    _2048._masterGain.gain.setValueAtTime(v, _2048.audioCtx.currentTime);
+  }
+}
+
+function getAppVolume() { return _appMuted ? 0 : _appVolume / 100; }
+
 // 탭 전환 시 2048 BGM 정지
 (function() {
   if (typeof uTab !== 'function') return;
@@ -1408,6 +1477,8 @@
     return _origUTab.apply(this, arguments);
   };
 })();
+
+_initVolControl();
 </script>
 
 </body>
