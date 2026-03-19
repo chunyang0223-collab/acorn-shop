@@ -1382,6 +1382,66 @@
   <div class="modal-box" onclick="event.stopPropagation()"><div id="modalContent"></div></div>
 </div>
 
+<!-- ── 앱 볼륨: Audio/AudioContext 래핑 (다른 JS보다 먼저 로드) ── -->
+<script>
+(function(){
+  var _appVolume = +(localStorage.getItem('acorn-volume') ?? 50);
+  var _appMuted = localStorage.getItem('acorn-muted') === '1';
+  var _trackedAudios = new Set();
+  var _trackedContexts = new Set();
+
+  window._appVol = { get volume(){ return _appVolume; }, set volume(v){ _appVolume = v; }, get muted(){ return _appMuted; }, set muted(v){ _appMuted = v; }, audios: _trackedAudios, contexts: _trackedContexts };
+
+  window.getAppVolume = function(){ return _appMuted ? 0 : _appVolume / 100; };
+
+  // ── Audio 래핑 ──
+  var _OrigAudio = window.Audio;
+  window.Audio = function(src){
+    var a = new _OrigAudio(src);
+    _patchAudio(a);
+    return a;
+  };
+  window.Audio.prototype = _OrigAudio.prototype;
+
+  var _origCreateEl = document.createElement.bind(document);
+  document.createElement = function(tag){
+    var el = _origCreateEl(tag);
+    if (tag.toLowerCase() === 'audio') _patchAudio(el);
+    return el;
+  };
+
+  function _patchAudio(a){
+    _trackedAudios.add(a);
+    var _base = 1;
+    var desc = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+    Object.defineProperty(a, '_baseVol', { get:function(){ return _base; }, set:function(v){ _base = v; }, configurable:true });
+    Object.defineProperty(a, 'volume', {
+      get:function(){ return desc.get.call(this); },
+      set:function(v){ _base = v; desc.set.call(this, Math.max(0, Math.min(1, v * getAppVolume()))); },
+      configurable:true
+    });
+    a.volume = _base;
+    a.addEventListener('ended', function(){ if(!a.loop) _trackedAudios.delete(a); });
+  }
+
+  // ── AudioContext 래핑 ──
+  var _OrigCtx = window.AudioContext || window.webkitAudioContext;
+  if (_OrigCtx) {
+    window.AudioContext = function(){
+      var ctx = new _OrigCtx();
+      var mg = ctx.createGain();
+      mg.gain.value = getAppVolume();
+      mg.connect(ctx.destination);
+      ctx._appMasterGain = mg;
+      _trackedContexts.add(ctx);
+      return ctx;
+    };
+    window.AudioContext.prototype = _OrigCtx.prototype;
+    if (window.webkitAudioContext) window.webkitAudioContext = window.AudioContext;
+  }
+})();
+</script>
+
 <!-- JS 모듈 (로드 순서 중요) -->
 <script src="js/supabase-client.js"></script>
 <script src="js/state.js"></script>
@@ -1405,73 +1465,74 @@
 <script src="js/expedition.js"></script>
 <script src="js/app.js"></script>
 <script>
-// ── 앱 볼륨 시스템 ──
-let _appVolume = +(localStorage.getItem('acorn-volume') ?? 50);
-let _appMuted = localStorage.getItem('acorn-muted') === '1';
+// ── 앱 볼륨: UI 컨트롤 + 적용 함수 ──
+function setAppVolume(val) {
+  _appVol.volume = +val;
+  _appVol.muted = (+val === 0);
+  localStorage.setItem('acorn-volume', +val);
+  localStorage.setItem('acorn-muted', _appVol.muted ? '1' : '0');
+  _applyVolumeAll();
+  _updateVolIcon();
+}
+
+function toggleMute() {
+  _appVol.muted = !_appVol.muted;
+  localStorage.setItem('acorn-muted', _appVol.muted ? '1' : '0');
+  if (!_appVol.muted && _appVol.volume === 0) {
+    _appVol.volume = 50;
+    var s = document.getElementById('volSlider');
+    if (s) s.value = 50;
+    localStorage.setItem('acorn-volume', 50);
+  }
+  _applyVolumeAll();
+  _updateVolIcon();
+}
+
+function _applyVolumeAll() {
+  var v = getAppVolume();
+  // 모든 추적된 Audio 객체
+  for (var a of _appVol.audios) {
+    try {
+      var base = a._baseVol ?? 1;
+      var desc = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+      if (desc) desc.set.call(a, base * v);
+    } catch(e){}
+  }
+  // 모든 추적된 AudioContext
+  for (var ctx of _appVol.contexts) {
+    try {
+      if (ctx._appMasterGain) ctx._appMasterGain.gain.setValueAtTime(v, ctx.currentTime);
+    } catch(e){}
+  }
+}
+
+function _updateVolIcon() {
+  var btn = document.getElementById('volIconBtn');
+  if (!btn) return;
+  var vol = _appVol.volume;
+  if (_appVol.muted || vol === 0) btn.textContent = '🔇';
+  else if (vol < 35) btn.textContent = '🔈';
+  else if (vol < 70) btn.textContent = '🔉';
+  else btn.textContent = '🔊';
+}
 
 function _initVolControl() {
-  const slider = document.getElementById('volSlider');
-  const icon = document.getElementById('volIconBtn');
-  const wrap = document.getElementById('volControl');
+  var slider = document.getElementById('volSlider');
+  var wrap = document.getElementById('volControl');
   if (!slider) return;
-  slider.value = _appVolume;
+  slider.value = _appVol.volume;
   _updateVolIcon();
-  // 로그인 후 표시 (headerRight와 동기)
-  const obs = new MutationObserver(() => {
-    const hr = document.getElementById('headerRight');
+  var obs = new MutationObserver(function(){
+    var hr = document.getElementById('headerRight');
     if (hr && hr.style.display !== 'none') { wrap.style.display = ''; obs.disconnect(); }
   });
   obs.observe(document.body, { subtree: true, attributes: true, childList: true });
 }
 
-function setAppVolume(val) {
-  _appVolume = +val;
-  _appMuted = (_appVolume === 0);
-  localStorage.setItem('acorn-volume', _appVolume);
-  localStorage.setItem('acorn-muted', _appMuted ? '1' : '0');
-  _applyVolume();
-  _updateVolIcon();
-}
-
-function toggleMute() {
-  _appMuted = !_appMuted;
-  localStorage.setItem('acorn-muted', _appMuted ? '1' : '0');
-  _applyVolume();
-  _updateVolIcon();
-  const slider = document.getElementById('volSlider');
-  if (slider && !_appMuted && _appVolume === 0) {
-    _appVolume = 50;
-    slider.value = 50;
-    localStorage.setItem('acorn-volume', 50);
-    _applyVolume();
-  }
-}
-
-function _updateVolIcon() {
-  const btn = document.getElementById('volIconBtn');
-  if (!btn) return;
-  if (_appMuted || _appVolume === 0) btn.textContent = '🔇';
-  else if (_appVolume < 35) btn.textContent = '🔈';
-  else if (_appVolume < 70) btn.textContent = '🔉';
-  else btn.textContent = '🔊';
-}
-
-function _applyVolume() {
-  const v = _appMuted ? 0 : _appVolume / 100;
-  // 2048 BGM
-  if (typeof _2048 !== 'undefined' && _2048.bgm) _2048.bgm.volume = v * 0.5;
-  // 2048 AudioContext (효과음) — masterGain 사용
-  if (typeof _2048 !== 'undefined' && _2048.audioCtx && _2048._masterGain) {
-    _2048._masterGain.gain.setValueAtTime(v, _2048.audioCtx.currentTime);
-  }
-}
-
-function getAppVolume() { return _appMuted ? 0 : _appVolume / 100; }
-
 // 탭 전환 시 2048 BGM 정지
 (function() {
   if (typeof uTab !== 'function') return;
-  const _origUTab = uTab;
+  var _origUTab = uTab;
   uTab = function() {
     if (typeof stop2048Bgm === 'function') stop2048Bgm();
     return _origUTab.apply(this, arguments);
