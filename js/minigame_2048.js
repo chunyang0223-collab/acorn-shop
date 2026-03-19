@@ -94,16 +94,22 @@ function start2048Game() {
 
   play.innerHTML = `
     <style>
-      .mg2048-wrap{position:relative;width:100%;max-width:400px;margin:0 auto}
-      .mg2048-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+      .mg2048-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+      .mg2048-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 2px}
       .mg2048-title{font-size:1.5rem;font-weight:900;color:#78350f;display:flex;align-items:baseline;gap:8px}
       .mg2048-badge{font-size:.5rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:3px 8px;border-radius:6px;animation:mg2048-pulse 1.5s ease infinite;box-shadow:0 2px 8px rgba(245,158,11,.3)}
       @keyframes mg2048-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.85;transform:scale(1.04)}}
-      .mg2048-scores{display:flex;gap:6px}
-      .mg2048-sbox{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:10px;padding:4px 12px;text-align:center;min-width:56px;border:1.5px solid rgba(180,100,0,.1);box-shadow:0 2px 8px rgba(180,100,0,.06)}
+      .mg2048-exit-top{width:32px;height:32px;border-radius:50%;border:none;background:rgba(120,53,15,.08);color:#92400e;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+      .mg2048-exit-top:hover{background:rgba(120,53,15,.15)}
+      .mg2048-scores{display:flex;gap:6px;margin-bottom:14px}
+      .mg2048-sbox{flex:1;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:12px;padding:8px 10px;text-align:center;border:1.5px solid rgba(180,100,0,.1);box-shadow:0 2px 8px rgba(180,100,0,.06)}
       .mg2048-sbox-label{font-size:.5rem;text-transform:uppercase;letter-spacing:1px;color:#b45309;opacity:.6;font-weight:700}
-      .mg2048-sbox-val{font-size:1.05rem;font-weight:900;color:#d97706}
-      .mg2048-timer-wrap{position:relative;height:8px;background:rgba(180,100,0,.08);border-radius:6px;margin-bottom:10px;overflow:hidden;border:1px solid rgba(180,100,0,.06)}
+      .mg2048-sbox-val{font-size:1.1rem;font-weight:900;color:#d97706;margin-top:2px}
+      .mg2048-sbox.drop{background:linear-gradient(135deg,#fffbeb,#fef9e7);border-color:rgba(251,191,36,.2)}
+      .mg2048-sbox.combo{background:linear-gradient(135deg,#faf5ff,#f3e8ff);border-color:rgba(168,85,247,.12)}
+      .mg2048-sbox.combo .mg2048-sbox-label{color:#7c3aed;opacity:.6}
+      .mg2048-sbox.combo .mg2048-sbox-val{color:#7c3aed}
+      .mg2048-timer-wrap{position:relative;height:8px;background:rgba(180,100,0,.08);border-radius:6px;margin-bottom:14px;overflow:hidden;border:1px solid rgba(180,100,0,.06)}
       .mg2048-timer-bar{height:100%;border-radius:6px;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);transition:width .1s linear}
       .mg2048-timer-bar.danger{background:linear-gradient(90deg,#ef4444,#dc2626);animation:mg2048-tflash .3s ease infinite}
       @keyframes mg2048-tflash{0%,100%{opacity:1}50%{opacity:.5}}
@@ -147,9 +153,8 @@ function start2048Game() {
       @keyframes mg2048-ring{0%{width:8px;height:8px;opacity:1;transform:translate(-4px,-4px)}100%{width:90px;height:90px;opacity:0;transform:translate(-45px,-45px)}}
       .mg2048-board.shake{animation:mg2048-shake 200ms ease}
       @keyframes mg2048-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-      .mg2048-exit{position:absolute;top:6px;right:6px;z-index:20;width:30px;height:30px;border-radius:50%;border:none;background:rgba(120,53,15,.1);color:#92400e;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
-      .mg2048-exit:hover{background:rgba(120,53,15,.2)}
-      .mg2048-acorn-count{position:absolute;top:8px;left:8px;z-index:15;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:20px;padding:4px 12px;font-size:.8rem;font-weight:900;color:#b45309;border:1.5px solid rgba(180,100,0,.15);box-shadow:0 2px 8px rgba(180,100,0,.1)}
+      .mg2048-swipe-zone{min-height:80px;border-radius:16px;margin-top:14px;display:flex;align-items:center;justify-content:center;border:1.5px dashed rgba(180,100,0,.08);background:rgba(180,100,0,.02)}
+      .mg2048-swipe-hint{font-size:.65rem;color:rgba(120,53,15,.18);font-weight:700;letter-spacing:.5px}
       .mg2048-overlay{position:absolute;inset:0;background:rgba(254,243,199,.94);backdrop-filter:blur(8px);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .3s}
       [data-theme="dark"] .mg2048-overlay{background:rgba(30,30,40,.92)}
       .mg2048-overlay.hidden{opacity:0;pointer-events:none}
@@ -159,14 +164,18 @@ function start2048Game() {
       .mg2048-overlay .rules .cyan{color:#0891b2;font-weight:800;opacity:1}
       [data-theme="dark"] .mg2048-overlay h3{color:#e8e8f0}
       [data-theme="dark"] .mg2048-overlay .rules{color:#ccc}
+      .mg2048-foot{text-align:center;font-size:.6rem;opacity:.2;margin-top:10px;letter-spacing:1px}
     </style>
-    <div class="mg2048-wrap">
+    <div class="mg2048-wrap" id="mg2048Wrap">
       <div class="mg2048-header">
         <div class="mg2048-title">2048 <span class="mg2048-badge">HARDCORE</span></div>
-        <div class="mg2048-scores">
-          <div class="mg2048-sbox"><div class="mg2048-sbox-label">Score</div><div class="mg2048-sbox-val" id="mg2048Score">0</div></div>
-          <div class="mg2048-sbox"><div class="mg2048-sbox-label">Best</div><div class="mg2048-sbox-val" id="mg2048Best">${_2048_getBest()}</div></div>
-        </div>
+        <button class="mg2048-exit-top" onclick="_2048_confirmExit()">✕</button>
+      </div>
+      <div class="mg2048-scores">
+        <div class="mg2048-sbox"><div class="mg2048-sbox-label">Score</div><div class="mg2048-sbox-val" id="mg2048Score">0</div></div>
+        <div class="mg2048-sbox"><div class="mg2048-sbox-label">Best</div><div class="mg2048-sbox-val" id="mg2048Best">${_2048_getBest()}</div></div>
+        <div class="mg2048-sbox drop"><div class="mg2048-sbox-label">Drop</div><div class="mg2048-sbox-val" id="mg2048AcornCount">🌰 0</div></div>
+        <div class="mg2048-sbox combo"><div class="mg2048-sbox-label">Combo</div><div class="mg2048-sbox-val" id="mg2048ComboCount">-</div></div>
       </div>
       <div class="mg2048-timer-wrap" id="mg2048TimerWrap">
         <div class="mg2048-timer-text" id="mg2048TimerText">${maxTime}.0s</div>
@@ -178,8 +187,6 @@ function start2048Game() {
         <div class="mg2048-cell"></div><div class="mg2048-cell"></div><div class="mg2048-cell"></div><div class="mg2048-cell"></div>
         <div class="mg2048-cell"></div><div class="mg2048-cell"></div><div class="mg2048-cell"></div><div class="mg2048-cell"></div>
         <div class="mg2048-tile-layer" id="mg2048TileLayer"></div>
-        <div class="mg2048-acorn-count" id="mg2048AcornCount">🌰 0</div>
-        <button class="mg2048-exit" onclick="_2048_confirmExit()">✕</button>
         <div class="mg2048-overlay" id="mg2048Start">
           <div style="font-size:2.5rem;margin-bottom:6px">⚡</div>
           <h3>HARDCORE MODE</h3>
@@ -193,7 +200,10 @@ function start2048Game() {
         </div>
         <div class="mg2048-overlay hidden" id="mg2048Overlay"></div>
       </div>
-      <p style="text-align:center;font-size:.6rem;opacity:.25;margin-top:8px;letter-spacing:1px">방향키 · WASD · 스와이프 · 💀+💀 = 💥</p>
+      <div class="mg2048-swipe-zone">
+        <span class="mg2048-swipe-hint">↕ 여기서도 스와이프 가능 ↕</span>
+      </div>
+      <p class="mg2048-foot">방향키 · WASD · 스와이프 · 💀+💀 = 💥</p>
     </div>`;
 
   _2048.tileLayer = document.getElementById('mg2048TileLayer');
@@ -204,6 +214,7 @@ function start2048Game() {
   _2048.overlayEl = document.getElementById('mg2048Overlay');
   _2048.scoreEl   = document.getElementById('mg2048Score');
   _2048.bestEl    = document.getElementById('mg2048Best');
+  _2048.wrapEl    = document.getElementById('mg2048Wrap');
   _2048_bindInput();
 }
 
@@ -214,15 +225,16 @@ function _2048_bindInput() {
     const dir = map[e.key]; if (dir) { e.preventDefault(); _2048_move(dir); }
   };
   document.addEventListener('keydown', _2048._keyHandler);
-  const b = _2048.boardEl;
+  // 스와이프: wrap 전체에 바인딩 (보드 밖에서도 인식)
+  const w = _2048.wrapEl;
 
   // ── Touch: track during move, fire early on sufficient delta ──
   let _tActive = false, _tSX = 0, _tSY = 0, _tFired = false;
-  b.addEventListener('touchstart', e => {
+  w.addEventListener('touchstart', e => {
     _tSX = e.touches[0].clientX; _tSY = e.touches[0].clientY;
     _tActive = true; _tFired = false;
   }, { passive: true });
-  b.addEventListener('touchmove', e => {
+  w.addEventListener('touchmove', e => {
     if (!_tActive || _tFired) return;
     e.preventDefault(); // 스크롤 방지
     const dx = e.touches[0].clientX - _tSX, dy = e.touches[0].clientY - _tSY;
@@ -231,7 +243,7 @@ function _2048_bindInput() {
     _tFired = true;
     adx > ady ? _2048_move(dx > 0 ? 'right' : 'left') : _2048_move(dy > 0 ? 'down' : 'up');
   }, { passive: false });
-  b.addEventListener('touchend', e => {
+  w.addEventListener('touchend', e => {
     if (!_tActive || _tFired) { _tActive = false; return; }
     _tActive = false;
     // touchmove에서 못 잡은 짧은 스와이프 보완
@@ -241,8 +253,8 @@ function _2048_bindInput() {
   });
 
   // ── Mouse drag ──
-  b.addEventListener('mousedown', e => { _2048._mouseX = e.clientX; _2048._mouseY = e.clientY; _2048._mouseDown = true; });
-  b.addEventListener('mouseup', e => {
+  w.addEventListener('mousedown', e => { _2048._mouseX = e.clientX; _2048._mouseY = e.clientY; _2048._mouseDown = true; });
+  w.addEventListener('mouseup', e => {
     if (!_2048._mouseDown) return; _2048._mouseDown = false;
     const dx = e.clientX - _2048._mouseX, dy = e.clientY - _2048._mouseY;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
@@ -380,6 +392,8 @@ function _2048_move(dir) {
   const now = Date.now();
   if (mergeCount > 0) { _2048.combo = (now - _2048.lastMergeTime < 1200) ? _2048.combo + mergeCount : mergeCount; _2048.lastMergeTime = now; }
   else if (now - _2048.lastMergeTime > 1500) _2048.combo = 0;
+  const comboEl = document.getElementById('mg2048ComboCount');
+  if (comboEl) comboEl.textContent = _2048.combo >= 2 ? '×' + _2048.combo : '-';
 
   _2048.bombCounter++;
   let shouldBomb = false;
