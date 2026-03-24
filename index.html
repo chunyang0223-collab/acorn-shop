@@ -253,6 +253,7 @@
       <div class="clay-card p-2 flex gap-1 mb-4">
         <button class="tab-btn active flex-1" onclick="sqTab('my')"         id="sqtab-my">🏠 내 다람쥐</button>
         <button class="tab-btn flex-1"        onclick="sqTab('shop')"       id="sqtab-shop">🛒 상점</button>
+        <button class="tab-btn flex-1"        onclick="sqTab('fuse')"       id="sqtab-fuse">🧬 합성</button>
         <button class="tab-btn flex-1"        onclick="sqTab('expedition')" id="sqtab-expedition">⚔️ 탐험</button>
       </div>
       <!-- 내 다람쥐 -->
@@ -298,6 +299,32 @@
             <summary>⭐ 등급은 어떻게 정해지나요?</summary>
             <div class="sq-help-body">다람쥐의 HP, 공격, 방어 스탯에 따라 일반 → 레어 → 희귀 → 유일 → 레전드 등급이 결정돼요. 등급이 높을수록 테두리가 화려합니다!</div>
           </details>
+        </div>
+      </div>
+      <!-- 합성 -->
+      <div id="sqcontent-fuse" class="hidden">
+        <div class="clay-card p-5 mb-4">
+          <div class="text-center mb-4">
+            <div style="font-size:48px" class="mb-2">🧬</div>
+            <div class="title-font text-lg text-gray-700 mb-1">다람쥐 합성</div>
+            <div class="text-sm text-gray-400">같은 등급 다람쥐 두 마리를 합성하여 새 다람쥐를 얻어요</div>
+            <div class="text-xs text-gray-400 mt-1">🌰 합성 비용: <strong id="sqFuseCostDisplay">10</strong> 도토리</div>
+          </div>
+          <div id="sqFuseSlots" style="display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:20px">
+            <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
+              <span style="font-size:32px;color:#d1d5db">＋</span>
+            </div>
+            <div style="font-size:28px;font-weight:900;color:#d1d5db">＋</div>
+            <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
+              <span style="font-size:32px;color:#d1d5db">＋</span>
+            </div>
+          </div>
+          <div id="sqFuseInfo" style="text-align:center;margin-bottom:16px"></div>
+          <button id="sqFuseBtn" onclick="sqFuseExecute()" class="btn btn-primary w-full" style="display:none">🧬 합성하기!</button>
+        </div>
+        <div id="sqFuseList" class="clay-card p-4">
+          <div class="title-font text-sm text-gray-600 mb-3">합성 가능한 다람쥐</div>
+          <div id="sqFuseGrid"></div>
         </div>
       </div>
       <!-- 탐험 -->
@@ -1073,6 +1100,37 @@
           </div>
           <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 설정 저장</button>
         </div>
+      </div>
+
+      <!-- 🧬 합성 설정 -->
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-lg font-black text-gray-800 mb-1">🧬 다람쥐 합성 설정</h2>
+        <p class="text-xs text-gray-400 font-semibold mb-4">같은 등급 두 마리를 합성하여 새 다람쥐를 얻습니다</p>
+        <div class="mb-4">
+          <label class="text-xs font-black text-gray-600 mb-1 block">🌰 합성 비용 (도토리)</label>
+          <input type="number" id="sqSet_fuseCost" class="field" value="10" min="0">
+        </div>
+        <h3 class="text-sm font-black text-gray-700 mb-2">⬆️ 등급 승급 확률 (%)</h3>
+        <p class="text-xs text-gray-400 mb-3">합성 시 한 단계 높은 등급이 나올 확률입니다. 레전드는 최고 등급이므로 승급 없음.</p>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">일반 → 레어</label>
+            <input type="number" id="sqSet_fuseUpNormal" class="field" value="15" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">레어 → 희귀</label>
+            <input type="number" id="sqSet_fuseUpRare" class="field" value="12" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">희귀 → 유일</label>
+            <input type="number" id="sqSet_fuseUpEpic" class="field" value="8" min="0" max="100">
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">유일 → 레전드</label>
+            <input type="number" id="sqSet_fuseUpUnique" class="field" value="5" min="0" max="100">
+          </div>
+        </div>
+        <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 합성 설정 저장</button>
       </div>
 
       <!-- ⚔️ 탐험 보상 설정 -->
