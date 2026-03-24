@@ -1553,11 +1553,8 @@ async function sqFuseConfirm() {
   const sprite = _sqRandomSprite();
   const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
 
-  // DB: 재료 삭제 + 새 다람쥐 생성
+  // DB: 새 다람쥐 생성 먼저 → 성공하면 재료 삭제 (안전한 순서)
   try {
-    const { error: delErr } = await sb.from('squirrels').delete().in('id', [id1, id2]);
-    if (delErr) throw delErr;
-
     const { data: newSq, error: insErr } = await sb.from('squirrels').insert({
       user_id: myProfile.id,
       name: sq1.name,
@@ -1567,9 +1564,14 @@ async function sqFuseConfirm() {
       hp_current: stats.hp,
       acorns_fed: 0,
       acorns_required: 0,
-      acquired_from: 'fuse'
+      acquired_from: 'shop'
     }).select('*').single();
     if (insErr) throw insErr;
+
+    const { error: delErr } = await sb.from('squirrels').delete().in('id', [id1, id2]);
+    if (delErr) {
+      console.warn('[fuse] 재료 삭제 실패, 새 다람쥐는 생성됨:', delErr);
+    }
 
     // 로컬 캐시 업데이트
     _sqSquirrels = _sqSquirrels.filter(s => s.id !== id1 && s.id !== id2);
@@ -1578,8 +1580,8 @@ async function sqFuseConfirm() {
     // 결과 연출
     _sqFuseShowResult(newSq, upgraded, grade, resultGrade);
   } catch(e) {
-    console.error('[fuse] 합성 실패:', e);
-    toast('❌', '합성 중 오류가 발생했어요');
+    console.error('[fuse] 합성 실패:', JSON.stringify(e));
+    toast('❌', '합성 실패: ' + (e?.message || e?.details || JSON.stringify(e)));
     // 도토리 환불 시도
     try {
       await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: cost, p_reason: '합성 실패 환불' });
