@@ -1537,12 +1537,8 @@ async function sqFuseConfirm() {
   const cost = _sqSettings.fuse_cost ?? 10;
 
   // 도토리 차감
-  try {
-    const { error: acornErr } = await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: -cost });
-    if (acornErr) throw acornErr;
-    myProfile.acorns -= cost;
-    if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
-  } catch(e) {
+  const spendRes = await spendAcorns(cost, '다람쥐 합성');
+  if (spendRes.error) {
     toast('❌', '도토리 차감 실패');
     return;
   }
@@ -1586,7 +1582,7 @@ async function sqFuseConfirm() {
     toast('❌', '합성 중 오류가 발생했어요');
     // 도토리 환불 시도
     try {
-      await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: cost });
+      await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: cost, p_reason: '합성 실패 환불' });
       myProfile.acorns += cost;
       if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
     } catch(e2) { console.error('[fuse] 환불 실패:', e2); }
