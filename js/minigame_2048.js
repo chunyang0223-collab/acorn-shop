@@ -555,7 +555,7 @@ function _2048_endGame(title, msg) {
 }
 
 async function _2048_finish(score, reward) {
-  await recordPlay('2048', score, reward > 0);
+  await recordPlay('2048', score, reward > 0, reward);
 
   if (reward > 0) {
     await _giveMinigameReward(reward, score, '2048');
