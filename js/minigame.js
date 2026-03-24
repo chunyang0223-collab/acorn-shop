@@ -111,9 +111,11 @@ function getRewardLimit(gameId) {
 }
 
 // ── 플레이 기록 저장 ──
-async function recordPlay(gameId, score, rewarded) {
+async function recordPlay(gameId, score, rewarded, actualReward) {
   if (!myProfile) return;
-  const reward = rewarded ? Math.min(getMgSetting(gameId, 'maxReward'), Math.max(score > 0 ? 1 : 0, Math.floor(score / getMgSetting(gameId, 'rewardRate')))) : 0;
+  const reward = !rewarded ? 0
+    : actualReward != null ? actualReward
+    : Math.min(getMgSetting(gameId, 'maxReward'), Math.max(score > 0 ? 1 : 0, Math.floor(score / getMgSetting(gameId, 'rewardRate'))));
   try {
     await sb.from('minigame_plays').insert({
       user_id: myProfile.id,
