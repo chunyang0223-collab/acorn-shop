@@ -1371,6 +1371,9 @@ function sqFuseRenderSlots() {
     if (g1 !== g2) {
       info.innerHTML = `<div style="color:#dc2626;font-size:13px;font-weight:800">⚠️ 같은 등급끼리만 합성할 수 있어요</div>`;
       btn.style.display = 'none';
+    } else if (sq1.status !== sq2.status) {
+      info.innerHTML = `<div style="color:#dc2626;font-size:13px;font-weight:800">⚠️ 같은 타입끼리만 합성할 수 있어요 (탐험+탐험 or 애완+애완)</div>`;
+      btn.style.display = 'none';
     } else {
       const gs = _sqGradeStyle(g1);
       const gi = _sqGradeOrder.indexOf(g1);
@@ -1534,6 +1537,7 @@ async function sqFuseConfirm() {
   if (!sq1 || !sq2) return;
 
   const grade = _sqCalcGrade(sq1);
+  if (sq1.status !== sq2.status) { toast('⚠️', '같은 타입끼리만 합성 가능'); return; }
   const cost = _sqSettings.fuse_cost ?? 10;
 
   // 도토리 차감
@@ -1551,7 +1555,7 @@ async function sqFuseConfirm() {
   // 해당 등급 범위의 스탯 생성
   const stats = _sqFuseGenerateStats(resultGrade);
   const sprite = _sqRandomSprite();
-  const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
+  const growType = sq1.status; // 재료와 같은 타입 유지
 
   // DB: 새 다람쥐 생성 먼저 → 성공하면 재료 삭제 (안전한 순서)
   try {
@@ -1620,27 +1624,94 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
   const spriteFile = newSq.sprite || 'sq_acorn';
   const typeLabel = newSq.status === 'explorer' ? '탐험형' : '애완형';
 
+  // Phase 1: 합성 중 연출 모달
   showModal(`
-    <div style="text-align:center">
-      <div style="font-size:14px;color:#9ca3af;font-weight:700;margin-bottom:12px">합성 결과</div>
-      ${upgraded ? `
-        <div style="font-size:28px;margin-bottom:8px;animation:sqReadyBounce 0.8s ease-in-out infinite">⬆️</div>
-        <div style="font-size:16px;font-weight:900;color:#f59e0b;margin-bottom:12px">🎉 등급 승급!</div>
-      ` : ''}
-      <div style="display:inline-block;border-radius:20px;${gs.border};box-shadow:${gs.shadow};padding:4px;background:${gs.bg};margin-bottom:12px">
-        <img src="images/squirrels/${spriteFile}.png" style="width:80px;height:80px;object-fit:contain;border-radius:16px;display:block" onerror="this.outerHTML='<div style=\\'font-size:60px;line-height:80px\\'>🦔</div>'">
-      </div>
-      <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:4px">${newSq.name}</div>
-      <div style="font-size:14px;font-weight:800;color:${gs.color};margin-bottom:4px">${gs.label} · ${typeLabel}</div>
-      <div style="display:flex;gap:12px;justify-content:center;margin:12px 0">
-        <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">❤️ HP</div><div style="font-size:16px;font-weight:900;color:#ef4444">${newSq.stats.hp}</div></div>
-        <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">⚔️ ATK</div><div style="font-size:16px;font-weight:900;color:#f97316">${newSq.stats.atk}</div></div>
-        <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">🛡️ DEF</div><div style="font-size:16px;font-weight:900;color:#3b82f6">${newSq.stats.def}</div></div>
-      </div>
-      ${upgraded ? `<div style="font-size:12px;color:#6b7280;margin-bottom:12px">${_sqGradeLabel[oldGrade]} → <strong style="color:${gs.color}">${gs.label}</strong></div>` : ''}
-      <button onclick="closeModal();sqFuseInit();sqRenderGrid();" class="btn btn-primary w-full">확인</button>
+    <div id="sqFuseAnim" style="text-align:center;padding:20px 0">
+      <div id="sqFuseAnimIcon" style="font-size:56px;animation:sqCardShake 0.5s ease infinite">🧬</div>
+      <div style="font-size:16px;font-weight:900;color:#78350f;margin-top:16px">합성 중...</div>
+      <div style="font-size:12px;color:#9ca3af;margin-top:4px">두근두근</div>
     </div>
   `);
+
+  // 두근두근 사운드
+  _playTone(220, 'sine', 0.12, 0.18);
+  setTimeout(() => _playTone(220, 'sine', 0.12, 0.18), 200);
+  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 400);
+  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 600);
+
+  // Phase 2: 서스펜스 상승 사운드
+  setTimeout(() => _playTone(330, 'triangle', 0.2, 0.15), 900);
+  setTimeout(() => _playTone(392, 'triangle', 0.2, 0.15), 1100);
+  setTimeout(() => _playTone(466, 'triangle', 0.25, 0.15), 1300);
+  setTimeout(() => _playTone(554, 'triangle', 0.3, 0.12), 1500);
+
+  // Phase 3: 아이콘 흔들림 강화
+  setTimeout(() => {
+    const icon = document.getElementById('sqFuseAnimIcon');
+    if (icon) icon.style.animation = 'sqCardShake 0.2s ease infinite';
+  }, 1000);
+
+  // Phase 4: 파티클 + 빛남 효과
+  setTimeout(() => {
+    const animEl = document.getElementById('sqFuseAnim');
+    if (animEl) {
+      const r = animEl.getBoundingClientRect();
+      _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/2, true, 15);
+    }
+  }, 1600);
+
+  // Phase 5: 결과 공개 (약 2초 후)
+  setTimeout(() => {
+    _sqPlayGrowSound();
+
+    // 승급 시 추가 팡파레
+    if (upgraded) {
+      setTimeout(() => _playTone(523, 'sine', 0.3, 0.2), 100);
+      setTimeout(() => _playTone(659, 'sine', 0.3, 0.2), 250);
+      setTimeout(() => _playTone(784, 'sine', 0.4, 0.25), 400);
+    }
+
+    closeModal();
+
+    setTimeout(() => {
+      showModal(`
+        <div style="text-align:center">
+          <div style="font-size:14px;color:#9ca3af;font-weight:700;margin-bottom:12px">합성 결과</div>
+          ${upgraded ? `
+            <div style="font-size:28px;margin-bottom:8px;animation:sqReadyBounce 0.8s ease-in-out infinite">⬆️</div>
+            <div style="font-size:16px;font-weight:900;color:#f59e0b;margin-bottom:12px">🎉 등급 승급!</div>
+          ` : ''}
+          <div id="sqFuseResultImg" style="display:inline-block;border-radius:20px;${gs.border};box-shadow:${gs.shadow};padding:4px;background:${gs.bg};margin-bottom:12px;opacity:0;transform:scale(0.5);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.34,1.56,0.64,1)">
+            <img src="images/squirrels/${spriteFile}.png" style="width:80px;height:80px;object-fit:contain;border-radius:16px;display:block" onerror="this.outerHTML='<div style=\\'font-size:60px;line-height:80px\\'>🦔</div>'">
+          </div>
+          <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:4px">${newSq.name}</div>
+          <div style="font-size:14px;font-weight:800;color:${gs.color};margin-bottom:4px">${gs.label} · ${typeLabel}</div>
+          <div style="display:flex;gap:12px;justify-content:center;margin:12px 0">
+            <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">❤️ HP</div><div style="font-size:16px;font-weight:900;color:#ef4444">${newSq.stats.hp}</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">⚔️ ATK</div><div style="font-size:16px;font-weight:900;color:#f97316">${newSq.stats.atk}</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">🛡️ DEF</div><div style="font-size:16px;font-weight:900;color:#3b82f6">${newSq.stats.def}</div></div>
+          </div>
+          ${upgraded ? `<div style="font-size:12px;color:#6b7280;margin-bottom:12px">${_sqGradeLabel[oldGrade]} → <strong style="color:${gs.color}">${gs.label}</strong></div>` : ''}
+          <button onclick="closeModal();sqFuseInit();sqRenderGrid();" class="btn btn-primary w-full">확인</button>
+        </div>
+      `);
+
+      // 이미지 팝인 애니메이션
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const img = document.getElementById('sqFuseResultImg');
+        if (img) { img.style.opacity = '1'; img.style.transform = 'scale(1)'; }
+      }));
+
+      // 결과 파티클
+      setTimeout(() => {
+        const modal = document.querySelector('.modal-content') || document.querySelector('[class*="modal"]');
+        if (modal) {
+          const r = modal.getBoundingClientRect();
+          _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/3, true, 20);
+        }
+      }, 200);
+    }, 150);
+  }, 2000);
 }
 
 // ================================================================
