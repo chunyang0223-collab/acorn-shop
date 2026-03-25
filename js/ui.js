@@ -28,6 +28,8 @@ async function initAppUI() {
     await _loadEventsFromDB(); // 이벤트 데이터 DB에서 로드
     await loadMaintenanceSettings(); // 점검 설정 먼저 로드 완료 후
     checkFreeGacha(); // 무료 뽑기 상태 초기화
+    checkAdminNotice(); // 공지 확인
+    requestNotifPermission(); // 브라우저 알림 권한 요청
 
     // 첫 탭(상점)이 점검 중이면 점검 안내 표시, 아니면 정상 렌더
     const maint = window._maintSettings || {};

@@ -631,10 +631,12 @@ function _sqStartTimer(id, sq) {
           cardEl.replaceWith(tmp.firstElementChild);
         }
         toast('🎁', `${sq.name}이(가) 털갈이를 합니다! 어떤 털 색깔을 가지고 있을까요?`);
+        sendBrowserNotif('🐿️ 성장 완료!', `${sq.name}이(가) 성장을 마쳤어요! 어떤 다람쥐가 되었을지 확인해보세요.`);
       } else {
         // 중간 쉬는 타이머 → 도토리 주기 버튼 복원
         _sqShowFeedButtons(id);
         toast('🌱', `${sq.name}이(가) 다시 배가 고파졌어요!`);
+        sendBrowserNotif('🐿️ 아기 다람쥐가 배가 고파요!', `${sq.name}이(가) 다시 배가 고파졌어요! 도토리를 주세요.`);
       }
     }
   }, 1000);
