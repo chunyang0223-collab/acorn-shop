@@ -1815,17 +1815,14 @@ async function sqAdminGrantSquirrel() {
   const userName = _sqGrantUsers.find(u => u.id === userId)?.display_name || '?';
 
   try {
-    const { data: newSq, error } = await sb.from('squirrels').insert({
-      user_id: userId,
-      name: '지급 다람쥐',
-      status: type,
-      sprite: sprite,
-      stats: stats,
-      hp_current: stats.hp,
-      acorns_fed: 0,
-      acorns_required: 0,
-      acquired_from: 'shop'
-    }).select('*').single();
+    const { data: newSq, error } = await sb.rpc('admin_grant_squirrel', {
+      p_target_user_id: userId,
+      p_name: '지급 다람쥐',
+      p_status: type,
+      p_sprite: sprite,
+      p_stats: stats,
+      p_hp_current: stats.hp
+    });
     if (error) throw error;
 
     toast('✅', `${userName}에게 ${gradeLabel} ${typeLabel} 다람쥐 지급 완료!`);
