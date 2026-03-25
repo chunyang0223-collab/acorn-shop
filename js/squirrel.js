@@ -22,6 +22,7 @@ var _sqSettings  = {
   sell_price_base: 20, sell_price_max: 80,
   recovery_base_minutes: 60, recovery_instant_cost: 15,
   time_trigger_min: 40, time_trigger_max: 80,
+  max_squirrels: 10,
   // 합성 설정
   fuse_cost: 10,
   fuse_upgrade_normal: 15,
@@ -255,7 +256,7 @@ async function _sqPoll() {
           }
         }
         const countEl = document.getElementById('squirrelCount');
-        if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+        if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
       }
     });
 
@@ -267,7 +268,7 @@ async function _sqPoll() {
         _sqClearTimer(sq.id);
         document.getElementById('sqCard-' + sq.id)?.remove();
         const countEl = document.getElementById('squirrelCount');
-        if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+        if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
       }
     });
 
@@ -381,9 +382,9 @@ async function sqLoadSquirrels() {
 function sqRenderGrid() {
   const grid = document.getElementById('squirrelGrid');
   if (!grid) return;
-  document.getElementById('squirrelCount')?.setAttribute('textContent', _sqSquirrels.length + ' / 10');
+  document.getElementById('squirrelCount')?.setAttribute('textContent', _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10));
   const countEl = document.getElementById('squirrelCount');
-  if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+  if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
 
   if (_sqSquirrels.length === 0) {
     grid.innerHTML = `
@@ -948,8 +949,9 @@ async function sqFeedSquirrel(id) {
 //  구매
 // ================================================================
 async function sqBuySquirrel(from) {
-  if (_sqSquirrels.length >= 10) {
-    showModal(`<div class="text-center"><div style="font-size:40px">😅</div><div class="title-font text-lg text-gray-800 my-2">보유 한도 초과</div><div class="text-sm text-gray-500 mb-4">최대 10마리까지 보유할 수 있어요.</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
+  const maxSq = _sqSettings.max_squirrels || 10;
+  if (_sqSquirrels.length >= maxSq) {
+    showModal(`<div class="text-center"><div style="font-size:40px">😅</div><div class="title-font text-lg text-gray-800 my-2">보유 한도 초과</div><div class="text-sm text-gray-500 mb-4">최대 ${maxSq}마리까지 보유할 수 있어요.</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
     return;
   }
   if (from === 'gacha') {
@@ -1022,7 +1024,7 @@ async function sqDoBuySquirrel(price) {
 
     const grid = document.getElementById('squirrelGrid');
     const countEl = document.getElementById('squirrelCount');
-    if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+    if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
     if (grid) {
       grid.querySelector('.text-center.py-8')?.remove(); // 빈 상태 메시지 제거
       const tmp = document.createElement('div');
@@ -1175,7 +1177,7 @@ async function sqDoSell(id, price) {
     _sqClearTimer(id);
     document.getElementById('sqCard-' + id)?.remove();
     const countEl = document.getElementById('squirrelCount');
-    if (countEl) countEl.textContent = _sqSquirrels.length + ' / 10';
+    if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
     if (_sqSquirrels.length === 0) {
       const grid = document.getElementById('squirrelGrid');
       if (grid) grid.innerHTML = `
@@ -1350,6 +1352,7 @@ function sqFuseRenderSlots() {
           </div>
           <div style="font-size:11px;font-weight:900;color:#1f2937;margin-top:4px">${sq.name}</div>
           <div style="font-size:10px;font-weight:800;color:${gs.color}">${gs.label}</div>
+          <div style="font-size:9px;font-weight:700;color:${sq.status==='explorer'?'#059669':'#7c3aed'};margin-top:1px">${sq.status==='explorer'?'탐험형':'애완형'}</div>
         </div>`;
       slot.style.border = '3px solid ' + gs.color;
       slot.style.background = gs.bg;
@@ -1441,6 +1444,7 @@ function sqFuseRenderGrid() {
             <img src="images/squirrels/${spriteFile}.png" style="width:40px;height:40px;object-fit:contain;border-radius:8px;display:block" onerror="this.outerHTML='<div style=\\'font-size:28px;line-height:40px\\'>🦔</div>'">
           </div>
           <div style="font-size:10px;font-weight:900;color:#1f2937;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px">${sq.name}</div>
+          <div style="font-size:9px;font-weight:700;color:${sq.status==='explorer'?'#059669':'#7c3aed'}">${sq.status==='explorer'?'탐험형':'애완형'}</div>
           ${isSelected ? '<div style="font-size:10px;color:#f59e0b;font-weight:800">선택됨</div>' : ''}
         </div>`;
     });
@@ -1463,6 +1467,10 @@ function sqFuseClearSlot(slot) {
 }
 
 function sqFuseSelect(id) {
+  // 이미 슬롯에 있으면 → 빼기 (토글)
+  if (_sqFuseSelected[0] === id) { sqFuseClearSlot(1); return; }
+  if (_sqFuseSelected[1] === id) { sqFuseClearSlot(2); return; }
+
   // 슬롯이 선택되어 있지 않으면 빈 슬롯에 자동 배치
   if (!_sqFuseSlotPicking) {
     if (!_sqFuseSelected[0]) _sqFuseSlotPicking = 1;
@@ -1719,6 +1727,7 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
 // ================================================================
 async function sqAdminInit() {
   await sqLoadSettings();
+  document.getElementById('sqSet_maxSquirrels').value     = _sqSettings.max_squirrels     || 10;
   document.getElementById('sqSet_shopPrice').value       = _sqSettings.shop_price        || 30;
   document.getElementById('sqSet_acornMin').value    = _sqSettings.acorn_min         || 20;
   document.getElementById('sqSet_acornMax').value    = _sqSettings.acorn_max         || 50;
@@ -1754,6 +1763,7 @@ async function sqAdminInit() {
 
 async function sqSaveSettings() {
   const settings = {
+    max_squirrels:    parseInt(document.getElementById('sqSet_maxSquirrels').value)   || 10,
     shop_price:       parseInt(document.getElementById('sqSet_shopPrice').value)      || 30,
     acorn_min:        parseInt(document.getElementById('sqSet_acornMin').value)   || 20,
     acorn_max:        parseInt(document.getElementById('sqSet_acornMax').value)   || 50,
