@@ -1748,6 +1748,7 @@ async function sqAdminInit() {
   // 탐험 보상 설정 로드
   await expLoadSettings();
   await expAdminLoadUI();
+  await sqAdminGrantInit();
   await sqAdminLoadList();
 }
 
@@ -1785,6 +1786,54 @@ async function sqSaveSettings() {
     .upsert({ key:'squirrel_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict:'key' });
   if (!error) { _sqSettings = settings; toast('✅','설정이 저장되었어요'); }
   else toast('❌','저장 실패');
+}
+
+// ── 관리자 다람쥐 지급 ──
+var _sqGrantUsers = [];
+
+async function sqAdminGrantInit() {
+  const sel = document.getElementById('sqGrantUser');
+  if (!sel) return;
+  const { data: users } = await sb.from('users').select('id, display_name').order('display_name');
+  _sqGrantUsers = users || [];
+  sel.innerHTML = '<option value="">-- 사용자 선택 --</option>' +
+    _sqGrantUsers.map(u => `<option value="${u.id}">${u.display_name}</option>`).join('');
+}
+
+async function sqAdminGrantSquirrel() {
+  const userId = document.getElementById('sqGrantUser')?.value;
+  const grade  = document.getElementById('sqGrantGrade')?.value;
+  const type   = document.getElementById('sqGrantType')?.value;
+  if (!userId) { toast('⚠️', '사용자를 선택하세요'); return; }
+  if (!grade)  { toast('⚠️', '등급을 선택하세요'); return; }
+  if (!type)   { toast('⚠️', '타입을 선택하세요'); return; }
+
+  const stats = _sqFuseGenerateStats(grade);
+  const sprite = _sqRandomSprite();
+  const gradeLabel = _sqGradeLabel[grade] || grade;
+  const typeLabel = type === 'explorer' ? '탐험형' : '애완형';
+  const userName = _sqGrantUsers.find(u => u.id === userId)?.display_name || '?';
+
+  try {
+    const { data: newSq, error } = await sb.from('squirrels').insert({
+      user_id: userId,
+      name: '지급 다람쥐',
+      status: type,
+      sprite: sprite,
+      stats: stats,
+      hp_current: stats.hp,
+      acorns_fed: 0,
+      acorns_required: 0,
+      acquired_from: 'shop'
+    }).select('*').single();
+    if (error) throw error;
+
+    toast('✅', `${userName}에게 ${gradeLabel} ${typeLabel} 다람쥐 지급 완료!`);
+    await sqAdminLoadList();
+  } catch (e) {
+    console.error('[grant]', e);
+    toast('❌', '지급 실패: ' + (e?.message || JSON.stringify(e)));
+  }
 }
 
 async function sqAdminLoadList() {
