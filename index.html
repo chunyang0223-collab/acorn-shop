@@ -1377,6 +1377,37 @@
         <button class="btn btn-primary w-full" onclick="expSaveSettings()">💾 탐험 보상 설정 저장</button>
       </div>
 
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-base font-black text-gray-800 mb-3">🎁 다람쥐 지급</h2>
+        <div class="grid grid-cols-1 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-black text-gray-600 mb-1 block">👤 사용자</label>
+            <select id="sqGrantUser" class="field"><option value="">로딩 중...</option></select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">⭐ 등급</label>
+              <select id="sqGrantGrade" class="field">
+                <option value="normal">일반</option>
+                <option value="rare">레어</option>
+                <option value="epic">희귀</option>
+                <option value="unique">유일</option>
+                <option value="legend">레전드</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">🐿️ 타입</label>
+              <select id="sqGrantType" class="field">
+                <option value="explorer">탐험형</option>
+                <option value="pet">애완형</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary w-full" onclick="sqAdminGrantSquirrel()">🎁 다람쥐 지급하기</button>
+        <div class="text-xs text-gray-400 mt-2">선택한 등급 범위 내에서 랜덤 스탯으로 생성됩니다.</div>
+      </div>
+
       <div class="clay-card p-5">
         <h2 class="text-base font-black text-gray-800 mb-3">📋 보유 다람쥐 현황</h2>
         <div id="sqAdminList" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
