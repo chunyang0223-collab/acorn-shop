@@ -495,6 +495,17 @@
         <div class="adm-grid-item adm-edit-btn" onclick="showPinEditor()"><span class="adm-grid-icon">⚙️</span><span class="adm-grid-label">탭 편집</span></div>
       </div>
 
+      <!-- 공지 관리 -->
+      <p class="adm-section-label">📢 공지사항</p>
+      <div class="clay-card p-4 mb-4">
+        <textarea id="adminNoticeText" class="field" rows="3" placeholder="사용자에게 보여줄 공지 내용을 입력하세요..." style="resize:vertical;font-size:13px"></textarea>
+        <div class="flex gap-2 mt-2">
+          <button class="btn btn-primary flex-1" onclick="adminSaveNotice()">📢 공지 등록</button>
+          <button class="btn flex-1" style="background:#fee2e2;color:#dc2626;font-weight:800" onclick="adminClearNotice()">🗑️ 공지 삭제</button>
+        </div>
+        <div class="text-xs text-gray-400 mt-2">등록하면 모든 사용자에게 접속 시 팝업으로 표시됩니다. 확인 버튼을 누르면 다시 뜨지 않아요.</div>
+      </div>
+
       <!-- 점검 관리 -->
       <p class="adm-section-label">🔧 메뉴 점검</p>
       <div class="adm-maint-row" id="maintRow">
