@@ -1643,23 +1643,21 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
     </div>
   `);
 
-  // 두근두근 사운드
+  // 두근두근 → 서스펜스 상승 (끊김 없이 연결)
   _playTone(220, 'sine', 0.12, 0.18);
-  setTimeout(() => _playTone(220, 'sine', 0.12, 0.18), 200);
-  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 400);
-  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 600);
-
-  // Phase 2: 서스펜스 상승 사운드
-  setTimeout(() => _playTone(330, 'triangle', 0.2, 0.15), 900);
-  setTimeout(() => _playTone(392, 'triangle', 0.2, 0.15), 1100);
-  setTimeout(() => _playTone(466, 'triangle', 0.25, 0.15), 1300);
-  setTimeout(() => _playTone(554, 'triangle', 0.3, 0.12), 1500);
+  setTimeout(() => _playTone(220, 'sine', 0.12, 0.18), 180);
+  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 360);
+  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 540);
+  setTimeout(() => _playTone(330, 'triangle', 0.18, 0.15), 720);
+  setTimeout(() => _playTone(392, 'triangle', 0.2, 0.15), 900);
+  setTimeout(() => _playTone(466, 'triangle', 0.25, 0.15), 1080);
+  setTimeout(() => _playTone(554, 'triangle', 0.3, 0.12), 1260);
 
   // Phase 3: 아이콘 흔들림 강화
   setTimeout(() => {
     const icon = document.getElementById('sqFuseAnimIcon');
     if (icon) icon.style.animation = 'sqCardShake 0.2s ease infinite';
-  }, 1000);
+  }, 900);
 
   // Phase 4: 파티클 + 빛남 효과
   setTimeout(() => {
@@ -1668,9 +1666,9 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
       const r = animEl.getBoundingClientRect();
       _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/2, true, 15);
     }
-  }, 1600);
+  }, 1400);
 
-  // Phase 5: 결과 공개 (약 2초 후)
+  // Phase 5: 결과 공개 (약 1.8초 후)
   setTimeout(() => {
     _sqPlayGrowSound();
 
@@ -1721,7 +1719,7 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
         }
       }, 200);
     }, 150);
-  }, 2000);
+  }, 1800);
 }
 
 // ================================================================
