@@ -245,7 +245,7 @@ function aTab(tab, btn) {
 // ── 점검 상태 도트 (홈 화면용) ──
 function renderMaintDots() {
   const m = window._maintSettings || {};
-  ['shop','gacha','quest','recycle','minigame','mypage'].forEach(k => {
+  ['shop','gacha','quest','recycle','minigame','mypage','sq_farm'].forEach(k => {
     const dot = document.getElementById('maint-dot-' + k);
     if (dot) {
       dot.className = 'maint-dot ' + (m[k] ? 'off' : 'on');
@@ -387,7 +387,7 @@ function uTab(tab, btn) {
 }
 
 // ── 메뉴 점검 관리 ──
-const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','mypage'];
+const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','mypage','sq_farm'];
 
 async function toggleMaintenance(tab) {
   // 현재 DB 값 읽기

@@ -176,10 +176,29 @@ function sqAdminClose() {}
 //  서브탭 전환
 // ================================================================
 function sqTab(tab) {
-  ['my','shop','fuse','expedition'].forEach(t => {
+  ['my','shop','fuse','expedition','farm'].forEach(t => {
     document.getElementById('sqcontent-' + t)?.classList.toggle('hidden', t !== tab);
     document.getElementById('sqtab-' + t)?.classList.toggle('active', t === tab);
   });
+
+  // 서브탭 점검 체크 (농사)
+  if (tab === 'farm') {
+    const maint = window._maintSettings || {};
+    const area = document.getElementById('sqFarmArea');
+    if (area) {
+      if (maint['sq_farm'] && !_isMaintBypassed()) {
+        area.innerHTML = `
+          <div class="clay-card p-8 text-center mt-4">
+            <div style="font-size:3rem;margin-bottom:12px">🔧</div>
+            <p class="text-lg font-black text-gray-700 mb-2">점검 중입니다</p>
+            <p class="text-sm text-gray-400">농사 기능을 준비하고 있어요!</p>
+          </div>`;
+      } else {
+        sqFarmInit();
+      }
+    }
+  }
+
   // 탭별 초기화
   if (tab === 'fuse') sqFuseInit();
   // 탭별 배경음
@@ -189,6 +208,18 @@ function sqTab(tab) {
     else if (tab === 'my') _sndPlayBGM('my');
     else _sndStopBGM();
   }
+}
+
+// 농사 초기화 (추후 구현)
+function sqFarmInit() {
+  const area = document.getElementById('sqFarmArea');
+  if (!area) return;
+  area.innerHTML = `
+    <div class="clay-card p-8 text-center">
+      <div style="font-size:48px;margin-bottom:12px">🌾</div>
+      <div class="title-font text-lg text-gray-700 mb-2">다람쥐 농장</div>
+      <div class="text-sm text-gray-400">곧 농사 기능이 찾아옵니다!</div>
+    </div>`;
 }
 
 // ================================================================
@@ -1643,21 +1674,21 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
     </div>
   `);
 
-  // 두근두근 → 서스펜스 상승 (끊김 없이 연결)
+  // 두근두근 → 서스펜스 상승 (아기다람쥐 성장 연출과 동일)
   _playTone(220, 'sine', 0.12, 0.18);
-  setTimeout(() => _playTone(220, 'sine', 0.12, 0.18), 180);
-  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 360);
-  setTimeout(() => _playTone(280, 'sine', 0.12, 0.18), 540);
-  setTimeout(() => _playTone(330, 'triangle', 0.18, 0.15), 720);
-  setTimeout(() => _playTone(392, 'triangle', 0.2, 0.15), 900);
-  setTimeout(() => _playTone(466, 'triangle', 0.25, 0.15), 1080);
-  setTimeout(() => _playTone(554, 'triangle', 0.3, 0.12), 1260);
+  setTimeout(() => _playTone(220, 'sine', 0.12, 0.18), 200);
+  setTimeout(() => _playTone(260, 'sine', 0.12, 0.18), 400);
+  setTimeout(() => _playTone(260, 'sine', 0.12, 0.18), 600);
+  setTimeout(() => _playTone(310, 'triangle', 0.2, 0.15), 800);
+  setTimeout(() => _playTone(370, 'triangle', 0.2, 0.15), 1000);
+  setTimeout(() => _playTone(440, 'triangle', 0.25, 0.15), 1200);
+  setTimeout(() => _playTone(523, 'triangle', 0.3, 0.12), 1400);
 
   // Phase 3: 아이콘 흔들림 강화
   setTimeout(() => {
     const icon = document.getElementById('sqFuseAnimIcon');
     if (icon) icon.style.animation = 'sqCardShake 0.2s ease infinite';
-  }, 900);
+  }, 1000);
 
   // Phase 4: 파티클 + 빛남 효과
   setTimeout(() => {
@@ -1666,9 +1697,9 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
       const r = animEl.getBoundingClientRect();
       _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/2, true, 15);
     }
-  }, 1400);
+  }, 1600);
 
-  // Phase 5: 결과 공개 (약 1.8초 후)
+  // Phase 5: 결과 공개 (약 2초 후)
   setTimeout(() => {
     _sqPlayGrowSound();
 
@@ -1719,7 +1750,7 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
         }
       }, 200);
     }, 150);
-  }, 1800);
+  }, 2000);
 }
 
 // ================================================================
