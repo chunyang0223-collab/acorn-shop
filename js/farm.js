@@ -175,6 +175,9 @@ function farmRenderApprentice() {
         <div id="farmApprenticeTimer" style="font-size:28px;font-weight:900;color:#f59e0b;font-variant-numeric:tabular-nums">${_farmFmtTime(remaining)}</div>
       </div>
       <div class="text-xs text-gray-400">수습이 끝나면 결과를 확인할 수 있어요</div>
+      ${myProfile?.is_admin ? `
+        <button onclick="farmSkipApprentice()" class="btn mt-3" style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:800;padding:8px 16px">⏩ [관리자] 수습 스킵</button>
+      ` : ''}
     </div>`;
 
   // 타이머 시작
@@ -372,6 +375,26 @@ function farmRenderMain() {
       <div class="title-font text-base text-gray-700 mb-2">농장 준비 중</div>
       <div class="text-sm text-gray-400">농부가 밭을 정리하고 있어요!<br>곧 농사를 시작할 수 있습니다.</div>
     </div>`;
+}
+
+// ── [관리자] 수습 시간 스킵 ──
+async function farmSkipApprentice() {
+  if (!myProfile?.is_admin) return;
+  try {
+    const { error } = await sb.from('farm_data')
+      .update({ apprentice_until: new Date().toISOString() })
+      .eq('user_id', myProfile.id);
+    if (error) throw error;
+    toast('⏩', '수습 시간 스킵!');
+    _farmClearTimer();
+    // farm_data 다시 로드
+    const { data } = await sb.from('farm_data').select('*').eq('user_id', myProfile.id).maybeSingle();
+    _farmData = data;
+    farmRenderApprenticeResult(_sqSquirrels.find(s => s.id === _farmData?.farmer_squirrel_id));
+  } catch (e) {
+    console.error('[farm skip]', e);
+    toast('❌', '스킵 실패: ' + (e?.message || ''));
+  }
 }
 
 // ── 유틸리티 ──
