@@ -210,18 +210,6 @@ function sqTab(tab) {
   }
 }
 
-// 농사 초기화 (추후 구현)
-function sqFarmInit() {
-  const area = document.getElementById('sqFarmArea');
-  if (!area) return;
-  area.innerHTML = `
-    <div class="clay-card p-8 text-center">
-      <div style="font-size:48px;margin-bottom:12px">🌾</div>
-      <div class="title-font text-lg text-gray-700 mb-2">다람쥐 농장</div>
-      <div class="text-sm text-gray-400">곧 농사 기능이 찾아옵니다!</div>
-    </div>`;
-}
-
 // ================================================================
 //  초기화
 // ================================================================
