@@ -255,6 +255,7 @@
         <button class="tab-btn flex-1"        onclick="sqTab('shop')"       id="sqtab-shop">🛒 상점</button>
         <button class="tab-btn flex-1"        onclick="sqTab('fuse')"       id="sqtab-fuse">🧬 합성</button>
         <button class="tab-btn flex-1"        onclick="sqTab('expedition')" id="sqtab-expedition">⚔️ 탐험</button>
+        <button class="tab-btn flex-1"        onclick="sqTab('farm')"       id="sqtab-farm">🌾 농사</button>
       </div>
       <!-- 내 다람쥐 -->
       <div id="sqcontent-my">
@@ -361,6 +362,10 @@
             </div>
           </div>
         </div>
+      </div>
+      <!-- 농사 -->
+      <div id="sqcontent-farm" class="hidden">
+        <div id="sqFarmArea"></div>
       </div>
     </div>
 
@@ -517,6 +522,11 @@
         <div class="adm-maint-chip" onclick="toggleMaintenance('squirrel')"><span class="maint-dot" id="maint-dot-squirrel"></span> 🐿️ 다람쥐</div>
         <div class="adm-maint-chip" onclick="toggleMaintenance('mypage')"><span class="maint-dot" id="maint-dot-mypage"></span> 👤 마이</div>
       </div>
+      <p class="adm-section-label" style="margin-top:8px">🐿️ 다람쥐 서브탭 점검</p>
+      <div class="adm-maint-row" id="maintRowSqSub">
+        <div class="adm-maint-chip" onclick="toggleMaintenance('sq_farm')"><span class="maint-dot" id="maint-dot-sq_farm"></span> 🌾 농사</div>
+      </div>
+      <div class="text-xs text-gray-400 mt-1 mb-3" style="padding:0 4px">다람쥐 메뉴 전체 점검과 별개로, 서브탭만 개별 점검할 수 있어요.</div>
 
       <!-- 최근 활동 -->
       <p class="adm-section-label">📋 최근 활동</p>
