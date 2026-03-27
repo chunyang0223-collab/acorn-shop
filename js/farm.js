@@ -67,25 +67,29 @@ function farmRenderMain() {
   html += farmRenderFarmerSlot();
 
   // ── 섹션 2: 수습 중이면 타이머, 아니면 수습 보내기 ──
-  html += farmRenderApprenticeSection();
+  html += '<div id="farmApprenticeSection">' + farmRenderApprenticeSection() + '</div>';
 
   // ── 섹션 3: 농장 콘텐츠 (밭 등) ──
   html += farmRenderFarmContent();
 
   area.innerHTML = html;
 
-  // 수습 타이머 시작 (수습 중일 때)
+  // 수습 타이머 시작 (수습 중이고 아직 시간 남아있을 때만)
   if (_farmData?.farmer_status === 'apprentice' && _farmData.apprentice_until) {
     const until = new Date(_farmData.apprentice_until);
-    _farmTimer = setInterval(() => {
-      const rem = until - Date.now();
-      const el = document.getElementById('farmApprenticeTimer');
-      if (el) el.textContent = _farmFmtTime(rem);
-      if (rem <= 0) {
-        _farmClearTimer();
-        sqFarmInit(); // 리렌더
-      }
-    }, 1000);
+    if (until > Date.now()) {
+      _farmTimer = setInterval(() => {
+        const rem = until - Date.now();
+        const el = document.getElementById('farmApprenticeTimer');
+        if (el) el.textContent = _farmFmtTime(rem);
+        if (rem <= 0) {
+          _farmClearTimer();
+          // 전체 리로드 대신 수습 섹션만 교체
+          const section = document.getElementById('farmApprenticeSection');
+          if (section) section.innerHTML = farmRenderApprenticeSection();
+        }
+      }, 1000);
+    }
   }
 }
 
