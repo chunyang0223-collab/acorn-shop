@@ -181,7 +181,7 @@ function sqTab(tab) {
     document.getElementById('sqtab-' + t)?.classList.toggle('active', t === tab);
   });
 
-  // 서브탭 점검 체크 (농사)
+  // 서브탭 점검 체크 (농장)
   if (tab === 'farm') {
     const maint = window._maintSettings || {};
     const area = document.getElementById('sqFarmArea');
@@ -191,7 +191,7 @@ function sqTab(tab) {
           <div class="clay-card p-8 text-center mt-4">
             <div style="font-size:3rem;margin-bottom:12px">🔧</div>
             <p class="text-lg font-black text-gray-700 mb-2">점검 중입니다</p>
-            <p class="text-sm text-gray-400">농사 기능을 준비하고 있어요!</p>
+            <p class="text-sm text-gray-400">농장 기능을 준비하고 있어요!</p>
           </div>`;
       } else {
         sqFarmInit();
