@@ -195,8 +195,7 @@ async function farmEquipFarmer(squirrelId) {
     if (data?.error) { toast('⚠️', data.error); return; }
     toast('🌾', '농부를 장착했어요!');
     closeModal();
-    const { data: farmData } = await sb.from('farm_data').select('*').eq('user_id', myProfile.id).maybeSingle();
-    _farmData = farmData;
+    await _farmReloadAll();
     farmRenderMain();
   } catch (e) {
     console.error('[farm equip]', e);
@@ -214,8 +213,7 @@ async function farmUnequipFarmer() {
     if (error) throw error;
     toast('🌾', '농부를 해제했어요');
     closeModal();
-    const { data: farmData } = await sb.from('farm_data').select('*').eq('user_id', myProfile.id).maybeSingle();
-    _farmData = farmData;
+    await _farmReloadAll();
     farmRenderMain();
   } catch (e) {
     console.error('[farm unequip]', e);
@@ -468,11 +466,7 @@ async function farmAfterReveal(success) {
   if (!success) {
     if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
   }
-  // 데이터 리로드 후 메인 리렌더
-  const { data: farmData } = await sb.from('farm_data').select('*').eq('user_id', myProfile.id).maybeSingle();
-  _farmData = farmData;
-  const { data: farmers } = await sb.from('farm_farmers').select('*').eq('user_id', myProfile.id);
-  _farmFarmers = farmers || [];
+  await _farmReloadAll();
   farmRenderMain();
 }
 
@@ -493,6 +487,14 @@ async function farmSkipApprentice() {
     console.error('[farm skip]', e);
     toast('❌', '스킵 실패: ' + (e?.message || ''));
   }
+}
+
+// ── 데이터 리로드 (farm_data + farm_farmers) ──
+async function _farmReloadAll() {
+  const { data: farmData } = await sb.from('farm_data').select('*').eq('user_id', myProfile.id).maybeSingle();
+  _farmData = farmData;
+  const { data: farmers } = await sb.from('farm_farmers').select('*').eq('user_id', myProfile.id);
+  _farmFarmers = farmers || [];
 }
 
 // ── 유틸리티 ──
