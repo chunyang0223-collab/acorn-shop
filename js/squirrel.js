@@ -398,12 +398,23 @@ async function sqLoadSquirrels() {
 // ================================================================
 //  그리드 렌더링 (초기 진입·전체 재렌더 시에만)
 // ================================================================
-function sqRenderGrid() {
+async function sqRenderGrid() {
   const grid = document.getElementById('squirrelGrid');
   if (!grid) return;
   document.getElementById('squirrelCount')?.setAttribute('textContent', _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10));
   const countEl = document.getElementById('squirrelCount');
   if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
+
+  // 농부 데이터가 아직 로드되지 않았으면 한 번 로드
+  if (typeof _farmFarmers !== 'undefined' && !window._farmDataLoaded) {
+    try {
+      const { data: fd } = await sb.from('farm_data').select('*').eq('user_id', myProfile.id).maybeSingle();
+      _farmData = fd;
+      const { data: ff } = await sb.from('farm_farmers').select('*').eq('user_id', myProfile.id);
+      _farmFarmers = ff || [];
+      window._farmDataLoaded = true;
+    } catch(e) { console.warn('[sqRenderGrid] farm data load failed', e); }
+  }
 
   if (_sqSquirrels.length === 0) {
     grid.innerHTML = `

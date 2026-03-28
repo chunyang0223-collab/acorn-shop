@@ -41,6 +41,7 @@ async function sqFarmInit() {
 
     const { data: farmers } = await sb.from('farm_farmers').select('*').eq('user_id', myProfile.id);
     _farmFarmers = farmers || [];
+    window._farmDataLoaded = true;
 
     const { data: plots } = await sb.from('farm_plots').select('*').eq('user_id', myProfile.id).order('slot');
     _farmPlots = plots || [];
@@ -638,6 +639,7 @@ async function _farmReloadAll() {
   _farmData = farmData;
   const { data: farmers } = await sb.from('farm_farmers').select('*').eq('user_id', myProfile.id);
   _farmFarmers = farmers || [];
+  window._farmDataLoaded = true;
   const { data: plots } = await sb.from('farm_plots').select('*').eq('user_id', myProfile.id).order('slot');
   _farmPlots = plots || [];
 }
