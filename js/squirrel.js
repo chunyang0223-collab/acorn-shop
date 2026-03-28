@@ -618,7 +618,7 @@ function sqCardHTML(sq) {
       // 수습 진행 중 → 타이머
       apprenticeHTML = `
         <div style="margin-top:12px;background:#f0fdf4;border-radius:14px;padding:14px 16px;text-align:center">
-          <div style="font-size:11px;font-weight:800;color:#15803d;margin-bottom:4px">🌾 수습 농부 훈련 중</div>
+          <div style="font-size:11px;font-weight:800;color:#15803d;margin-bottom:4px">🌾 농부 체험 알바 중 (수습 알바생)</div>
           <div id="sqApprenticeTimer-${sq.id}" style="font-size:22px;font-weight:900;color:#16a34a;font-variant-numeric:tabular-nums;letter-spacing:2px">${_farmFmtTime(remaining)}</div>
           <div style="font-size:10px;color:#86efac;margin-top:2px">훈련이 끝나면 결과를 확인할 수 있어요</div>
           ${myProfile?.is_admin ? `<button onclick="farmSkipApprentice()" style="margin-top:8px;padding:4px 12px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit">⏩ 스킵 (관리자)</button>` : ''}
