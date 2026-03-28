@@ -656,8 +656,8 @@ function sqCardHTML(sq) {
           <div style="font-size:12px;font-weight:700;margin-top:3px">${statusText[sq.status] || ''}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
-          ${(sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;background:#ecfdf5;color:#15803d">농부</span>' : ''}
+          <span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
+          ${(sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#ecfdf5;color:#15803d">농부</span>' : ''}
         </div>
       </div>
       ${babyHTML}${statsHTML}${recoverHTML}${apprenticeHTML}${sellBtn}
