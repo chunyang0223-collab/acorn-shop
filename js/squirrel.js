@@ -569,9 +569,25 @@ function sqCardHTML(sq) {
       </div>`;
   }
 
-  const sellBtn = (sq.status === 'pet' || sq.status === 'explorer')
-    ? `<button onclick="sqSellSquirrel('${sq.id}')" style="margin-top:12px;width:100%;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>`
-    : '';
+  let sellBtn = '';
+  if (sq.status === 'pet' || sq.status === 'explorer') {
+    const isFarmer = typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id);
+    const isApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_squirrel_id === sq.id;
+    const hasApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice';
+
+    if (sq.status === 'pet' && !isFarmer) {
+      // 애완형 + 농부 아님 → 버튼 2개 (펫샵에 팔기 / 농부로 전직)
+      const apprenticeDisabled = isApprentice || hasApprentice;
+      const apprenticeLabel = isApprentice ? '수습 중...' : (hasApprentice ? '다른 수습 중' : '🌾 농부로 전직');
+      sellBtn = `<div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="sqSellSquirrel('${sq.id}')" style="flex:1;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>
+        <button onclick="${apprenticeDisabled ? '' : `farmStartApprentice('${sq.id}')`}" style="flex:1;height:32px;border-radius:10px;border:none;background:${apprenticeDisabled ? '#f3f4f6' : '#ecfdf5'};color:${apprenticeDisabled ? '#9ca3af' : '#15803d'};font-size:12px;font-weight:900;cursor:${apprenticeDisabled ? 'default' : 'pointer'};font-family:inherit;${apprenticeDisabled ? 'opacity:0.7' : ''}">${apprenticeLabel}</button>
+      </div>`;
+    } else {
+      // 탐험형 or 이미 농부 → 기존 팔기 버튼만
+      sellBtn = `<button onclick="sqSellSquirrel('${sq.id}')" style="margin-top:12px;width:100%;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>`;
+    }
+  }
 
   return `
     <div id="sqCard-${sq.id}" style="background:white;border-radius:24px;padding:20px;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,0.07);border-left:5px solid ${borderColor};transition:border-left-color 0.5s">
@@ -581,7 +597,10 @@ function sqCardHTML(sq) {
           <div style="display:flex;align-items:center;gap:4px;font-size:18px;font-weight:900;color:#1f2937">${sq.name}<span onclick="sqEditName('${sq.id}')" style="font-size:13px;cursor:pointer;padding:2px 6px;display:inline-flex;align-items:center" title="클릭하여 이름 변경">✏️</span>${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}</div>
           <div style="font-size:12px;font-weight:700;margin-top:3px">${statusText[sq.status] || ''}</div>
         </div>
-        <span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
+          ${(sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;background:#ecfdf5;color:#15803d">🌾 농부</span>' : ''}
+        </div>
       </div>
       ${babyHTML}${statsHTML}${recoverHTML}${sellBtn}
     </div>`;
@@ -1466,6 +1485,7 @@ function sqFuseRenderGrid() {
           </div>
           <div style="font-size:10px;font-weight:900;color:#1f2937;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px">${sq.name}</div>
           <div style="font-size:9px;font-weight:700;color:${sq.status==='explorer'?'#059669':'#7c3aed'}">${sq.status==='explorer'?'탐험형':'애완형'}</div>
+          <div style="font-size:8px;color:#9ca3af;margin-top:1px;white-space:nowrap">❤${sq.hp_current||0} ⚔${sq.stats?.atk||0} 🛡${sq.stats?.def||0}</div>
           ${isSelected ? '<div style="font-size:10px;color:#f59e0b;font-weight:800">선택됨</div>' : ''}
         </div>`;
     });

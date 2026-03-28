@@ -154,21 +154,7 @@ function farmRenderApprenticeCompact() {
       </div>`;
   }
 
-  // 수습 안 하고 있을 때 — 수습 보내기 버튼
-  const petSquirrels = _sqSquirrels.filter(sq => {
-    if (sq.status !== 'pet') return false;
-    if (_farmFarmers.some(f => f.squirrel_id === sq.id)) return false;
-    return true;
-  });
-
-  if (petSquirrels.length > 0) {
-    return `
-      <div onclick="farmShowApprenticeModal()" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;cursor:pointer">
-        <div style="font-size:14px">🐿️</div>
-        <div style="font-size:10px;font-weight:700;color:#16a34a">수습 농부 보내기 (${petSquirrels.length})</div>
-      </div>`;
-  }
-
+  // 수습 안 하고 있을 때 — 빈 공간 (수습 보내기는 내 다람쥐 탭에서 처리)
   return `<div style="flex:1"></div>`;
 }
 
@@ -442,7 +428,10 @@ async function farmConfirmApprentice(squirrelId) {
 
     toast('🌾', '수습 농부로 출발했어요!');
     await _farmReloadAll();
-    farmRenderMain();
+    // 농장 탭이 열려있으면 리렌더
+    if (document.getElementById('sqFarmArea')) farmRenderMain();
+    // 내 다람쥐 탭 카드도 갱신 (버튼 상태 반영)
+    if (typeof sqRenderGrid === 'function') sqRenderGrid();
   } catch (e) {
     console.error('[farm]', e);
     toast('❌', '수습 시작 실패: ' + (e?.message || JSON.stringify(e)));
@@ -544,6 +533,8 @@ async function farmAfterReveal(success) {
   if (!success && typeof updateAcornDisplay === 'function') updateAcornDisplay();
   await _farmReloadAll();
   farmRenderMain();
+  // 내 다람쥐 탭 카드도 갱신 (농부 뱃지 반영)
+  if (typeof sqRenderGrid === 'function') sqRenderGrid();
 }
 
 // ================================================================
