@@ -98,6 +98,42 @@ function farmRenderMain() {
   html += farmRenderInventory();
 
   area.innerHTML = html;
+
+  // ── 밭 타이머 실시간 업데이트 ──
+  const growingPlots = _farmPlots.filter(p => p.crop_id && p.harvest_at);
+  if (growingPlots.length > 0) {
+    _farmTimer = setInterval(() => {
+      let anyGrowing = false;
+      growingPlots.forEach(plot => {
+        const slot = plot.slot;
+        const cell = document.getElementById(`farm-cell-${slot}`);
+        const labelEl = document.getElementById(`farm-cell-label-${slot}`);
+        const timerEl = document.getElementById(`farm-cell-timer-${slot}`);
+        const skipEl = document.getElementById(`farm-cell-skip-${slot}`);
+        if (!cell || !labelEl || !timerEl) return;
+
+        const remaining = Math.max(0, new Date(plot.harvest_at) - Date.now());
+
+        if (remaining <= 0) {
+          // 수확 가능 상태로 전환
+          cell.style.background = 'linear-gradient(135deg,#fef9c3,#fef3c7)';
+          cell.style.border = '2px solid #fbbf24';
+          cell.style.cursor = 'pointer';
+          cell.setAttribute('onclick', `farmHarvest(${slot})`);
+          labelEl.style.color = '#92400e';
+          labelEl.textContent = '수확!';
+          timerEl.textContent = '';
+          if (skipEl) skipEl.style.display = 'none';
+        } else {
+          anyGrowing = true;
+          timerEl.textContent = _farmFmtTime(remaining);
+        }
+      });
+      if (!anyGrowing) {
+        _farmClearTimer();
+      }
+    }, 1000);
+  }
 }
 
 // ================================================================
@@ -143,11 +179,11 @@ function farmRenderFieldGrid() {
         const remaining = harvestAt ? Math.max(0, harvestAt - Date.now()) : 0;
         const remainStr = remaining > 0 ? _farmFmtTime(remaining) : '';
         gridHtml += `
-          <div style="aspect-ratio:1;border-radius:16px;background:${ready ? 'linear-gradient(135deg,#fef9c3,#fef3c7)' : 'linear-gradient(135deg,#ecfdf5,#d1fae5)'};border:2px solid ${ready ? '#fbbf24' : '#86efac'};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:${ready ? 'pointer' : 'default'};transition:all .15s;position:relative" ${ready ? `onclick="farmHarvest(${i})"` : ''}>
+          <div id="farm-cell-${i}" data-harvest="${plot.harvest_at || ''}" style="aspect-ratio:1;border-radius:16px;background:${ready ? 'linear-gradient(135deg,#fef9c3,#fef3c7)' : 'linear-gradient(135deg,#ecfdf5,#d1fae5)'};border:2px solid ${ready ? '#fbbf24' : '#86efac'};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:${ready ? 'pointer' : 'default'};transition:background .3s,border .3s;position:relative" ${ready ? `onclick="farmHarvest(${i})"` : ''}>
             <div style="font-size:${ready ? '28' : '24'}px">${crop?.emoji || '🌱'}</div>
-            <div style="font-size:9px;font-weight:700;color:${ready ? '#92400e' : '#16a34a'};margin-top:2px">${ready ? '수확!' : (crop?.name || '')}</div>
-            ${!ready && remainStr ? `<div style="font-size:7px;color:#6b7280;font-weight:600;margin-top:1px">${remainStr}</div>` : ''}
-            ${!ready && myProfile?.is_admin ? `<div onclick="event.stopPropagation();farmAdminSkipGrow(${i})" style="position:absolute;top:3px;right:3px;font-size:7px;background:#ef4444;color:white;border-radius:6px;padding:1px 4px;cursor:pointer;font-weight:800;opacity:0.8">⏩</div>` : ''}
+            <div id="farm-cell-label-${i}" style="font-size:9px;font-weight:700;color:${ready ? '#92400e' : '#16a34a'};margin-top:2px">${ready ? '수확!' : (crop?.name || '')}</div>
+            <div id="farm-cell-timer-${i}" style="font-size:7px;color:#6b7280;font-weight:600;margin-top:1px">${!ready && remainStr ? remainStr : ''}</div>
+            ${myProfile?.is_admin ? `<div id="farm-cell-skip-${i}" onclick="event.stopPropagation();farmAdminSkipGrow(${i})" style="position:absolute;top:3px;right:3px;font-size:7px;background:#ef4444;color:white;border-radius:6px;padding:1px 4px;cursor:pointer;font-weight:800;opacity:0.8;display:${ready ? 'none' : 'block'}">⏩</div>` : ''}
           </div>`;
       } else {
         // 빈 밭
@@ -228,19 +264,24 @@ function farmRenderFarmerSlot() {
 // ================================================================
 function farmRenderInventory() {
   const capacity = _farmData?.inventory_capacity || 3;
+  const STACK_MAX = 10; // 슬롯당 최대 스택
   const items = _farmInventory || [];
 
-  // 아이템을 칸별로 펼치기 (같은 작물 quantity 만큼)
+  // 슬롯 목록 생성: 같은 (crop_id, item_type) 묶음을 STACK_MAX 단위로 슬롯 분할
   let slots = [];
   items.forEach(inv => {
     const crop = _farmCrops.find(c => c.id === inv.crop_id);
-    for (let i = 0; i < inv.quantity; i++) {
+    let remaining = inv.quantity;
+    while (remaining > 0) {
+      const stackQty = Math.min(remaining, STACK_MAX);
       slots.push({
         crop_id: inv.crop_id,
         emoji: crop?.emoji || '📦',
         name: crop?.name || inv.crop_id,
-        type: inv.item_type || 'seed'
+        type: inv.item_type || 'seed',
+        qty: stackQty
       });
+      remaining -= stackQty;
     }
   });
 
@@ -258,7 +299,7 @@ function farmRenderInventory() {
         <div style="width:48px;height:48px;border-radius:12px;background:${bgGrad};border:2px solid ${borderColor};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
           <div style="font-size:20px">${s.emoji}</div>
           <div style="font-size:7px;font-weight:700;color:${labelColor};margin-top:1px;white-space:nowrap">${isSeed ? s.name + ' 씨앗' : s.name}</div>
-          ${isSeed ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#16a34a;color:white;font-size:6px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid white">🌱</div>` : ''}
+          <div style="position:absolute;bottom:-4px;right:-4px;min-width:14px;height:14px;border-radius:7px;background:${isSeed ? '#16a34a' : '#d97706'};color:white;font-size:7px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid white;padding:0 2px">${s.qty}</div>
         </div>`;
     } else {
       gridHtml += `
@@ -275,13 +316,14 @@ function farmRenderInventory() {
       <div style="font-size:7px;color:#9ca3af;font-weight:700">🌰${expandCost}</div>
     </div>`;
 
-  const usedCount = slots.length;
+  const usedSlots = slots.length;
+  const totalItems = items.reduce((sum, inv) => sum + inv.quantity, 0);
 
   return `
     <div class="clay-card p-3" style="margin-top:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:11px;font-weight:900;color:#1f2937">📦 인벤토리</div>
-        <div style="font-size:9px;color:#6b7280;font-weight:700">${usedCount} / ${capacity}</div>
+        <div style="font-size:9px;color:#6b7280;font-weight:700">${usedSlots} / ${capacity} 칸 · 총 ${totalItems}개</div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${gridHtml}
@@ -453,7 +495,7 @@ function _farmRenderBuyTab() {
           <div style="font-size:12px;font-weight:900;color:#78350f">🌰 ${priceStr}</div>
           <div style="font-size:8px;font-weight:700;color:${changeColor}">${changeIcon} ${Math.abs(changePct).toFixed(1)}%</div>
         </div>
-        <button onclick="farmBuySeed('${crop.id}')" ${canBuy ? '' : 'disabled'} style="padding:4px 10px;border-radius:8px;border:none;background:${canBuy ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#e5e7eb'};color:${canBuy ? 'white' : '#9ca3af'};font-size:10px;font-weight:800;cursor:${canBuy ? 'pointer' : 'default'};flex-shrink:0">구매</button>
+        <button onclick="${canBuy ? `farmBuySeed('${crop.id}')` : `toast('⚠️','예치금이 부족해요! (필요: ${priceStr})')`}" style="padding:4px 10px;border-radius:8px;border:none;background:${canBuy ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#e5e7eb'};color:${canBuy ? 'white' : '#9ca3af'};font-size:10px;font-weight:800;cursor:pointer;flex-shrink:0">구매</button>
       </div>`;
   });
   return `<div style="display:flex;flex-direction:column;gap:6px">${html}</div>`;
