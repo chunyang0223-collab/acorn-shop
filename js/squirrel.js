@@ -462,6 +462,26 @@ async function sqRenderGrid() {
       _sqStartRecoverTimer(sq.id, sq);
     }
   });
+
+  // 수습 농부 타이머 시작
+  if (typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_until && _farmData?.apprentice_squirrel_id) {
+    const until = new Date(_farmData.apprentice_until);
+    const sqId = _farmData.apprentice_squirrel_id;
+    const timerEl = document.getElementById('sqApprenticeTimer-' + sqId);
+    if (timerEl && until > Date.now()) {
+      if (window._sqApprenticeTimer) clearInterval(window._sqApprenticeTimer);
+      window._sqApprenticeTimer = setInterval(() => {
+        const rem = until - Date.now();
+        const el = document.getElementById('sqApprenticeTimer-' + sqId);
+        if (el) el.textContent = _farmFmtTime(rem);
+        if (rem <= 0) {
+          clearInterval(window._sqApprenticeTimer);
+          window._sqApprenticeTimer = null;
+          _farmReloadAll().then(() => sqRenderGrid());
+        }
+      }, 1000);
+    }
+  }
 }
 
 // ================================================================
@@ -580,24 +600,51 @@ function sqCardHTML(sq) {
       </div>`;
   }
 
+  // 수습 농부 UI (이 다람쥐가 현재 수습 중일 때)
+  let apprenticeHTML = '';
+  const _isThisApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_squirrel_id === sq.id;
+  if (_isThisApprentice && _farmData?.apprentice_until) {
+    const until = new Date(_farmData.apprentice_until);
+    const remaining = until - Date.now();
+    if (remaining <= 0) {
+      // 수습 완료 → 결과 확인
+      apprenticeHTML = `
+        <div onclick="farmRevealResult()" style="margin-top:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px 16px;text-align:center;border:2px solid rgba(251,191,36,.3);cursor:pointer">
+          <div style="font-size:28px;margin-bottom:4px">🎁</div>
+          <div style="font-size:14px;font-weight:900;color:#78350f;margin-bottom:4px">수습 완료!</div>
+          <div style="font-size:11px;color:#92400e">결과 확인하기 →</div>
+        </div>`;
+    } else {
+      // 수습 진행 중 → 타이머
+      apprenticeHTML = `
+        <div style="margin-top:12px;background:#f0fdf4;border-radius:14px;padding:14px 16px;text-align:center">
+          <div style="font-size:11px;font-weight:800;color:#15803d;margin-bottom:4px">🌾 수습 농부 훈련 중</div>
+          <div id="sqApprenticeTimer-${sq.id}" style="font-size:22px;font-weight:900;color:#16a34a;font-variant-numeric:tabular-nums;letter-spacing:2px">${_farmFmtTime(remaining)}</div>
+          <div style="font-size:10px;color:#86efac;margin-top:2px">훈련이 끝나면 결과를 확인할 수 있어요</div>
+          ${myProfile?.is_admin ? `<button onclick="farmSkipApprentice()" style="margin-top:8px;padding:4px 12px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit">⏩ 스킵 (관리자)</button>` : ''}
+        </div>`;
+    }
+  }
+
   let sellBtn = '';
   if (sq.status === 'pet' || sq.status === 'explorer') {
     const isFarmer = typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id);
-    const isApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_squirrel_id === sq.id;
+    const isApprentice = _isThisApprentice;
     const hasApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice';
 
-    if (sq.status === 'pet' && !isFarmer) {
-      // 애완형 + 농부 아님 → 버튼 2개 (펫샵에 팔기 / 농부로 전직)
-      const apprenticeDisabled = isApprentice || hasApprentice;
-      const apprenticeLabel = isApprentice ? '수습 중...' : (hasApprentice ? '다른 수습 중' : '🌾 농부로 전직');
+    if (sq.status === 'pet' && !isFarmer && !isApprentice) {
+      // 애완형 + 농부 아님 + 수습 아님 → 버튼 2개 (펫샵에 팔기 / 농부로 전직)
+      const apprenticeDisabled = hasApprentice;
+      const apprenticeLabel = hasApprentice ? '다른 수습 중' : '🌾 농부로 전직';
       sellBtn = `<div style="display:flex;gap:8px;margin-top:12px">
         <button onclick="sqSellSquirrel('${sq.id}')" style="flex:1;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>
         <button onclick="${apprenticeDisabled ? '' : `farmStartApprentice('${sq.id}')`}" style="flex:1;height:32px;border-radius:10px;border:none;background:${apprenticeDisabled ? '#f3f4f6' : '#ecfdf5'};color:${apprenticeDisabled ? '#9ca3af' : '#15803d'};font-size:12px;font-weight:900;cursor:${apprenticeDisabled ? 'default' : 'pointer'};font-family:inherit;${apprenticeDisabled ? 'opacity:0.7' : ''}">${apprenticeLabel}</button>
       </div>`;
-    } else {
-      // 탐험형 or 이미 농부 → 기존 팔기 버튼만
+    } else if (!isApprentice) {
+      // 탐험형 or 이미 농부 or 수습 중 아닌 일반 → 팔기 버튼만
       sellBtn = `<button onclick="sqSellSquirrel('${sq.id}')" style="margin-top:12px;width:100%;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>`;
     }
+    // 수습 중인 다람쥐는 팔기 버튼 숨김
   }
 
   return `
@@ -610,10 +657,10 @@ function sqCardHTML(sq) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
           <span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
-          ${(sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;background:#ecfdf5;color:#15803d">🌾 농부</span>' : ''}
+          ${(sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:13px;font-weight:900;padding:6px 16px;border-radius:99px;background:#ecfdf5;color:#15803d">🌾 농부</span>' : ''}
         </div>
       </div>
-      ${babyHTML}${statsHTML}${recoverHTML}${sellBtn}
+      ${babyHTML}${statsHTML}${recoverHTML}${apprenticeHTML}${sellBtn}
     </div>`;
 }
 

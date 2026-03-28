@@ -66,12 +66,12 @@ function farmRenderMain() {
 
   let html = '';
 
-  // ── 상단 바: 상점 아이콘 + 수습 상태 + 예치금 ──
+  // ── 상단 바: 상점 아이콘 + 예치금 ──
   html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">`;
   // 상점 버튼
   html += `<div onclick="farmShowShop()" style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,.3);flex-shrink:0;font-size:20px">🛒</div>`;
-  // 수습 상태 (컴팩트)
-  html += farmRenderApprenticeCompact();
+  // 여백
+  html += `<div style="flex:1"></div>`;
   // 예치금
   html += farmRenderDepositBadge();
   html += `</div>`;
@@ -83,22 +83,6 @@ function farmRenderMain() {
   html += farmRenderFarmerCompact();
 
   area.innerHTML = html;
-
-  // 수습 타이머
-  if (_farmData?.farmer_status === 'apprentice' && _farmData.apprentice_until) {
-    const until = new Date(_farmData.apprentice_until);
-    if (until > Date.now()) {
-      _farmTimer = setInterval(() => {
-        const rem = until - Date.now();
-        const el = document.getElementById('farmApprenticeTimer');
-        if (el) el.textContent = _farmFmtTime(rem);
-        if (rem <= 0) {
-          _farmClearTimer();
-          sqFarmInit();
-        }
-      }, 1000);
-    }
-  }
 }
 
 // ================================================================
@@ -121,42 +105,6 @@ function farmRenderDepositBadge() {
         </div>
       </div>
     </div>`;
-}
-
-// ================================================================
-//  수습 상태 (컴팩트 — 상단 바 안에)
-// ================================================================
-function farmRenderApprenticeCompact() {
-  if (_farmData?.farmer_status === 'apprentice' && _farmData.apprentice_squirrel_id) {
-    const sq = _sqSquirrels.find(s => s.id === _farmData.apprentice_squirrel_id);
-    const sqName = sq?.name || '다람쥐';
-    const until = new Date(_farmData.apprentice_until);
-    const remaining = until - Date.now();
-
-    if (remaining <= 0) {
-      return `
-        <div onclick="farmRevealResult()" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:#fef3c7;border:2px solid #fbbf24;cursor:pointer">
-          <div style="font-size:16px">🎁</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:800;color:#92400e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sqName} 수습 완료!</div>
-            <div style="font-size:10px;color:#b45309">결과 확인하기 →</div>
-          </div>
-        </div>`;
-    }
-
-    return `
-      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:#f9fafb;border:1px solid #e5e7eb">
-        <div style="font-size:14px">🌾</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:10px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sqName} 수습 중</div>
-          <div id="farmApprenticeTimer" style="font-size:12px;font-weight:900;color:#f59e0b;font-variant-numeric:tabular-nums">${_farmFmtTime(remaining)}</div>
-        </div>
-        ${myProfile?.is_admin ? `<div onclick="event.stopPropagation();farmSkipApprentice()" style="font-size:9px;color:#92400e;background:#fef3c7;border-radius:6px;padding:2px 6px;cursor:pointer;font-weight:700">⏩</div>` : ''}
-      </div>`;
-  }
-
-  // 수습 안 하고 있을 때 — 빈 공간 (수습 보내기는 내 다람쥐 탭에서 처리)
-  return `<div style="flex:1"></div>`;
 }
 
 // ================================================================
@@ -359,45 +307,7 @@ function farmShowShop() {
 // ================================================================
 //  수습 농부 보내기 모달
 // ================================================================
-function farmShowApprenticeModal() {
-  const petSquirrels = _sqSquirrels.filter(sq => {
-    if (sq.status !== 'pet') return false;
-    if (_farmFarmers.some(f => f.squirrel_id === sq.id)) return false;
-    return true;
-  });
-
-  showModal(`
-    <div style="padding:4px 0">
-      <div style="font-size:15px;font-weight:900;color:#1f2937;text-align:center;margin-bottom:4px">🐿️ 수습 농부 보내기</div>
-      <div style="font-size:10px;color:#9ca3af;text-align:center;margin-bottom:12px">수습 ${_farmSettings.apprentice_hours || 4}시간 · 성공 ${_farmSettings.apprentice_success_pct || 50}% · 실패 시 🌰${(_farmSettings.apprentice_fail_reward || 500) / 100}</div>
-      ${petSquirrels.length === 0 ? `
-        <div style="text-align:center;padding:16px 0;font-size:12px;color:#9ca3af">수습 보낼 수 있는 애완형 다람쥐가 없어요.</div>
-      ` : `
-        <div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto">
-          ${petSquirrels.map(sq => {
-            const grade = _sqCalcGrade(sq);
-            const gs = _sqGradeStyle(grade);
-            const spriteFile = sq.sprite || 'sq_acorn';
-            return `
-              <div onclick="closeModal();farmStartApprentice('${sq.id}')" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:white;border:2px solid #e5e7eb;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='${gs.color}'" onmouseout="this.style.borderColor='#e5e7eb'">
-                <div style="border-radius:8px;${gs.border};padding:2px;background:${gs.bg};flex-shrink:0">
-                  <img src="images/squirrels/${spriteFile}.png" style="width:30px;height:30px;object-fit:contain;border-radius:6px;display:block" onerror="this.outerHTML='<div style=\\'font-size:22px;line-height:30px;text-align:center\\'>🐱</div>'">
-                </div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:11px;font-weight:900;color:#1f2937">${sq.name}</div>
-                  <div style="font-size:9px;font-weight:700;color:${gs.color}">${gs.label} · 애완형</div>
-                </div>
-                <div style="font-size:10px;font-weight:800;color:#f59e0b">보내기 →</div>
-              </div>`;
-          }).join('')}
-        </div>
-      `}
-      <button onclick="closeModal()" class="btn w-full mt-3" style="background:#f9fafb;color:#9ca3af;font-size:11px;font-weight:700">닫기</button>
-    </div>
-  `);
-}
-
-// ── 수습 시작 확인 ──
+// ── 수습 시작 확인 (내 다람쥐 탭에서 호출) ──
 async function farmStartApprentice(squirrelId) {
   const sq = _sqSquirrels.find(s => s.id === squirrelId);
   if (!sq) return;
@@ -532,9 +442,9 @@ async function farmRevealResult() {
 
 async function farmAfterReveal(success) {
   if (!success && typeof updateAcornDisplay === 'function') updateAcornDisplay();
+  if (window._sqApprenticeTimer) { clearInterval(window._sqApprenticeTimer); window._sqApprenticeTimer = null; }
   await _farmReloadAll();
-  farmRenderMain();
-  // 내 다람쥐 탭 카드도 갱신 (농부 뱃지 반영)
+  if (document.getElementById('sqFarmArea')) farmRenderMain();
   if (typeof sqRenderGrid === 'function') sqRenderGrid();
 }
 
@@ -613,8 +523,10 @@ async function farmSkipApprentice() {
     if (error) throw error;
     toast('⏩', '수습 시간 스킵!');
     _farmClearTimer();
+    if (window._sqApprenticeTimer) { clearInterval(window._sqApprenticeTimer); window._sqApprenticeTimer = null; }
     await _farmReloadAll();
-    farmRenderMain();
+    if (document.getElementById('sqFarmArea')) farmRenderMain();
+    if (typeof sqRenderGrid === 'function') sqRenderGrid();
   } catch (e) { console.error('[farm skip]', e); toast('❌', '스킵 실패'); }
 }
 
