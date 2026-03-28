@@ -22,6 +22,86 @@ async function farmLoadSettings() {
   _farmSettings = data?.value || {};
 }
 
+// ── 관리자: 농장 설정 UI 로드 ──
+async function farmAdminLoadSettingsUI() {
+  await farmLoadSettings();
+  const s = _farmSettings;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  set('farmSet_harvestNormal', s.harvest_normal_pct ?? 55);
+  set('farmSet_harvestBumper', s.harvest_bumper_pct ?? 20);
+  set('farmSet_harvestPoor', s.harvest_poor_pct ?? 17);
+  set('farmSet_harvestCatthief', s.harvest_catthief_pct ?? 8);
+  set('farmSet_normalHarvest', s.normal_harvest ?? 3);
+  set('farmSet_priceVariance', s.price_variance_pct ?? 30);
+  set('farmSet_bumperMin', s.bumper_min ?? 4);
+  set('farmSet_bumperMax', s.bumper_max ?? 5);
+  set('farmSet_poorMin', s.poor_min ?? 1);
+  set('farmSet_poorMax', s.poor_max ?? 2);
+  set('farmSet_plotBaseCost', s.plot_base_cost ?? 10);
+  set('farmSet_plotIncrement', s.plot_cost_increment ?? 10);
+  set('farmSet_maxPlots', s.max_plots ?? 9);
+  set('farmSet_sellRatePct', s.sell_rate_pct ?? 110);
+  set('farmSet_seedResellPct', s.seed_resell_pct ?? 70);
+  set('farmSet_tier1Limit', s.sell_tier1_limit ?? 10);
+  set('farmSet_tier2Limit', s.sell_tier2_limit ?? 10);
+  set('farmSet_tier3Limit', s.sell_tier3_limit ?? 10);
+  set('farmSet_tier1Pct', s.sell_tier1_pct ?? 100);
+  set('farmSet_tier2Pct', s.sell_tier2_pct ?? 80);
+  set('farmSet_tier3Pct', s.sell_tier3_pct ?? 60);
+  set('farmSet_apprenticeHours', s.apprentice_hours ?? 4);
+  set('farmSet_apprenticeSuccess', s.apprentice_success_pct ?? 50);
+  set('farmSet_apprenticeFailReward', s.apprentice_fail_reward ?? 500);
+  set('farmSet_inventoryBase', s.inventory_base ?? 10);
+  set('farmSet_inventoryExpandCost', s.inventory_expand_cost ?? 5);
+  set('farmSet_acceleratorCost', s.accelerator_cost ?? 100);
+  set('farmSet_nutrientCost', s.nutrient_cost ?? 200);
+  set('farmSet_depositFee', s.deposit_withdraw_fee ?? 20);
+  set('farmSet_disasterChance', s.disaster_chance_pct ?? 7);
+}
+
+async function farmSaveSettings() {
+  const get = (id, fallback) => {
+    const el = document.getElementById(id);
+    return el ? (parseFloat(el.value) || fallback) : fallback;
+  };
+  const merged = Object.assign({}, _farmSettings, {
+    harvest_normal_pct:    get('farmSet_harvestNormal', 55),
+    harvest_bumper_pct:    get('farmSet_harvestBumper', 20),
+    harvest_poor_pct:      get('farmSet_harvestPoor', 17),
+    harvest_catthief_pct:  get('farmSet_harvestCatthief', 8),
+    normal_harvest:        get('farmSet_normalHarvest', 3),
+    price_variance_pct:    get('farmSet_priceVariance', 30),
+    bumper_min:            get('farmSet_bumperMin', 4),
+    bumper_max:            get('farmSet_bumperMax', 5),
+    poor_min:              get('farmSet_poorMin', 1),
+    poor_max:              get('farmSet_poorMax', 2),
+    plot_base_cost:        get('farmSet_plotBaseCost', 10),
+    plot_cost_increment:   get('farmSet_plotIncrement', 10),
+    max_plots:             get('farmSet_maxPlots', 9),
+    sell_rate_pct:         get('farmSet_sellRatePct', 110),
+    seed_resell_pct:       get('farmSet_seedResellPct', 70),
+    sell_tier1_limit:      get('farmSet_tier1Limit', 10),
+    sell_tier2_limit:      get('farmSet_tier2Limit', 10),
+    sell_tier3_limit:      get('farmSet_tier3Limit', 10),
+    sell_tier1_pct:        get('farmSet_tier1Pct', 100),
+    sell_tier2_pct:        get('farmSet_tier2Pct', 80),
+    sell_tier3_pct:        get('farmSet_tier3Pct', 60),
+    apprentice_hours:      get('farmSet_apprenticeHours', 4),
+    apprentice_success_pct:get('farmSet_apprenticeSuccess', 50),
+    apprentice_fail_reward:get('farmSet_apprenticeFailReward', 500),
+    inventory_base:        get('farmSet_inventoryBase', 10),
+    inventory_expand_cost: get('farmSet_inventoryExpandCost', 5),
+    accelerator_cost:      get('farmSet_acceleratorCost', 100),
+    nutrient_cost:         get('farmSet_nutrientCost', 200),
+    deposit_withdraw_fee:  get('farmSet_depositFee', 20),
+    disaster_chance_pct:   get('farmSet_disasterChance', 7),
+  });
+  const { error } = await sb.from('app_settings')
+    .upsert({ key: 'farm_settings', value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (!error) { _farmSettings = merged; toast('✅', '농장 설정이 저장되었어요'); }
+  else toast('❌', '저장 실패: ' + error.message);
+}
+
 // ── 농장 탭 진입 ──
 async function sqFarmInit() {
   const area = document.getElementById('sqFarmArea');

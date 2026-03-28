@@ -158,15 +158,22 @@ function _sqSpawnParticles(isGood, count = 8) {
 // ================================================================
 function sqAdminEnter() {
   document.getElementById('adminMode').classList.add('hidden');
+  document.getElementById('atab-squirrelSettings')?.classList.add('hidden');
   document.getElementById('userMode').classList.remove('hidden');
   document.getElementById('sqAdminBackBar')?.classList.remove('hidden');
+  // 관리자 설정 패널 표시
+  document.querySelectorAll('.sq-admin-panel').forEach(el => el.classList.remove('hidden'));
   const sqBtn = document.querySelector('#userTabBar .tab-btn[onclick*="squirrel"]');
   if (sqBtn) sqBtn.click();
+  // 설정값 로드
+  sqAdminInit();
 }
 
 function sqAdminBack() {
   if (typeof _sqUnsubscribe === 'function') _sqUnsubscribe();
   document.getElementById('sqAdminBackBar')?.classList.add('hidden');
+  // 관리자 설정 패널 숨기기
+  document.querySelectorAll('.sq-admin-panel').forEach(el => el.classList.add('hidden'));
   document.getElementById('userMode').classList.add('hidden');
   document.getElementById('adminMode').classList.remove('hidden');
 }
@@ -1856,6 +1863,8 @@ async function sqAdminInit() {
   await expAdminLoadUI();
   await sqAdminGrantInit();
   await sqAdminLoadList();
+  // 농장 설정 로드
+  if (typeof farmAdminLoadSettingsUI === 'function') await farmAdminLoadSettingsUI();
 }
 
 async function sqSaveSettings() {
