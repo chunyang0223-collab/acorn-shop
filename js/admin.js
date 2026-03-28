@@ -593,11 +593,13 @@ async function renderTxLog() {
   window._logUsers = users;
   btnList.innerHTML = users.map(u => `
     <button id="logBtn-${u.id}" onclick="selectLogUser('${u.id}')"
-      style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;border:1.5px solid rgba(200,180,240,0.3);background:rgba(255,255,255,0.7);font-family:'Jua',sans-serif;font-size:13px;color:#4b3060;cursor:pointer;transition:all .15s">
+      style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;border:1.5px solid rgba(200,180,240,0.3);background:rgba(255,255,255,0.7);font-family:'Jua',sans-serif;font-size:13px;color:#4b3060;cursor:pointer;transition:all .15s;flex-shrink:0;white-space:nowrap">
       <span>${u.avatar_emoji || '🐿️'}</span>
       <span>${u.display_name}</span>
       <span style="font-size:11px;color:#a78bfa">🌰${u.acorns||0}</span>
     </button>`).join('');
+  // 드래그 스크롤 + 스크롤 힌트 초기화
+  if (typeof initTabBarDragScroll === 'function') initTabBarDragScroll(btnList);
 }
 
 function selectLogUser(uid) {
@@ -902,13 +904,13 @@ async function renderUserAdmin() {
           </div>
           <div class="um-acorn">🌰 ${u.acorns}</div>
         </div>
-        ${u.is_admin ? '' : `<div class="um-actions">
+        <div class="um-actions">
           <button class="um-btn um-btn-acorn" onclick="showAcornModal('${u.id}','${esc(u.display_name)}',1)">🌰 도토리 지급</button>
           <button class="um-btn um-btn-minus" onclick="showAcornModal('${u.id}','${esc(u.display_name)}',-1)">🌰 도토리 차감</button>
-          <button class="um-btn um-btn-item" onclick="showGiftItemModal('${u.id}','${esc(u.display_name)}')">🎁 아이템 선물</button>
-          <button class="um-btn um-btn-game" onclick="showMgChargeModal('${u.id}','${esc(u.display_name)}')">🎮 게임횟수 조정</button>
+          ${u.is_admin ? '' : `<button class="um-btn um-btn-item" onclick="showGiftItemModal('${u.id}','${esc(u.display_name)}')">🎁 아이템 선물</button>
+          <button class="um-btn um-btn-game" onclick="showMgChargeModal('${u.id}','${esc(u.display_name)}')">🎮 게임횟수 조정</button>`}
         </div>
-        <div class="um-delete-wrap">
+        ${u.is_admin ? '' : `<div class="um-delete-wrap">
           <button class="um-btn-delete" onclick="confirmDeleteUser('${u.id}','${esc(u.display_name)}')">🗑️ 탈퇴</button>
         </div>`}
       </div>`;
