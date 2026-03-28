@@ -775,23 +775,31 @@
               <div class="fc-sec-body">
                 <div class="fc-sub-title">일반 몬스터</div>
                 <div id="expSet_monsterList" class="mb-2">로딩 중...</div>
-                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap">
-                  <input type="text" id="expMonEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
-                  <input type="text" id="expMonName" class="field" placeholder="이름" style="flex:1; min-width:120px">
-                  <input type="number" id="expMonLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
-                  <input type="number" id="expMonLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
-                  <button class="btn btn-primary btn-sm" onclick="_expAddMonster(false)">추가</button>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+                  <div style="display:flex;gap:6px">
+                    <input type="text" id="expMonEmoji" class="field" placeholder="🐺" style="width:44px;text-align:center;flex-shrink:0">
+                    <input type="text" id="expMonName" class="field" placeholder="몬스터 이름" style="flex:1">
+                  </div>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input type="number" id="expMonLvMin" class="field" placeholder="최소 Lv" style="flex:1" min="1">
+                    <input type="number" id="expMonLvMax" class="field" placeholder="최대 Lv" style="flex:1" min="1">
+                    <button class="btn btn-primary btn-sm" style="flex-shrink:0;padding:6px 14px" onclick="_expAddMonster(false)">추가</button>
+                  </div>
                 </div>
 
                 <div class="fc-divider"></div>
                 <div class="fc-sub-title">보스</div>
                 <div id="expSet_bossList" class="mb-2">로딩 중...</div>
-                <div style="display:flex; gap:8px; margin-bottom:0; flex-wrap:wrap">
-                  <input type="text" id="expBossEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
-                  <input type="text" id="expBossName" class="field" placeholder="이름" style="flex:1; min-width:120px">
-                  <input type="number" id="expBossLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
-                  <input type="number" id="expBossLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
-                  <button class="btn btn-primary btn-sm" onclick="_expAddMonster(true)">추가</button>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="display:flex;gap:6px">
+                    <input type="text" id="expBossEmoji" class="field" placeholder="👑" style="width:44px;text-align:center;flex-shrink:0">
+                    <input type="text" id="expBossName" class="field" placeholder="보스 이름" style="flex:1">
+                  </div>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input type="number" id="expBossLvMin" class="field" placeholder="최소 Lv" style="flex:1" min="1">
+                    <input type="number" id="expBossLvMax" class="field" placeholder="최대 Lv" style="flex:1" min="1">
+                    <button class="btn btn-primary btn-sm" style="flex-shrink:0;padding:6px 14px" onclick="_expAddMonster(true)">추가</button>
+                  </div>
                 </div>
               </div>
             </div>
