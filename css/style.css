@@ -347,6 +347,7 @@ body {
 #adminTabBar { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; cursor: grab; }
 #adminTabBar::-webkit-scrollbar { display: none; }
 #userTabBar::-webkit-scrollbar { display: none; }
+#logUserBtnList::-webkit-scrollbar { display: none; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: rgba(200,180,230,0.4); border-radius: 99px; }
 
