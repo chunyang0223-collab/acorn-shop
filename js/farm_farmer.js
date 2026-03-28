@@ -19,7 +19,7 @@ async function farmStartApprentice(squirrelId) {
         ${_farmSettings.apprentice_hours || 4}시간 후 결과를 확인할 수 있어요.
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280;font-weight:800">취소</button>
+        <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280;font-weight:800;font-size:13px;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">취소</button>
         <button onclick="closeModal();farmConfirmApprentice('${squirrelId}')" class="btn btn-primary flex-1">보내기!</button>
       </div>
     </div>
@@ -153,7 +153,7 @@ function farmShowChangeFarmer() {
         ? `<button onclick="farmUnequipFarmer()" class="btn w-full mt-3" style="background:#fef2f2;color:#ef4444;font-weight:800;font-size:11px">농부 해제하기</button>`
         : `<div class="w-full mt-3 text-center" style="font-size:10px;color:#9ca3af;font-weight:700;padding:8px 0">🌱 작물이 자라는 중에는 해제할 수 없어요</div>`
       ) : ''}
-      <button onclick="closeModal()" class="btn w-full mt-2" style="background:#f9fafb;color:#9ca3af;font-size:11px;font-weight:700">닫기</button>
+      <button onclick="closeModal()" class="btn w-full mt-2" style="background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">닫기</button>
     </div>
   `);
 }

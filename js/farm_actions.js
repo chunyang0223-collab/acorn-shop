@@ -42,7 +42,7 @@ function farmShowPlantModal(slot) {
       <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
         ${listHtml}
       </div>
-      <button onclick="closeModal()" class="btn w-full" style="background:#f9fafb;color:#9ca3af;font-size:11px;font-weight:700;margin-top:10px">취소</button>
+      <button onclick="closeModal()" class="btn w-full" style="background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb;margin-top:10px">취소</button>
     </div>
   `);
 }
