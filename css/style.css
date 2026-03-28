@@ -2162,3 +2162,256 @@ body {
 [data-theme="dark"] .vol-slider::-webkit-slider-thumb {
   background: linear-gradient(135deg, #b05878, #8050b8) !important;
 }
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크모드: 인라인 스타일 텍스트/배경 전역 오버라이드
+   인라인 style="" 의 어두운 색상을 밝게 변환
+   ══════════════════════════════════════════════════════ */
+
+/* ── 다크: 어두운 텍스트 → 밝은 텍스트 ── */
+[data-theme="dark"] [style*="color:#1f2937"] { color: #e2e8f0 !important; }
+[data-theme="dark"] [style*="color:#374151"] { color: #cbd5e1 !important; }
+[data-theme="dark"] [style*="color:#4b5563"] { color: #a0aec0 !important; }
+[data-theme="dark"] [style*="color:#6b7280"] { color: #94a3b8 !important; }
+[data-theme="dark"] [style*="color:#9ca3af"] { color: #78849e !important; }
+[data-theme="dark"] [style*="color:#78350f"] { color: #fcd34d !important; }
+[data-theme="dark"] [style*="color:#92400e"] { color: #fbbf24 !important; }
+[data-theme="dark"] [style*="color:#b45309"] { color: #f59e0b !important; }
+[data-theme="dark"] [style*="color:#d97706"] { color: #fbbf24 !important; }
+[data-theme="dark"] [style*="color:#5c4a32"] { color: #d4c4a0 !important; }
+[data-theme="dark"] [style*="color:#8a7a60"] { color: #c8b898 !important; }
+
+/* ── 다크: 모달 내부 밝은 배경 → 어두운 배경 ── */
+[data-theme="dark"] .modal-box [style*="background:white"],
+[data-theme="dark"] .modal-box [style*="background:#fff"] {
+  background: rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"] .modal-box [style*="background:#f9fafb"] {
+  background: rgba(255,255,255,0.06) !important;
+}
+[data-theme="dark"] .modal-box [style*="background:#f3f4f6"] {
+  background: rgba(255,255,255,0.08) !important;
+}
+
+/* ── 다크: 모달 내부 밝은 그라디언트 배경 → 반투명 ── */
+[data-theme="dark"] .modal-box [style*="background:linear-gradient(135deg,#fffbeb"] {
+  background: rgba(245,158,11,0.12) !important;
+}
+[data-theme="dark"] .modal-box [style*="background:linear-gradient(135deg,#fef9c3"] {
+  background: rgba(245,158,11,0.10) !important;
+}
+[data-theme="dark"] .modal-box [style*="background:linear-gradient(135deg,#ecfdf5"] {
+  background: rgba(34,197,94,0.10) !important;
+}
+[data-theme="dark"] .modal-box [style*="background:linear-gradient(135deg,#f0fdf4"] {
+  background: rgba(34,197,94,0.10) !important;
+}
+
+/* ── 다크: 모달 내부 테두리 색상 ── */
+[data-theme="dark"] .modal-box [style*="border:2px solid #e5e7eb"],
+[data-theme="dark"] .modal-box [style*="border:1.5px solid #e5e7eb"] {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+[data-theme="dark"] .modal-box [style*="border:2px dashed #d1d5db"] {
+  border-color: rgba(255,255,255,0.15) !important;
+}
+[data-theme="dark"] .modal-box [style*="border:1px solid #d1d5db"] {
+  border-color: rgba(255,255,255,0.15) !important;
+}
+[data-theme="dark"] .modal-box [style*="border:2px solid #86efac"] {
+  border-color: rgba(34,197,94,0.35) !important;
+}
+[data-theme="dark"] .modal-box [style*="border:2px solid #fbbf24"] {
+  border-color: rgba(245,158,11,0.35) !important;
+}
+[data-theme="dark"] .modal-box [style*="border:3px solid #d97706"] {
+  border-color: rgba(217,119,6,0.35) !important;
+}
+
+/* ── 다크: 모달 input 필드 ── */
+[data-theme="dark"] .modal-box input[type="number"],
+[data-theme="dark"] .modal-box input[type="text"] {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  color: #e2e8f0 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크: 농장 영역 인라인 스타일 오버라이드
+   ══════════════════════════════════════════════════════ */
+
+/* 밭 그리드 */
+[data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#fef9c3"] {
+  background: rgba(245,158,11,0.15) !important;
+}
+[data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#ecfdf5"] {
+  background: rgba(34,197,94,0.12) !important;
+}
+[data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#fefce8"] {
+  background: rgba(245,158,11,0.08) !important;
+}
+[data-theme="dark"] .clay-card [style*="border:2px solid #fbbf24"] {
+  border-color: rgba(245,158,11,0.4) !important;
+}
+[data-theme="dark"] .clay-card [style*="border:2px solid #86efac"] {
+  border-color: rgba(34,197,94,0.35) !important;
+}
+[data-theme="dark"] .clay-card [style*="border:2px dashed #d1d5db"] {
+  border-color: rgba(255,255,255,0.15) !important;
+}
+[data-theme="dark"] .clay-card [style*="background:#f9fafb"] {
+  background: rgba(255,255,255,0.06) !important;
+}
+[data-theme="dark"] .clay-card [style*="background:#f3f4f6"] {
+  background: rgba(255,255,255,0.06) !important;
+}
+
+/* 인벤토리 슬롯 배경 */
+[data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#ecfdf5,#d1fae5)"] {
+  background: rgba(34,197,94,0.15) !important;
+}
+[data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#fef9c3,#fef3c7)"] {
+  background: rgba(245,158,11,0.15) !important;
+}
+
+/* 예치금 뱃지 */
+[data-theme="dark"] [style*="background:linear-gradient(135deg,#fffbeb,#fef3c7)"] {
+  background: rgba(245,158,11,0.15) !important;
+}
+[data-theme="dark"] [style*="border:3px solid #d97706"] {
+  border-color: rgba(217,119,6,0.35) !important;
+}
+[data-theme="dark"] [style*="border:2px solid #fbbf24"] {
+  border-color: rgba(245,158,11,0.30) !important;
+}
+
+/* 농부 슬롯 */
+[data-theme="dark"] [style*="background:linear-gradient(135deg,#f0fdf4,#ecfdf5)"] {
+  background: rgba(34,197,94,0.12) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크: 상점 모달 판매 카드 배경
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .modal-box [style*="background:#f0fdf4"] {
+  background: rgba(34,197,94,0.10) !important;
+}
+[data-theme="dark"] .modal-box [style*="background:#fefce8"] {
+  background: rgba(245,158,11,0.10) !important;
+}
+[data-theme="dark"] .modal-box [style*="background:#fef2f2"] {
+  background: rgba(239,68,68,0.10) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크: 미니게임 (2048·캐치·룰렛)
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .mg2048-title { color: #fcd34d !important; }
+[data-theme="dark"] .mg2048-exit-top { background: rgba(255,255,255,0.08) !important; color: #94a3b8 !important; }
+[data-theme="dark"] .mg2048-sbox-label { color: #fbbf24 !important; }
+[data-theme="dark"] .mg2048-combo { color: #fbbf24 !important; }
+[data-theme="dark"] .mg2048-overlay h3 { color: #fcd34d !important; }
+[data-theme="dark"] .mg2048-overlay .rules { color: #94a3b8 !important; }
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크: 원정대(expedition) 결과 화면
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] [style*="background:rgba(255,255,255,0.5)"] {
+  background: rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"] [style*="color:#b89e78"] { color: #d4c4a0 !important; }
+
+/* ══════════════════════════════════════════════════════
+   🎨 모달 버튼 스타일 개선 (닫기·취소 버튼 등)
+   ══════════════════════════════════════════════════════ */
+
+/* 모달 내부 닫기/취소 버튼 — 더 크고 명확하게 */
+.modal-box .btn.w-full {
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  border-radius: 14px !important;
+  min-height: 44px !important;
+  letter-spacing: 0.5px;
+  transition: all 0.15s ease;
+}
+
+/* 다크모드 닫기/취소 버튼 */
+[data-theme="dark"] .modal-box .btn[style*="background:#f9fafb"],
+[data-theme="dark"] .modal-box .btn[style*="background:#f3f4f6"] {
+  background: rgba(255,255,255,0.08) !important;
+  color: #94a3b8 !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+/* 모달 primary 버튼도 크기 맞춤 */
+.modal-box .btn-primary {
+  min-height: 44px !important;
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  border-radius: 14px !important;
+}
+
+/* 다크모드: 모달 일반 버튼 (조작 버튼 ◀ ▶ ALL 등) */
+[data-theme="dark"] .modal-box button[style*="background:white"] {
+  background: rgba(255,255,255,0.10) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
+/* 다크모드: 모달 내부 비활성 카드 */
+[data-theme="dark"] .modal-box [style*="opacity:0.6"] {
+  opacity: 0.5 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크: 원정대 카드 보상 텍스트 (카드 이미지 배경 위의 어두운 글씨)
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .btl-grade-c .btl-card-reward-txt { color: #b8e8b8 !important; }
+[data-theme="dark"] .btl-grade-b .btl-card-reward-txt { color: #a8c8e8 !important; }
+[data-theme="dark"] .btl-grade-a .btl-card-reward-txt { color: #f0d8a0 !important; }
+[data-theme="dark"] .btl-card-grade { text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+[data-theme="dark"] .btl-continue-btn {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .btl-card-hint { color: #80a880 !important; }
+
+/* 원정대 결과 화면 — 파티 카드 내 이름 */
+[data-theme="dark"] [style*="color:#5c4a32"] { color: #e8d5b5 !important; }
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크: 미니게임 모달 (공통 — clay-card 내부의 어두운 텍스트)
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .clay-card [style*="color:#78350f"] { color: #fcd34d !important; }
+[data-theme="dark"] .clay-card [style*="color:#92400e"] { color: #fbbf24 !important; }
+[data-theme="dark"] .clay-card [style*="color:#b45309"] { color: #f59e0b !important; }
+
+/* 2048 스코어 박스 */
+[data-theme="dark"] .mg2048-sbox {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+[data-theme="dark"] .mg2048-sbox-val { color: #e2e8f0 !important; }
+
+/* 원정대 도움말 카드 */
+[data-theme="dark"] .sq-help-card {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"] .sq-help-card-title { color: #e2e8f0 !important; }
+[data-theme="dark"] .sq-help-card-desc { color: #94a3b8 !important; }
+[data-theme="dark"] .sq-help-acc summary { color: #cbd5e1 !important; }
+
+/* ══════════════════════════════════════════════════════
+   🌙 다크: 원정대 아이템 선택 칩
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .exp-item-select-wrap {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+[data-theme="dark"] .exp-item-chip {
+  border-color: rgba(255,255,255,0.12) !important;
+  background: rgba(255,255,255,0.05) !important;
+}
+[data-theme="dark"] .exp-item-chip-name { color: #e2e8f0 !important; }
