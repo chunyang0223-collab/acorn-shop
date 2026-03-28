@@ -147,6 +147,7 @@ function farmRenderFieldGrid() {
             <div style="font-size:${ready ? '28' : '24'}px">${crop?.emoji || '🌱'}</div>
             <div style="font-size:9px;font-weight:700;color:${ready ? '#92400e' : '#16a34a'};margin-top:2px">${ready ? '수확!' : (crop?.name || '')}</div>
             ${!ready && remainStr ? `<div style="font-size:7px;color:#6b7280;font-weight:600;margin-top:1px">${remainStr}</div>` : ''}
+            ${!ready && myProfile?.is_admin ? `<div onclick="event.stopPropagation();farmAdminSkipGrow(${i})" style="position:absolute;top:3px;right:3px;font-size:7px;background:#ef4444;color:white;border-radius:6px;padding:1px 4px;cursor:pointer;font-weight:800;opacity:0.8">⏩</div>` : ''}
           </div>`;
       } else {
         // 빈 밭
@@ -926,11 +927,16 @@ async function farmAfterReveal(success) {
 //  농부 교체/해제 모달
 // ================================================================
 function farmShowChangeFarmer() {
+  const hasGrowingCrop = (_farmPlots || []).some(p => p.crop_id != null);
+  const canUnequip = _farmData?.active_farmer_id && !hasGrowingCrop;
   showModal(`
     <div style="padding:4px 0">
       <div style="font-size:15px;font-weight:900;color:#1f2937;margin-bottom:12px;text-align:center">🌾 농부 교체/해제</div>
       ${_farmRenderFarmerList()}
-      ${_farmData?.active_farmer_id ? `<button onclick="farmUnequipFarmer()" class="btn w-full mt-3" style="background:#fef2f2;color:#ef4444;font-weight:800;font-size:11px">농부 해제하기</button>` : ''}
+      ${_farmData?.active_farmer_id ? (canUnequip
+        ? `<button onclick="farmUnequipFarmer()" class="btn w-full mt-3" style="background:#fef2f2;color:#ef4444;font-weight:800;font-size:11px">농부 해제하기</button>`
+        : `<div class="w-full mt-3 text-center" style="font-size:10px;color:#9ca3af;font-weight:700;padding:8px 0">🌱 작물이 자라는 중에는 해제할 수 없어요</div>`
+      ) : ''}
       <button onclick="closeModal()" class="btn w-full mt-2" style="background:#f9fafb;color:#9ca3af;font-size:11px;font-weight:700">닫기</button>
     </div>
   `);
@@ -1005,9 +1011,32 @@ async function farmSkipApprentice() {
 }
 
 // ================================================================
+//  [관리자] 작물 성장 시간 스킵
+// ================================================================
+async function farmAdminSkipGrow(slot) {
+  if (!myProfile?.is_admin) return;
+  try {
+    const { data, error } = await sb.rpc('farm_admin_skip_grow', {
+      p_admin_id: myProfile.id, p_slot: slot
+    });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+    toast('⏩', `${slot}번 밭 성장 스킵!`);
+    await _farmReloadAll();
+    farmRenderMain();
+  } catch (e) { console.error('[farm admin skip grow]', e); toast('❌', '스킵 실패'); }
+}
+
+// ================================================================
 //  파종 모달 (인벤토리 씨앗 선택 → 밭에 심기)
 // ================================================================
 function farmShowPlantModal(slot) {
+  // 농부 장착 체크
+  if (!_farmData?.active_farmer_id) {
+    toast('⚠️', '농부가 장착되어 있어야 씨앗을 심을 수 있어요');
+    return;
+  }
+
   const seeds = (_farmInventory || []).filter(i => i.item_type === 'seed' && i.quantity > 0);
 
   if (seeds.length === 0) {
@@ -1067,6 +1096,13 @@ async function farmDoPlant(slot, cropId) {
 async function farmHarvest(slot) {
   const plot = _farmPlots.find(p => p.slot === slot);
   if (!plot?.crop_id) return;
+
+  // 농부 장착 체크
+  if (!_farmData?.active_farmer_id) {
+    toast('⚠️', '농부가 장착되어 있어야 수확할 수 있어요');
+    return;
+  }
+
   const crop = _farmCrops.find(c => c.id === plot.crop_id);
 
   // 수확 연출
