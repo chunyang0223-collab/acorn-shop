@@ -237,23 +237,24 @@ function _farmRenderSellTab() {
       const maxSellable = Math.min(inv.quantity, tierRemaining);
 
       html += `
-        <div style="padding:10px;border-radius:12px;background:${tierBg};border:1.5px solid ${tierColor}30;margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span style="font-size:20px">${crop.emoji}</span>
+        <div style="padding:12px 14px;border-radius:14px;background:${tierBg};border:1.5px solid ${tierColor}30;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <span style="font-size:28px">${crop.emoji}</span>
             <div style="flex:1">
-              <div style="font-size:11px;font-weight:900;color:#1f2937">${crop.name} <span style="font-size:9px;color:#6b7280">×${inv.quantity}</span></div>
-              <div style="font-size:9px;font-weight:700;color:${tierColor}">${currentTier+1}단계 (${tierPct}%) ${tierLimit<999?`: ${tierSold}/${tierLimit}`:''}</div>
+              <div style="font-size:14px;font-weight:900;color:#1f2937">${crop.name} <span style="font-size:12px;color:#6b7280;font-weight:700">×${inv.quantity}</span></div>
+              <div style="font-size:12px;font-weight:700;color:${tierColor};margin-top:2px">${currentTier+1}단계 (${tierPct}%) ${tierLimit<999?`· ${tierSold}/${tierLimit}`:''}</div>
             </div>
             <div style="text-align:right">
-              <div style="font-size:10px;font-weight:900;color:${tierColor}">개당 🌰 ${priceStr}</div>
+              <div style="font-size:9px;color:#6b7280;font-weight:700">개당</div>
+              <div style="font-size:14px;font-weight:900;color:${tierColor}">🌰 ${priceStr}</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
-            <button onclick="_farmSellCropQty('${inv.crop_id}',-1)" style="width:24px;height:24px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
-            <span id="farmCropQty_${inv.crop_id}" style="font-size:13px;font-weight:900;min-width:24px;text-align:center">0</span>
-            <button onclick="_farmSellCropQty('${inv.crop_id}',1)" style="width:24px;height:24px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
-            <button onclick="_farmSellCropQty('${inv.crop_id}',${maxSellable})" style="padding:3px 8px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:9px;font-weight:800;cursor:pointer;color:#6b7280">ALL</button>
-            <button onclick="farmSellCrop('${inv.crop_id}')" style="padding:5px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,${tierColor},${tierColor}dd);color:white;font-size:10px;font-weight:800;cursor:pointer">판매</button>
+          <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+            <button onclick="_farmSellCropQty('${inv.crop_id}',-1)" style="width:28px;height:28px;border-radius:8px;border:1px solid #d1d5db;background:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
+            <span id="farmCropQty_${inv.crop_id}" style="font-size:15px;font-weight:900;min-width:28px;text-align:center">0</span>
+            <button onclick="_farmSellCropQty('${inv.crop_id}',1)" style="width:28px;height:28px;border-radius:8px;border:1px solid #d1d5db;background:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
+            <button onclick="_farmSellCropQty('${inv.crop_id}',${maxSellable})" style="padding:4px 10px;border-radius:8px;border:1px solid #d1d5db;background:white;font-size:10px;font-weight:800;cursor:pointer;color:#6b7280">ALL</button>
+            <button onclick="farmSellCrop('${inv.crop_id}')" style="padding:6px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,${tierColor},${tierColor}dd);color:white;font-size:12px;font-weight:800;cursor:pointer">판매</button>
           </div>
         </div>`;
     });
