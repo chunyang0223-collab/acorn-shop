@@ -802,184 +802,83 @@
         <div id="sqFarmArea"></div>
         <!-- 관리자 전용: 농장 설정 -->
         <div class="sq-admin-panel hidden">
-          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
-            <h2 class="text-lg font-black text-gray-800 mb-1">🌾 농장 설정</h2>
-            <p class="text-xs text-gray-400 font-semibold mb-4">수확 확률, 밭 비용, 판매, 수습 등을 관리합니다</p>
+          <div class="clay-card p-3 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-sm font-black text-gray-800 mb-2">🌾 농장 설정</h2>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">🎲 수확 결과 확률 (%)</h3>
-            <p class="text-xs text-gray-400 mb-2">일반 + 풍작 + 흉작 + 고양이도둑 = 100</p>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">🌾 일반 수확</label>
-                <input type="number" id="farmSet_harvestNormal" class="field" value="55" min="0" max="100">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">🌟 풍작</label>
-                <input type="number" id="farmSet_harvestBumper" class="field" value="20" min="0" max="100">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">😢 흉작</label>
-                <input type="number" id="farmSet_harvestPoor" class="field" value="17" min="0" max="100">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">🐱 고양이 도둑</label>
-                <input type="number" id="farmSet_harvestCatthief" class="field" value="8" min="0" max="100">
-              </div>
+            <!-- 수확 확률 -->
+            <div style="font-size:10px;font-weight:800;color:#6b7280;margin-bottom:4px">🎲 수확 확률 (%) · 합계=100</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">일반</div><input type="number" id="farmSet_harvestNormal" class="field" value="55" min="0" max="100" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">풍작</div><input type="number" id="farmSet_harvestBumper" class="field" value="20" min="0" max="100" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">흉작</div><input type="number" id="farmSet_harvestPoor" class="field" value="17" min="0" max="100" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">도둑</div><input type="number" id="farmSet_harvestCatthief" class="field" value="8" min="0" max="100" style="padding:4px 6px;font-size:12px"></div>
             </div>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">📦 수확량 범위</h3>
-            <div class="grid grid-cols-2 gap-3 mb-2">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">일반 수확량</label>
-                <input type="number" id="farmSet_normalHarvest" class="field" value="3" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">가격 변동폭 (%)</label>
-                <input type="number" id="farmSet_priceVariance" class="field" value="30" min="0" max="100">
-              </div>
+            <!-- 수확량 -->
+            <div style="font-size:10px;font-weight:800;color:#6b7280;margin-bottom:4px">📦 수확량</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:4px">
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">일반 수확량</div><input type="number" id="farmSet_normalHarvest" class="field" value="3" min="1" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">가격변동(%)</div><input type="number" id="farmSet_priceVariance" class="field" value="30" min="0" max="100" style="padding:4px 6px;font-size:12px"></div>
+              <div></div>
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-2">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">🌟 풍작 최소</label>
-                <input type="number" id="farmSet_bumperMin" class="field" value="4" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">🌟 풍작 최대</label>
-                <input type="number" id="farmSet_bumperMax" class="field" value="5" min="1">
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">😢 흉작 최소</label>
-                <input type="number" id="farmSet_poorMin" class="field" value="1" min="0">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">😢 흉작 최대</label>
-                <input type="number" id="farmSet_poorMax" class="field" value="2" min="0">
-              </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">풍작 최소</div><input type="number" id="farmSet_bumperMin" class="field" value="4" min="1" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">풍작 최대</div><input type="number" id="farmSet_bumperMax" class="field" value="5" min="1" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">흉작 최소</div><input type="number" id="farmSet_poorMin" class="field" value="1" min="0" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">흉작 최대</div><input type="number" id="farmSet_poorMax" class="field" value="2" min="0" style="padding:4px 6px;font-size:12px"></div>
             </div>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">🏗️ 밭 확장</h3>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">기본 비용 (🌰)</label>
-                <input type="number" id="farmSet_plotBaseCost" class="field" value="10" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">밭당 추가 (🌰)</label>
-                <input type="number" id="farmSet_plotIncrement" class="field" value="10" min="0">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">최대 밭 수</label>
-                <input type="number" id="farmSet_maxPlots" class="field" value="9" min="1" max="20">
-              </div>
+            <!-- 확장 (밭 + 인벤토리 통합) -->
+            <div style="font-size:10px;font-weight:800;color:#6b7280;margin-bottom:4px">🏗️ 확장 설정</div>
+            <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;align-items:end;margin-bottom:8px">
+              <div></div>
+              <div style="font-size:8px;font-weight:700;color:#6b7280;text-align:center">기본 칸</div>
+              <div style="font-size:8px;font-weight:700;color:#6b7280;text-align:center">확장비용(🌰)</div>
+              <div style="font-size:8px;font-weight:700;color:#6b7280;text-align:center">최대</div>
+              <div style="font-size:9px;font-weight:800;color:#1f2937;padding:4px 0">🌾 밭</div>
+              <input type="number" id="farmSet_plotBaseCost" class="field" value="10" min="1" style="padding:4px 6px;font-size:12px">
+              <input type="number" id="farmSet_plotIncrement" class="field" value="10" min="0" style="padding:4px 6px;font-size:12px">
+              <input type="number" id="farmSet_maxPlots" class="field" value="9" min="1" max="20" style="padding:4px 6px;font-size:12px">
+              <div style="font-size:9px;font-weight:800;color:#1f2937;padding:4px 0">📦 인벤</div>
+              <input type="number" id="farmSet_inventoryBase" class="field" value="3" min="1" style="padding:4px 6px;font-size:12px">
+              <input type="number" id="farmSet_inventoryExpandCost" class="field" value="10" min="1" style="padding:4px 6px;font-size:12px">
+              <input type="number" id="farmSet_inventoryMax" class="field" value="20" min="1" max="99" style="padding:4px 6px;font-size:12px">
             </div>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">🛒 판매 설정</h3>
-            <div class="grid grid-cols-2 gap-3 mb-2">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">판매 가격 배율 (%)</label>
-                <input type="number" id="farmSet_sellRatePct" class="field" value="110" min="1">
-                <div class="text-xs text-gray-400 mt-1">100 = 원가, 110 = 10% 마진</div>
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">씨앗 되팔기 (%)</label>
-                <input type="number" id="farmSet_seedResellPct" class="field" value="70" min="0" max="100">
-                <div class="text-xs text-gray-400 mt-1">씨앗 구매가의 N%</div>
-              </div>
+            <!-- 판매 -->
+            <div style="font-size:10px;font-weight:800;color:#6b7280;margin-bottom:4px">🛒 판매</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:4px">
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">판매배율(%)</div><input type="number" id="farmSet_sellRatePct" class="field" value="110" min="1" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">씨앗되팔기(%)</div><input type="number" id="farmSet_seedResellPct" class="field" value="70" min="0" max="100" style="padding:4px 6px;font-size:12px"></div>
             </div>
-            <p class="text-xs font-black text-gray-500 mt-3 mb-2">단계별 판매 한도 / 가격률</p>
-            <div class="grid grid-cols-3 gap-3 mb-2">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">1단계 한도</label>
-                <input type="number" id="farmSet_tier1Limit" class="field" value="10" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">2단계 한도</label>
-                <input type="number" id="farmSet_tier2Limit" class="field" value="10" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">3단계 한도</label>
-                <input type="number" id="farmSet_tier3Limit" class="field" value="10" min="1">
-              </div>
-            </div>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">1단계 가격률 (%)</label>
-                <input type="number" id="farmSet_tier1Pct" class="field" value="100" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">2단계 가격률 (%)</label>
-                <input type="number" id="farmSet_tier2Pct" class="field" value="80" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">3단계 가격률 (%)</label>
-                <input type="number" id="farmSet_tier3Pct" class="field" value="60" min="1">
-              </div>
+            <div style="font-size:8px;font-weight:700;color:#9ca3af;margin-bottom:2px">단계별 한도 / 가격률(%)</div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px">
+              <div><div style="font-size:7px;font-weight:700;color:#6b7280">1단계한도</div><input type="number" id="farmSet_tier1Limit" class="field" value="10" min="1" style="padding:4px 4px;font-size:11px"></div>
+              <div><div style="font-size:7px;font-weight:700;color:#6b7280">1단계%</div><input type="number" id="farmSet_tier1Pct" class="field" value="100" min="1" style="padding:4px 4px;font-size:11px"></div>
+              <div><div style="font-size:7px;font-weight:700;color:#6b7280">2단계한도</div><input type="number" id="farmSet_tier2Limit" class="field" value="10" min="1" style="padding:4px 4px;font-size:11px"></div>
+              <div><div style="font-size:7px;font-weight:700;color:#6b7280">2단계%</div><input type="number" id="farmSet_tier2Pct" class="field" value="80" min="1" style="padding:4px 4px;font-size:11px"></div>
+              <div><div style="font-size:7px;font-weight:700;color:#6b7280">3단계한도</div><input type="number" id="farmSet_tier3Limit" class="field" value="10" min="1" style="padding:4px 4px;font-size:11px"></div>
+              <div><div style="font-size:7px;font-weight:700;color:#6b7280">3단계%</div><input type="number" id="farmSet_tier3Pct" class="field" value="60" min="1" style="padding:4px 4px;font-size:11px"></div>
             </div>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">👨‍🌾 수습 농부</h3>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">수습 시간 (시간)</label>
-                <input type="number" id="farmSet_apprenticeHours" class="field" value="4" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">성공률 (%)</label>
-                <input type="number" id="farmSet_apprenticeSuccess" class="field" value="50" min="0" max="100">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">실패 보상 (🌰)</label>
-                <input type="number" id="farmSet_apprenticeFailReward" class="field" value="500" min="0">
-                <div class="text-xs text-gray-400 mt-1">÷100 후 지급</div>
-              </div>
+            <!-- 수습 농부 -->
+            <div style="font-size:10px;font-weight:800;color:#6b7280;margin-bottom:4px">👨‍🌾 수습 농부</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px">
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">시간(h)</div><input type="number" id="farmSet_apprenticeHours" class="field" value="4" min="1" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">성공률(%)</div><input type="number" id="farmSet_apprenticeSuccess" class="field" value="50" min="0" max="100" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">실패보상(🌰÷100)</div><input type="number" id="farmSet_apprenticeFailReward" class="field" value="500" min="0" style="padding:4px 6px;font-size:12px"></div>
             </div>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">📦 인벤토리</h3>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">기본 칸</label>
-                <input type="number" id="farmSet_inventoryBase" class="field" value="3" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">확장 비용 (🌰)</label>
-                <input type="number" id="farmSet_inventoryExpandCost" class="field" value="10" min="1">
-                <div class="text-xs text-gray-400 mt-1">칸당 누적 추가</div>
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">최대 칸</label>
-                <input type="number" id="farmSet_inventoryMax" class="field" value="20" min="1" max="99">
-              </div>
+            <!-- 촉진제 / 영양제 -->
+            <div style="font-size:10px;font-weight:800;color:#6b7280;margin-bottom:4px">⚡ 촉진제 / 🧪 영양제</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:10px">
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">⚡가격(🌰)</div><input type="number" id="farmSet_acceleratorCost" class="field" value="3" min="0" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">시간감소(%)</div><input type="number" id="farmSet_acceleratorPct" class="field" value="50" min="1" max="99" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">🧪가격(🌰)</div><input type="number" id="farmSet_nutrientCost" class="field" value="5" min="0" style="padding:4px 6px;font-size:12px"></div>
+              <div><div style="font-size:8px;font-weight:700;color:#6b7280">풍작+(%p)</div><input type="number" id="farmSet_nutrientBumperBoost" class="field" value="20" min="1" max="80" style="padding:4px 6px;font-size:12px"></div>
             </div>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">⚡ 촉진제 / 🧪 영양제</h3>
-            <p class="text-xs text-gray-400 mb-2">상점에서 구매 후 성장 중인 작물에 사용</p>
-            <div class="grid grid-cols-2 gap-3 mb-2">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">⚡ 촉진제 가격 (🌰)</label>
-                <input type="number" id="farmSet_acceleratorCost" class="field" value="3" min="0">
-                <div class="text-xs text-gray-400 mt-1">도토리 단위</div>
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">성장시간 감소 (%)</label>
-                <input type="number" id="farmSet_acceleratorPct" class="field" value="50" min="1" max="99">
-                <div class="text-xs text-gray-400 mt-1">남은 시간의 N% 감소</div>
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">🧪 영양제 가격 (🌰)</label>
-                <input type="number" id="farmSet_nutrientCost" class="field" value="5" min="0">
-                <div class="text-xs text-gray-400 mt-1">도토리 단위</div>
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">풍작 확률 증가 (%p)</label>
-                <input type="number" id="farmSet_nutrientBumperBoost" class="field" value="20" min="1" max="80">
-                <div class="text-xs text-gray-400 mt-1">기존 풍작%에 +N%p</div>
-              </div>
-            </div>
-
-            <button class="btn btn-primary w-full" onclick="farmSaveSettings()">💾 농장 설정 저장</button>
+            <button class="btn btn-primary w-full" onclick="farmSaveSettings()" style="padding:8px;font-size:12px">💾 농장 설정 저장</button>
           </div>
         </div>
       </div>
