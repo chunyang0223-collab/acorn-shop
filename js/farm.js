@@ -160,7 +160,7 @@ function farmRenderFieldGrid() {
       // 다음 확장 가능 슬롯
       const expandCost = (_farmSettings.plot_base_cost || 10) + (_farmSettings.plot_cost_increment || 10) * (plotCount - 1);
       gridHtml += `
-        <div style="aspect-ratio:1;border-radius:16px;background:#f9fafb;border:2px dashed #d1d5db;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s" onclick="farmShowShop()">
+        <div style="aspect-ratio:1;border-radius:16px;background:#f9fafb;border:2px dashed #d1d5db;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s" onclick="farmShowExpandPlot(${expandCost})">
           <div style="font-size:18px;opacity:0.5">🔒</div>
           <div style="font-size:9px;color:#9ca3af;margin-top:2px">🌰${expandCost}</div>
         </div>`;
@@ -256,8 +256,8 @@ function farmRenderInventory() {
       gridHtml += `
         <div style="width:48px;height:48px;border-radius:12px;background:${bgGrad};border:2px solid ${borderColor};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
           <div style="font-size:20px">${s.emoji}</div>
-          <div style="font-size:7px;font-weight:700;color:${labelColor};margin-top:1px;white-space:nowrap">${isSeed ? s.name + ' 씨' : s.name}</div>
-          ${isSeed ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#16a34a;color:white;font-size:7px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid white">씨</div>` : ''}
+          <div style="font-size:7px;font-weight:700;color:${labelColor};margin-top:1px;white-space:nowrap">${isSeed ? s.name + ' 씨앗' : s.name}</div>
+          ${isSeed ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#16a34a;color:white;font-size:6px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid white">🌱</div>` : ''}
         </div>`;
     } else {
       gridHtml += `
@@ -735,6 +735,44 @@ async function farmDoExpandInventory() {
     farmRenderMain();
   } catch (e) {
     console.error('[farm expand inv]', e);
+    toast('❌', '확장 실패: ' + (e?.message || ''));
+  }
+}
+
+// ================================================================
+//  밭 확장 모달
+// ================================================================
+function farmShowExpandPlot(cost) {
+  const plotCount = _farmData?.plot_count || 1;
+  const depositAcorns = _farmData?.deposit_acorns || 0;
+
+  showModal(`
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:14px;font-weight:900;color:#1f2937;margin-bottom:12px">🌾 밭 확장</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:8px">
+        현재 ${plotCount}칸 → ${plotCount + 1}칸
+      </div>
+      <div style="font-size:16px;font-weight:900;color:#78350f;margin-bottom:8px">🌰 ${cost} 도토리</div>
+      <div style="font-size:10px;color:#9ca3af;margin-bottom:16px">예치금에서 차감됩니다 (보유: 🌰${depositAcorns})</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280;font-weight:800">취소</button>
+        <button onclick="closeModal();farmDoExpandPlot()" class="btn btn-primary flex-1" ${depositAcorns < cost ? 'disabled style="opacity:0.5"' : ''}>확장!</button>
+      </div>
+    </div>
+  `);
+}
+
+async function farmDoExpandPlot() {
+  try {
+    const { data, error } = await sb.rpc('farm_expand_plot', { p_user_id: myProfile.id });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+
+    toast('🌾', `밭 ${data.new_plot_count}칸으로 확장! (🌰${data.cost} 사용)`);
+    await _farmReloadAll();
+    farmRenderMain();
+  } catch (e) {
+    console.error('[farm expand plot]', e);
     toast('❌', '확장 실패: ' + (e?.message || ''));
   }
 }
