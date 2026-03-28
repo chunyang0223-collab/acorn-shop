@@ -51,12 +51,13 @@ async function farmAdminLoadSettingsUI() {
   set('farmSet_apprenticeHours', s.apprentice_hours ?? 4);
   set('farmSet_apprenticeSuccess', s.apprentice_success_pct ?? 50);
   set('farmSet_apprenticeFailReward', s.apprentice_fail_reward ?? 500);
-  set('farmSet_inventoryBase', s.inventory_base ?? 10);
-  set('farmSet_inventoryExpandCost', s.inventory_expand_cost ?? 5);
-  set('farmSet_acceleratorCost', s.accelerator_cost ?? 100);
-  set('farmSet_nutrientCost', s.nutrient_cost ?? 200);
-  set('farmSet_depositFee', s.deposit_withdraw_fee ?? 20);
-  set('farmSet_disasterChance', s.disaster_chance_pct ?? 7);
+  set('farmSet_inventoryBase', s.inventory_base ?? 3);
+  set('farmSet_inventoryExpandCost', s.inventory_expand_cost ?? 10);
+  set('farmSet_inventoryMax', s.inventory_max ?? 20);
+  set('farmSet_acceleratorCost', s.accelerator_cost ?? 3);
+  set('farmSet_acceleratorPct', s.accelerator_pct ?? 50);
+  set('farmSet_nutrientCost', s.nutrient_cost ?? 5);
+  set('farmSet_nutrientBumperBoost', s.nutrient_bumper_boost ?? 20);
 }
 
 async function farmSaveSettings() {
@@ -89,12 +90,13 @@ async function farmSaveSettings() {
     apprentice_hours:      get('farmSet_apprenticeHours', 4),
     apprentice_success_pct:get('farmSet_apprenticeSuccess', 50),
     apprentice_fail_reward:get('farmSet_apprenticeFailReward', 500),
-    inventory_base:        get('farmSet_inventoryBase', 10),
-    inventory_expand_cost: get('farmSet_inventoryExpandCost', 5),
-    accelerator_cost:      get('farmSet_acceleratorCost', 100),
-    nutrient_cost:         get('farmSet_nutrientCost', 200),
-    deposit_withdraw_fee:  get('farmSet_depositFee', 20),
-    disaster_chance_pct:   get('farmSet_disasterChance', 7),
+    inventory_base:        get('farmSet_inventoryBase', 3),
+    inventory_expand_cost: get('farmSet_inventoryExpandCost', 10),
+    inventory_max:         get('farmSet_inventoryMax', 20),
+    accelerator_cost:      get('farmSet_acceleratorCost', 3),
+    accelerator_pct:       get('farmSet_acceleratorPct', 50),
+    nutrient_cost:         get('farmSet_nutrientCost', 5),
+    nutrient_bumper_boost: get('farmSet_nutrientBumperBoost', 20),
   });
   const { error } = await sb.from('app_settings')
     .upsert({ key: 'farm_settings', value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
@@ -242,12 +244,36 @@ function farmRenderFieldGrid() {
         const ready = harvestAt && harvestAt <= Date.now();
         const remaining = harvestAt ? Math.max(0, harvestAt - Date.now()) : 0;
         const remainStr = remaining > 0 ? _farmFmtTime(remaining) : '';
+        // 아이템 사용 버튼 (성장 중일 때만)
+        const accInv = (_farmInventory || []).find(iv => iv.item_type === 'accelerator');
+        const nutInv = (_farmInventory || []).find(iv => iv.item_type === 'nutrient');
+        const hasAcc = accInv && accInv.quantity > 0;
+        const hasNut = nutInv && nutInv.quantity > 0;
+        const isGrowing = !ready && remaining > 0;
+        const alreadyAccelerated = !!plot.accelerated;
+        const alreadyNourished = !!plot.nourished;
+        let itemBtns = '';
+        if (isGrowing) {
+          itemBtns += `<div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);display:flex;gap:2px">`;
+          if (hasAcc && !alreadyAccelerated) {
+            itemBtns += `<div onclick="event.stopPropagation();farmUseAccelerator(${i})" style="font-size:8px;background:#8b5cf6;color:white;border-radius:5px;padding:1px 4px;cursor:pointer;font-weight:800;opacity:0.9" title="촉진제">⚡</div>`;
+          } else if (alreadyAccelerated) {
+            itemBtns += `<div style="font-size:8px;background:#d1d5db;color:white;border-radius:5px;padding:1px 4px;opacity:0.5" title="이미 사용됨">⚡</div>`;
+          }
+          if (hasNut && !alreadyNourished) {
+            itemBtns += `<div onclick="event.stopPropagation();farmUseNutrient(${i})" style="font-size:8px;background:#10b981;color:white;border-radius:5px;padding:1px 4px;cursor:pointer;font-weight:800;opacity:0.9" title="영양제">🧪</div>`;
+          } else if (alreadyNourished) {
+            itemBtns += `<div style="font-size:8px;background:#d1d5db;color:white;border-radius:5px;padding:1px 4px;opacity:0.5" title="이미 사용됨">🧪</div>`;
+          }
+          itemBtns += `</div>`;
+        }
         gridHtml += `
           <div id="farm-cell-${i}" data-harvest="${plot.harvest_at || ''}" style="aspect-ratio:1;border-radius:16px;background:${ready ? 'linear-gradient(135deg,#fef9c3,#fef3c7)' : 'linear-gradient(135deg,#ecfdf5,#d1fae5)'};border:2px solid ${ready ? '#fbbf24' : '#86efac'};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:${ready ? 'pointer' : 'default'};transition:background .3s,border .3s;position:relative" ${ready ? `onclick="farmHarvest(${i})"` : ''}>
             <div style="font-size:${ready ? '28' : '24'}px">${crop?.emoji || '🌱'}</div>
             <div id="farm-cell-label-${i}" style="font-size:9px;font-weight:700;color:${ready ? '#92400e' : '#16a34a'};margin-top:2px">${ready ? '수확!' : (crop?.name || '')}</div>
             <div id="farm-cell-timer-${i}" style="font-size:7px;color:#6b7280;font-weight:600;margin-top:1px">${!ready && remainStr ? remainStr : ''}</div>
             ${myProfile?.is_admin ? `<div id="farm-cell-skip-${i}" onclick="event.stopPropagation();farmAdminSkipGrow(${i})" style="position:absolute;top:3px;right:3px;font-size:7px;background:#ef4444;color:white;border-radius:6px;padding:1px 4px;cursor:pointer;font-weight:800;opacity:0.8;display:${ready ? 'none' : 'block'}">⏩</div>` : ''}
+            ${itemBtns}
           </div>`;
       } else {
         gridHtml += `
@@ -326,8 +352,12 @@ function farmRenderInventory() {
   const STACK_MAX = 10;
   const items = _farmInventory || [];
 
+  // 촉진제/영양제는 인벤토리 슬롯 차지 안 함 (별도 표시)
+  const consumables = items.filter(i => i.item_type === 'accelerator' || i.item_type === 'nutrient');
+  const cropItems = items.filter(i => i.item_type !== 'accelerator' && i.item_type !== 'nutrient');
+
   let slots = [];
-  items.forEach(inv => {
+  cropItems.forEach(inv => {
     const crop = _farmCrops.find(c => c.id === inv.crop_id);
     let remaining = inv.quantity;
     while (remaining > 0) {
@@ -374,12 +404,24 @@ function farmRenderInventory() {
     </div>`;
 
   const usedSlots = slots.length;
-  const totalItems = items.reduce((sum, inv) => sum + inv.quantity, 0);
+  const totalItems = cropItems.reduce((sum, inv) => sum + inv.quantity, 0);
+
+  // 소비 아이템 뱃지
+  let consumableHtml = '';
+  consumables.forEach(c => {
+    if (c.quantity > 0) {
+      const isAcc = c.item_type === 'accelerator';
+      consumableHtml += `<span style="display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:8px;background:${isAcc ? '#ede9fe' : '#ecfdf5'};border:1px solid ${isAcc ? '#c4b5fd' : '#6ee7b7'};font-size:9px;font-weight:800;color:${isAcc ? '#7c3aed' : '#059669'}">${isAcc ? '⚡' : '🧪'} ${c.quantity}</span>`;
+    }
+  });
 
   return `
     <div class="clay-card p-3" style="margin-top:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:900;color:#1f2937">📦 인벤토리</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="font-size:11px;font-weight:900;color:#1f2937">📦 인벤토리</div>
+          ${consumableHtml ? `<div style="display:flex;gap:3px">${consumableHtml}</div>` : ''}
+        </div>
         <div style="font-size:9px;color:#6b7280;font-weight:700">${usedSlots} / ${capacity} 칸 · 총 ${totalItems}개</div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">

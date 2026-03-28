@@ -116,8 +116,10 @@ async function farmShowShop(tab) {
   }
 
   const isBuy = _farmShopTab === 'buy';
-  const tabStyle = (active) => `padding:8px 20px;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;${active ? 'background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 2px 8px rgba(245,158,11,.3)' : 'background:#f3f4f6;color:#9ca3af'}`;
-  let contentHtml = isBuy ? _farmRenderBuyTab() : _farmRenderSellTab();
+  const isSell = _farmShopTab === 'sell';
+  const isItem = _farmShopTab === 'item';
+  const tabStyle = (active) => `padding:8px 16px;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;${active ? 'background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 2px 8px rgba(245,158,11,.3)' : 'background:#f3f4f6;color:#9ca3af'}`;
+  let contentHtml = isItem ? _farmRenderItemTab() : (isBuy ? _farmRenderBuyTab() : _farmRenderSellTab());
 
   showModal(`
     <div style="padding:4px 0">
@@ -126,7 +128,8 @@ async function farmShowShop(tab) {
       ${timeLeftStr ? `<div style="font-size:9px;color:#f59e0b;text-align:center;margin-bottom:8px">⏰ ${timeLeftStr}</div>` : ''}
       <div style="display:flex;gap:6px;margin-bottom:10px;justify-content:center">
         <button onclick="farmShowShop('buy')" style="${tabStyle(isBuy)}">🌱 구매</button>
-        <button onclick="farmShowShop('sell')" style="${tabStyle(!isBuy)}">💰 판매</button>
+        <button onclick="farmShowShop('sell')" style="${tabStyle(isSell)}">💰 판매</button>
+        <button onclick="farmShowShop('item')" style="${tabStyle(isItem)}">⚗️ 아이템</button>
       </div>
       <div style="max-height:340px;overflow-y:auto;padding:2px">
         ${contentHtml}
@@ -422,4 +425,113 @@ async function farmDoExpandPlot() {
     await _farmReloadAll();
     farmRenderMain();
   } catch (e) { console.error('[farm expand plot]', e); toast('❌', '확장 실패: ' + (e?.message || '')); }
+}
+
+// ================================================================
+//  아이템 탭 (촉진제 / 영양제)
+// ================================================================
+function _farmRenderItemTab() {
+  const depositTotal = (_farmData?.deposit_acorns || 0) * 100 + (_farmData?.deposit_crumbs || 0);
+  const accCost = (_farmSettings.accelerator_cost ?? 3) * 100;  // 도토리→부스러기
+  const nutCost = (_farmSettings.nutrient_cost ?? 5) * 100;
+  const accPct = _farmSettings.accelerator_pct ?? 50;
+  const nutBoost = _farmSettings.nutrient_bumper_boost ?? 20;
+  const canAcc = depositTotal >= accCost;
+  const canNut = depositTotal >= nutCost;
+
+  // 보유 아이템 수량
+  const accInv = (_farmInventory || []).find(i => i.item_type === 'accelerator');
+  const nutInv = (_farmInventory || []).find(i => i.item_type === 'nutrient');
+  const accQty = accInv?.quantity || 0;
+  const nutQty = nutInv?.quantity || 0;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:${canAcc ? 'white' : '#f9fafb'};border:1.5px solid ${canAcc ? '#8b5cf6' : '#f3f4f6'};${canAcc ? '' : 'opacity:0.6'}">
+        <div style="font-size:28px;flex-shrink:0;width:36px;text-align:center">⚡</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:900;color:#1f2937">촉진제</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:1px">남은 성장시간 ${accPct}% 감소</div>
+          <div style="font-size:9px;color:#8b5cf6;font-weight:700;margin-top:1px">보유: ${accQty}개</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:900;color:#78350f">🌰 ${_farmFmtPrice(accCost)}</div>
+        </div>
+        <button onclick="${canAcc ? "farmBuyItem('accelerator')" : "toast('⚠️','예치금이 부족해요!')"}" style="padding:6px 14px;border-radius:10px;border:none;background:${canAcc ? 'linear-gradient(135deg,#a78bfa,#8b5cf6)' : '#e5e7eb'};color:${canAcc ? 'white' : '#9ca3af'};font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">구매</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:${canNut ? 'white' : '#f9fafb'};border:1.5px solid ${canNut ? '#10b981' : '#f3f4f6'};${canNut ? '' : 'opacity:0.6'}">
+        <div style="font-size:28px;flex-shrink:0;width:36px;text-align:center">🧪</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:900;color:#1f2937">영양제</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:1px">풍작 확률 +${nutBoost}%p</div>
+          <div style="font-size:9px;color:#10b981;font-weight:700;margin-top:1px">보유: ${nutQty}개</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:900;color:#78350f">🌰 ${_farmFmtPrice(nutCost)}</div>
+        </div>
+        <button onclick="${canNut ? "farmBuyItem('nutrient')" : "toast('⚠️','예치금이 부족해요!')"}" style="padding:6px 14px;border-radius:10px;border:none;background:${canNut ? 'linear-gradient(135deg,#34d399,#10b981)' : '#e5e7eb'};color:${canNut ? 'white' : '#9ca3af'};font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">구매</button>
+      </div>
+      <div style="font-size:10px;color:#9ca3af;text-align:center;margin-top:4px;line-height:1.4">
+        구매한 아이템은 인벤토리에 보관됩니다.<br>
+        성장 중인 작물을 탭하면 사용할 수 있어요.
+      </div>
+    </div>`;
+}
+
+// ── 아이템 구매 ──
+async function farmBuyItem(itemType) {
+  const label = itemType === 'accelerator' ? '촉진제' : '영양제';
+  const emoji = itemType === 'accelerator' ? '⚡' : '🧪';
+  try {
+    const { data, error } = await sb.rpc('farm_buy_item', {
+      p_user_id: myProfile.id, p_item_type: itemType, p_quantity: 1
+    });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+    toast(emoji, `${label} 구매 완료! (🌰${_farmFmtPrice(data.cost)})`);
+    await _farmReloadAll();
+    await farmShowShop('item');
+    farmRenderMain();
+  } catch (e) {
+    console.error('[farm buy item]', e);
+    toast('❌', '구매 실패: ' + (e?.message || ''));
+  }
+}
+
+// ── 촉진제 사용 ──
+async function farmUseAccelerator(slot) {
+  const accInv = (_farmInventory || []).find(i => i.item_type === 'accelerator');
+  if (!accInv || accInv.quantity <= 0) { toast('⚠️', '촉진제가 없어요! 상점에서 구매하세요'); return; }
+  try {
+    const { data, error } = await sb.rpc('farm_use_accelerator', {
+      p_user_id: myProfile.id, p_slot: slot
+    });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+    toast('⚡', `촉진제 사용! 성장시간 ${_farmSettings.accelerator_pct ?? 50}% 단축`);
+    await _farmReloadAll();
+    farmRenderMain();
+  } catch (e) {
+    console.error('[farm use accelerator]', e);
+    toast('❌', '사용 실패: ' + (e?.message || ''));
+  }
+}
+
+// ── 영양제 사용 ──
+async function farmUseNutrient(slot) {
+  const nutInv = (_farmInventory || []).find(i => i.item_type === 'nutrient');
+  if (!nutInv || nutInv.quantity <= 0) { toast('⚠️', '영양제가 없어요! 상점에서 구매하세요'); return; }
+  try {
+    const { data, error } = await sb.rpc('farm_use_nutrient', {
+      p_user_id: myProfile.id, p_slot: slot
+    });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+    toast('🧪', '영양제 사용! 풍작 확률 UP');
+    await _farmReloadAll();
+    farmRenderMain();
+  } catch (e) {
+    console.error('[farm use nutrient]', e);
+    toast('❌', '사용 실패: ' + (e?.message || ''));
+  }
 }
