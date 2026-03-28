@@ -567,6 +567,90 @@ body {
 }
 .page-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
+/* ── 농장 설정 아코디언 ── */
+.farm-cfg { padding: 0; }
+.farm-cfg .fc-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; padding:0 4px; }
+.farm-cfg .fc-header h2 { font-size:15px; font-weight:800; color:#1a1a1a; }
+.farm-cfg .fc-section { background:#ffffff; border:1px solid #ddd5c5; border-radius:14px; margin-bottom:8px; overflow:hidden; }
+.farm-cfg .fc-sec-head { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; cursor:pointer; user-select:none; transition:background .15s; }
+.farm-cfg .fc-sec-head:hover { background:#fefcf8; }
+.farm-cfg .fc-sec-head .fc-left { display:flex; align-items:center; gap:8px; }
+.farm-cfg .fc-sec-head .fc-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.farm-cfg .fc-sec-head .fc-title { font-size:13px; font-weight:700; color:#1a1a1a; }
+.farm-cfg .fc-sec-head .fc-subtitle { font-size:10px; color:#6b7280; margin-top:1px; }
+.farm-cfg .fc-sec-head .fc-arrow { font-size:10px; color:#6b7280; transition:transform .2s; }
+.farm-cfg .fc-section.open .fc-arrow { transform:rotate(90deg); }
+.farm-cfg .fc-sec-body { display:none; padding:0 14px 12px; }
+.farm-cfg .fc-section.open .fc-sec-body { display:block; }
+.farm-cfg .fc-divider { height:1px; background:#ddd5c5; margin:8px 0; }
+.farm-cfg .fc-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
+.farm-cfg .fc-row-label { font-size:12px; font-weight:600; color:#374151; flex:1; }
+.farm-cfg .fc-row-input { width:64px; }
+.farm-cfg .fc-row-input input {
+  width:100%; padding:5px 8px; font-size:13px; font-weight:700;
+  background:#faf8f3; border:1.5px solid #d4cbb8; border-radius:8px;
+  color:#1a1a1a; text-align:center; outline:none;
+}
+.farm-cfg .fc-row-input input:focus { border-color:#d97706; }
+.farm-cfg .fc-grid { display:grid; gap:6px; padding:4px 0; }
+.farm-cfg .fc-grid.g2 { grid-template-columns:repeat(2,1fr); }
+.farm-cfg .fc-grid.g3 { grid-template-columns:repeat(3,1fr); }
+.farm-cfg .fc-grid.g4 { grid-template-columns:repeat(4,1fr); }
+.farm-cfg .fc-cell { text-align:center; }
+.farm-cfg .fc-cell-label { font-size:11px; font-weight:600; color:#374151; margin-bottom:3px; }
+.farm-cfg .fc-cell input {
+  width:100%; padding:5px 4px; font-size:13px; font-weight:700;
+  background:#faf8f3; border:1.5px solid #d4cbb8; border-radius:8px;
+  color:#1a1a1a; text-align:center; outline:none;
+}
+.farm-cfg .fc-cell input:focus { border-color:#d97706; }
+.farm-cfg .fc-expand-table { width:100%; border-collapse:separate; border-spacing:0 4px; }
+.farm-cfg .fc-expand-table th { font-size:10px; font-weight:700; color:#374151; padding:0 4px 2px; text-align:center; }
+.farm-cfg .fc-expand-table td { padding:0 3px; }
+.farm-cfg .fc-expand-table td:first-child { font-size:12px; font-weight:700; color:#1a1a1a; width:54px; }
+.farm-cfg .fc-expand-table input {
+  width:100%; padding:5px 4px; font-size:13px; font-weight:700;
+  background:#faf8f3; border:1.5px solid #d4cbb8; border-radius:8px;
+  color:#1a1a1a; text-align:center; outline:none;
+}
+.farm-cfg .fc-tier-grid { display:grid; grid-template-columns:36px 1fr 1fr; gap:4px; align-items:center; }
+.farm-cfg .fc-tier-grid .tg-head { font-size:10px; font-weight:700; color:#374151; text-align:center; }
+.farm-cfg .fc-tier-grid .tg-num { font-size:12px; font-weight:800; text-align:center; color:#d97706; }
+.farm-cfg .fc-tier-grid input {
+  width:100%; padding:5px 4px; font-size:13px; font-weight:700;
+  background:#faf8f3; border:1.5px solid #d4cbb8; border-radius:8px;
+  color:#1a1a1a; text-align:center; outline:none;
+}
+.farm-cfg .fc-sub-title { font-size:11px; font-weight:700; color:#374151; margin:6px 0 4px; }
+.farm-cfg .fc-desc { font-size:10px; color:#6b7280; margin-bottom:6px; line-height:1.4; }
+.farm-cfg .fc-save-btn {
+  width:100%; padding:12px; border:none; border-radius:12px;
+  background:linear-gradient(135deg,#f59e0b,#d97706); color:white;
+  font-size:13px; font-weight:800; cursor:pointer; margin-top:4px;
+}
+
+/* 농장 설정 다크모드 */
+[data-theme="dark"] .farm-cfg .fc-header h2 { color:#f0f0f0; }
+[data-theme="dark"] .farm-cfg .fc-section { background:rgba(38,36,58,0.93); border-color:rgba(255,255,255,0.1); }
+[data-theme="dark"] .farm-cfg .fc-sec-head:hover { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .farm-cfg .fc-sec-head .fc-title { color:#f0f0f0; }
+[data-theme="dark"] .farm-cfg .fc-sec-head .fc-subtitle { color:#a3a3a3; }
+[data-theme="dark"] .farm-cfg .fc-sec-head .fc-arrow { color:#a3a3a3; }
+[data-theme="dark"] .farm-cfg .fc-divider { background:rgba(255,255,255,0.1); }
+[data-theme="dark"] .farm-cfg .fc-row-label { color:#d4d4d4; }
+[data-theme="dark"] .farm-cfg .fc-row-input input { background:#1a1a1a; border-color:#444; color:#f5f5f5; }
+[data-theme="dark"] .farm-cfg .fc-row-input input:focus { border-color:#fbbf24; }
+[data-theme="dark"] .farm-cfg .fc-cell-label { color:#d4d4d4; }
+[data-theme="dark"] .farm-cfg .fc-cell input { background:#1a1a1a; border-color:#444; color:#f5f5f5; }
+[data-theme="dark"] .farm-cfg .fc-cell input:focus { border-color:#fbbf24; }
+[data-theme="dark"] .farm-cfg .fc-expand-table th { color:#d4d4d4; }
+[data-theme="dark"] .farm-cfg .fc-expand-table td:first-child { color:#f0f0f0; }
+[data-theme="dark"] .farm-cfg .fc-expand-table input { background:#1a1a1a; border-color:#444; color:#f5f5f5; }
+[data-theme="dark"] .farm-cfg .fc-tier-grid .tg-head { color:#d4d4d4; }
+[data-theme="dark"] .farm-cfg .fc-tier-grid .tg-num { color:#fbbf24; }
+[data-theme="dark"] .farm-cfg .fc-tier-grid input { background:#1a1a1a; border-color:#444; color:#f5f5f5; }
+[data-theme="dark"] .farm-cfg .fc-sub-title { color:#d4d4d4; }
+[data-theme="dark"] .farm-cfg .fc-desc { color:#a3a3a3; }
 
 /* ── 테마: 다크모드 ── */
 [data-theme="dark"] body {
