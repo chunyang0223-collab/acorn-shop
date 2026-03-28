@@ -268,6 +268,151 @@
             <div class="flex justify-center py-8"><div class="spinner"></div></div>
           </div>
         </div>
+        <!-- 관리자 전용: 다람쥐 기본 설정 -->
+        <div class="sq-admin-panel hidden">
+          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-lg font-black text-gray-800 mb-1">🐿️ 다람쥐 설정</h2>
+            <p class="text-xs text-gray-400 font-semibold mb-4">다람쥐 성장 조건, 스탯, 회복 등을 관리합니다</p>
+            <div class="space-y-3" id="sqSettingsForm">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">📦 최대 보유 마릿수</label>
+                <input type="number" id="sqSet_maxSquirrels" class="field" value="10" min="1" max="99">
+                <div class="text-xs text-gray-400 mt-1">사용자 1명당 보유 가능한 다람쥐 수</div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">🌰 성장 도토리 최소</label>
+                  <input type="number" id="sqSet_acornMin" class="field" value="20" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">🌰 성장 도토리 최대</label>
+                  <input type="number" id="sqSet_acornMax" class="field" value="50" min="1">
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">⏳ 시간 필요 다람쥐 확률 (%)</label>
+                <input type="number" id="sqSet_timeChance" class="field" value="40" min="0" max="100">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">⏰ 성장 대기 시간 최소 (분)</label>
+                  <input type="number" id="sqSet_timeMin" class="field" value="10" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">⏰ 성장 대기 시간 최대 (분)</label>
+                  <input type="number" id="sqSet_timeMax" class="field" value="60" min="1">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">🎲 먹이기 배율 최소</label>
+                  <input type="number" id="sqSet_multiMin" class="field" value="0.5" min="0.1" max="1.0" step="0.05">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">🎲 먹이기 배율 최대</label>
+                  <input type="number" id="sqSet_multiMax" class="field" value="1.3" min="1.0" max="5.0" step="0.05">
+                </div>
+              </div>
+              <div class="text-xs font-black text-gray-500 mb-2 mt-2">⚔️ 스탯 범위 (성장 시 랜덤)</div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">❤️ HP 최소</label>
+                  <input type="number" id="sqSet_hpMin" class="field" value="60" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">❤️ HP 최대</label>
+                  <input type="number" id="sqSet_hpMax" class="field" value="120" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">⚔️ 공격 최소</label>
+                  <input type="number" id="sqSet_atkMin" class="field" value="8" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">⚔️ 공격 최대</label>
+                  <input type="number" id="sqSet_atkMax" class="field" value="20" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">🛡️ 방어 최소</label>
+                  <input type="number" id="sqSet_defMin" class="field" value="4" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">🛡️ 방어 최대</label>
+                  <input type="number" id="sqSet_defMax" class="field" value="14" min="1">
+                </div>
+              </div>
+              <div class="text-xs font-black text-gray-500 mb-2 mt-2">🏪 펫샵 매입가 (스탯 기반 자동 산정)</div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">최저 매입가 (🌰)</label>
+                  <input type="number" id="sqSet_sellBase" class="field" value="20" min="1">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">최고 매입가 (🌰)</label>
+                  <input type="number" id="sqSet_sellMax" class="field" value="80" min="1">
+                </div>
+              </div>
+              <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">💚 회복 설정</h3>
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">기본 회복시간 (분)</label>
+                  <input type="number" id="sqSet_recoveryMinutes" class="field" value="60" min="1">
+                  <div class="text-xs text-gray-400 mt-1">HP 0→풀 기준 (비례 적용)</div>
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">즉시회복 비용 (🌰)</label>
+                  <input type="number" id="sqSet_recoveryCost" class="field" value="15" min="1">
+                </div>
+              </div>
+              <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">⏰ 시간 발동 구간 (%)</h3>
+              <p class="text-xs text-gray-400 mb-2">시간이 필요한 다람쥐의 타이머가 발동되는 성장 게이지 구간</p>
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">최소 (%)</label>
+                  <input type="number" id="sqSet_triggerMin" class="field" value="40" min="1" max="99">
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">최대 (%)</label>
+                  <input type="number" id="sqSet_triggerMax" class="field" value="80" min="1" max="99">
+                </div>
+              </div>
+              <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 설정 저장</button>
+            </div>
+          </div>
+          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-base font-black text-gray-800 mb-3">🎁 다람쥐 지급</h2>
+            <div class="grid grid-cols-1 gap-3 mb-3">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">👤 사용자</label>
+                <select id="sqGrantUser" class="field"><option value="">로딩 중...</option></select>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">⭐ 등급</label>
+                  <select id="sqGrantGrade" class="field">
+                    <option value="normal">일반</option>
+                    <option value="rare">레어</option>
+                    <option value="epic">희귀</option>
+                    <option value="unique">유일</option>
+                    <option value="legend">레전드</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs font-black text-gray-600 mb-1 block">🐿️ 타입</label>
+                  <select id="sqGrantType" class="field">
+                    <option value="explorer">탐험형</option>
+                    <option value="pet">애완형</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary w-full" onclick="sqAdminGrantSquirrel()">🎁 다람쥐 지급하기</button>
+            <div class="text-xs text-gray-400 mt-2">선택한 등급 범위 내에서 랜덤 스탯으로 생성됩니다.</div>
+          </div>
+          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-base font-black text-gray-800 mb-3">📋 보유 다람쥐 현황</h2>
+            <div id="sqAdminList" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
+          </div>
+        </div>
       </div>
       <!-- 상점 -->
       <div id="sqcontent-shop" class="hidden">
@@ -301,6 +446,18 @@
             <div class="sq-help-body">다람쥐의 HP, 공격, 방어 스탯에 따라 일반 → 레어 → 희귀 → 유일 → 레전드 등급이 결정돼요. 등급이 높을수록 테두리가 화려합니다!</div>
           </details>
         </div>
+        <!-- 관리자 전용: 상점 설정 -->
+        <div class="sq-admin-panel hidden">
+          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-lg font-black text-gray-800 mb-1">🛒 상점 설정</h2>
+            <p class="text-xs text-gray-400 font-semibold mb-4">분양 가격을 관리합니다</p>
+            <div>
+              <label class="text-xs font-black text-gray-600 mb-1 block">🛒 상점 구매 가격 (도토리)</label>
+              <input type="number" id="sqSet_shopPrice" class="field" value="30" min="1">
+            </div>
+            <button class="btn btn-primary w-full mt-4" onclick="sqSaveSettings()">💾 설정 저장</button>
+          </div>
+        </div>
       </div>
       <!-- 합성 -->
       <div id="sqcontent-fuse" class="hidden">
@@ -326,6 +483,38 @@
         <div id="sqFuseList" class="clay-card p-4">
           <div class="title-font text-sm text-gray-600 mb-3">합성 가능한 다람쥐</div>
           <div id="sqFuseGrid"></div>
+        </div>
+        <!-- 관리자 전용: 합성 설정 -->
+        <div class="sq-admin-panel hidden">
+          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-lg font-black text-gray-800 mb-1">🧬 합성 설정</h2>
+            <p class="text-xs text-gray-400 font-semibold mb-4">같은 등급 두 마리를 합성하여 새 다람쥐를 얻습니다</p>
+            <div class="mb-4">
+              <label class="text-xs font-black text-gray-600 mb-1 block">🌰 합성 비용 (도토리)</label>
+              <input type="number" id="sqSet_fuseCost" class="field" value="10" min="0">
+            </div>
+            <h3 class="text-sm font-black text-gray-700 mb-2">⬆️ 등급 승급 확률 (%)</h3>
+            <p class="text-xs text-gray-400 mb-3">합성 시 한 단계 높은 등급이 나올 확률입니다. 레전드는 최고 등급이므로 승급 없음.</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">일반 → 레어</label>
+                <input type="number" id="sqSet_fuseUpNormal" class="field" value="15" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">레어 → 희귀</label>
+                <input type="number" id="sqSet_fuseUpRare" class="field" value="12" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">희귀 → 유일</label>
+                <input type="number" id="sqSet_fuseUpEpic" class="field" value="8" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">유일 → 레전드</label>
+                <input type="number" id="sqSet_fuseUpUnique" class="field" value="5" min="0" max="100">
+              </div>
+            </div>
+            <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 합성 설정 저장</button>
+          </div>
         </div>
       </div>
       <!-- 탐험 -->
@@ -362,10 +551,421 @@
             </div>
           </div>
         </div>
+        <!-- 관리자 전용: 탐험 설정 -->
+        <div class="sq-admin-panel hidden">
+          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-lg font-black text-gray-800 mb-1">⚔️ 탐험 보상 설정</h2>
+            <p class="text-xs text-gray-400 font-semibold mb-4">탐험 타일 확률, 보상 범위, 카드 등급 등을 관리합니다</p>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🗺️ 타일 이벤트 확률 (%)</h3>
+            <p class="text-xs text-gray-400 mb-2">빈칸 + 보물 + 몬스터 = 100 (보스는 마지막칸 고정)</p>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🍃 빈칸</label>
+                <input type="number" id="expSet_chanceEmpty" class="field" value="25" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">💰 보물</label>
+                <input type="number" id="expSet_chanceTreasure" class="field" value="30" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">⚔️ 몬스터</label>
+                <input type="number" id="expSet_chanceMonster" class="field" value="45" min="0" max="100">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">✨ 스킬 포인트 (탐험당)</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">최소 SP</label>
+                <input type="number" id="expSet_spMin" class="field" value="1" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">최대 SP</label>
+                <input type="number" id="expSet_spMax" class="field" value="5" min="1">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">💰 보물 상자 보상</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">최소 도토리</label>
+                <input type="number" id="expSet_treasureMin" class="field" value="3" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">최대 도토리</label>
+                <input type="number" id="expSet_treasureMax" class="field" value="12" min="1">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">📊 레벨 기반 몬스터 스탯</h3>
+            <p class="text-xs text-gray-400 mb-2">스탯 = 기본값 + (레벨 × 증가량). 보스는 배율 추가 적용</p>
+            <div class="grid grid-cols-3 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">기본 HP</label>
+                <input type="number" id="expSet_lvBaseHp" class="field" value="30" min="0" step="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">기본 공격</label>
+                <input type="number" id="expSet_lvBaseAtk" class="field" value="8" min="0" step="0.5">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">기본 방어</label>
+                <input type="number" id="expSet_lvBaseDef" class="field" value="3" min="0" step="0.5">
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 HP↑</label>
+                <input type="number" id="expSet_lvGrowHp" class="field" value="12" min="0" step="0.5">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 공격↑</label>
+                <input type="number" id="expSet_lvGrowAtk" class="field" value="2" min="0" step="0.5">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 방어↑</label>
+                <input type="number" id="expSet_lvGrowDef" class="field" value="1.5" min="0" step="0.5">
+              </div>
+            </div>
+            <div class="mb-4" style="max-width:200px">
+              <label class="text-xs font-black text-gray-600 mb-1 block">👑 보스 스탯 배율 (×)</label>
+              <input type="number" id="expSet_bossStatMult" class="field" value="1.4" min="1" step="0.1">
+              <div class="text-xs text-gray-400 mt-1">보스의 HP/공/방에 곱셈</div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🐺 일반 몬스터</h3>
+            <div id="expSet_monsterList" class="mb-2">로딩 중...</div>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="expMonEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
+              <input type="text" id="expMonName" class="field" placeholder="이름" style="flex:1">
+              <input type="number" id="expMonLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
+              <input type="number" id="expMonLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
+              <button class="btn btn-primary btn-sm" onclick="_expAddMonster(false)">추가</button>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">👑 보스</h3>
+            <div id="expSet_bossList" class="mb-2">로딩 중...</div>
+            <div class="flex gap-2 mb-4">
+              <input type="text" id="expBossEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
+              <input type="text" id="expBossName" class="field" placeholder="이름" style="flex:1">
+              <input type="number" id="expBossLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
+              <input type="number" id="expBossLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
+              <button class="btn btn-primary btn-sm" onclick="_expAddMonster(true)">추가</button>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🃏 보상 카드 등급 확률 (%)</h3>
+            <p class="text-xs text-gray-400 mb-2">A + B + C = 100</p>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🥉 C등급</label>
+                <input type="number" id="expSet_weightC" class="field" value="65" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🥈 B등급</label>
+                <input type="number" id="expSet_weightB" class="field" value="28" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🥇 A등급</label>
+                <input type="number" id="expSet_weightA" class="field" value="7" min="0" max="100">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">👑 보스전 카드 등급 확률 (%)</h3>
+            <p class="text-xs text-gray-400 mb-2">보스 처치 시 적용되는 카드 확률 (A + B + C = 100)</p>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🥉 C등급</label>
+                <input type="number" id="expSet_bossWeightC" class="field" value="30" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🥈 B등급</label>
+                <input type="number" id="expSet_bossWeightB" class="field" value="45" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🥇 A등급</label>
+                <input type="number" id="expSet_bossWeightA" class="field" value="25" min="0" max="100">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🥉 C등급 보상</h3>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
+                <div class="flex gap-2">
+                  <input type="number" id="expSet_cAcornMin" class="field" value="5" min="0" style="flex:1">
+                  <input type="number" id="expSet_cAcornMax" class="field" value="10" min="0" style="flex:1">
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
+                <input type="number" id="expSet_cItemChance" class="field" value="15" min="0" max="100">
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (클릭하여 선택/해제)</label>
+              <div id="expSet_cItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🥈 B등급 보상</h3>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
+                <div class="flex gap-2">
+                  <input type="number" id="expSet_bAcornMin" class="field" value="10" min="0" style="flex:1">
+                  <input type="number" id="expSet_bAcornMax" class="field" value="20" min="0" style="flex:1">
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
+                <input type="number" id="expSet_bItemChance" class="field" value="45" min="0" max="100">
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (클릭하여 선택/해제)</label>
+              <div id="expSet_bItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🥇 A등급 보상</h3>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
+                <div class="flex gap-2">
+                  <input type="number" id="expSet_aAcornMin" class="field" value="20" min="0" style="flex:1">
+                  <input type="number" id="expSet_aAcornMax" class="field" value="40" min="0" style="flex:1">
+                </div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
+                <input type="number" id="expSet_aItemChance" class="field" value="85" min="0" max="100">
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (클릭하여 선택/해제)</label>
+              <div id="expSet_aItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">⚔️ 전투 밸런스</h3>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">스킬 배율 (×)</label>
+                <input type="number" id="expSet_skillMulti" class="field" value="1.65" min="0.1" step="0.05">
+                <div class="text-xs text-gray-400 mt-1">데미지 = 공격력 × 배율</div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">스킬 랜덤 변동폭 (±)</label>
+                <input type="number" id="expSet_skillSwing" class="field" value="5" min="0">
+                <div class="text-xs text-gray-400 mt-1">5면 -5~+5 변동</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">일반공격 랜덤 변동폭 (±)</label>
+                <input type="number" id="expSet_atkSwing" class="field" value="3" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 공격 랜덤 변동폭 (±)</label>
+                <input type="number" id="expSet_monSwing" class="field" value="3" min="0">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 방어력 효과 (%)</label>
+                <input type="number" id="expSet_monDefEffect" class="field" value="38" min="0" max="100">
+                <div class="text-xs text-gray-400 mt-1">높을수록 몬스터가 단단</div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">다람쥐 방어력 효과 (%)</label>
+                <input type="number" id="expSet_sqDefEffect" class="field" value="48" min="0" max="100">
+                <div class="text-xs text-gray-400 mt-1">높을수록 다람쥐가 단단</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🧪 포션 회복량 (%)</label>
+                <input type="number" id="expSet_healPct" class="field" value="40" min="1" max="100">
+                <div class="text-xs text-gray-400 mt-1">최대HP의 N%</div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">💨 도망 실패 확률 (%)</label>
+                <input type="number" id="expSet_escapeFail" class="field" value="30" min="0" max="100">
+                <div class="text-xs text-gray-400 mt-1">0이면 항상 성공</div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-full" onclick="expSaveSettings()">💾 탐험 보상 설정 저장</button>
+          </div>
+        </div>
       </div>
       <!-- 농장 -->
       <div id="sqcontent-farm" class="hidden">
         <div id="sqFarmArea"></div>
+        <!-- 관리자 전용: 농장 설정 -->
+        <div class="sq-admin-panel hidden">
+          <div class="clay-card p-5 mt-4" style="border:2px solid rgba(245,158,11,0.25);background:linear-gradient(135deg,#fffdf5,#fff9e6)">
+            <h2 class="text-lg font-black text-gray-800 mb-1">🌾 농장 설정</h2>
+            <p class="text-xs text-gray-400 font-semibold mb-4">수확 확률, 밭 비용, 판매, 수습 등을 관리합니다</p>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🎲 수확 결과 확률 (%)</h3>
+            <p class="text-xs text-gray-400 mb-2">일반 + 풍작 + 흉작 + 고양이도둑 = 100</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🌾 일반 수확</label>
+                <input type="number" id="farmSet_harvestNormal" class="field" value="55" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🌟 풍작</label>
+                <input type="number" id="farmSet_harvestBumper" class="field" value="20" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">😢 흉작</label>
+                <input type="number" id="farmSet_harvestPoor" class="field" value="17" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🐱 고양이 도둑</label>
+                <input type="number" id="farmSet_harvestCatthief" class="field" value="8" min="0" max="100">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">📦 수확량 범위</h3>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">일반 수확량</label>
+                <input type="number" id="farmSet_normalHarvest" class="field" value="3" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">가격 변동폭 (%)</label>
+                <input type="number" id="farmSet_priceVariance" class="field" value="30" min="0" max="100">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🌟 풍작 최소</label>
+                <input type="number" id="farmSet_bumperMin" class="field" value="4" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">🌟 풍작 최대</label>
+                <input type="number" id="farmSet_bumperMax" class="field" value="5" min="1">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">😢 흉작 최소</label>
+                <input type="number" id="farmSet_poorMin" class="field" value="1" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">😢 흉작 최대</label>
+                <input type="number" id="farmSet_poorMax" class="field" value="2" min="0">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🏗️ 밭 확장</h3>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">기본 비용 (🌰)</label>
+                <input type="number" id="farmSet_plotBaseCost" class="field" value="10" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">밭당 추가 (🌰)</label>
+                <input type="number" id="farmSet_plotIncrement" class="field" value="10" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">최대 밭 수</label>
+                <input type="number" id="farmSet_maxPlots" class="field" value="9" min="1" max="20">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">🛒 판매 설정</h3>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">판매 가격 배율 (%)</label>
+                <input type="number" id="farmSet_sellRatePct" class="field" value="110" min="1">
+                <div class="text-xs text-gray-400 mt-1">100 = 원가, 110 = 10% 마진</div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">씨앗 되팔기 (%)</label>
+                <input type="number" id="farmSet_seedResellPct" class="field" value="70" min="0" max="100">
+                <div class="text-xs text-gray-400 mt-1">씨앗 구매가의 N%</div>
+              </div>
+            </div>
+            <p class="text-xs font-black text-gray-500 mt-3 mb-2">단계별 판매 한도 / 가격률</p>
+            <div class="grid grid-cols-3 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">1단계 한도</label>
+                <input type="number" id="farmSet_tier1Limit" class="field" value="10" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">2단계 한도</label>
+                <input type="number" id="farmSet_tier2Limit" class="field" value="10" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">3단계 한도</label>
+                <input type="number" id="farmSet_tier3Limit" class="field" value="10" min="1">
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">1단계 가격률 (%)</label>
+                <input type="number" id="farmSet_tier1Pct" class="field" value="100" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">2단계 가격률 (%)</label>
+                <input type="number" id="farmSet_tier2Pct" class="field" value="80" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">3단계 가격률 (%)</label>
+                <input type="number" id="farmSet_tier3Pct" class="field" value="60" min="1">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">👨‍🌾 수습 농부</h3>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">수습 시간 (시간)</label>
+                <input type="number" id="farmSet_apprenticeHours" class="field" value="4" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">성공률 (%)</label>
+                <input type="number" id="farmSet_apprenticeSuccess" class="field" value="50" min="0" max="100">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">실패 보상 (🌰)</label>
+                <input type="number" id="farmSet_apprenticeFailReward" class="field" value="500" min="0">
+                <div class="text-xs text-gray-400 mt-1">÷100 후 지급</div>
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">📦 기타</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">재고 기본 슬롯</label>
+                <input type="number" id="farmSet_inventoryBase" class="field" value="10" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">재고 확장 비용 (🌰)</label>
+                <input type="number" id="farmSet_inventoryExpandCost" class="field" value="5" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">촉진제 비용 (🌰)</label>
+                <input type="number" id="farmSet_acceleratorCost" class="field" value="100" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">영양제 비용 (🌰)</label>
+                <input type="number" id="farmSet_nutrientCost" class="field" value="200" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">입출금 수수료 (🌰)</label>
+                <input type="number" id="farmSet_depositFee" class="field" value="20" min="0">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">재해 확률 (%)</label>
+                <input type="number" id="farmSet_disasterChance" class="field" value="7" min="0" max="100">
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-full" onclick="farmSaveSettings()">💾 농장 설정 저장</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -996,441 +1596,17 @@
       </div>
     </div>
 
-    <!-- 🐿️ 다람쥐 설정 관리 -->
+    <!-- 🐿️ 다람쥐 설정 관리 (간소화 - 설정은 각 서브탭 안으로 이동됨) -->
     <div id="atab-squirrelSettings" class="hidden">
       <button class="adm-back-btn" onclick="aTabGrid('home')">← 홈으로</button>
-      <!-- 관리자 전용 다람쥐 탭 진입 버튼 -->
       <div class="clay-card p-4 mb-4" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid rgba(245,158,11,0.3)">
         <div class="flex items-center justify-between">
           <div>
             <div class="title-font text-base text-amber-800">🐿️ 다람쥐 마을 입장</div>
-            <div class="text-xs text-amber-600 mt-0.5">점검 중에도 관리자는 입장 가능합니다</div>
+            <div class="text-xs text-amber-600 mt-0.5">입장 후 각 탭(내 다람쥐/상점/합성/탐험/농장) 하단에서 관련 설정을 변경할 수 있습니다</div>
           </div>
           <button class="btn btn-primary" onclick="sqAdminEnter()">입장하기 →</button>
         </div>
-      </div>
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-1">🐿️ 다람쥐 설정</h2>
-        <p class="text-xs text-gray-400 font-semibold mb-4">다람쥐 성장 조건 및 탐험 설정을 관리합니다</p>
-        <div class="space-y-3" id="sqSettingsForm">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">📦 최대 보유 마릿수</label>
-            <input type="number" id="sqSet_maxSquirrels" class="field" value="10" min="1" max="99">
-            <div class="text-xs text-gray-400 mt-1">사용자 1명당 보유 가능한 다람쥐 수</div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🛒 상점 구매 가격 (도토리)</label>
-            <input type="number" id="sqSet_shopPrice" class="field" value="30" min="1">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">🌰 성장 도토리 최소</label>
-              <input type="number" id="sqSet_acornMin" class="field" value="20" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">🌰 성장 도토리 최대</label>
-              <input type="number" id="sqSet_acornMax" class="field" value="50" min="1">
-            </div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">⏳ 시간 필요 다람쥐 확률 (%)</label>
-            <input type="number" id="sqSet_timeChance" class="field" value="40" min="0" max="100">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">⏰ 성장 대기 시간 최소 (분)</label>
-              <input type="number" id="sqSet_timeMin" class="field" value="10" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">⏰ 성장 대기 시간 최대 (분)</label>
-              <input type="number" id="sqSet_timeMax" class="field" value="60" min="1">
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">🎲 먹이기 배율 최소</label>
-              <input type="number" id="sqSet_multiMin" class="field" value="0.5" min="0.1" max="1.0" step="0.05">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">🎲 먹이기 배율 최대</label>
-              <input type="number" id="sqSet_multiMax" class="field" value="1.3" min="1.0" max="5.0" step="0.05">
-            </div>
-          </div>
-          <div class="text-xs font-black text-gray-500 mb-2 mt-2">⚔️ 스탯 범위 (성장 시 랜덤)</div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">❤️ HP 최소</label>
-              <input type="number" id="sqSet_hpMin" class="field" value="60" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">❤️ HP 최대</label>
-              <input type="number" id="sqSet_hpMax" class="field" value="120" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">⚔️ 공격 최소</label>
-              <input type="number" id="sqSet_atkMin" class="field" value="8" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">⚔️ 공격 최대</label>
-              <input type="number" id="sqSet_atkMax" class="field" value="20" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">🛡️ 방어 최소</label>
-              <input type="number" id="sqSet_defMin" class="field" value="4" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">🛡️ 방어 최대</label>
-              <input type="number" id="sqSet_defMax" class="field" value="14" min="1">
-            </div>
-          </div>
-          <div class="text-xs font-black text-gray-500 mb-2 mt-2">🏪 펫샵 매입가 (스탯 기반 자동 산정)</div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">최저 매입가 (🌰)</label>
-              <input type="number" id="sqSet_sellBase" class="field" value="20" min="1">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">최고 매입가 (🌰)</label>
-              <input type="number" id="sqSet_sellMax" class="field" value="80" min="1">
-            </div>
-          </div>
-          <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">💚 회복 설정</h3>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">기본 회복시간 (분)</label>
-              <input type="number" id="sqSet_recoveryMinutes" class="field" value="60" min="1">
-              <div class="text-xs text-gray-400 mt-1">HP 0→풀 기준 (비례 적용)</div>
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">즉시회복 비용 (🌰)</label>
-              <input type="number" id="sqSet_recoveryCost" class="field" value="15" min="1">
-            </div>
-          </div>
-          <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">⏰ 시간 발동 구간 (%)</h3>
-          <p class="text-xs text-gray-400 mb-2">시간이 필요한 다람쥐의 타이머가 발동되는 성장 게이지 구간</p>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">최소 (%)</label>
-              <input type="number" id="sqSet_triggerMin" class="field" value="40" min="1" max="99">
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">최대 (%)</label>
-              <input type="number" id="sqSet_triggerMax" class="field" value="80" min="1" max="99">
-            </div>
-          </div>
-          <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 설정 저장</button>
-        </div>
-      </div>
-
-      <!-- 🧬 합성 설정 -->
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-1">🧬 다람쥐 합성 설정</h2>
-        <p class="text-xs text-gray-400 font-semibold mb-4">같은 등급 두 마리를 합성하여 새 다람쥐를 얻습니다</p>
-        <div class="mb-4">
-          <label class="text-xs font-black text-gray-600 mb-1 block">🌰 합성 비용 (도토리)</label>
-          <input type="number" id="sqSet_fuseCost" class="field" value="10" min="0">
-        </div>
-        <h3 class="text-sm font-black text-gray-700 mb-2">⬆️ 등급 승급 확률 (%)</h3>
-        <p class="text-xs text-gray-400 mb-3">합성 시 한 단계 높은 등급이 나올 확률입니다. 레전드는 최고 등급이므로 승급 없음.</p>
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">일반 → 레어</label>
-            <input type="number" id="sqSet_fuseUpNormal" class="field" value="15" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">레어 → 희귀</label>
-            <input type="number" id="sqSet_fuseUpRare" class="field" value="12" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">희귀 → 유일</label>
-            <input type="number" id="sqSet_fuseUpEpic" class="field" value="8" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">유일 → 레전드</label>
-            <input type="number" id="sqSet_fuseUpUnique" class="field" value="5" min="0" max="100">
-          </div>
-        </div>
-        <button class="btn btn-primary w-full" onclick="sqSaveSettings()">💾 합성 설정 저장</button>
-      </div>
-
-      <!-- ⚔️ 탐험 보상 설정 -->
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-1">⚔️ 탐험 보상 설정</h2>
-        <p class="text-xs text-gray-400 font-semibold mb-4">탐험 타일 확률, 보상 범위, 카드 등급 등을 관리합니다</p>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">🗺️ 타일 이벤트 확률 (%)</h3>
-        <p class="text-xs text-gray-400 mb-2">빈칸 + 보물 + 몬스터 = 100 (보스는 마지막칸 고정)</p>
-        <div class="grid grid-cols-3 gap-3 mb-4">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🍃 빈칸</label>
-            <input type="number" id="expSet_chanceEmpty" class="field" value="25" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">💰 보물</label>
-            <input type="number" id="expSet_chanceTreasure" class="field" value="30" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">⚔️ 몬스터</label>
-            <input type="number" id="expSet_chanceMonster" class="field" value="45" min="0" max="100">
-          </div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">✨ 스킬 포인트 (탐험당)</h3>
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">최소 SP</label>
-            <input type="number" id="expSet_spMin" class="field" value="1" min="0">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">최대 SP</label>
-            <input type="number" id="expSet_spMax" class="field" value="5" min="1">
-          </div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">💰 보물 상자 보상</h3>
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">최소 도토리</label>
-            <input type="number" id="expSet_treasureMin" class="field" value="3" min="0">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">최대 도토리</label>
-            <input type="number" id="expSet_treasureMax" class="field" value="12" min="1">
-          </div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">📊 레벨 기반 몬스터 스탯</h3>
-        <p class="text-xs text-gray-400 mb-2">스탯 = 기본값 + (레벨 × 증가량). 보스는 배율 추가 적용</p>
-        <div class="grid grid-cols-3 gap-3 mb-2">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">기본 HP</label>
-            <input type="number" id="expSet_lvBaseHp" class="field" value="30" min="0" step="1">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">기본 공격</label>
-            <input type="number" id="expSet_lvBaseAtk" class="field" value="8" min="0" step="0.5">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">기본 방어</label>
-            <input type="number" id="expSet_lvBaseDef" class="field" value="3" min="0" step="0.5">
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-3 mb-2">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 HP↑</label>
-            <input type="number" id="expSet_lvGrowHp" class="field" value="12" min="0" step="0.5">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 공격↑</label>
-            <input type="number" id="expSet_lvGrowAtk" class="field" value="2" min="0" step="0.5">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">레벨당 방어↑</label>
-            <input type="number" id="expSet_lvGrowDef" class="field" value="1.5" min="0" step="0.5">
-          </div>
-        </div>
-        <div class="mb-4" style="max-width:200px">
-          <label class="text-xs font-black text-gray-600 mb-1 block">👑 보스 스탯 배율 (×)</label>
-          <input type="number" id="expSet_bossStatMult" class="field" value="1.4" min="1" step="0.1">
-          <div class="text-xs text-gray-400 mt-1">보스의 HP/공/방에 곱셈</div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">🐺 일반 몬스터</h3>
-        <div id="expSet_monsterList" class="mb-2">로딩 중...</div>
-        <div class="flex gap-2 mb-4">
-          <input type="text" id="expMonEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
-          <input type="text" id="expMonName" class="field" placeholder="이름" style="flex:1">
-          <input type="number" id="expMonLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
-          <input type="number" id="expMonLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
-          <button class="btn btn-primary btn-sm" onclick="_expAddMonster(false)">추가</button>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">👑 보스</h3>
-        <div id="expSet_bossList" class="mb-2">로딩 중...</div>
-        <div class="flex gap-2 mb-4">
-          <input type="text" id="expBossEmoji" class="field" placeholder="이모지" style="width:50px;text-align:center">
-          <input type="text" id="expBossName" class="field" placeholder="이름" style="flex:1">
-          <input type="number" id="expBossLvMin" class="field" placeholder="최소Lv" style="width:60px" min="1">
-          <input type="number" id="expBossLvMax" class="field" placeholder="최대Lv" style="width:60px" min="1">
-          <button class="btn btn-primary btn-sm" onclick="_expAddMonster(true)">추가</button>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">🃏 보상 카드 등급 확률 (%)</h3>
-        <p class="text-xs text-gray-400 mb-2">A + B + C = 100</p>
-        <div class="grid grid-cols-3 gap-3 mb-4">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🥉 C등급</label>
-            <input type="number" id="expSet_weightC" class="field" value="65" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🥈 B등급</label>
-            <input type="number" id="expSet_weightB" class="field" value="28" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🥇 A등급</label>
-            <input type="number" id="expSet_weightA" class="field" value="7" min="0" max="100">
-          </div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">👑 보스전 카드 등급 확률 (%)</h3>
-        <p class="text-xs text-gray-400 mb-2">보스 처치 시 적용되는 카드 확률 (A + B + C = 100)</p>
-        <div class="grid grid-cols-3 gap-3 mb-4">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🥉 C등급</label>
-            <input type="number" id="expSet_bossWeightC" class="field" value="30" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🥈 B등급</label>
-            <input type="number" id="expSet_bossWeightB" class="field" value="45" min="0" max="100">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🥇 A등급</label>
-            <input type="number" id="expSet_bossWeightA" class="field" value="25" min="0" max="100">
-          </div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">🥉 C등급 보상</h3>
-        <div class="grid grid-cols-2 gap-3 mb-2">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
-            <div class="flex gap-2">
-              <input type="number" id="expSet_cAcornMin" class="field" value="5" min="0" style="flex:1">
-              <input type="number" id="expSet_cAcornMax" class="field" value="10" min="0" style="flex:1">
-            </div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
-            <input type="number" id="expSet_cItemChance" class="field" value="15" min="0" max="100">
-          </div>
-        </div>
-        <div class="mb-4">
-          <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (클릭하여 선택/해제)</label>
-          <div id="expSet_cItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">🥈 B등급 보상</h3>
-        <div class="grid grid-cols-2 gap-3 mb-2">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
-            <div class="flex gap-2">
-              <input type="number" id="expSet_bAcornMin" class="field" value="10" min="0" style="flex:1">
-              <input type="number" id="expSet_bAcornMax" class="field" value="20" min="0" style="flex:1">
-            </div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
-            <input type="number" id="expSet_bItemChance" class="field" value="45" min="0" max="100">
-          </div>
-        </div>
-        <div class="mb-4">
-          <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (클릭하여 선택/해제)</label>
-          <div id="expSet_bItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mb-2">🥇 A등급 보상</h3>
-        <div class="grid grid-cols-2 gap-3 mb-2">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">도토리 (최소~최대)</label>
-            <div class="flex gap-2">
-              <input type="number" id="expSet_aAcornMin" class="field" value="20" min="0" style="flex:1">
-              <input type="number" id="expSet_aAcornMax" class="field" value="40" min="0" style="flex:1">
-            </div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">아이템 확률 (%)</label>
-            <input type="number" id="expSet_aItemChance" class="field" value="85" min="0" max="100">
-          </div>
-        </div>
-        <div class="mb-4">
-          <label class="text-xs font-black text-gray-600 mb-1 block">아이템 목록 (클릭하여 선택/해제)</label>
-          <div id="expSet_aItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
-        </div>
-
-        <h3 class="text-sm font-black text-gray-700 mt-4 mb-2">⚔️ 전투 밸런스</h3>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">스킬 배율 (×)</label>
-            <input type="number" id="expSet_skillMulti" class="field" value="1.65" min="0.1" step="0.05">
-            <div class="text-xs text-gray-400 mt-1">데미지 = 공격력 × 배율</div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">스킬 랜덤 변동폭 (±)</label>
-            <input type="number" id="expSet_skillSwing" class="field" value="5" min="0">
-            <div class="text-xs text-gray-400 mt-1">5면 -5~+5 변동</div>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">일반공격 랜덤 변동폭 (±)</label>
-            <input type="number" id="expSet_atkSwing" class="field" value="3" min="0">
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 공격 랜덤 변동폭 (±)</label>
-            <input type="number" id="expSet_monSwing" class="field" value="3" min="0">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">몬스터 방어력 효과 (%)</label>
-            <input type="number" id="expSet_monDefEffect" class="field" value="38" min="0" max="100">
-            <div class="text-xs text-gray-400 mt-1">높을수록 몬스터가 단단</div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">다람쥐 방어력 효과 (%)</label>
-            <input type="number" id="expSet_sqDefEffect" class="field" value="48" min="0" max="100">
-            <div class="text-xs text-gray-400 mt-1">높을수록 다람쥐가 단단</div>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">🧪 포션 회복량 (%)</label>
-            <input type="number" id="expSet_healPct" class="field" value="40" min="1" max="100">
-            <div class="text-xs text-gray-400 mt-1">최대HP의 N%</div>
-          </div>
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">💨 도망 실패 확률 (%)</label>
-            <input type="number" id="expSet_escapeFail" class="field" value="30" min="0" max="100">
-            <div class="text-xs text-gray-400 mt-1">0이면 항상 성공</div>
-          </div>
-        </div>
-
-        <button class="btn btn-primary w-full" onclick="expSaveSettings()">💾 탐험 보상 설정 저장</button>
-      </div>
-
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-base font-black text-gray-800 mb-3">🎁 다람쥐 지급</h2>
-        <div class="grid grid-cols-1 gap-3 mb-3">
-          <div>
-            <label class="text-xs font-black text-gray-600 mb-1 block">👤 사용자</label>
-            <select id="sqGrantUser" class="field"><option value="">로딩 중...</option></select>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">⭐ 등급</label>
-              <select id="sqGrantGrade" class="field">
-                <option value="normal">일반</option>
-                <option value="rare">레어</option>
-                <option value="epic">희귀</option>
-                <option value="unique">유일</option>
-                <option value="legend">레전드</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-xs font-black text-gray-600 mb-1 block">🐿️ 타입</label>
-              <select id="sqGrantType" class="field">
-                <option value="explorer">탐험형</option>
-                <option value="pet">애완형</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <button class="btn btn-primary w-full" onclick="sqAdminGrantSquirrel()">🎁 다람쥐 지급하기</button>
-        <div class="text-xs text-gray-400 mt-2">선택한 등급 범위 내에서 랜덤 스탯으로 생성됩니다.</div>
-      </div>
-
-      <div class="clay-card p-5">
-        <h2 class="text-base font-black text-gray-800 mb-3">📋 보유 다람쥐 현황</h2>
-        <div id="sqAdminList" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
       </div>
     </div>
 
