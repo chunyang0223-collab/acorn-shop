@@ -941,6 +941,7 @@ body {
 
 /* 메뉴 그리드 */
 .adm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.adm-grid-cat { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .adm-grid-item {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 14px 4px; border-radius: 18px;
@@ -948,6 +949,9 @@ body {
   box-shadow: 4px 4px 12px rgba(188,170,145,0.14), -3px -3px 8px rgba(255,255,255,0.5);
   cursor: pointer; transition: all 0.15s; gap: 5px; position: relative;
 }
+.adm-grid-cat .adm-grid-item { padding: 18px 6px; gap: 6px; }
+.adm-grid-cat .adm-grid-icon { font-size: 28px; }
+.adm-grid-cat .adm-grid-label { font-size: 12px; }
 .adm-grid-item:hover { transform: translateY(-2px); box-shadow: 5px 5px 18px rgba(188,170,145,0.22); }
 .adm-grid-item:active { transform: scale(0.95); }
 .adm-grid-icon { font-size: 24px; }
@@ -1004,6 +1008,45 @@ body {
 [data-theme="dark"] .adm-grid-label { color: #d1d5db; }
 [data-theme="dark"] .adm-maint-chip { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #d1d5db; }
 [data-theme="dark"] .adm-back-btn { color: #a78bfa; }
+
+/* ── 카테고리 서브탭 바 ── */
+.adm-subtab-bar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 8px; margin-bottom: 12px;
+  background: rgba(245, 240, 255, 0.6); border-radius: 14px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.adm-subtab-bar::-webkit-scrollbar { display: none; }
+.adm-subtab-home {
+  flex-shrink: 0; width: 32px; height: 32px;
+  border-radius: 10px; border: 1.5px solid rgba(124,58,237,0.15);
+  background: white; color: #7c3aed;
+  font-size: 14px; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.adm-subtab-home:hover { background: #f5f3ff; }
+.adm-subtab {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 10px;
+  font-family: 'Jua', sans-serif; font-size: 12px; font-weight: 800;
+  border: 1.5px solid transparent; background: transparent;
+  color: #6b7280; cursor: pointer; transition: all 0.15s;
+  white-space: nowrap;
+}
+.adm-subtab:hover { background: rgba(255,255,255,0.6); }
+.adm-subtab.active {
+  background: white; color: #7c3aed;
+  border-color: rgba(124,58,237,0.2);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.12);
+}
+
+/* 서브탭 다크모드 */
+[data-theme="dark"] .adm-subtab-bar { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .adm-subtab-home { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); color: #a78bfa; }
+[data-theme="dark"] .adm-subtab { color: #9ca3af; }
+[data-theme="dark"] .adm-subtab:hover { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .adm-subtab.active { background: rgba(124,58,237,0.15); color: #c4b5fd; border-color: rgba(124,58,237,0.3); box-shadow: none; }
 
 /* ══════════════════════════════════════════════
    v2 개선: 품절 카드 강화
