@@ -296,6 +296,7 @@ body {
   max-height: 88dvh; overflow-y: auto;
 }
 @media (max-width: 480px) {
+  .tab-btn { font-size: 11px; padding: 8px 10px; }
   .modal-box {
     padding: 18px 16px 22px;
     border-radius: 22px;
