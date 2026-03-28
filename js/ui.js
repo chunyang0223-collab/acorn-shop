@@ -151,9 +151,9 @@ async function doSignup() {
 //  TABS
 // ──────────────────────────────────────────────
 const U_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','ranking','mypage'];
-const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','ranking'];
+const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking'];
 
-// ── 관리자 메뉴 정의 (그리드용) ──
+// ── 관리자 메뉴 정의 (개별 탭) ──
 const ADMIN_MENU_DEFS = {
   dashboard:        { icon: '📊', label: '현황' },
   requests:         { icon: '📬', label: '신청목록' },
@@ -165,8 +165,24 @@ const ADMIN_MENU_DEFS = {
   minigameSettings: { icon: '🎮', label: '미니게임' },
   ranking:          { icon: '🏆', label: '랭킹' },
   txlog:            { icon: '🗂️', label: '로그' },
-  users:            { icon: '👥', label: '회원관리' }
+  users:            { icon: '👥', label: '회원관리' },
+  squirrelSettings: { icon: '🐿️', label: '다람쥐' }
 };
+
+// ── 카테고리 그룹 정의 ──
+const ADMIN_CATS = {
+  dashboard: { icon: '📊', label: '대시보드',   tabs: ['dashboard'] },
+  shop:      { icon: '🛒', label: '상점 운영',  tabs: ['products', 'gachaTest', 'events', 'requests'] },
+  users:     { icon: '👥', label: '유저 관리',  tabs: ['users', 'txlog', 'ranking'] },
+  content:   { icon: '🎮', label: '콘텐츠',    tabs: ['quests', 'minigameSettings', 'recycle'] },
+  squirrel:  { icon: '🐿️', label: '다람쥐 마을', tabs: ['squirrelSettings'] }
+};
+
+// 역방향 조회: 탭 → 카테고리ID
+const _tabToCat = {};
+Object.entries(ADMIN_CATS).forEach(([catId, cat]) => {
+  cat.tabs.forEach(t => { _tabToCat[t] = catId; });
+});
 
 // 핀 기본값
 const DEFAULT_PINS = ['requests', 'users', 'txlog'];
@@ -206,6 +222,13 @@ function aTabGrid(tab) {
   aTab(tab, fakeBtn);
 }
 
+// 카테고리 열기 (첫 번째 서브탭으로 이동)
+function openAdminCat(catId) {
+  const cat = ADMIN_CATS[catId];
+  if (!cat) return;
+  aTab(cat.tabs[0]);
+}
+
 function aTab(tab, btn) {
   playSound('tab');
   A_TABS.forEach(t => { const el = document.getElementById('atab-'+t); if(el) el.classList.add('hidden'); });
@@ -220,7 +243,10 @@ function aTab(tab, btn) {
   }
 
   const tabEl = document.getElementById('atab-'+tab);
-  if (tabEl) tabEl.classList.remove('hidden');
+  if (tabEl) {
+    tabEl.classList.remove('hidden');
+    _injectCatSubtabs(tab, tabEl); // 카테고리 서브탭 바 주입
+  }
 
   // 핀 탭 하이라이트
   const pinIdx = _adminPins.indexOf(tab);
@@ -240,6 +266,28 @@ function aTab(tab, btn) {
   if (tab === 'minigameSettings') renderMinigameAdmin();
   if (tab === 'squirrelSettings') sqAdminInit();
   if (tab === 'ranking') renderAdminRanking();
+}
+
+// ── 카테고리 서브탭 바 주입 ──
+function _injectCatSubtabs(tab, tabEl) {
+  // 기존 서브탭 바 제거
+  tabEl.querySelector('.adm-subtab-bar')?.remove();
+
+  const catId = _tabToCat[tab];
+  if (!catId) return;
+  const cat = ADMIN_CATS[catId];
+  if (!cat || cat.tabs.length <= 1) return; // 단일 탭 카테고리는 바 불필요
+
+  const bar = document.createElement('div');
+  bar.className = 'adm-subtab-bar';
+  bar.innerHTML =
+    `<button class="adm-subtab-home" onclick="aTab('home')">←</button>` +
+    cat.tabs.map(t => {
+      const def = ADMIN_MENU_DEFS[t];
+      const active = t === tab ? ' active' : '';
+      return `<button class="adm-subtab${active}" onclick="aTab('${t}')">${def?.icon || ''} ${def?.label || t}</button>`;
+    }).join('');
+  tabEl.prepend(bar);
 }
 
 // ── 점검 상태 도트 (홈 화면용) ──
