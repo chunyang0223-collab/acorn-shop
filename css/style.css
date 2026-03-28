@@ -2110,10 +2110,7 @@ body {
 .btl-grade-b .btl-card-grade{color:#fff;background:rgba(60,120,220,.7)}
 .btl-grade-a .btl-card-grade{color:#fff;background:rgba(200,140,20,.8)}
 .btl-card-reward-icon{font-size:24px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
-.btl-card-reward-txt{font-size:10px;text-align:center;line-height:1.4;padding:0 6px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,0.35)}
-.btl-grade-c .btl-card-reward-txt{color:#ffffff}
-.btl-grade-b .btl-card-reward-txt{color:#ffffff}
-.btl-grade-a .btl-card-reward-txt{color:#fff8e0}
+.btl-card-reward-txt{font-size:11px;text-align:center;line-height:1.4;padding:0 6px;font-weight:900;color:#fff !important;text-shadow:0 1px 4px rgba(0,0,0,0.7),0 0 2px rgba(0,0,0,0.5)}
 .btl-card-front-unchosen .btl-card-grade{opacity:.7}
 .btl-card-front-unchosen .btl-card-reward-icon{opacity:.6}
 .btl-card-front-unchosen .btl-card-reward-txt{opacity:.6}
@@ -2495,9 +2492,7 @@ body {
 /* ══════════════════════════════════════════════════════
    🌙 다크: 원정대 카드 보상 텍스트 (카드 이미지 배경 위의 어두운 글씨)
    ══════════════════════════════════════════════════════ */
-[data-theme="dark"] .btl-grade-c .btl-card-reward-txt { color: #b8e8b8 !important; }
-[data-theme="dark"] .btl-grade-b .btl-card-reward-txt { color: #a8c8e8 !important; }
-[data-theme="dark"] .btl-grade-a .btl-card-reward-txt { color: #f0d8a0 !important; }
+[data-theme="dark"] .btl-card-reward-txt { color: #fff !important; }
 [data-theme="dark"] .btl-card-grade { text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
 [data-theme="dark"] .btl-continue-btn {
   color: #fff !important;
