@@ -753,10 +753,11 @@ function farmShowExpandPlot(cost) {
         현재 ${plotCount}칸 → ${plotCount + 1}칸
       </div>
       <div style="font-size:16px;font-weight:900;color:#78350f;margin-bottom:8px">🌰 ${cost} 도토리</div>
-      <div style="font-size:10px;color:#9ca3af;margin-bottom:16px">예치금에서 차감됩니다 (보유: 🌰${depositAcorns})</div>
+      <div style="font-size:10px;color:#9ca3af;margin-bottom:${depositAcorns < cost ? '8' : '16'}px">예치금에서 차감됩니다 (보유: 🌰${depositAcorns})</div>
+      ${depositAcorns < cost ? `<div style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:12px">⚠️ 예치금이 부족해요! (🌰${cost - depositAcorns} 더 필요)</div>` : ''}
       <div style="display:flex;gap:8px">
         <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280;font-weight:800">취소</button>
-        <button onclick="closeModal();farmDoExpandPlot()" class="btn btn-primary flex-1" ${depositAcorns < cost ? 'disabled style="opacity:0.5"' : ''}>확장!</button>
+        <button onclick="${depositAcorns >= cost ? "closeModal();farmDoExpandPlot()" : "toast('⚠️','예치금이 부족해요! 입금 후 다시 시도하세요')"}" class="btn btn-primary flex-1" style="${depositAcorns < cost ? 'opacity:0.5;cursor:not-allowed' : ''}">확장!</button>
       </div>
     </div>
   `);
