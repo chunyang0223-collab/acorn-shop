@@ -250,12 +250,12 @@
         <button onclick="sqAdminBack()" class="btn btn-gray btn-sm">← 관리자 화면으로</button>
       </div>
       <!-- 서브탭 -->
-      <div class="clay-card p-2 flex gap-1 mb-4">
-        <button class="tab-btn active flex-1" onclick="sqTab('my')"         id="sqtab-my">🏠 내 다람쥐</button>
-        <button class="tab-btn flex-1"        onclick="sqTab('shop')"       id="sqtab-shop">🛒 상점</button>
-        <button class="tab-btn flex-1"        onclick="sqTab('fuse')"       id="sqtab-fuse">🧬 합성</button>
-        <button class="tab-btn flex-1"        onclick="sqTab('expedition')" id="sqtab-expedition">⚔️ 탐험</button>
-        <button class="tab-btn flex-1"        onclick="sqTab('farm')"       id="sqtab-farm">🌾 농장</button>
+      <div class="clay-card p-2 flex gap-1 mb-4" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        <button class="tab-btn active" onclick="sqTab('my')"         id="sqtab-my" style="flex:1 0 auto;min-width:0">🏠 내 다람쥐</button>
+        <button class="tab-btn"        onclick="sqTab('shop')"       id="sqtab-shop" style="flex:1 0 auto;min-width:0">🛒 상점</button>
+        <button class="tab-btn"        onclick="sqTab('fuse')"       id="sqtab-fuse" style="flex:1 0 auto;min-width:0">🧬 합성</button>
+        <button class="tab-btn"        onclick="sqTab('expedition')" id="sqtab-expedition" style="flex:1 0 auto;min-width:0">⚔️ 탐험</button>
+        <button class="tab-btn"        onclick="sqTab('farm')"       id="sqtab-farm" style="flex:1 0 auto;min-width:0">🌾 농장</button>
       </div>
       <!-- 내 다람쥐 -->
       <div id="sqcontent-my">
