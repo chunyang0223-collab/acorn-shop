@@ -78,10 +78,10 @@ async function farmHarvest(slot) {
     return;
   }
 
-  // ★ 인벤토리 공간 체크 (슬롯 기반)
+  // ★ 인벤토리 공간 체크 (슬롯 기반, 촉진제/영양제는 슬롯 미차지)
   const capacity = _farmData?.inventory_capacity || 3;
   const cropId = plot.crop_id;
-  const usedSlots = (_farmInventory || []).reduce((sum, inv) => {
+  const usedSlots = (_farmInventory || []).filter(i => i.item_type === 'seed' || i.item_type === 'crop').reduce((sum, inv) => {
     return sum + Math.ceil(inv.quantity / _FARM_STACK_MAX);
   }, 0);
   const existing = (_farmInventory || []).find(i => i.crop_id === cropId && i.item_type === 'crop');

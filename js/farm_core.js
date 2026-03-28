@@ -406,27 +406,50 @@ function farmRenderInventory() {
   const usedSlots = slots.length;
   const totalItems = cropItems.reduce((sum, inv) => sum + inv.quantity, 0);
 
-  // 소비 아이템 뱃지
-  let consumableHtml = '';
-  consumables.forEach(c => {
-    if (c.quantity > 0) {
-      const isAcc = c.item_type === 'accelerator';
-      consumableHtml += `<span style="display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:8px;background:${isAcc ? '#ede9fe' : '#ecfdf5'};border:1px solid ${isAcc ? '#c4b5fd' : '#6ee7b7'};font-size:9px;font-weight:800;color:${isAcc ? '#7c3aed' : '#059669'}">${isAcc ? '⚡' : '🧪'} ${c.quantity}</span>`;
+  // 소비 아이템 (촉진제/영양제) - 인벤토리 그리드 옆에 눈에 띄게 표시
+  const accItem = consumables.find(c => c.item_type === 'accelerator');
+  const nutItem = consumables.find(c => c.item_type === 'nutrient');
+  const accQty = accItem?.quantity || 0;
+  const nutQty = nutItem?.quantity || 0;
+
+  let consumableGridHtml = '';
+  if (accQty > 0 || nutQty > 0) {
+    consumableGridHtml += `<div style="display:flex;gap:6px;margin-top:8px;padding:8px 10px;border-radius:12px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1.5px solid #c4b5fd">`;
+    consumableGridHtml += `<div style="font-size:11px;font-weight:900;color:#7c3aed;display:flex;align-items:center;gap:3px;white-space:nowrap">🧴 소비 아이템</div>`;
+    consumableGridHtml += `<div style="display:flex;gap:6px;flex:1;justify-content:flex-end">`;
+    if (accQty > 0) {
+      consumableGridHtml += `
+        <div style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:10px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border:1.5px solid #a78bfa">
+          <span style="font-size:14px">⚡</span>
+          <div style="line-height:1.1">
+            <div style="font-size:8px;font-weight:700;color:#6d28d9">촉진제</div>
+            <div style="font-size:13px;font-weight:900;color:#5b21b6">${accQty}개</div>
+          </div>
+        </div>`;
     }
-  });
+    if (nutQty > 0) {
+      consumableGridHtml += `
+        <div style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:10px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1.5px solid #6ee7b7">
+          <span style="font-size:14px">🧪</span>
+          <div style="line-height:1.1">
+            <div style="font-size:8px;font-weight:700;color:#047857">영양제</div>
+            <div style="font-size:13px;font-weight:900;color:#065f46">${nutQty}개</div>
+          </div>
+        </div>`;
+    }
+    consumableGridHtml += `</div></div>`;
+  }
 
   return `
     <div class="clay-card p-3" style="margin-top:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <div style="font-size:11px;font-weight:900;color:#1f2937">📦 인벤토리</div>
-          ${consumableHtml ? `<div style="display:flex;gap:3px">${consumableHtml}</div>` : ''}
-        </div>
+        <div style="font-size:11px;font-weight:900;color:#1f2937">📦 인벤토리</div>
         <div style="font-size:9px;color:#6b7280;font-weight:700">${usedSlots} / ${capacity} 칸 · 총 ${totalItems}개</div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${gridHtml}
       </div>
+      ${consumableGridHtml}
     </div>`;
 }
 
