@@ -935,31 +935,47 @@
               </div>
             </div>
 
-            <h3 class="text-sm font-black text-gray-700 mb-2">📦 기타</h3>
+            <h3 class="text-sm font-black text-gray-700 mb-2">📦 인벤토리</h3>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">기본 칸</label>
+                <input type="number" id="farmSet_inventoryBase" class="field" value="3" min="1">
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">확장 비용 (🌰)</label>
+                <input type="number" id="farmSet_inventoryExpandCost" class="field" value="10" min="1">
+                <div class="text-xs text-gray-400 mt-1">칸당 누적 추가</div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">최대 칸</label>
+                <input type="number" id="farmSet_inventoryMax" class="field" value="20" min="1" max="99">
+              </div>
+            </div>
+
+            <h3 class="text-sm font-black text-gray-700 mb-2">⚡ 촉진제 / 🧪 영양제</h3>
+            <p class="text-xs text-gray-400 mb-2">상점에서 구매 후 성장 중인 작물에 사용</p>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">⚡ 촉진제 가격 (🌰)</label>
+                <input type="number" id="farmSet_acceleratorCost" class="field" value="3" min="0">
+                <div class="text-xs text-gray-400 mt-1">도토리 단위</div>
+              </div>
+              <div>
+                <label class="text-xs font-black text-gray-600 mb-1 block">성장시간 감소 (%)</label>
+                <input type="number" id="farmSet_acceleratorPct" class="field" value="50" min="1" max="99">
+                <div class="text-xs text-gray-400 mt-1">남은 시간의 N% 감소</div>
+              </div>
+            </div>
             <div class="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">재고 기본 슬롯</label>
-                <input type="number" id="farmSet_inventoryBase" class="field" value="10" min="1">
+                <label class="text-xs font-black text-gray-600 mb-1 block">🧪 영양제 가격 (🌰)</label>
+                <input type="number" id="farmSet_nutrientCost" class="field" value="5" min="0">
+                <div class="text-xs text-gray-400 mt-1">도토리 단위</div>
               </div>
               <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">재고 확장 비용 (🌰)</label>
-                <input type="number" id="farmSet_inventoryExpandCost" class="field" value="5" min="1">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">촉진제 비용 (🌰)</label>
-                <input type="number" id="farmSet_acceleratorCost" class="field" value="100" min="0">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">영양제 비용 (🌰)</label>
-                <input type="number" id="farmSet_nutrientCost" class="field" value="200" min="0">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">입출금 수수료 (🌰)</label>
-                <input type="number" id="farmSet_depositFee" class="field" value="20" min="0">
-              </div>
-              <div>
-                <label class="text-xs font-black text-gray-600 mb-1 block">재해 확률 (%)</label>
-                <input type="number" id="farmSet_disasterChance" class="field" value="7" min="0" max="100">
+                <label class="text-xs font-black text-gray-600 mb-1 block">풍작 확률 증가 (%p)</label>
+                <input type="number" id="farmSet_nutrientBumperBoost" class="field" value="20" min="1" max="80">
+                <div class="text-xs text-gray-400 mt-1">기존 풍작%에 +N%p</div>
               </div>
             </div>
 
