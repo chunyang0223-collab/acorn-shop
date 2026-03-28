@@ -18,6 +18,8 @@ var _farmCrops = [];       // farm_crops 목록
 var _farmPrices = [];      // 현재 시세
 var _farmPlots = [];       // 내 밭 목록
 var _farmInventory = [];   // 내 인벤토리
+var _farmSellStatus = {};  // 현재 기간 판매 추적
+var _farmShopTab = 'buy';  // 상점 현재 탭
 var _farmTimer = null;     // 수습/수확 타이머 인터벌
 
 // ── 설정 로드 ──
@@ -138,10 +140,13 @@ function farmRenderFieldGrid() {
         const crop = _farmCrops.find(c => c.id === plot.crop_id);
         const harvestAt = plot.harvest_at ? new Date(plot.harvest_at) : null;
         const ready = harvestAt && harvestAt <= Date.now();
+        const remaining = harvestAt ? Math.max(0, harvestAt - Date.now()) : 0;
+        const remainStr = remaining > 0 ? _farmFmtTime(remaining) : '';
         gridHtml += `
-          <div style="aspect-ratio:1;border-radius:16px;background:${ready ? 'linear-gradient(135deg,#fef9c3,#fef3c7)' : 'linear-gradient(135deg,#ecfdf5,#d1fae5)'};border:2px solid ${ready ? '#fbbf24' : '#86efac'};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative" onclick="${ready ? `farmHarvest(${i})` : ''}">
-            <div style="font-size:28px">${crop?.emoji || '🌱'}</div>
+          <div style="aspect-ratio:1;border-radius:16px;background:${ready ? 'linear-gradient(135deg,#fef9c3,#fef3c7)' : 'linear-gradient(135deg,#ecfdf5,#d1fae5)'};border:2px solid ${ready ? '#fbbf24' : '#86efac'};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:${ready ? 'pointer' : 'default'};transition:all .15s;position:relative" ${ready ? `onclick="farmHarvest(${i})"` : ''}>
+            <div style="font-size:${ready ? '28' : '24'}px">${crop?.emoji || '🌱'}</div>
             <div style="font-size:9px;font-weight:700;color:${ready ? '#92400e' : '#16a34a'};margin-top:2px">${ready ? '수확!' : (crop?.name || '')}</div>
+            ${!ready && remainStr ? `<div style="font-size:7px;color:#6b7280;font-weight:600;margin-top:1px">${remainStr}</div>` : ''}
           </div>`;
       } else {
         // 빈 밭
@@ -218,36 +223,43 @@ function farmRenderFarmerSlot() {
 
 // ================================================================
 //  인벤토리 (밭 아래, 기본 3칸, 확장 가능)
+//  씨앗: 초록 테두리 + "씨" 뱃지  /  작물: 주황 테두리
 // ================================================================
 function farmRenderInventory() {
   const capacity = _farmData?.inventory_capacity || 3;
   const items = _farmInventory || [];
 
-  // 인벤토리 아이템을 칸별로 펼치기 (같은 작물 quantity 만큼)
+  // 아이템을 칸별로 펼치기 (같은 작물 quantity 만큼)
   let slots = [];
   items.forEach(inv => {
     const crop = _farmCrops.find(c => c.id === inv.crop_id);
     for (let i = 0; i < inv.quantity; i++) {
-      slots.push({ crop_id: inv.crop_id, emoji: crop?.emoji || '📦', name: crop?.name || inv.crop_id });
+      slots.push({
+        crop_id: inv.crop_id,
+        emoji: crop?.emoji || '📦',
+        name: crop?.name || inv.crop_id,
+        type: inv.item_type || 'seed'
+      });
     }
   });
 
-  // 확장 비용: (현재용량 - 3 + 1) * 10
   const expandCost = (capacity - 3 + 1) * 10;
-
   let gridHtml = '';
 
-  // 채워진 슬롯
   for (let i = 0; i < capacity; i++) {
     if (i < slots.length) {
       const s = slots[i];
+      const isSeed = s.type === 'seed';
+      const borderColor = isSeed ? '#86efac' : '#fbbf24';
+      const bgGrad = isSeed ? 'linear-gradient(135deg,#ecfdf5,#d1fae5)' : 'linear-gradient(135deg,#fef9c3,#fef3c7)';
+      const labelColor = isSeed ? '#16a34a' : '#92400e';
       gridHtml += `
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#fef9c3,#fef3c7);border:2px solid #fbbf24;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+        <div style="width:48px;height:48px;border-radius:12px;background:${bgGrad};border:2px solid ${borderColor};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
           <div style="font-size:20px">${s.emoji}</div>
-          <div style="font-size:7px;font-weight:700;color:#92400e;margin-top:1px;white-space:nowrap">${s.name}</div>
+          <div style="font-size:7px;font-weight:700;color:${labelColor};margin-top:1px;white-space:nowrap">${isSeed ? s.name + ' 씨' : s.name}</div>
+          ${isSeed ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#16a34a;color:white;font-size:7px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid white">씨</div>` : ''}
         </div>`;
     } else {
-      // 빈 슬롯
       gridHtml += `
         <div style="width:48px;height:48px;border-radius:12px;background:#f9fafb;border:2px dashed #e5e7eb;display:flex;align-items:center;justify-content:center">
           <div style="font-size:14px;opacity:0.2">📦</div>
@@ -255,7 +267,7 @@ function farmRenderInventory() {
     }
   }
 
-  // 확장 슬롯 (+)
+  // 확장 버튼
   gridHtml += `
     <div onclick="farmExpandInventory()" style="width:48px;height:48px;border-radius:12px;background:#f3f4f6;border:2px dashed #d1d5db;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s" title="인벤토리 확장 (🌰${expandCost})">
       <div style="font-size:16px;color:#9ca3af">+</div>
@@ -363,14 +375,22 @@ async function farmDoWithdraw() {
 }
 
 // ================================================================
-//  상점 모달 (씨앗 구매)
+//  상점 모달 (탭: 구매 / 판매)
 // ================================================================
-function farmShowShop() {
+async function farmShowShop(tab) {
+  if (tab) _farmShopTab = tab;
+  // 판매 탭이면 판매 상태 로드
+  if (_farmShopTab === 'sell') {
+    try {
+      const { data } = await sb.rpc('farm_get_sell_status', { p_user_id: myProfile.id });
+      _farmSellStatus = data?.sales || {};
+    } catch(e) { console.warn('[farm sell status]', e); }
+  }
+
   const depositAcorns = _farmData?.deposit_acorns || 0;
   const depositCrumbs = _farmData?.deposit_crumbs || 0;
-  const depositTotal = depositAcorns * 100 + depositCrumbs;
 
-  // 시세 남은 시간 계산
+  // 시세 남은 시간
   let timeLeftStr = '';
   if (_farmPrices.length > 0) {
     const endTime = new Date(_farmPrices[0].period_end);
@@ -382,27 +402,46 @@ function farmShowShop() {
     }
   }
 
-  let seedListHtml = '';
+  const isBuy = _farmShopTab === 'buy';
+  const tabStyle = (active) => `padding:6px 16px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;${active ? 'background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white' : 'background:#f3f4f6;color:#9ca3af'}`;
+
+  let contentHtml = isBuy ? _farmRenderBuyTab() : _farmRenderSellTab();
+
+  showModal(`
+    <div style="padding:4px 0">
+      <div style="font-size:15px;font-weight:900;color:#1f2937;text-align:center;margin-bottom:4px">🛒 농장 상점</div>
+      <div style="font-size:10px;color:#6b7280;text-align:center;margin-bottom:4px">예치금: 🌰 ${depositAcorns} + ${depositCrumbs}부스러기</div>
+      ${timeLeftStr ? `<div style="font-size:9px;color:#f59e0b;text-align:center;margin-bottom:8px">⏰ ${timeLeftStr}</div>` : ''}
+
+      <div style="display:flex;gap:6px;margin-bottom:10px;justify-content:center">
+        <button onclick="farmShowShop('buy')" style="${tabStyle(isBuy)}">🌱 구매</button>
+        <button onclick="farmShowShop('sell')" style="${tabStyle(!isBuy)}">💰 판매</button>
+      </div>
+
+      <div style="max-height:340px;overflow-y:auto;padding:2px">
+        ${contentHtml}
+      </div>
+
+      <button onclick="closeModal()" class="btn w-full" style="background:#f9fafb;color:#9ca3af;font-size:11px;font-weight:700;margin-top:10px">닫기</button>
+    </div>
+  `);
+}
+
+// ── 구매 탭 렌더링 ──
+function _farmRenderBuyTab() {
+  const depositTotal = (_farmData?.deposit_acorns || 0) * 100 + (_farmData?.deposit_crumbs || 0);
+  let html = '';
   _farmCrops.forEach(crop => {
     const priceRow = _farmPrices.find(p => p.crop_id === crop.id);
     const currentPrice = priceRow ? priceRow.current_price : crop.base_price * 100;
     const changePct = priceRow ? priceRow.price_change_pct : 0;
-    const basePrice = crop.base_price * 100;
-
-    // 가격 표시: 도토리 + 부스러기
-    const priceAcorns = Math.floor(currentPrice / 100);
-    const priceCrumbs = currentPrice % 100;
-    const priceStr = priceCrumbs > 0 ? `${priceAcorns}.${String(priceCrumbs).padStart(2,'0')}` : `${priceAcorns}`;
-
-    // 변동률 색상
-    let changeColor = '#6b7280';
-    let changeIcon = '';
+    const priceStr = _farmFmtPrice(currentPrice);
+    let changeColor = '#6b7280', changeIcon = '';
     if (changePct > 0) { changeColor = '#ef4444'; changeIcon = '▲'; }
     else if (changePct < 0) { changeColor = '#3b82f6'; changeIcon = '▼'; }
-
     const canBuy = depositTotal >= currentPrice;
 
-    seedListHtml += `
+    html += `
       <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:${canBuy ? 'white' : '#f9fafb'};border:1.5px solid ${canBuy ? '#e5e7eb' : '#f3f4f6'};${canBuy ? '' : 'opacity:0.6'}">
         <div style="font-size:24px;flex-shrink:0;width:32px;text-align:center">${crop.emoji}</div>
         <div style="flex:1;min-width:0">
@@ -416,21 +455,221 @@ function farmShowShop() {
         <button onclick="farmBuySeed('${crop.id}')" ${canBuy ? '' : 'disabled'} style="padding:4px 10px;border-radius:8px;border:none;background:${canBuy ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#e5e7eb'};color:${canBuy ? 'white' : '#9ca3af'};font-size:10px;font-weight:800;cursor:${canBuy ? 'pointer' : 'default'};flex-shrink:0">구매</button>
       </div>`;
   });
+  return `<div style="display:flex;flex-direction:column;gap:6px">${html}</div>`;
+}
 
-  showModal(`
-    <div style="padding:4px 0">
-      <div style="font-size:15px;font-weight:900;color:#1f2937;text-align:center;margin-bottom:4px">🛒 농장 상점</div>
-      <div style="font-size:10px;color:#6b7280;text-align:center;margin-bottom:4px">예치금: 🌰 ${depositAcorns} + ${depositCrumbs}부스러기</div>
-      ${timeLeftStr ? `<div style="font-size:9px;color:#f59e0b;text-align:center;margin-bottom:8px">⏰ ${timeLeftStr}</div>` : ''}
+// ── 판매 탭 렌더링 ──
+function _farmRenderSellTab() {
+  const seeds = (_farmInventory || []).filter(i => i.item_type === 'seed' && i.quantity > 0);
+  const crops = (_farmInventory || []).filter(i => i.item_type === 'crop' && i.quantity > 0);
 
-      <div style="font-size:11px;font-weight:900;color:#1f2937;margin-bottom:6px;padding-left:4px">🌱 씨앗 구매</div>
-      <div style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;padding:2px">
-        ${seedListHtml}
-      </div>
+  let html = '';
 
-      <button onclick="closeModal()" class="btn w-full" style="background:#f9fafb;color:#9ca3af;font-size:11px;font-weight:700;margin-top:10px">닫기</button>
-    </div>
-  `);
+  // ─ 씨앗 되팔기 섹션 ─
+  html += `<div style="font-size:10px;font-weight:900;color:#1f2937;margin-bottom:6px">🌱 씨앗 되팔기 <span style="font-size:8px;color:#9ca3af;font-weight:700">(현재 시세의 70%)</span></div>`;
+  if (seeds.length === 0) {
+    html += `<div style="font-size:10px;color:#9ca3af;padding:8px;text-align:center">보유 씨앗이 없어요</div>`;
+  } else {
+    seeds.forEach(inv => {
+      const crop = _farmCrops.find(c => c.id === inv.crop_id);
+      if (!crop) return;
+      const priceRow = _farmPrices.find(p => p.crop_id === inv.crop_id);
+      const marketPrice = priceRow ? priceRow.current_price : crop.base_price * 100;
+      const sellPrice = Math.round(marketPrice * 0.7);
+      const priceStr = _farmFmtPrice(sellPrice);
+
+      html += `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:white;border:1.5px solid #e5e7eb;margin-bottom:4px">
+          <div style="font-size:20px;flex-shrink:0">${crop.emoji}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-weight:900;color:#1f2937">${crop.name} 씨앗 <span style="font-size:9px;color:#6b7280">×${inv.quantity}</span></div>
+            <div style="font-size:9px;color:#ef4444">개당 🌰 ${priceStr}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',-1)" style="width:22px;height:22px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
+            <span id="farmSeedQty_${inv.crop_id}" style="font-size:12px;font-weight:900;min-width:20px;text-align:center">1</span>
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',1)" style="width:22px;height:22px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',999)" style="padding:2px 6px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:8px;font-weight:800;cursor:pointer;color:#6b7280">ALL</button>
+            <button onclick="farmSellSeed('${inv.crop_id}')" style="padding:4px 8px;border-radius:8px;border:none;background:linear-gradient(135deg,#f87171,#ef4444);color:white;font-size:9px;font-weight:800;cursor:pointer">판매</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  // ─ 작물 판매 섹션 ─
+  html += `<div style="font-size:10px;font-weight:900;color:#1f2937;margin-top:12px;margin-bottom:6px">🥕 작물 판매 <span style="font-size:8px;color:#9ca3af;font-weight:700">(단계별 가격)</span></div>`;
+  if (crops.length === 0) {
+    html += `<div style="font-size:10px;color:#9ca3af;padding:8px;text-align:center">보유 작물이 없어요</div>`;
+  } else {
+    crops.forEach(inv => {
+      const crop = _farmCrops.find(c => c.id === inv.crop_id);
+      if (!crop) return;
+      const alreadySold = _farmSellStatus[inv.crop_id] || 0;
+      const tierLimits = [
+        _farmSettings.sell_tier1_limit || 10,
+        _farmSettings.sell_tier2_limit || 10,
+        _farmSettings.sell_tier3_limit || 10
+      ];
+      const tierPcts = [
+        _farmSettings.sell_tier1_pct || 100,
+        _farmSettings.sell_tier2_pct || 80,
+        _farmSettings.sell_tier3_pct || 60
+      ];
+      const tierColors = ['#16a34a', '#f59e0b', '#ef4444'];
+      const tierBgs = ['#f0fdf4', '#fefce8', '#fef2f2'];
+
+      // 현재 활성 단계 찾기
+      let tierStart = 0;
+      let currentTier = -1;
+      let tierRemaining = 0;
+      let tierSold = 0;
+      let tierLimit = 0;
+      let tierPct = 60;
+      let tierColor = '#ef4444';
+      let tierBg = '#fef2f2';
+
+      for (let t = 0; t < 3; t++) {
+        const tEnd = tierStart + tierLimits[t];
+        if (alreadySold < tEnd) {
+          currentTier = t;
+          tierSold = alreadySold - tierStart;
+          tierLimit = tierLimits[t];
+          tierRemaining = tierLimit - tierSold;
+          tierPct = tierPcts[t];
+          tierColor = tierColors[t];
+          tierBg = tierBgs[t];
+          break;
+        }
+        tierStart = tEnd;
+      }
+      if (currentTier === -1) {
+        // 모든 단계 소진 → 3단계 가격
+        currentTier = 2;
+        tierPct = tierPcts[2];
+        tierColor = tierColors[2];
+        tierBg = tierBgs[2];
+        tierSold = 0;
+        tierLimit = 999;
+        tierRemaining = 999;
+      }
+
+      // 작물 1개 기본 판매가 (부스러기)
+      const baseCropPrice = Math.round(crop.base_price * 100 * (_farmSettings.sell_rate_pct || 110) / 100 / 3);
+      const tierPrice = Math.round(baseCropPrice * tierPct / 100);
+      const priceStr = _farmFmtPrice(tierPrice);
+
+      const maxSellable = Math.min(inv.quantity, tierRemaining);
+
+      html += `
+        <div style="padding:10px;border-radius:12px;background:${tierBg};border:1.5px solid ${tierColor}30;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="font-size:20px">${crop.emoji}</span>
+            <div style="flex:1">
+              <div style="font-size:11px;font-weight:900;color:#1f2937">${crop.name} <span style="font-size:9px;color:#6b7280">×${inv.quantity}</span></div>
+              <div style="font-size:9px;font-weight:700;color:${tierColor}">${currentTier + 1}단계 (${tierPct}%) ${tierLimit < 999 ? `: ${tierSold}/${tierLimit}` : ''}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;font-weight:900;color:${tierColor}">개당 🌰 ${priceStr}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+            <button onclick="_farmSellCropQty('${inv.crop_id}',-1)" style="width:24px;height:24px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
+            <span id="farmCropQty_${inv.crop_id}" style="font-size:13px;font-weight:900;min-width:24px;text-align:center">0</span>
+            <button onclick="_farmSellCropQty('${inv.crop_id}',1)" style="width:24px;height:24px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
+            <button onclick="_farmSellCropQty('${inv.crop_id}',${maxSellable})" style="padding:3px 8px;border-radius:6px;border:1px solid #d1d5db;background:white;font-size:9px;font-weight:800;cursor:pointer;color:#6b7280">ALL</button>
+            <button onclick="farmSellCrop('${inv.crop_id}')" style="padding:5px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,${tierColor},${tierColor}dd);color:white;font-size:10px;font-weight:800;cursor:pointer">판매</button>
+          </div>
+        </div>`;
+    });
+  }
+  return html;
+}
+
+// ── 가격 포맷팅 헬퍼 ──
+function _farmFmtPrice(crumbs) {
+  const a = Math.floor(crumbs / 100);
+  const c = crumbs % 100;
+  return c > 0 ? `${a}.${String(c).padStart(2, '0')}` : `${a}`;
+}
+
+// ── 씨앗 판매 수량 조절 ──
+function _farmSellSeedQty(cropId, delta) {
+  const el = document.getElementById(`farmSeedQty_${cropId}`);
+  if (!el) return;
+  const inv = (_farmInventory || []).find(i => i.crop_id === cropId && i.item_type === 'seed');
+  const max = inv?.quantity || 0;
+  let cur = parseInt(el.textContent) || 0;
+  if (delta === 999) cur = max;
+  else cur = Math.max(0, Math.min(max, cur + delta));
+  el.textContent = cur;
+}
+
+// ── 작물 판매 수량 조절 ──
+function _farmSellCropQty(cropId, delta) {
+  const el = document.getElementById(`farmCropQty_${cropId}`);
+  if (!el) return;
+  const inv = (_farmInventory || []).find(i => i.crop_id === cropId && i.item_type === 'crop');
+  const max = inv?.quantity || 0;
+  // 단계 한도 계산
+  const alreadySold = _farmSellStatus[cropId] || 0;
+  const tierLimits = [
+    _farmSettings.sell_tier1_limit || 10,
+    _farmSettings.sell_tier2_limit || 10,
+    _farmSettings.sell_tier3_limit || 10
+  ];
+  let tierStart = 0;
+  let tierRemaining = max;
+  for (let t = 0; t < 3; t++) {
+    const tEnd = tierStart + tierLimits[t];
+    if (alreadySold < tEnd) {
+      tierRemaining = Math.min(max, tEnd - alreadySold);
+      break;
+    }
+    tierStart = tEnd;
+  }
+  const maxSellable = Math.min(max, tierRemaining);
+  let cur = parseInt(el.textContent) || 0;
+  if (delta >= maxSellable) cur = maxSellable;
+  else cur = Math.max(0, Math.min(maxSellable, cur + delta));
+  el.textContent = cur;
+}
+
+// ── 씨앗 판매 실행 ──
+async function farmSellSeed(cropId) {
+  const el = document.getElementById(`farmSeedQty_${cropId}`);
+  const qty = parseInt(el?.textContent) || 0;
+  if (qty <= 0) { toast('⚠️', '판매할 수량을 선택하세요'); return; }
+  const crop = _farmCrops.find(c => c.id === cropId);
+  try {
+    const { data, error } = await sb.rpc('farm_sell_item', {
+      p_user_id: myProfile.id, p_crop_id: cropId, p_item_type: 'seed', p_quantity: qty
+    });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+    toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗 ${qty}개 판매! (+🌰${_farmFmtPrice(data.revenue)})`);
+    await _farmReloadAll();
+    farmShowShop('sell');
+    farmRenderMain();
+  } catch(e) { console.error('[farm sell seed]', e); toast('❌', '판매 실패'); }
+}
+
+// ── 작물 판매 실행 ──
+async function farmSellCrop(cropId) {
+  const el = document.getElementById(`farmCropQty_${cropId}`);
+  const qty = parseInt(el?.textContent) || 0;
+  if (qty <= 0) { toast('⚠️', '판매할 수량을 선택하세요'); return; }
+  const crop = _farmCrops.find(c => c.id === cropId);
+  try {
+    const { data, error } = await sb.rpc('farm_sell_item', {
+      p_user_id: myProfile.id, p_crop_id: cropId, p_item_type: 'crop', p_quantity: qty
+    });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+    toast(crop?.emoji || '🥕', `${crop?.name || ''} ${qty}개 판매! (+🌰${_farmFmtPrice(data.revenue)})`);
+    await _farmReloadAll();
+    farmShowShop('sell');
+    farmRenderMain();
+  } catch(e) { console.error('[farm sell crop]', e); toast('❌', '판매 실패'); }
 }
 
 // ── 씨앗 구매 실행 ──
@@ -455,7 +694,7 @@ async function farmBuySeed(cropId) {
 
     await _farmReloadAll();
     // 상점 모달 갱신
-    farmShowShop();
+    await farmShowShop('buy');
     // 메인 화면도 갱신 (인벤토리 표시)
     farmRenderMain();
   } catch (e) {
@@ -727,16 +966,151 @@ async function farmSkipApprentice() {
 }
 
 // ================================================================
-//  밭 관련 (파종/수확 — 상점 구현 후 연결)
+//  파종 모달 (인벤토리 씨앗 선택 → 밭에 심기)
 // ================================================================
 function farmShowPlantModal(slot) {
-  // 추후 구현
-  toast('🌱', '씨앗 심기는 곧 추가됩니다!');
+  const seeds = (_farmInventory || []).filter(i => i.item_type === 'seed' && i.quantity > 0);
+
+  if (seeds.length === 0) {
+    toast('🌱', '심을 씨앗이 없어요! 상점에서 구매하세요');
+    return;
+  }
+
+  let listHtml = '';
+  seeds.forEach(inv => {
+    const crop = _farmCrops.find(c => c.id === inv.crop_id);
+    if (!crop) return;
+    listHtml += `
+      <div onclick="farmDoPlant(${slot},'${inv.crop_id}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:white;border:1.5px solid #e5e7eb;cursor:pointer;transition:all .15s">
+        <div style="font-size:28px;flex-shrink:0">${crop.emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:900;color:#1f2937">${crop.name} 씨앗 <span style="font-size:10px;color:#6b7280">×${inv.quantity}</span></div>
+          <div style="font-size:9px;color:#6b7280">재배 ${crop.grow_min_hours}~${crop.grow_max_hours}시간</div>
+        </div>
+        <div style="font-size:10px;color:#16a34a;font-weight:800">심기 →</div>
+      </div>`;
+  });
+
+  showModal(`
+    <div style="padding:4px 0">
+      <div style="font-size:14px;font-weight:900;color:#1f2937;text-align:center;margin-bottom:4px">🌱 씨앗 심기</div>
+      <div style="font-size:10px;color:#6b7280;text-align:center;margin-bottom:12px">${slot}번 밭에 심을 씨앗을 선택하세요</div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
+        ${listHtml}
+      </div>
+      <button onclick="closeModal()" class="btn w-full" style="background:#f9fafb;color:#9ca3af;font-size:11px;font-weight:700;margin-top:10px">취소</button>
+    </div>
+  `);
 }
 
-function farmHarvest(slot) {
-  // 추후 구현
-  toast('🌾', '수확 기능은 곧 추가됩니다!');
+async function farmDoPlant(slot, cropId) {
+  const crop = _farmCrops.find(c => c.id === cropId);
+  closeModal();
+  try {
+    const { data, error } = await sb.rpc('farm_plant_seed', {
+      p_user_id: myProfile.id, p_slot: slot, p_crop_id: cropId
+    });
+    if (error) throw error;
+    if (data?.error) { toast('⚠️', data.error); return; }
+
+    toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗을 심었어요!`);
+    await _farmReloadAll();
+    farmRenderMain();
+  } catch(e) {
+    console.error('[farm plant]', e);
+    toast('❌', '심기 실패: ' + (e?.message || ''));
+  }
+}
+
+// ================================================================
+//  수확 (이벤트 연출 포함)
+// ================================================================
+async function farmHarvest(slot) {
+  const plot = _farmPlots.find(p => p.slot === slot);
+  if (!plot?.crop_id) return;
+  const crop = _farmCrops.find(c => c.id === plot.crop_id);
+
+  // 수확 연출
+  showModal(`
+    <div id="farmHarvestAnim" style="text-align:center;padding:20px 0">
+      <div style="font-size:48px;animation:sqCardShake 0.5s ease infinite">${crop?.emoji || '🌾'}</div>
+      <div style="font-size:14px;font-weight:900;color:#78350f;margin-top:12px">수확 중...</div>
+    </div>
+  `);
+
+  _playTone(330, 'sine', 0.1, 0.15);
+  setTimeout(() => _playTone(392, 'sine', 0.1, 0.15), 150);
+  setTimeout(() => _playTone(523, 'triangle', 0.15, 0.12), 300);
+
+  let result;
+  try {
+    const { data, error } = await sb.rpc('farm_harvest_plot', {
+      p_user_id: myProfile.id, p_slot: slot
+    });
+    if (error) throw error;
+    if (data?.error) { closeModal(); toast('⚠️', data.error); return; }
+    result = data;
+  } catch(e) {
+    console.error('[farm harvest]', e);
+    closeModal();
+    toast('❌', '수확 실패');
+    return;
+  }
+
+  // 1.5초 후 결과 표시
+  setTimeout(() => {
+    const ev = result.event;
+    const qty = result.actual_qty;
+    const lost = result.lost_qty || 0;
+    let icon, title, desc, color;
+
+    if (ev === 'catthief') {
+      icon = '🐱';
+      title = '길냥이 도둑!';
+      desc = '길냥이가 작물을 몽땅 훔쳐갔어요...!';
+      color = '#6b7280';
+      _playTone(200, 'sine', 0.15, 0.3);
+      setTimeout(() => _playTone(160, 'sine', 0.15, 0.4), 200);
+    } else if (ev === 'poor') {
+      icon = '😥';
+      title = '흉작...';
+      desc = `${crop?.name || '작물'} ${qty}개만 수확했어요`;
+      color = '#f59e0b';
+      _playTone(260, 'sine', 0.12, 0.2);
+    } else if (ev === 'bumper') {
+      icon = '🎉';
+      title = '풍작!';
+      desc = `${crop?.name || '작물'} ${qty}개 대풍작이에요!`;
+      color = '#16a34a';
+      _sqPlayGrowSound();
+      setTimeout(() => {
+        const modal = document.querySelector('.modal-box');
+        if (modal) { const r = modal.getBoundingClientRect(); _sqSpawnParticlesAt(r.left + r.width/2, r.top + r.height/3, true, 20); }
+      }, 200);
+    } else {
+      icon = crop?.emoji || '🌾';
+      title = '수확 완료!';
+      desc = `${crop?.name || '작물'} ${qty}개를 수확했어요`;
+      color = '#16a34a';
+      _playTone(440, 'triangle', 0.12, 0.15);
+    }
+
+    closeModal();
+    setTimeout(() => {
+      showModal(`
+        <div style="text-align:center;padding:12px 0">
+          <div style="font-size:52px;margin-bottom:8px">${icon}</div>
+          <div style="font-size:18px;font-weight:900;color:${color};margin-bottom:6px">${title}</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:${lost > 0 ? '6' : '16'}px">${desc}</div>
+          ${lost > 0 ? `<div style="font-size:10px;color:#ef4444;margin-bottom:16px">⚠️ 인벤토리 부족으로 ${lost}개 소실!</div>` : ''}
+          <button onclick="closeModal()" class="btn btn-primary w-full">확인</button>
+        </div>
+      `);
+    }, 150);
+
+    // 데이터 갱신
+    _farmReloadAll().then(() => farmRenderMain());
+  }, 1500);
 }
 
 // ================================================================
@@ -756,6 +1130,11 @@ async function _farmReloadAll() {
   const now = new Date().toISOString();
   const { data: prices } = await sb.from('farm_prices').select('*').lte('period_start', now).gt('period_end', now);
   _farmPrices = prices || [];
+  // 판매 상태
+  try {
+    const { data: ss } = await sb.rpc('farm_get_sell_status', { p_user_id: myProfile.id });
+    _farmSellStatus = ss?.sales || {};
+  } catch(e) { /* 아직 함수 없을 수 있음 */ }
 }
 
 function _farmFmtTime(ms) {
