@@ -33,7 +33,7 @@ async function _loadFriends() {
     const { data, error } = await sb.from('friends')
       .select('id, requester_id, receiver_id, accepted_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji,acorns), receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji,acorns)')
       .eq('status', 'accepted')
-      .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`)
+      .or('requester_id.eq.' + uid + ',receiver_id.eq.' + uid)
       .order('accepted_at', { ascending: false });
     if (error) { console.warn('_loadFriends error:', error); _friendList = []; return; }
     _friendList = (data || []).map(f => {
