@@ -6,6 +6,65 @@
 var _farmShopWasOpen = false;  // 상점에서 입출금 열었는지 추적
 
 // ================================================================
+//  잔고 애니메이션 (플로팅 차감/증가)
+// ================================================================
+function _farmBalanceAnim(costCrumbs, isSell, label) {
+  const balBar = document.getElementById('farmShopFooter')?.querySelector('.farm-shop-balance');
+  const balInfo = balBar?.querySelector('.farm-shop-bal-info');
+  const balAcorn = balBar?.querySelector('.farm-shop-bal-acorn');
+  const balCrumb = balBar?.querySelector('.farm-shop-bal-crumb');
+  if (!balBar || !balInfo || !balAcorn || !balCrumb) return;
+
+  // 이전 잔고 (애니메이션 시작값)
+  const oldAcorns = parseInt(balAcorn.textContent) || 0;
+  const oldCrumbMatch = balCrumb.textContent.match(/\d+/);
+  const oldCrumbs = oldCrumbMatch ? parseInt(oldCrumbMatch[0]) : 0;
+  const startVal = oldAcorns * 100 + oldCrumbs;
+
+  // 새 잔고 (서버에서 이미 갱신된 _farmData 기준)
+  const endVal = (_farmData?.deposit_acorns || 0) * 100 + (_farmData?.deposit_crumbs || 0);
+
+  // ① 플로팅 텍스트 생성
+  const float = document.createElement('div');
+  float.className = 'farm-bal-float' + (isSell ? ' farm-bal-float-plus' : '');
+  const priceStr = _farmFmtPrice(costCrumbs);
+  float.textContent = isSell ? `+${priceStr}` : `▼${priceStr}`;
+  if (label) float.textContent += ` ${label}`;
+  balInfo.style.position = 'relative';
+  balInfo.appendChild(float);
+  setTimeout(() => float.remove(), 1000);
+
+  // ② 잔고 바 배경 번쩍
+  balBar.classList.remove('farm-bal-bar-flash', 'farm-bal-bar-flash-plus');
+  void balBar.offsetWidth;
+  balBar.classList.add(isSell ? 'farm-bal-bar-flash-plus' : 'farm-bal-bar-flash');
+
+  // ③ 숫자 카운트 애니메이션
+  const duration = 400;
+  const startTime = performance.now();
+  function tick(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(startVal + (endVal - startVal) * eased);
+    const a = Math.floor(current / 100), c = current % 100;
+    balAcorn.textContent = a;
+    balCrumb.textContent = `+${c}부스러기`;
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      balAcorn.textContent = _farmData?.deposit_acorns || 0;
+      balCrumb.textContent = `+${_farmData?.deposit_crumbs || 0}부스러기`;
+      // 최종 깜빡
+      balAcorn.classList.remove('farm-bal-num-flash', 'farm-bal-num-flash-plus');
+      void balAcorn.offsetWidth;
+      balAcorn.classList.add(isSell ? 'farm-bal-num-flash-plus' : 'farm-bal-num-flash');
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ================================================================
 //  예치금 모달
 // ================================================================
 function farmShowDeposit() {
@@ -375,9 +434,21 @@ async function farmSellSeed(cropId) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
-    toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗 ${qty}개 판매! (+🌰${_farmFmtPrice(data.revenue)})`);
+    const revenue = data.revenue || 0;
+    const _prevAcorns = _farmData?.deposit_acorns || 0;
+    const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
-    farmShowShop('sell');
+    const shopOpen = !!document.getElementById('farmShopContent');
+    if (shopOpen) {
+      await farmShowShop('sell');
+      const balAcorn = document.querySelector('.farm-shop-bal-acorn');
+      const balCrumb = document.querySelector('.farm-shop-bal-crumb');
+      if (balAcorn) balAcorn.textContent = _prevAcorns;
+      if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
+      _farmBalanceAnim(revenue, true, (crop?.name||'') + ' 씨앗 ' + qty + '개');
+    } else {
+      toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗 ${qty}개 판매! (+🌰${_farmFmtPrice(revenue)})`);
+    }
     farmRenderMain();
   } catch(e) { console.error('[farm sell seed]', e); toast('❌', '판매 실패'); }
 }
@@ -394,9 +465,21 @@ async function farmSellCrop(cropId) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
-    toast(crop?.emoji || '🥕', `${crop?.name || ''} ${qty}개 판매! (+🌰${_farmFmtPrice(data.revenue)})`);
+    const revenue = data.revenue || 0;
+    const _prevAcorns = _farmData?.deposit_acorns || 0;
+    const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
-    farmShowShop('sell');
+    const shopOpen = !!document.getElementById('farmShopContent');
+    if (shopOpen) {
+      await farmShowShop('sell');
+      const balAcorn = document.querySelector('.farm-shop-bal-acorn');
+      const balCrumb = document.querySelector('.farm-shop-bal-crumb');
+      if (balAcorn) balAcorn.textContent = _prevAcorns;
+      if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
+      _farmBalanceAnim(revenue, true, (crop?.name||'') + ' ' + qty + '개');
+    } else {
+      toast(crop?.emoji || '🥕', `${crop?.name || ''} ${qty}개 판매! (+🌰${_farmFmtPrice(revenue)})`);
+    }
     farmRenderMain();
   } catch(e) { console.error('[farm sell crop]', e); toast('❌', '판매 실패'); }
 }
@@ -412,11 +495,25 @@ async function farmBuySeed(cropId) {
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
     const unitPrice = data.unit_price || 0;
-    const pa = Math.floor(unitPrice / 100), pc = unitPrice % 100;
-    const priceStr = pc > 0 ? `${pa}.${String(pc).padStart(2,'0')}` : `${pa}`;
-    toast(crop.emoji, `${crop.name} 씨앗 구매! (🌰${priceStr})`);
+    // 잔고 애니메이션용 이전 값 저장
+    const _prevAcorns = _farmData?.deposit_acorns || 0;
+    const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
-    await farmShowShop('buy');
+    // 잔고 애니메이션 (상점이 열려있을 때만, 아니면 toast)
+    const shopOpen = !!document.getElementById('farmShopContent');
+    if (shopOpen) {
+      // 먼저 이전 잔고로 표시 유지한 채 컨텐츠 갱신
+      await farmShowShop('buy');
+      // 잔고 숫자를 이전 값으로 되돌린 뒤 애니메이션
+      const balAcorn = document.querySelector('.farm-shop-bal-acorn');
+      const balCrumb = document.querySelector('.farm-shop-bal-crumb');
+      if (balAcorn) balAcorn.textContent = _prevAcorns;
+      if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
+      _farmBalanceAnim(unitPrice, false, crop.name + ' 씨앗');
+    } else {
+      const priceStr = _farmFmtPrice(unitPrice);
+      toast(crop.emoji, `${crop.name} 씨앗 구매! (🌰${priceStr})`);
+    }
     farmRenderMain();
   } catch (e) {
     console.error('[farm buy]', e);
@@ -546,9 +643,21 @@ async function farmBuyItem(itemType) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
-    toast(emoji, `${label} 구매 완료! (🌰${_farmFmtPrice(data.cost)})`);
+    const itemCost = data.cost || 0;
+    const _prevAcorns = _farmData?.deposit_acorns || 0;
+    const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
-    await farmShowShop('item');
+    const shopOpen = !!document.getElementById('farmShopContent');
+    if (shopOpen) {
+      await farmShowShop('item');
+      const balAcorn = document.querySelector('.farm-shop-bal-acorn');
+      const balCrumb = document.querySelector('.farm-shop-bal-crumb');
+      if (balAcorn) balAcorn.textContent = _prevAcorns;
+      if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
+      _farmBalanceAnim(itemCost, false, label);
+    } else {
+      toast(emoji, `${label} 구매 완료! (🌰${_farmFmtPrice(itemCost)})`);
+    }
     farmRenderMain();
   } catch (e) {
     console.error('[farm buy item]', e);
