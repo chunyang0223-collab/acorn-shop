@@ -3,10 +3,14 @@
    예치금 모달 / 상점(구매·판매) / 인벤토리 확장 / 밭 확장
    ================================================================ */
 
+var _farmShopWasOpen = false;  // 상점에서 입출금 열었는지 추적
+
 // ================================================================
 //  예치금 모달
 // ================================================================
 function farmShowDeposit() {
+  // 상점 모달에서 호출된 경우 추적
+  _farmShopWasOpen = !!document.getElementById('farmShopContent');
   const acorns = _farmData?.deposit_acorns || 0;
   const crumbs = _farmData?.deposit_crumbs || 0;
   const myAcorns = myProfile?.acorns ?? 0;
@@ -59,6 +63,8 @@ async function farmDoDeposit() {
     await _farmReloadAll();
     closeModal();
     farmRenderMain();
+    // 상점이 열려있었으면 다시 상점 열기
+    if (_farmShopWasOpen) { _farmShopWasOpen = false; farmShowShop(); }
   } catch (e) {
     console.error('[farm deposit]', e);
     toast('❌', '입금 실패: ' + (e?.message || ''));
@@ -81,6 +87,8 @@ async function farmDoWithdraw() {
     await _farmReloadAll();
     closeModal();
     farmRenderMain();
+    // 상점이 열려있었으면 다시 상점 열기
+    if (_farmShopWasOpen) { _farmShopWasOpen = false; farmShowShop(); }
   } catch (e) {
     console.error('[farm withdraw]', e);
     toast('❌', '출금 실패: ' + (e?.message || ''));
@@ -88,7 +96,7 @@ async function farmDoWithdraw() {
 }
 
 // ================================================================
-//  상점 모달 (탭: 구매 / 판매)
+//  상점 — 고정 레이아웃 (메뉴 / 아이템 / 잔고 영역 분리)
 // ================================================================
 async function farmShowShop(tab) {
   if (tab) _farmShopTab = tab;
@@ -99,42 +107,94 @@ async function farmShowShop(tab) {
     } catch(e) { console.warn('[farm sell status]', e); }
   }
 
+  // 탭 변경 시 컨텐츠만 교체 (모달이 이미 열려있으면)
+  const existing = document.getElementById('farmShopContent');
+  if (existing) {
+    existing.innerHTML = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
+    _farmShopUpdateTabs();
+    _farmShopUpdateFooter();
+    return;
+  }
+
+  // 최초 열기 — 전체 고정 레이아웃 생성
   const depositAcorns = _farmData?.deposit_acorns || 0;
   const depositCrumbs = _farmData?.deposit_crumbs || 0;
+  let contentHtml = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
 
-  let timeLeftStr = '';
+  showModal(`
+    <div class="farm-shop-page">
+      <!-- ■ 상단 고정: 헤더 + 메뉴바 -->
+      <div class="farm-shop-header">
+        <div class="farm-shop-title">🏪 농장 상점</div>
+        <div class="farm-shop-tabs" id="farmShopTabs">
+          <button onclick="farmShowShop('buy')" class="farm-shop-tab ${_farmShopTab === 'buy' ? 'active' : ''}" data-tab="buy">🌱 구매</button>
+          <button onclick="farmShowShop('sell')" class="farm-shop-tab ${_farmShopTab === 'sell' ? 'active' : ''}" data-tab="sell">💰 판매</button>
+          <button onclick="farmShowShop('item')" class="farm-shop-tab ${_farmShopTab === 'item' ? 'active' : ''}" data-tab="item">⚗️ 아이템</button>
+        </div>
+      </div>
+
+      <!-- ■ 중앙 스크롤: 아이템 영역 -->
+      <div class="farm-shop-body" id="farmShopContent">
+        ${contentHtml}
+      </div>
+
+      <!-- ■ 하단 고정: 잔고 + 닫기 -->
+      <div class="farm-shop-footer" id="farmShopFooter">
+        <div class="farm-shop-balance">
+          <div class="farm-shop-bal-icon">🌰</div>
+          <div class="farm-shop-bal-info">
+            <span class="farm-shop-bal-acorn">${depositAcorns}</span>
+            <span class="farm-shop-bal-crumb">+${depositCrumbs}부스러기</span>
+          </div>
+          <button onclick="farmShowDeposit()" class="farm-shop-deposit-btn">입출금</button>
+        </div>
+        ${_farmShopTimeLeftHtml()}
+        <button onclick="closeModal()" class="farm-shop-close-btn">닫기</button>
+      </div>
+    </div>
+  `);
+}
+
+// ── 탭 활성 상태 업데이트 ──
+function _farmShopUpdateTabs() {
+  const tabs = document.querySelectorAll('#farmShopTabs .farm-shop-tab');
+  tabs.forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === _farmShopTab);
+  });
+}
+
+// ── 하단 잔고 업데이트 ──
+function _farmShopUpdateFooter() {
+  const footer = document.getElementById('farmShopFooter');
+  if (!footer) return;
+  const depositAcorns = _farmData?.deposit_acorns || 0;
+  const depositCrumbs = _farmData?.deposit_crumbs || 0;
+  footer.innerHTML = `
+    <div class="farm-shop-balance">
+      <div class="farm-shop-bal-icon">🌰</div>
+      <div class="farm-shop-bal-info">
+        <span class="farm-shop-bal-acorn">${depositAcorns}</span>
+        <span class="farm-shop-bal-crumb">+${depositCrumbs}부스러기</span>
+      </div>
+      <button onclick="farmShowDeposit()" class="farm-shop-deposit-btn">입출금</button>
+    </div>
+    ${_farmShopTimeLeftHtml()}
+    <button onclick="closeModal()" class="farm-shop-close-btn">닫기</button>
+  `;
+}
+
+// ── 시세 변경 시간 ──
+function _farmShopTimeLeftHtml() {
   if (_farmPrices.length > 0) {
     const endTime = new Date(_farmPrices[0].period_end);
     const diff = endTime - Date.now();
     if (diff > 0) {
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
-      timeLeftStr = `${h}시간 ${m}분 후 시세 변경`;
+      return `<div class="farm-shop-timer">⏰ ${h}시간 ${m}분 후 시세 변경</div>`;
     }
   }
-
-  const isBuy = _farmShopTab === 'buy';
-  const isSell = _farmShopTab === 'sell';
-  const isItem = _farmShopTab === 'item';
-  const tabStyle = (active) => `padding:8px 16px;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;${active ? 'background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 2px 8px rgba(245,158,11,.3)' : 'background:#f3f4f6;color:#9ca3af'}`;
-  let contentHtml = isItem ? _farmRenderItemTab() : (isBuy ? _farmRenderBuyTab() : _farmRenderSellTab());
-
-  showModal(`
-    <div style="padding:4px 0">
-      <div style="font-size:15px;font-weight:900;color:#1f2937;text-align:center;margin-bottom:4px">🛒 농장 상점</div>
-      <div style="font-size:10px;color:#6b7280;text-align:center;margin-bottom:4px">예치금: 🌰 ${depositAcorns} + ${depositCrumbs}부스러기</div>
-      ${timeLeftStr ? `<div style="font-size:9px;color:#f59e0b;text-align:center;margin-bottom:8px">⏰ ${timeLeftStr}</div>` : ''}
-      <div style="display:flex;gap:6px;margin-bottom:10px;justify-content:center">
-        <button onclick="farmShowShop('buy')" style="${tabStyle(isBuy)}">🌱 구매</button>
-        <button onclick="farmShowShop('sell')" style="${tabStyle(isSell)}">💰 판매</button>
-        <button onclick="farmShowShop('item')" style="${tabStyle(isItem)}">⚗️ 아이템</button>
-      </div>
-      <div style="max-height:340px;overflow-y:auto;padding:2px">
-        ${contentHtml}
-      </div>
-      <button onclick="closeModal()" class="btn w-full" style="background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:800;margin-top:12px;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">닫기</button>
-    </div>
-  `);
+  return '';
 }
 
 // ── 구매 탭 렌더링 ──

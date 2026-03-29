@@ -211,7 +211,7 @@ function farmRenderDepositBadge() {
     <div class="farm-deposit-badge" onclick="farmShowDeposit()">
       <div style="font-size:14px">🌰</div>
       <div class="farm-dep-num" style="font-size:18px;font-weight:900;line-height:1;font-family:'Pretendard',sans-serif">${acorns}</div>
-      <div class="farm-dep-sub" style="font-size:10px;font-weight:700;font-family:'Pretendard',sans-serif">+${crumbs}조각</div>
+      <div class="farm-dep-sub" style="font-size:10px;font-weight:700;font-family:'Pretendard',sans-serif">+${crumbs}부스러기</div>
     </div>`;
 }
 
