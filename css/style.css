@@ -3017,9 +3017,9 @@ body {
 [data-theme="dark"] .farm-txt-brown { color: #e2e8f0; }
 [data-theme="dark"] .farm-txt-green { color: #86efac; }
 [data-theme="dark"] .farm-txt-gold { color: #fbbf24; }
-[data-theme="dark"] .farm-txt-muted { color: #9ca3af; }
+[data-theme="dark"] .farm-txt-muted { color: #fbbf24; }
 [data-theme="dark"] .farm-cell-label { color: #e2e8f0; }
-[data-theme="dark"] .farm-cell-timer { color: #d1d5db; }
+[data-theme="dark"] .farm-cell-timer { color: #86efac; }
 [data-theme="dark"] .farm-cell-label.farm-txt-gold { color: #fbbf24; }
 [data-theme="dark"] .farm-cell-label.farm-txt-green { color: #86efac; }
 
