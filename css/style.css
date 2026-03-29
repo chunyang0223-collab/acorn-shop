@@ -3575,35 +3575,46 @@ body {
   background: rgba(255,255,255,0.9); padding: 0 4px; border-radius: 4px;
 }
 
-/* ── 미니게임 점수 ── */
-.pf-mini-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
+/* ── 미니게임 점수 (카드형) ── */
+.pf-mini-grid { display: flex; gap: 6px; }
+.pf-mini-card {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 4px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.04));
+  border: 1.5px solid rgba(251,191,36,0.15);
 }
-.pf-mini-row:last-child { border-bottom: none; }
-.pf-mini-name { font-size: 0.78rem; font-weight: 700; color: var(--text-primary, #1f2937); }
-.pf-mini-score { font-size: 0.85rem; font-weight: 900; color: #f59e0b; }
+.pf-mini-card-icon { font-size: 1.4rem; margin-bottom: 4px; }
+.pf-mini-card-name { font-size: 0.65rem; font-weight: 700; color: #92400e; margin-bottom: 2px; }
+.pf-mini-card-score { font-size: 1.05rem; font-weight: 900; color: #f59e0b; }
 
-/* ── 탐험 통계 ── */
-.pf-exp-stats {
-  display: flex; gap: 8px; justify-content: center;
-}
+/* ── 탐험 통계 (카드형) ── */
+.pf-exp-stats { display: flex; gap: 6px; }
 .pf-exp-stat {
-  flex: 1; text-align: center; padding: 8px 4px;
-  border-radius: 10px; background: rgba(0,0,0,0.03);
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 4px; border-radius: 12px;
+  border: 1.5px solid rgba(0,0,0,0.06);
 }
-.pf-exp-num { display: block; font-size: 1.2rem; font-weight: 900; }
-.pf-exp-label { font-size: 0.65rem; font-weight: 700; color: #fbbf24; }
+.pf-exp-stat--clear { background: linear-gradient(135deg, rgba(74,222,128,0.1), rgba(34,197,94,0.04)); border-color: rgba(74,222,128,0.2); }
+.pf-exp-stat--retreat { background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.04)); border-color: rgba(251,191,36,0.2); }
+.pf-exp-stat--boss { background: linear-gradient(135deg, rgba(248,113,113,0.1), rgba(239,68,68,0.04)); border-color: rgba(248,113,113,0.2); }
+.pf-exp-icon { font-size: 1.2rem; margin-bottom: 2px; }
+.pf-exp-num { display: block; font-size: 1.3rem; font-weight: 900; }
+.pf-exp-stat--clear .pf-exp-num { color: #4ade80; }
+.pf-exp-stat--retreat .pf-exp-num { color: #fbbf24; }
+.pf-exp-stat--boss .pf-exp-num { color: #f87171; }
+.pf-exp-label { font-size: 0.65rem; font-weight: 700; color: #78716c; margin-top: 1px; }
 
-/* ── 농장 정보 ── */
+/* ── 농장 정보 (카드형) ── */
 .pf-farm-row { display: flex; gap: 8px; }
-.pf-farm-stat {
-  flex: 1; display: flex; align-items: center; gap: 6px;
-  padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,0.03);
+.pf-farm-card {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 12px 8px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(134,239,172,0.1), rgba(74,222,128,0.04));
+  border: 1.5px solid rgba(134,239,172,0.2);
 }
-.pf-farm-icon { font-size: 1rem; }
-.pf-farm-label { font-size: 0.75rem; font-weight: 700; color: #fbbf24; flex: 1; }
-.pf-farm-val { font-size: 0.9rem; font-weight: 900; color: #4ade80; }
+.pf-farm-card-icon { font-size: 1.4rem; margin-bottom: 2px; }
+.pf-farm-card-val { font-size: 1.2rem; font-weight: 900; color: #4ade80; }
+.pf-farm-card-label { font-size: 0.65rem; font-weight: 700; color: #78716c; }
 
 /* ── 공개 설정 ── */
 .pf-privacy-btn-wrap { text-align: center; margin-top: 14px; }
@@ -3645,9 +3656,24 @@ body {
 [data-theme="dark"] .pf-sq-cell { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .pf-sq-empty { border-color: rgba(255,255,255,0.1) !important; background: rgba(255,255,255,0.02); }
 [data-theme="dark"] .pf-sq-grade { background: rgba(30,41,59,0.9); }
-[data-theme="dark"] .pf-mini-row { border-bottom-color: rgba(255,255,255,0.06); }
-[data-theme="dark"] .pf-exp-stat { background: rgba(255,255,255,0.06); }
-[data-theme="dark"] .pf-farm-stat { background: rgba(255,255,255,0.06); }
+/* 다크모드 미니게임 카드 */
+[data-theme="dark"] .pf-mini-card {
+  background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06));
+  border-color: rgba(251,191,36,0.2);
+}
+[data-theme="dark"] .pf-mini-card-name { color: #fbbf24; }
+[data-theme="dark"] .pf-mini-card-score { color: #fcd34d; }
+/* 다크모드 탐험 카드 */
+[data-theme="dark"] .pf-exp-stat--clear { background: linear-gradient(135deg, rgba(74,222,128,0.15), rgba(34,197,94,0.06)); border-color: rgba(74,222,128,0.25); }
+[data-theme="dark"] .pf-exp-stat--retreat { background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.06)); border-color: rgba(251,191,36,0.25); }
+[data-theme="dark"] .pf-exp-stat--boss { background: linear-gradient(135deg, rgba(248,113,113,0.15), rgba(239,68,68,0.06)); border-color: rgba(248,113,113,0.25); }
+[data-theme="dark"] .pf-exp-label { color: #86efac; }
+/* 다크모드 농장 카드 */
+[data-theme="dark"] .pf-farm-card {
+  background: linear-gradient(135deg, rgba(134,239,172,0.12), rgba(74,222,128,0.06));
+  border-color: rgba(134,239,172,0.25);
+}
+[data-theme="dark"] .pf-farm-card-label { color: #86efac; }
 [data-theme="dark"] .pf-privacy-row { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .pf-toggle { background: rgba(255,255,255,0.15); }
 [data-theme="dark"] .pf-toggle:checked { background: #22c55e; }
@@ -3659,11 +3685,11 @@ body {
 [data-theme="dark"] .pf-stat-value { color: #fcd34d; }
 [data-theme="dark"] .pf-section-title { color: #fcd34d; }
 [data-theme="dark"] .pf-sq-name { color: #e2e8f0; }
-[data-theme="dark"] .pf-mini-name { color: #e2e8f0; }
-[data-theme="dark"] .pf-mini-score { color: #fcd34d; }
+[data-theme="dark"] .pf-mini-card-name { color: #fbbf24; }
+[data-theme="dark"] .pf-mini-card-score { color: #fcd34d; }
 [data-theme="dark"] .pf-exp-label { color: #86efac; }
-[data-theme="dark"] .pf-farm-label { color: #fbbf24; }
-[data-theme="dark"] .pf-farm-val { color: #4ade80; }
+[data-theme="dark"] .pf-farm-card-label { color: #86efac; }
+[data-theme="dark"] .pf-farm-card-val { color: #4ade80; }
 [data-theme="dark"] .pf-empty-msg { color: #fbbf24; }
 
 /* 다크모드 공개설정 모달 텍스트 */
