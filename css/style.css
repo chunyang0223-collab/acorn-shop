@@ -3086,3 +3086,131 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 }
 [data-theme="dark"] [style*="background:#f9fafb"] { background: #1e2838 !important; }
 [data-theme="dark"] [style*="background:#f3f4f6"] { background: #222c3a !important; }
+
+/* ══════════════════════════════════════════════════════
+   🛒 농장 상점 — 고정 레이아웃
+   ══════════════════════════════════════════════════════ */
+.farm-shop-page {
+  display: flex; flex-direction: column;
+  height: 480px; max-height: 75vh;
+  margin: -16px; /* 모달 패딩 상쇄 */
+  font-family: 'Pretendard', sans-serif;
+}
+
+/* ── 상단 고정: 헤더 + 탭 ── */
+.farm-shop-header {
+  flex-shrink: 0;
+  padding: 14px 16px 0;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-bottom: 1.5px solid #fde68a;
+  border-radius: 16px 16px 0 0;
+}
+.farm-shop-title {
+  font-size: 16px; font-weight: 900; color: #78350f;
+  text-align: center; margin-bottom: 10px;
+}
+.farm-shop-tabs {
+  display: flex; gap: 0; overflow: hidden;
+}
+.farm-shop-tab {
+  flex: 1; padding: 10px 0; border: none;
+  font-size: 12px; font-weight: 800; cursor: pointer;
+  background: transparent; color: #92400e;
+  transition: all .15s; position: relative;
+  border-bottom: 3px solid transparent;
+}
+.farm-shop-tab.active {
+  background: #fff; color: #78350f;
+  border-bottom: 3px solid #f59e0b;
+}
+.farm-shop-tab:not(.active):hover {
+  background: rgba(255,255,255,.5);
+}
+
+/* ── 중앙 스크롤: 아이템 영역 ── */
+.farm-shop-body {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 12px 14px;
+  background: #fff;
+  -webkit-overflow-scrolling: touch;
+}
+.farm-shop-body::-webkit-scrollbar { width: 4px; }
+.farm-shop-body::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+/* ── 하단 고정: 잔고 + 닫기 ── */
+.farm-shop-footer {
+  flex-shrink: 0;
+  padding: 10px 16px 14px;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-top: 1.5px solid #fde68a;
+  border-radius: 0 0 16px 16px;
+}
+.farm-shop-balance {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 12px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1.5px solid #fbbf24;
+  margin-bottom: 8px;
+}
+.farm-shop-bal-icon { font-size: 20px; flex-shrink: 0; }
+.farm-shop-bal-info { flex: 1; }
+.farm-shop-bal-acorn {
+  font-size: 18px; font-weight: 900; color: #78350f;
+}
+.farm-shop-bal-crumb {
+  font-size: 10px; font-weight: 700; color: #92400e; margin-left: 4px;
+}
+.farm-shop-deposit-btn {
+  padding: 5px 12px; border-radius: 8px; border: 1.5px solid #d97706;
+  background: #fff; color: #92400e; font-size: 11px; font-weight: 800;
+  cursor: pointer; transition: all .12s; flex-shrink: 0;
+}
+.farm-shop-deposit-btn:active { transform: scale(0.95); background: #fef3c7; }
+.farm-shop-timer {
+  font-size: 9px; color: #d97706; text-align: center;
+  font-weight: 700; margin-bottom: 6px;
+}
+.farm-shop-close-btn {
+  width: 100%; padding: 10px; border-radius: 12px; border: 1.5px solid #e5e7eb;
+  background: #f3f4f6; color: #6b7280; font-size: 13px; font-weight: 800;
+  cursor: pointer; transition: all .12s;
+}
+.farm-shop-close-btn:active { transform: scale(0.97); }
+
+/* ══════════════════════════════════════════════════════
+   🌙 농장 상점 — 다크모드
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .farm-shop-header {
+  background: linear-gradient(135deg, #1a1608, #2a2010);
+  border-bottom-color: #4a3a10;
+}
+[data-theme="dark"] .farm-shop-title { color: #fcd34d; }
+[data-theme="dark"] .farm-shop-tabs { background: #1a1608; }
+[data-theme="dark"] .farm-shop-tab { color: #fbbf24; }
+[data-theme="dark"] .farm-shop-tab.active {
+  background: #1a2535; color: #fcd34d;
+  border-bottom-color: #f59e0b;
+}
+[data-theme="dark"] .farm-shop-tab:not(.active):hover { background: rgba(255,255,255,.05); }
+
+[data-theme="dark"] .farm-shop-body { background: #1a2535; }
+[data-theme="dark"] .farm-shop-body::-webkit-scrollbar-thumb { background: #3a4a5a; }
+
+[data-theme="dark"] .farm-shop-footer {
+  background: linear-gradient(135deg, #1a1608, #2a2010);
+  border-top-color: #4a3a10;
+}
+[data-theme="dark"] .farm-shop-balance {
+  background: linear-gradient(135deg, #2e2210, #3a2a10);
+  border-color: #6a4a10;
+}
+[data-theme="dark"] .farm-shop-bal-acorn { color: #fcd34d; }
+[data-theme="dark"] .farm-shop-bal-crumb { color: #fbbf24; }
+[data-theme="dark"] .farm-shop-deposit-btn {
+  background: #2a2010; border-color: #6a4a10; color: #fbbf24;
+}
+[data-theme="dark"] .farm-shop-deposit-btn:active { background: #3a2a10; }
+[data-theme="dark"] .farm-shop-timer { color: #fbbf24; }
+[data-theme="dark"] .farm-shop-close-btn {
+  background: #222c3a; border-color: #3a4a5a; color: #fbbf24;
+}
