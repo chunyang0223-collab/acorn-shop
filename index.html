@@ -1108,6 +1108,27 @@
               </div>
             </div>
 
+            <!-- 농부 등급별 버프 -->
+            <div class="fc-section">
+              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+                <div class="fc-left">
+                  <div class="fc-icon" style="background:rgba(234,179,8,0.1)"><span style="font-size:14px">⭐</span></div>
+                  <div><div class="fc-title">농부 등급별 버프</div><div class="fc-subtitle">풍작↑ · 흉작↓ · 성장시간↓ (증감률 %)</div></div>
+                </div>
+                <div class="fc-arrow">▶</div>
+              </div>
+              <div class="fc-sec-body">
+                <div class="fc-desc">각 수치는 기본 확률 대비 증감률(%)입니다. 예: 풍작+35 → 기본 풍작 확률의 35% 증가</div>
+                <div class="fc-grade-table">
+                  <div class="fc-gt-header"><div></div><div>풍작 증가(%)</div><div>흉작 감소(%)</div><div>성장 감소(%)</div></div>
+                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#16a34a">🍀 레어</div><input type="number" id="farmSet_gradeRareBumper" value="0"><input type="number" id="farmSet_gradeRarePoor" value="12"><input type="number" id="farmSet_gradeRareGrow" value="0"></div>
+                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#2563eb">💎 희귀</div><input type="number" id="farmSet_gradeEpicBumper" value="10"><input type="number" id="farmSet_gradeEpicPoor" value="20"><input type="number" id="farmSet_gradeEpicGrow" value="5"></div>
+                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#ca8a04">⚡ 유일</div><input type="number" id="farmSet_gradeUniqueBumper" value="20"><input type="number" id="farmSet_gradeUniquePoor" value="28"><input type="number" id="farmSet_gradeUniqueGrow" value="8"></div>
+                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#dc2626">🔥 레전드</div><input type="number" id="farmSet_gradeLegendBumper" value="35"><input type="number" id="farmSet_gradeLegendPoor" value="40"><input type="number" id="farmSet_gradeLegendGrow" value="12"></div>
+                </div>
+              </div>
+            </div>
+
             <!-- 촉진제 / 영양제 -->
             <div class="fc-section">
               <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
