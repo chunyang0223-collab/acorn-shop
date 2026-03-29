@@ -320,21 +320,19 @@ function farmRenderFieldGrid() {
 // ================================================================
 function _farmGradeBuff(grade) {
   const s = _farmSettings;
-  const icons = { legend:'🔥', unique:'⚡', epic:'💎', rare:'🍀', normal:'🌱' };
-  const icon = icons[grade] || '🌱';
 
-  if (grade === 'normal') return { icon, text:'기본 농부' };
+  if (grade === 'normal') return { isDefault: true, lines: [] };
 
   const bm = s[`grade_${grade}_bumper`] ?? { rare:0, epic:10, unique:20, legend:35 }[grade] ?? 0;
   const pm = s[`grade_${grade}_poor`]   ?? { rare:12, epic:20, unique:28, legend:40 }[grade] ?? 0;
   const gm = s[`grade_${grade}_grow`]   ?? { rare:0, epic:5, unique:8, legend:12 }[grade] ?? 0;
 
-  const parts = [];
-  if (bm > 0) parts.push(`풍작 +${bm}%`);
-  if (pm > 0) parts.push(`흉작 -${pm}%`);
-  if (gm > 0) parts.push(`성장 -${gm}%`);
+  const lines = [];
+  if (bm > 0) lines.push(`풍작 확률 +${bm}%`);
+  if (pm > 0) lines.push(`흉작 확률 -${pm}%`);
+  if (gm > 0) lines.push(`작물 성장 시간 -${gm}%`);
 
-  return { icon, text: parts.length > 0 ? parts.join(' · ') : '기본 농부' };
+  return { isDefault: false, lines };
 }
 
 function farmRenderFarmerSlot() {
@@ -347,34 +345,37 @@ function farmRenderFarmerSlot() {
     const gs = _sqGradeStyle(grade);
     const buff = _farmGradeBuff(grade);
     const spriteFile = activeSq.sprite || 'sq_acorn';
+
+    let buffHtml;
+    if (buff.isDefault) {
+      buffHtml = `<div class="fc-buff fc-buff-default">🌱 기본 농부</div>`;
+    } else {
+      buffHtml = `<div class="fc-buff">${buff.lines.map(l => `<span class="fc-buff-line">${l}</span>`).join('')}</div>`;
+    }
+
     return `
-      <div class="farm-farmer-slot farm-farmer-slot--active" onclick="farmShowChangeFarmer()">
-        <div class="farm-farmer-avatar" style="${gs.border};background:${gs.bg}">
-          <img src="images/squirrels/${spriteFile}.png" style="width:34px;height:34px;object-fit:contain;display:block" onerror="this.outerHTML='<div style=\\'font-size:24px;line-height:34px;text-align:center\\'>🐱</div>'">
+      <div class="fc-card fc-grade-${grade}" onclick="farmShowChangeFarmer()">
+        <div class="fc-zone1">
+          <img src="images/squirrels/${spriteFile}.png" alt="" onerror="this.outerHTML='<div class=\\'fc-emoji-fb\\'>🐿️</div>'">
         </div>
-        <div class="farm-farmer-info">
-          <div class="farm-farmer-name">${activeSq.name} 🌾</div>
-          <div class="farm-farmer-grade" style="color:${gs.color}">${gs.label}</div>
-        </div>
-        <div class="farm-farmer-buff" style="border-color:${gs.color}30;background:${gs.bg}">
-          <span class="farm-farmer-buff-icon">${buff.icon}</span>
-          <span class="farm-farmer-buff-text">${buff.text}</span>
-        </div>
+        <div class="fc-zone2"><div class="fc-name">${activeSq.name}</div></div>
+        <div class="fc-zone3"><div class="fc-grade">${gs.label}</div></div>
+        <div class="fc-zone4">${buffHtml}</div>
       </div>`;
   }
 
   if (_farmFarmers.length > 0) {
     return `
-      <div class="farm-farmer-slot" onclick="farmShowChangeFarmer()">
-        <div class="farm-farmer-avatar" style="opacity:0.5">🐿️</div>
-        <div class="farm-txt-muted farm-txt-xs farm-txt-bold" style="position:relative;z-index:1">농부 장착</div>
+      <div class="fc-card-empty" onclick="farmShowChangeFarmer()">
+        <div class="fc-empty-emoji">🐿️</div>
+        <div class="fc-empty-label">농부 장착</div>
       </div>`;
   }
 
   return `
-    <div class="farm-farmer-slot farm-farmer-slot-empty">
-      <div class="farm-farmer-avatar" style="opacity:0.4;background:rgba(0,0,0,.03);border-color:#d1d5db">🐿️</div>
-      <div class="farm-txt-muted farm-txt-xs" style="position:relative;z-index:1">농부 없음</div>
+    <div class="fc-card-empty fc-card-none">
+      <div class="fc-empty-emoji" style="opacity:0.4">🐿️</div>
+      <div class="fc-empty-label">농부 없음</div>
     </div>`;
 }
 
