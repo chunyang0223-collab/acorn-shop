@@ -3443,6 +3443,10 @@ body {
    🤝 친구 시스템 & 👤 프로필 뷰어
    ================================================================ */
 
+/* ── 공통 텍스트 (라이트: 다크블루 / 다크: 거의 흰색) ── */
+.fr-text { color: #1f2937; }
+[data-theme="dark"] .fr-text { color: #e2e8f0; }
+
 /* ── 친구 탭 ── */
 .fr-search-wrap { position: relative; }
 .fr-req-badge {
@@ -3634,6 +3638,7 @@ body {
 /* ================================================================
    🌙 다크모드 - 프로필
    ================================================================ */
+/* 다크모드 배경 */
 [data-theme="dark"] .pf-header { border-bottom-color: rgba(255,255,255,0.08); }
 [data-theme="dark"] .pf-stat-row { background: rgba(251,191,36,0.1); }
 [data-theme="dark"] .pf-section { background: rgba(255,255,255,0.04); }
@@ -3647,3 +3652,20 @@ body {
 [data-theme="dark"] .pf-toggle { background: rgba(255,255,255,0.15); }
 [data-theme="dark"] .pf-toggle:checked { background: #22c55e; }
 [data-theme="dark"] .spinner-sm { border-color: rgba(255,255,255,0.1); border-top-color: #fbbf24; }
+
+/* 다크모드 텍스트 — 회색 금지, 채도 있는 색상만 */
+[data-theme="dark"] .pf-name { color: #e2e8f0; }
+[data-theme="dark"] .pf-stat-label { color: #fbbf24; }
+[data-theme="dark"] .pf-stat-value { color: #fcd34d; }
+[data-theme="dark"] .pf-section-title { color: #fcd34d; }
+[data-theme="dark"] .pf-sq-name { color: #e2e8f0; }
+[data-theme="dark"] .pf-mini-name { color: #e2e8f0; }
+[data-theme="dark"] .pf-mini-score { color: #fcd34d; }
+[data-theme="dark"] .pf-exp-label { color: #86efac; }
+[data-theme="dark"] .pf-farm-label { color: #fbbf24; }
+[data-theme="dark"] .pf-farm-val { color: #4ade80; }
+[data-theme="dark"] .pf-empty-msg { color: #fbbf24; }
+
+/* 다크모드 공개설정 모달 텍스트 */
+[data-theme="dark"] .pf-privacy-modal h2 { color: #fcd34d; }
+[data-theme="dark"] .pf-privacy-row span { color: #e2e8f0; }
