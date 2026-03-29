@@ -685,7 +685,7 @@ function _expShowOverlay(emoji, title, body, btn1Text, btn1Fn, btn2Text, btn2Fn)
   overlay.id = 'expOverlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);animation:expFadeIn .25s ease';
 
-  var btn1Style = 'flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);box-shadow:0 3px 0 #b45309';
+  var btn1Style = 'flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#d97706);color:#78350f;box-shadow:0 3px 0 #b45309';
   var btn2Style = 'flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:transparent;color:#a5b4fc';
 
   overlay.innerHTML =
@@ -895,10 +895,9 @@ function _btlBuildParty() {
 }
 
 function _btlHpColor(pct) {
-  // Returns the appropriate HP bar class based on percentage
-  if (pct <= 20) return 'hp-bar-low';
-  if (pct <= 50) return 'hp-bar-mid';
-  return 'hp-bar-high';
+  return pct <= 20 ? 'linear-gradient(90deg,#d42020,#f03838)'
+       : pct <= 50 ? 'linear-gradient(90deg,#c88c10,#ecc028)'
+                   : 'linear-gradient(90deg,#1ea81e,#4edf4e)';
 }
 
 function _btlRender() {
@@ -906,12 +905,7 @@ function _btlRender() {
   // 몬스터 HP
   var mpct = b.mon.hp / b.mon.maxHp * 100;
   var mb = document.getElementById('btlMHpBar');
-  if (mb) {
-    mb.style.width = mpct + '%';
-    var hpClass = _btlHpColor(mpct);
-    mb.classList.remove('hp-bar-low', 'hp-bar-mid', 'hp-bar-high');
-    mb.classList.add(hpClass);
-  }
+  if (mb) { mb.style.width = mpct + '%'; mb.style.background = _btlHpColor(mpct); }
   var mt = document.getElementById('btlMHpTxt');
   if (mt) mt.textContent = b.mon.hp + '/' + b.mon.maxHp;
 
@@ -919,12 +913,7 @@ function _btlRender() {
   b.party.forEach(function(p, i) {
     var pct = Math.max(0, p.hp / p.maxHp * 100);
     var bar = document.getElementById('btlPhp' + i);
-    if (bar) {
-      bar.style.width = pct + '%';
-      var hpClass = _btlHpColor(pct);
-      bar.classList.remove('hp-bar-low', 'hp-bar-mid', 'hp-bar-high');
-      bar.classList.add(hpClass);
-    }
+    if (bar) { bar.style.width = pct + '%'; bar.style.background = _btlHpColor(pct); }
     var txt = document.getElementById('btlPhp' + i + 'txt');
     if (txt) txt.textContent = Math.max(0, p.hp) + '/' + p.maxHp;
     var card = document.getElementById('btlPc' + i);
@@ -968,7 +957,7 @@ function _btlUpdateSpBtn() {
 function _btlFlash(col) {
   var f = document.getElementById('btlFlash');
   if (!f) return;
-  f.style.setProperty('--flash-color', col);
+  f.style.background = col;
   f.style.opacity = '.55';
   setTimeout(function() { f.style.opacity = '0'; }, 90);
 }
@@ -983,7 +972,6 @@ function _btlPopNum(txt, targetId, col) {
   d.className = 'btl-pop';
   d.style.left = (er.left - wr.left + er.width / 2 - 18) + 'px';
   d.style.top = (er.top - wr.top + 12) + 'px';
-  d.style.setProperty('--dmg-color', col);
   d.style.color = col;
   d.textContent = txt;
   wrap.appendChild(d);
@@ -1007,26 +995,6 @@ var _sndBGM = null; // 현재 재생 중인 배경음
 var _sndLastSFX = null; // 마지막 재생 SFX (정리용)
 var _sndVolSFX = 0.7;
 var _sndVolBGM = 0.3;
-var _sndUnlocked = false; // 모바일 오디오 잠금 해제 여부
-var _sndPendingBGM = null; // 잠금 해제 전 대기 중인 BGM 타입
-
-// 모바일 오디오 잠금 해제 (첫 터치 시)
-function _sndUnlock() {
-  if (_sndUnlocked) return;
-  var silent = new Audio();
-  silent.play().then(function() {
-    silent.pause();
-    _sndUnlocked = true;
-    // 대기 중이던 BGM이 있으면 재생
-    if (_sndPendingBGM) {
-      _sndPlayBGM(_sndPendingBGM);
-      _sndPendingBGM = null;
-    }
-  }).catch(function(){});
-}
-['touchstart','touchend','click'].forEach(function(evt) {
-  document.addEventListener(evt, _sndUnlock, { once: false, passive: true });
-});
 
 // 효과음 재생 (1회)
 function _btlSound(type) {
@@ -1068,8 +1036,6 @@ function _sndPlayBGM(type) {
     'my':       ['sounds/menu_bgm_my_squirrels.mp3'],
     'shop':     ['sounds/menu_bgm_squirrel_shop.mp3'],
     'explorer': ['sounds/menu_bgm_explorer.mp3'],
-    'fuse':     ['sounds/menu_bgm_fuse.mp3'],
-    'farm':     ['sounds/farm_bgm.mp3'],
     'battle':   ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
     'boss':     ['sounds/battle_boss_1.mp3','sounds/battle_boss_2.mp3','sounds/battle_boss_3.mp3'],
     'defeat':   ['sounds/explorer_complete_defeat.mp3'],
@@ -1081,18 +1047,11 @@ function _sndPlayBGM(type) {
   _sndBGM = new Audio(file);
   _sndBGM.volume = _sndVolBGM;
   _sndBGM.loop = true;
-  _sndBGM.play().then(function() {
-    _sndUnlocked = true;
-    _sndPendingBGM = null;
-  }).catch(function() {
-    // 모바일: 아직 잠금 해제 안 됐으면 다음 터치 때 재생되도록 대기
-    _sndPendingBGM = type;
-  });
+  _sndBGM.play().catch(function(){});
 }
 
 // 배경음 정지
 function _sndStopBGM() {
-  _sndPendingBGM = null;
   if (_sndBGM) {
     _sndBGM.pause();
     _sndBGM.currentTime = 0;
@@ -1431,8 +1390,7 @@ function _btlSelectCard(idx) {
   var hint = document.getElementById('btlCardHint');
   if (hint) {
     hint.textContent = r.grade + '등급 획득! ' + _btlRewardText(r);
-    var gradeClass = r.grade === 'A' ? 'grade-text-a' : r.grade === 'B' ? 'grade-text-b' : 'grade-text-c';
-    hint.className = gradeClass;
+    hint.style.color = r.grade === 'A' ? '#f0c040' : r.grade === 'B' ? '#60a8f0' : '#60c060';
   }
   _btl.loot.acorns += r.acorns;
   if (r.item) _btl.loot.items.push(r.item);

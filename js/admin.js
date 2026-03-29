@@ -350,11 +350,12 @@ async function renderQuestAdmin() {
   const pendingCount = qcrs?.length || 0;
   // 대기 건수에 따라 카드 강조
   if (apCard) {
-    apCard.classList.toggle('adm-pending-highlight', pendingCount > 0);
+    apCard.style.border = pendingCount > 0 ? '2px solid rgba(236,72,153,0.5)' : '';
+    apCard.style.background = pendingCount > 0 ? 'rgba(253,242,248,0.8)' : '';
   }
   if (apTitle) {
     apTitle.textContent = pendingCount > 0 ? `✋ 완료 승인 요청 (${pendingCount}건 대기중)` : '✋ 완료 승인 요청';
-    apTitle.classList.toggle('adm-pending-text', pendingCount > 0);
+    apTitle.style.color = pendingCount > 0 ? '#be185d' : '';
   }
   apEl.innerHTML = qcrs?.length
     ? qcrs.map(r => `<div class="p-4 rounded-2xl bg-pink-50 border border-pink-100 flex flex-col gap-2">
@@ -591,24 +592,26 @@ async function renderTxLog() {
   // 사용자 버튼 목록
   window._logUsers = users;
   btnList.innerHTML = users.map(u => `
-    <button id="logBtn-${u.id}" onclick="selectLogUser('${u.id}')" class="adm-log-tab"
-      style="display:flex;align-items:center;gap:6px;font-family:'Jua',sans-serif;font-size:13px;flex-shrink:0;white-space:nowrap">
+    <button id="logBtn-${u.id}" onclick="selectLogUser('${u.id}')"
+      style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;border:1.5px solid rgba(200,180,240,0.3);background:rgba(255,255,255,0.7);font-family:'Jua',sans-serif;font-size:13px;color:#4b3060;cursor:pointer;transition:all .15s">
       <span>${u.avatar_emoji || '🐿️'}</span>
       <span>${u.display_name}</span>
       <span style="font-size:11px;color:#a78bfa">🌰${u.acorns||0}</span>
     </button>`).join('');
-  // 드래그 스크롤 + 스크롤 힌트 초기화
-  if (typeof initTabBarDragScroll === 'function') initTabBarDragScroll(btnList);
 }
 
 function selectLogUser(uid) {
   // 버튼 활성화 표시
   document.querySelectorAll('[id^="logBtn-"]').forEach(b => {
-    b.classList.remove('active');
+    b.style.background = 'rgba(255,255,255,0.7)';
+    b.style.borderColor = 'rgba(200,180,240,0.3)';
+    b.style.color = '#4b3060';
   });
   const activeBtn = document.getElementById('logBtn-' + uid);
   if (activeBtn) {
-    activeBtn.classList.add('active');
+    activeBtn.style.background = 'linear-gradient(135deg,#ff8fab,#c084fc)';
+    activeBtn.style.borderColor = 'transparent';
+    activeBtn.style.color = '#fff';
   }
 
   // 카드 렌더 (날짜 인덱스 리셋, 캐시는 유지)
@@ -899,13 +902,13 @@ async function renderUserAdmin() {
           </div>
           <div class="um-acorn">🌰 ${u.acorns}</div>
         </div>
-        <div class="um-actions">
+        ${u.is_admin ? '' : `<div class="um-actions">
           <button class="um-btn um-btn-acorn" onclick="showAcornModal('${u.id}','${esc(u.display_name)}',1)">🌰 도토리 지급</button>
           <button class="um-btn um-btn-minus" onclick="showAcornModal('${u.id}','${esc(u.display_name)}',-1)">🌰 도토리 차감</button>
-          ${u.is_admin ? '' : `<button class="um-btn um-btn-item" onclick="showGiftItemModal('${u.id}','${esc(u.display_name)}')">🎁 아이템 선물</button>
-          <button class="um-btn um-btn-game" onclick="showMgChargeModal('${u.id}','${esc(u.display_name)}')">🎮 게임횟수 조정</button>`}
+          <button class="um-btn um-btn-item" onclick="showGiftItemModal('${u.id}','${esc(u.display_name)}')">🎁 아이템 선물</button>
+          <button class="um-btn um-btn-game" onclick="showMgChargeModal('${u.id}','${esc(u.display_name)}')">🎮 게임횟수 조정</button>
         </div>
-        ${u.is_admin ? '' : `<div class="um-delete-wrap">
+        <div class="um-delete-wrap">
           <button class="um-btn-delete" onclick="confirmDeleteUser('${u.id}','${esc(u.display_name)}')">🗑️ 탈퇴</button>
         </div>`}
       </div>`;

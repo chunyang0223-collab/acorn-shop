@@ -48,31 +48,35 @@ async function checkFreeGacha() {
 
   // ── 1회 버튼: 무료일 > 티켓 > 유료 순 우선순위 ──
   if (btn1) {
-    btn1.classList.remove('gacha-btn-free', 'gacha-btn-ticket', 'gacha-btn-paid');
     if (!dailyUsed) {
       btn1.innerHTML = '🎁 1회 무료!';
-      btn1.classList.add('gacha-btn-free');
+      btn1.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+      btn1.style.color = '#fff';
     } else if (ticketCount > 0) {
       btn1.innerHTML = `🎫 티켓으로 뽑기 <span style="font-size:10px;opacity:0.8">(${ticketCount}장)</span>`;
-      btn1.classList.add('gacha-btn-ticket');
+      btn1.style.background = 'linear-gradient(135deg,#7c3aed,#5b21b6)';
+      btn1.style.color = '#fff';
     } else {
       btn1.innerHTML = '1회 뽑기 <span style="font-size:10px;opacity:0.7">(🌰 10)</span>';
-      btn1.classList.add('gacha-btn-paid');
+      btn1.style.background = '';
+      btn1.style.color = '';
     }
   }
 
   // ── 5회 버튼: 무료주간 > 티켓 5장+ > 유료 ──
   if (btn5) {
-    btn5.classList.remove('gacha-btn-free', 'gacha-btn-ticket', 'gacha-btn-paid');
     if (!weeklyUsed) {
       btn5.innerHTML = '🎁 5회 무료!';
-      btn5.classList.add('gacha-btn-free');
+      btn5.style.background = 'linear-gradient(135deg,#a855f7,#7c3aed)';
+      btn5.style.color = '#fff';
     } else if (ticketCount >= 5) {
       btn5.innerHTML = `🎫 티켓으로 5회 뽑기 <span style="font-size:10px;opacity:0.8">(${ticketCount}장)</span>`;
-      btn5.classList.add('gacha-btn-ticket');
+      btn5.style.background = 'linear-gradient(135deg,#6d28d9,#4c1d95)';
+      btn5.style.color = '#fff';
     } else {
       btn5.innerHTML = '5회 뽑기 <span style="font-size:10px;opacity:0.7">(🌰 50)</span>';
-      btn5.classList.add('gacha-btn-paid');
+      btn5.style.background = '';
+      btn5.style.color = '';
     }
   }
 
@@ -538,7 +542,8 @@ async function renderGachaProbTable() {
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'gachaEventBanner';
-        banner.className = 'text-sm font-black text-center mb-2 gacha-event-banner';
+        banner.className = 'text-sm font-black text-green-700 text-center mb-2';
+        banner.style.cssText = 'background:rgba(220,252,231,0.8);border-radius:12px;padding:8px 12px;border:2px solid rgba(34,197,94,0.3)';
         gachaCard.insertBefore(banner, gachaCard.firstChild);
       }
       const evtDiscount = getActiveEventDiscount('gacha');

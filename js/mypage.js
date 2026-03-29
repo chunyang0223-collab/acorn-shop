@@ -158,7 +158,6 @@ async function renderMypage() {
       <div>
         <h2 class="text-xl font-black text-gray-800">${myProfile.display_name}</h2>
         <p class="text-xs text-gray-400 font-semibold">${session?.user?.email || ''}</p>
-        <button class="text-xs font-bold mt-1 px-3 py-1 rounded-lg" style="background:rgba(59,130,246,0.1);color:#3b82f6" onclick="openMyProfile()">👤 내 프로필 보기</button>
       </div>
       <div class="ml-auto text-center">
         <div class="text-3xl font-black text-amber-600" id="myAcornVal">${myProfile.acorns || 0}</div>

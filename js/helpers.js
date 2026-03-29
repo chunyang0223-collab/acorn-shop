@@ -58,8 +58,7 @@ function toggleTheme() {
     const left  = (Math.random() * 100).toFixed(1) + 'vw';
     const blur  = (Math.random() * 0.8).toFixed(1) + 'px';       // 0~0.8px 번짐
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    el.style.cssText = `width:${size}px;height:${size}px;top:${top};left:${left};--peak:${peak};--dur:${dur};--delay:${delay};filter:blur(${blur});--particle-color:${color}`;
-    el.style.background = `var(--particle-color)`;
+    el.style.cssText = `width:${size}px;height:${size}px;top:${top};left:${left};--peak:${peak};--dur:${dur};--delay:${delay};filter:blur(${blur});background:${color}`;
     document.body.appendChild(el);
   }
 })();
@@ -153,70 +152,6 @@ function installPWA() {
     if (r.outcome === 'accepted') document.getElementById('installBanner').classList.add('hidden');
     _deferredInstall = null;
   });
-}
-
-// ── 관리자 공지 팝업 ──
-async function checkAdminNotice() {
-  try {
-    const { data } = await sb.from('app_settings').select('value').eq('key', 'admin_notice').maybeSingle();
-    if (!data?.value?.message) return;
-    const notice = data.value;
-    const lastSeen = localStorage.getItem('notice_seen_id');
-    if (lastSeen === notice.id) return;
-    showModal(`
-      <div style="text-align:center;padding:8px 0">
-        <div style="font-size:36px;margin-bottom:8px">📢</div>
-        <div style="font-size:16px;font-weight:900;color:#1f2937;margin-bottom:12px">공지사항</div>
-        <div style="font-size:13px;color:#4b5563;line-height:1.7;white-space:pre-wrap;text-align:left;background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">${notice.message.replace(/</g,'&lt;')}</div>
-        <div style="font-size:10px;color:#9ca3af;margin-bottom:12px">${notice.date || ''}</div>
-        <button class="btn btn-primary w-full" onclick="localStorage.setItem('notice_seen_id','${notice.id}');closeModal()">확인</button>
-      </div>
-    `);
-  } catch (e) { console.warn('[notice]', e); }
-}
-
-async function adminSaveNotice() {
-  const msg = document.getElementById('adminNoticeText')?.value?.trim();
-  if (!msg) { toast('⚠️', '공지 내용을 입력하세요'); return; }
-  const notice = {
-    id: Date.now().toString(),
-    message: msg,
-    date: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-  };
-  const { error } = await sb.from('app_settings')
-    .upsert({ key: 'admin_notice', value: notice, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-  if (error) { toast('❌', '공지 저장 실패'); return; }
-  toast('✅', '공지가 등록되었어요! 사용자 접속 시 팝업됩니다.');
-  document.getElementById('adminNoticeText').value = '';
-}
-
-async function adminClearNotice() {
-  const { error } = await sb.from('app_settings')
-    .upsert({ key: 'admin_notice', value: {}, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-  if (!error) toast('✅', '공지가 삭제되었어요');
-  else toast('❌', '삭제 실패');
-}
-
-// ── 브라우저 알림 ──
-function requestNotifPermission() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-}
-
-function sendBrowserNotif(title, body) {
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-  try {
-    new Notification(title, { body, icon: 'images/icons/icon-192.png', tag: 'acorn-' + Date.now() });
-  } catch (e) {
-    if (navigator.serviceWorker?.controller) {
-      navigator.serviceWorker.ready.then(reg => {
-        reg.showNotification(title, { body, icon: 'images/icons/icon-192.png', tag: 'acorn-' + Date.now() });
-      });
-    }
-  }
 }
 
 // ──────────────────────────────────────────────

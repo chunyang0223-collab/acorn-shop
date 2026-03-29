@@ -217,10 +217,7 @@ function _showCatchEffect(parent, x, y, text, color) {
   const el = document.createElement('div');
   el.className = 'catch-float-text';
   el.textContent = text;
-  el.style.left = x + 'px';
-  el.style.top = y + 'px';
-  el.style.setProperty('--float-text-color', color);
-  el.style.color = color;
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.color = color;
   parent.appendChild(el);
   setTimeout(() => el.remove(), 800);
 }

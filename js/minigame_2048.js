@@ -486,10 +486,7 @@ function _2048_particles(r, c, value, type) {
     const angle = (Math.PI * 2 / count) * i + Math.random() * .4, dist = 16 + Math.random() * maxDist;
     p.style.left = cx + 'px'; p.style.top = cy + 'px';
     p.style.setProperty('--dx', Math.cos(angle) * dist + 'px'); p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-    const particleColor = colors[Math.floor(Math.random() * colors.length)];
-    p.style.setProperty('--dur', dur + 'ms');
-    p.style.setProperty('--particle-bg', particleColor);
-    p.style.background = `var(--particle-bg)`;
+    p.style.setProperty('--dur', dur + 'ms'); p.style.background = colors[Math.floor(Math.random() * colors.length)];
     const s = isBomb ? 4 + Math.random() * 5 : 3 + Math.random() * 3; p.style.width = s + 'px'; p.style.height = s + 'px';
     _2048.tileLayer.appendChild(p); setTimeout(() => p.remove(), dur);
   }

@@ -28,8 +28,6 @@ async function initAppUI() {
     await _loadEventsFromDB(); // 이벤트 데이터 DB에서 로드
     await loadMaintenanceSettings(); // 점검 설정 먼저 로드 완료 후
     checkFreeGacha(); // 무료 뽑기 상태 초기화
-    checkAdminNotice(); // 공지 확인
-    requestNotifPermission(); // 브라우저 알림 권한 요청
 
     // 첫 탭(상점)이 점검 중이면 점검 안내 표시, 아니면 정상 렌더
     const maint = window._maintSettings || {};
@@ -150,10 +148,10 @@ async function doSignup() {
 // ──────────────────────────────────────────────
 //  TABS
 // ──────────────────────────────────────────────
-const U_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','ranking','friend','mypage'];
-const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking'];
+const U_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','ranking','mypage'];
+const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','ranking'];
 
-// ── 관리자 메뉴 정의 (개별 탭) ──
+// ── 관리자 메뉴 정의 (그리드용) ──
 const ADMIN_MENU_DEFS = {
   dashboard:        { icon: '📊', label: '현황' },
   requests:         { icon: '📬', label: '신청목록' },
@@ -165,24 +163,8 @@ const ADMIN_MENU_DEFS = {
   minigameSettings: { icon: '🎮', label: '미니게임' },
   ranking:          { icon: '🏆', label: '랭킹' },
   txlog:            { icon: '🗂️', label: '로그' },
-  users:            { icon: '👥', label: '회원관리' },
-  squirrelSettings: { icon: '🐿️', label: '다람쥐' }
+  users:            { icon: '👥', label: '회원관리' }
 };
-
-// ── 카테고리 그룹 정의 ──
-const ADMIN_CATS = {
-  dashboard: { icon: '📊', label: '대시보드',   tabs: ['dashboard'] },
-  shop:      { icon: '🛒', label: '상점 운영',  tabs: ['products', 'gachaTest', 'events', 'requests'] },
-  users:     { icon: '👥', label: '유저 관리',  tabs: ['users', 'txlog', 'ranking'] },
-  content:   { icon: '🎮', label: '콘텐츠',    tabs: ['quests', 'minigameSettings', 'recycle'] },
-  squirrel:  { icon: '🐿️', label: '다람쥐 마을', tabs: ['squirrelSettings'] }
-};
-
-// 역방향 조회: 탭 → 카테고리ID
-const _tabToCat = {};
-Object.entries(ADMIN_CATS).forEach(([catId, cat]) => {
-  cat.tabs.forEach(t => { _tabToCat[t] = catId; });
-});
 
 // 핀 기본값
 const DEFAULT_PINS = ['requests', 'users', 'txlog'];
@@ -222,13 +204,6 @@ function aTabGrid(tab) {
   aTab(tab, fakeBtn);
 }
 
-// 카테고리 열기 (첫 번째 서브탭으로 이동)
-function openAdminCat(catId) {
-  const cat = ADMIN_CATS[catId];
-  if (!cat) return;
-  aTab(cat.tabs[0]);
-}
-
 function aTab(tab, btn) {
   playSound('tab');
   A_TABS.forEach(t => { const el = document.getElementById('atab-'+t); if(el) el.classList.add('hidden'); });
@@ -243,10 +218,7 @@ function aTab(tab, btn) {
   }
 
   const tabEl = document.getElementById('atab-'+tab);
-  if (tabEl) {
-    tabEl.classList.remove('hidden');
-    _injectCatSubtabs(tab, tabEl); // 카테고리 서브탭 바 주입
-  }
+  if (tabEl) tabEl.classList.remove('hidden');
 
   // 핀 탭 하이라이트
   const pinIdx = _adminPins.indexOf(tab);
@@ -268,32 +240,10 @@ function aTab(tab, btn) {
   if (tab === 'ranking') renderAdminRanking();
 }
 
-// ── 카테고리 서브탭 바 주입 ──
-function _injectCatSubtabs(tab, tabEl) {
-  // 기존 서브탭 바 제거
-  tabEl.querySelector('.adm-subtab-bar')?.remove();
-
-  const catId = _tabToCat[tab];
-  if (!catId) return;
-  const cat = ADMIN_CATS[catId];
-  if (!cat || cat.tabs.length <= 1) return; // 단일 탭 카테고리는 바 불필요
-
-  const bar = document.createElement('div');
-  bar.className = 'adm-subtab-bar';
-  bar.innerHTML =
-    `<button class="adm-subtab-home" onclick="aTab('home')">←</button>` +
-    cat.tabs.map(t => {
-      const def = ADMIN_MENU_DEFS[t];
-      const active = t === tab ? ' active' : '';
-      return `<button class="adm-subtab${active}" onclick="aTab('${t}')">${def?.icon || ''} ${def?.label || t}</button>`;
-    }).join('');
-  tabEl.prepend(bar);
-}
-
 // ── 점검 상태 도트 (홈 화면용) ──
 function renderMaintDots() {
   const m = window._maintSettings || {};
-  ['shop','gacha','quest','recycle','minigame','squirrel','mypage','sq_farm'].forEach(k => {
+  ['shop','gacha','quest','recycle','minigame','mypage'].forEach(k => {
     const dot = document.getElementById('maint-dot-' + k);
     if (dot) {
       dot.className = 'maint-dot ' + (m[k] ? 'off' : 'on');
@@ -430,13 +380,12 @@ function uTab(tab, btn) {
   if (tab === 'recycle') renderRecycleTab();
   if (tab === 'minigame') renderMinigameHub();
   if (tab === 'ranking') renderUserRanking();
-  if (tab === 'friend') friendInit();
   if (tab === 'squirrel') { sqInit(); }
   else if (typeof _sqUnsubscribe === 'function') _sqUnsubscribe();
 }
 
 // ── 메뉴 점검 관리 ──
-const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','mypage','sq_farm'];
+const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','mypage'];
 
 async function toggleMaintenance(tab) {
   // 현재 DB 값 읽기
