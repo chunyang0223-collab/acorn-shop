@@ -2658,6 +2658,7 @@ body {
 .farm-field-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 10px; padding: 14px; border-radius: 16px; margin-bottom: 8px;
+  max-width: 340px; margin-left: auto; margin-right: auto;
 }
 body .farm-field-grid { background: rgba(255,255,255,.50); border: 1px solid rgba(0,0,0,.08); }
 
@@ -2760,11 +2761,11 @@ body .farm-field-grid { background: rgba(255,255,255,.50); border: 1px solid rgb
   padding: 10px 14px; border-radius: 16px; margin-top: 8px;
   background: rgba(255,255,255,.50); border: 1px solid rgba(0,0,0,.08);
 }
-.farm-inv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+.farm-inv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .farm-inv-header-right { font-size: 11px; font-weight: 700; color: #374151; font-family: 'Pretendard', sans-serif; display: flex; align-items: center; gap: 4px; }
-.farm-inv-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.farm-inv-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .farm-inv-slot {
-  width: 50px; height: 50px; border-radius: 10px;
+  width: 58px; height: 58px; border-radius: 10px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   position: relative;
 }
@@ -2776,8 +2777,8 @@ body .farm-field-grid { background: rgba(255,255,255,.50); border: 1px solid rgb
 
 .farm-inv-qty {
   position: absolute; bottom: -2px; right: -2px;
-  min-width: 13px; height: 13px; border-radius: 7px;
-  font-size: 9px; font-weight: 900; color: #fff;
+  min-width: 15px; height: 15px; border-radius: 8px;
+  font-size: 10px; font-weight: 900; color: #fff;
   display: flex; align-items: center; justify-content: center;
   padding: 0 3px; font-family: 'Pretendard', sans-serif;
   background: #16a34a; border: 1.5px solid #fff;
