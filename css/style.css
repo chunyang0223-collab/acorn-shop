@@ -82,12 +82,12 @@ body {
 
 /* ── 글라스 카드 ── */
 .clay-card {
-  background: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.78);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-radius: 24px;
-  border: 1.5px solid rgba(255,255,255,0.85);
-  box-shadow: 0 8px 32px rgba(180,140,200,0.13), 0 2px 8px rgba(180,140,200,0.08);
+  border: 1.5px solid rgba(200,190,210,0.45);
+  box-shadow: 0 8px 32px rgba(180,140,200,0.15), 0 2px 8px rgba(180,140,200,0.1);
   transition: transform .2s, box-shadow .2s;
 }
 .card-hover:hover {
@@ -637,20 +637,20 @@ body {
 [data-theme="dark"] .cfg-panel .fc-sec-head .fc-subtitle { color:#fb923c; }
 [data-theme="dark"] .cfg-panel .fc-sec-head .fc-arrow { color:#fb923c; }
 [data-theme="dark"] .cfg-panel .fc-divider { background:#2a3a4a; }
-[data-theme="dark"] .cfg-panel .fc-row-label { color:#6ee7b7; }
+[data-theme="dark"] .cfg-panel .fc-row-label { color:#e2e8f0; }
 [data-theme="dark"] .cfg-panel .fc-row-input input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
 [data-theme="dark"] .cfg-panel .fc-row-input input:focus { border-color:#f59e0b; }
-[data-theme="dark"] .cfg-panel .fc-cell-label { color:#6ee7b7; }
+[data-theme="dark"] .cfg-panel .fc-cell-label { color:#e2e8f0; }
 [data-theme="dark"] .cfg-panel .fc-cell input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
 [data-theme="dark"] .cfg-panel .fc-cell input:focus { border-color:#f59e0b; }
-[data-theme="dark"] .cfg-panel .fc-expand-table th { color:#6ee7b7; }
+[data-theme="dark"] .cfg-panel .fc-expand-table th { color:#e2e8f0; }
 [data-theme="dark"] .cfg-panel .fc-expand-table td:first-child { color:#fbbf24; }
 [data-theme="dark"] .cfg-panel .fc-expand-table input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-tier-grid .tg-head { color:#6ee7b7; }
+[data-theme="dark"] .cfg-panel .fc-tier-grid .tg-head { color:#e2e8f0; }
 [data-theme="dark"] .cfg-panel .fc-tier-grid .tg-num { color:#fbbf24; }
 [data-theme="dark"] .cfg-panel .fc-tier-grid input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-sub-title { color:#6ee7b7; }
-[data-theme="dark"] .cfg-panel .fc-desc { color:#fb923c; }
+[data-theme="dark"] .cfg-panel .fc-sub-title { color:#e2e8f0; }
+[data-theme="dark"] .cfg-panel .fc-desc { color:#d4a060; }
 
 /* ── 테마: 다크모드 ── */
 [data-theme="dark"] body {
@@ -715,20 +715,20 @@ body {
   color: #fbbf24 !important;
 }
 [data-theme="dark"] .field::placeholder { color: #d97706 !important; }
-[data-theme="dark"] .tab-btn { color: #fb923c !important; }
+[data-theme="dark"] .tab-btn { color: #d4a060 !important; }
 [data-theme="dark"] .tab-btn.active { color: #fff !important; }
 [data-theme="dark"] .acorn-pill {
   background: linear-gradient(135deg,#92400e,#b45309) !important;
   color: #fde68a !important;
 }
 
-/* 다크: 텍스트 — 채도 있는 색상 (회색 금지) */
+/* 다크: 텍스트 — 채도 있는 색상 (회색 금지, 차분한 톤) */
 [data-theme="dark"] .text-gray-800,
-[data-theme="dark"] .font-black.text-gray-800 { color: #f0c040 !important; }
-[data-theme="dark"] .text-gray-700 { color: #6ee7b7 !important; }
+[data-theme="dark"] .font-black.text-gray-800 { color: #e2e8f0 !important; }
+[data-theme="dark"] .text-gray-700 { color: #e2e8f0 !important; }
 [data-theme="dark"] .text-gray-600 { color: #fbbf24 !important; }
-[data-theme="dark"] .text-gray-500 { color: #fb923c !important; }
-[data-theme="dark"] .text-gray-400 { color: #d97706 !important; }
+[data-theme="dark"] .text-gray-500 { color: #e2a84c !important; }
+[data-theme="dark"] .text-gray-400 { color: #d4a040 !important; }
 [data-theme="dark"] .text-amber-900 { color: #fcd34d !important; }
 [data-theme="dark"] .text-amber-700 { color: #fbbf24 !important; }
 [data-theme="dark"] .text-amber-600 { color: #f59e0b !important; }
@@ -762,15 +762,15 @@ body {
 
 /* ── 다크: 누락 텍스트 색상 ── */
 [data-theme="dark"] .text-amber-800  { color: #fbbf24 !important; }
-[data-theme="dark"] .text-gray-300   { color: #d97706 !important; }
+[data-theme="dark"] .text-gray-300   { color: #d4a040 !important; }
 [data-theme="dark"] .text-yellow-700 { color: #fcd34d !important; }
 [data-theme="dark"] .text-yellow-800 { color: #fbbf24 !important; }
-[data-theme="dark"] .text-green-700  { color: #4ade80 !important; }
-[data-theme="dark"] .text-green-600  { color: #34d399 !important; }
-[data-theme="dark"] .text-red-600    { color: #f87171 !important; }
-[data-theme="dark"] .text-red-500    { color: #fca5a5 !important; }
-[data-theme="dark"] .text-red-400    { color: #fecaca !important; }
-[data-theme="dark"] .text-purple-600 { color: #c084fc !important; }
+[data-theme="dark"] .text-green-700  { color: #5cb87a !important; }
+[data-theme="dark"] .text-green-600  { color: #5cb87a !important; }
+[data-theme="dark"] .text-red-600    { color: #e07070 !important; }
+[data-theme="dark"] .text-red-500    { color: #d88888 !important; }
+[data-theme="dark"] .text-red-400    { color: #d8a0a0 !important; }
+[data-theme="dark"] .text-purple-600 { color: #a889d4 !important; }
 [data-theme="dark"] .text-blue-700   { color: #60a5fa !important; }
 [data-theme="dark"] .text-orange-700 { color: #fb923c !important; }
 [data-theme="dark"] .text-orange-500 { color: #fdba74 !important; }
@@ -789,35 +789,35 @@ body {
 .it-store { color: #78350f; font-weight: 700; }
 .it-gacha { color: #6d28d9; font-weight: 700; }
 [data-theme="dark"] .it-store { color: #fbbf24 !important; }
-[data-theme="dark"] .it-gacha { color: #c084fc !important; }
+[data-theme="dark"] .it-gacha { color: #a889d4 !important; }
 
 /* ── 다크: 커스텀 배지 ── */
-[data-theme="dark"] .qs-done       { background: #1a3a28 !important; color: #4ade80 !important; }
-[data-theme="dark"] .qs-pending    { background: #3a2a10 !important; color: #fcd34d !important; }
-[data-theme="dark"] .qs-inprogress { background: #201530 !important; color: #c084fc !important; }
+[data-theme="dark"] .qs-done       { background: #1a3a28 !important; color: #5cb87a !important; }
+[data-theme="dark"] .qs-pending    { background: #3a2a10 !important; color: #e0b050 !important; }
+[data-theme="dark"] .qs-inprogress { background: #201530 !important; color: #a889d4 !important; }
 [data-theme="dark"] .ct-auto       { background: #3a2a10 !important; color: #fcd34d !important; }
 [data-theme="dark"] .ct-approval   { background: #2a1525 !important; color: #f9a8d4 !important; }
-[data-theme="dark"] .tx-plus       { color: #4ade80 !important; }
-[data-theme="dark"] .tx-minus      { color: #f87171 !important; }
+[data-theme="dark"] .tx-plus       { color: #5cb87a !important; }
+[data-theme="dark"] .tx-minus      { color: #e07070 !important; }
 [data-theme="dark"] .badge-soldout    { background: #4a1a1a !important; color: #fca5a5 !important; }
-[data-theme="dark"] .badge-stock      { background: #201530 !important; color: #c084fc !important; }
-[data-theme="dark"] .badge-unlimited  { background: #1a3a28 !important; color: #4ade80 !important; }
-[data-theme="dark"] .badge-gacha-pct  { background: #201530 !important; color: #c084fc !important; }
-[data-theme="dark"] .badge-prob       { background: #201530 !important; color: #c084fc !important; }
+[data-theme="dark"] .badge-stock      { background: #201530 !important; color: #a889d4 !important; }
+[data-theme="dark"] .badge-unlimited  { background: #1a3a28 !important; color: #5cb87a !important; }
+[data-theme="dark"] .badge-gacha-pct  { background: #201530 !important; color: #a889d4 !important; }
+[data-theme="dark"] .badge-prob       { background: #201530 !important; color: #a889d4 !important; }
 
 /* ── 다크: stat-card ── */
 [data-theme="dark"] .sc-orange { background: #2e2010 !important; border-color: #5a3510 !important; }
 [data-theme="dark"] .sc-blue   { background: #1a3060 !important; border-color: #1a3560 !important; }
 [data-theme="dark"] .sc-green  { background: #1a3a28 !important; border-color: #1a4a35 !important; }
 [data-theme="dark"] .sc-purple { background: #201530 !important; border-color: #3a2560 !important; }
-[data-theme="dark"] .text-orange-700 { color: #fb923c !important; }
-[data-theme="dark"] .text-blue-700   { color: #60a5fa !important; }
-[data-theme="dark"] .text-green-700  { color: #4ade80 !important; }
-[data-theme="dark"] .text-purple-700 { color: #c084fc !important; }
-[data-theme="dark"] .text-orange-500 { color: #fdba74 !important; }
-[data-theme="dark"] .text-blue-500   { color: #93c5fd !important; }
-[data-theme="dark"] .text-green-500  { color: #6ee7b7 !important; }
-[data-theme="dark"] .text-purple-500 { color: #d8b4fe !important; }
+[data-theme="dark"] .text-orange-700 { color: #e0a050 !important; }
+[data-theme="dark"] .text-blue-700   { color: #7aabe0 !important; }
+[data-theme="dark"] .text-green-700  { color: #5cb87a !important; }
+[data-theme="dark"] .text-purple-700 { color: #a889d4 !important; }
+[data-theme="dark"] .text-orange-500 { color: #e0a060 !important; }
+[data-theme="dark"] .text-blue-500   { color: #7aabe0 !important; }
+[data-theme="dark"] .text-green-500  { color: #5cb87a !important; }
+[data-theme="dark"] .text-purple-500 { color: #b89cd4 !important; }
 
 /* ── 다크: row-item-bg (인라인 bg 대체) ── */
 .row-item-bg { background: rgba(255,255,255,0.5); border-radius: 12px; }
@@ -843,7 +843,7 @@ body {
 }
 .modal-notice-text { font-size: 14px; font-weight: 700; color: inherit; }
 .modal-notice-sub  { font-size: 12px; font-weight: 700; color: #059669; margin-top: 4px; }
-[data-theme="dark"] .modal-notice-sub { color: #4ade80 !important; }
+[data-theme="dark"] .modal-notice-sub { color: #5cb87a !important; }
 
 /* ── 다크: 모달 오버레이 ── */
 [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; }
@@ -1185,17 +1185,17 @@ body {
 [data-theme="dark"] .rc-legend  { background: #3a1a1a !important; color: #fca5a5 !important; }
 
 [data-theme="dark"] .st-pending  { background: #3a2a10 !important; color: #fcd34d !important; }
-[data-theme="dark"] .st-approved { background: #1a3a28 !important; color: #4ade80 !important; }
+[data-theme="dark"] .st-approved { background: #1a3a28 !important; color: #5cb87a !important; }
 [data-theme="dark"] .st-rejected { background: #3a1a1a !important; color: #fca5a5 !important; }
 
 [data-theme="dark"] .rep-once   { background: #201530 !important; color: #c4b5fd !important; }
 [data-theme="dark"] .rep-daily  { background: #1a3060 !important; color: #93c5fd !important; }
 [data-theme="dark"] .rep-weekly { background: #2a1525 !important; color: #f9a8d4 !important; }
 
-[data-theme="dark"] .rt-auto   { background: #1a3a28 !important; color: #4ade80 !important; }
+[data-theme="dark"] .rt-auto   { background: #1a3a28 !important; color: #5cb87a !important; }
 [data-theme="dark"] .rt-manual { background: #201530 !important; color: #c4b5fd !important; }
 
-[data-theme="dark"] .recycle-badge-active   { background: #1a3a28 !important; color: #4ade80 !important; }
+[data-theme="dark"] .recycle-badge-active   { background: #1a3a28 !important; color: #5cb87a !important; }
 [data-theme="dark"] .recycle-badge-inactive { background: #3a1a1a !important; color: #fca5a5 !important; }
 
 /* ══════════════════════════════════════════════
@@ -1326,7 +1326,7 @@ body {
 .mg-tag-danger { background: rgba(239,68,68,0.12) !important; color: #dc2626 !important; }
 .mg-tag-reward { background: rgba(34,197,94,0.12) !important; color: #059669 !important; }
 [data-theme="dark"] .mg-tag-danger { background: #3a1a1a !important; color: #fca5a5 !important; }
-[data-theme="dark"] .mg-tag-reward { background: #1a3a28 !important; color: #6ee7b7 !important; }
+[data-theme="dark"] .mg-tag-reward { background: #1a3a28 !important; color: #86ceac !important; }
 
 /* ══════════════════════════════════════════════
    도토리 캐치 — 게임 컨테이너
@@ -2309,12 +2309,12 @@ body {
    인라인 style="" 의 어두운 색상을 밝게 변환
    ══════════════════════════════════════════════════════ */
 
-/* ── 다크: 어두운 텍스트 → 채도 있는 밝은 색 ── */
-[data-theme="dark"] [style*="color:#1f2937"] { color: #fbbf24 !important; }
-[data-theme="dark"] [style*="color:#374151"] { color: #6ee7b7 !important; }
-[data-theme="dark"] [style*="color:#4b5563"] { color: #fb923c !important; }
-[data-theme="dark"] [style*="color:#6b7280"] { color: #c084fc !important; }
-[data-theme="dark"] [style*="color:#9ca3af"] { color: #d97706 !important; }
+/* ── 다크: 어두운 텍스트 → 채도 있는 밝은 색 (차분한 톤) ── */
+[data-theme="dark"] [style*="color:#1f2937"] { color: #e2e8f0 !important; }
+[data-theme="dark"] [style*="color:#374151"] { color: #e2e8f0 !important; }
+[data-theme="dark"] [style*="color:#4b5563"] { color: #d4a060 !important; }
+[data-theme="dark"] [style*="color:#6b7280"] { color: #b0a090 !important; }
+[data-theme="dark"] [style*="color:#9ca3af"] { color: #c0a060 !important; }
 [data-theme="dark"] [style*="color:#78350f"] { color: #fcd34d !important; }
 [data-theme="dark"] [style*="color:#92400e"] { color: #fbbf24 !important; }
 [data-theme="dark"] [style*="color:#b45309"] { color: #f59e0b !important; }
@@ -2602,7 +2602,7 @@ body {
 .farm-btn-green { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border-color: #86efac; color: #166534; }
 
 /* ── 상단 바 ── */
-.farm-topbar { display: flex; gap: 6px; margin-bottom: 8px; }
+.farm-topbar { display: flex; gap: 8px; margin-bottom: 10px; }
 
 /* ── 농부 카드 ── */
 .farm-farmer-slot {
@@ -2657,13 +2657,13 @@ body {
 /* ── 밭 그리드 ── */
 .farm-field-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 4px; padding: 8px; border-radius: 14px; margin-bottom: 5px;
+  gap: 10px; padding: 14px; border-radius: 16px; margin-bottom: 8px;
 }
-body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgba(0,0,0,.04); }
+body .farm-field-grid { background: rgba(255,255,255,.50); border: 1px solid rgba(0,0,0,.08); }
 
 /* ── 밭 셀 ── */
 .farm-cell {
-  aspect-ratio: 1; border-radius: 10px;
+  aspect-ratio: 1; border-radius: 12px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   position: relative; transition: transform 0.12s;
 }
@@ -2671,9 +2671,9 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 .farm-cell-clickable:active { transform: scale(0.94); }
 .farm-cell-growing { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border: 1.5px solid #86efac; }
 .farm-cell-ready { background: linear-gradient(135deg,#fef9c3,#fef3c7); border: 1.5px solid #fbbf24; animation: farm-cell-pulse 1.2s ease-in-out infinite; }
-.farm-cell-empty { background: rgba(0,0,0,.015); border: 1.5px dashed rgba(0,0,0,.07); }
-.farm-cell-locked { background: rgba(0,0,0,.015); border: 1.5px solid rgba(0,0,0,.04); opacity: .4; }
-.farm-cell-expand { background: rgba(0,0,0,.015); border: 1.5px dashed rgba(0,0,0,.07); cursor: pointer; }
+.farm-cell-empty { background: rgba(0,0,0,.02); border: 1.5px dashed rgba(0,0,0,.10); }
+.farm-cell-locked { background: rgba(0,0,0,.02); border: 1.5px solid rgba(0,0,0,.06); opacity: .4; }
+.farm-cell-expand { background: rgba(0,0,0,.02); border: 1.5px dashed rgba(0,0,0,.10); cursor: pointer; }
 .farm-cell-expand:active { transform: scale(0.94); }
 
 @keyframes farm-cell-pulse {
@@ -2686,20 +2686,83 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 .farm-cell-label { font-size: 11px; font-weight: 700; margin-top: 2px; font-family: 'Pretendard', sans-serif; }
 .farm-cell-timer { font-size: 10px; font-weight: 600; margin-top: 1px; font-family: 'Pretendard', sans-serif; }
 
-.farm-cell-item-btns { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
+/* 기존 인라인 버튼 (하위호환) — 팝업 전환 후 미사용 */
+.farm-cell-item-btns { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; display: none; }
 .farm-cell-item-btn { font-size: 11px; line-height: 1; padding: 2px 4px; border-radius: 5px; cursor: pointer; font-weight: 800; border: none; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
 .farm-cell-item-btn-acc { background: #8b5cf6; color: white; }
 .farm-cell-item-btn-nut { background: #10b981; color: white; }
 .farm-cell-item-btn-used { background: #d1d5db; color: white; opacity: 0.5; cursor: default; }
 
+/* ── 작물 클릭 팝업 (촉진제/영양제) ── */
+.farm-crop-popup-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,.45); z-index: 9998;
+  display: flex; align-items: center; justify-content: center;
+  animation: farm-popup-fadein .15s ease;
+}
+@keyframes farm-popup-fadein { from { opacity: 0; } to { opacity: 1; } }
+
+.farm-crop-popup {
+  background: #fff; border-radius: 18px; padding: 20px 18px 16px;
+  width: 260px; max-width: 85vw;
+  box-shadow: 0 12px 40px rgba(0,0,0,.25);
+  text-align: center; position: relative;
+  animation: farm-popup-scale .2s ease;
+  font-family: 'Pretendard', sans-serif;
+}
+@keyframes farm-popup-scale { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.farm-crop-popup-title {
+  font-size: 15px; font-weight: 900; margin-bottom: 4px; color: #1f2937;
+}
+.farm-crop-popup-sub {
+  font-size: 11px; font-weight: 600; margin-bottom: 14px; color: #6b7280;
+}
+.farm-crop-popup-btns {
+  display: flex; gap: 8px; justify-content: center;
+}
+.farm-crop-popup-btn {
+  flex: 1; padding: 10px 6px; border-radius: 12px; border: none;
+  cursor: pointer; font-family: 'Pretendard', sans-serif;
+  font-size: 12px; font-weight: 800; transition: transform .1s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.farm-crop-popup-btn:active { transform: scale(0.93); }
+.farm-crop-popup-btn-acc { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #6d28d9; }
+.farm-crop-popup-btn-nut { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #047857; }
+.farm-crop-popup-btn-used { background: #f3f4f6; color: #9ca3af; cursor: default; opacity: .6; }
+.farm-crop-popup-btn-used:active { transform: none; }
+.farm-crop-popup-btn-icon { font-size: 22px; }
+.farm-crop-popup-btn-label { font-size: 11px; }
+.farm-crop-popup-btn-qty { font-size: 10px; font-weight: 600; opacity: .7; }
+.farm-crop-popup-close {
+  margin-top: 12px; padding: 7px 0; border-radius: 10px;
+  background: #f3f4f6; border: none; width: 100%;
+  font-size: 12px; font-weight: 800; color: #6b7280;
+  cursor: pointer; font-family: 'Pretendard', sans-serif;
+}
+.farm-crop-popup-close:active { transform: scale(0.96); }
+
+/* ── 다크모드 팝업 ── */
+[data-theme="dark"] .farm-crop-popup {
+  background: linear-gradient(160deg, #2a1e14, #1e1510);
+  border: 1px solid #4a3525; box-shadow: 0 12px 40px rgba(0,0,0,.6);
+}
+[data-theme="dark"] .farm-crop-popup-title { color: #fcd34d; }
+[data-theme="dark"] .farm-crop-popup-sub { color: #fbbf24; }
+[data-theme="dark"] .farm-crop-popup-btn-acc { background: linear-gradient(135deg, #2a1a40, #3a2560); color: #c4b5fd; }
+[data-theme="dark"] .farm-crop-popup-btn-nut { background: linear-gradient(135deg, #1a3a28, #1e4a30); color: #86ceac; }
+[data-theme="dark"] .farm-crop-popup-btn-used { background: #201810; color: #fbbf24; opacity: .4; }
+[data-theme="dark"] .farm-crop-popup-close { background: #201810; color: #fbbf24; border: 1px solid #3a2a1a; }
+
 /* ── 인벤토리 ── */
 .farm-inv-wrap {
-  padding: 8px; border-radius: 14px; margin-top: 5px;
-  background: rgba(255,255,255,.45); border: 1px solid rgba(0,0,0,.04);
+  padding: 10px 14px; border-radius: 16px; margin-top: 8px;
+  background: rgba(255,255,255,.50); border: 1px solid rgba(0,0,0,.08);
 }
 .farm-inv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
 .farm-inv-header-right { font-size: 11px; font-weight: 700; color: #374151; font-family: 'Pretendard', sans-serif; display: flex; align-items: center; gap: 4px; }
-.farm-inv-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.farm-inv-grid { display: flex; flex-wrap: wrap; gap: 6px; }
 .farm-inv-slot {
   width: 50px; height: 50px; border-radius: 10px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -2707,8 +2770,8 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 }
 .farm-inv-slot-seed { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border: 1.5px solid #86efac; }
 .farm-inv-slot-harvest { background: linear-gradient(135deg,#fef9c3,#fef3c7); border: 1.5px solid #fbbf24; }
-.farm-inv-slot-empty { background: rgba(0,0,0,.01); border: 1.5px dashed rgba(0,0,0,.07); }
-.farm-inv-slot-expand { background: rgba(0,0,0,.01); border: 1.5px dashed rgba(0,0,0,.07); cursor: pointer; }
+.farm-inv-slot-empty { background: rgba(0,0,0,.02); border: 1.5px dashed rgba(0,0,0,.10); }
+.farm-inv-slot-expand { background: rgba(0,0,0,.02); border: 1.5px dashed rgba(0,0,0,.10); cursor: pointer; }
 .farm-inv-slot-expand:active { transform: scale(0.92); }
 
 .farm-inv-qty {
@@ -2754,34 +2817,34 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 /* ═══════════════════════════════════════════════════════
    다크모드 — 프리뷰 body.dark 원본값 그대로
    ═══════════════════════════════════════════════════════ */
-[data-theme="dark"] .farm-farmer-slot { background: #1a3a28; border-color: #2a6a40; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
-[data-theme="dark"] .farm-farmer-slot::before { background: radial-gradient(circle at 20% 50%, rgba(34,197,94,.1), transparent 60%); }
-[data-theme="dark"] .farm-farmer-slot-empty { background: #1a2030; border-color: #2a3a4a; }
+[data-theme="dark"] .farm-farmer-slot { background: linear-gradient(135deg, #1a3a28, #1e2e1c); border-color: #2a6a40; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+[data-theme="dark"] .farm-farmer-slot::before { background: radial-gradient(circle at 20% 50%, rgba(34,197,94,.12), transparent 60%); }
+[data-theme="dark"] .farm-farmer-slot-empty { background: #201810; border-color: #3a2a1a; }
 [data-theme="dark"] .farm-farmer-avatar { background: #1a4a2e; border-color: #2a6a40; }
 
-[data-theme="dark"] .farm-right-col .farm-deposit-badge { background: #2e2210; border-color: #6a4a10; }
+[data-theme="dark"] .farm-right-col .farm-deposit-badge { background: linear-gradient(135deg, #3a2a10, #2e2210); border-color: #6a4a10; }
 [data-theme="dark"] .farm-dep-num { color: #fcd34d; }
 [data-theme="dark"] .farm-dep-sub { color: #fbbf24; }
 [data-theme="dark"] .farm-shop-btn { background: linear-gradient(135deg,#b45309,#92400e); box-shadow: 0 2px 6px rgba(0,0,0,.5); }
 [data-theme="dark"] .farm-shop-lbl { color: #fef3c7; }
 
-[data-theme="dark"] .farm-field-grid { background: #141c28; border-color: #2a3a4a; }
-[data-theme="dark"] .farm-cell-growing { background: #1a4a30; border: 2px solid #2a7a4a; }
-[data-theme="dark"] .farm-cell-ready { background: #4a3a10; border: 2px solid #8a6a18; }
-[data-theme="dark"] .farm-cell-empty { background: #1a2838; border: 2px dashed #3a5a6a; }
-[data-theme="dark"] .farm-cell-locked { background: #10151e; border: 1.5px solid #1a2030; opacity: .3; }
-[data-theme="dark"] .farm-cell-expand { background: #1a3040; border: 2px dashed #3a6a5a; }
+[data-theme="dark"] .farm-field-grid { background: linear-gradient(160deg, #2a1e14 0%, #1e1510 50%, #2a1e14 100%); border: 1px solid #4a3525; box-shadow: inset 0 2px 8px rgba(0,0,0,.3); }
+[data-theme="dark"] .farm-cell-growing { background: linear-gradient(145deg, #1a4a30, #1e3a22); border: 2px solid #2a7a4a; box-shadow: 0 2px 6px rgba(34,197,94,.1); }
+[data-theme="dark"] .farm-cell-ready { background: linear-gradient(145deg, #4a3a10, #5a4515); border: 2px solid #8a6a18; box-shadow: 0 2px 8px rgba(251,191,36,.15); }
+[data-theme="dark"] .farm-cell-empty { background: #251c14; border: 2px dashed #5a4030; }
+[data-theme="dark"] .farm-cell-locked { background: #1a1410; border: 1.5px solid #30251a; opacity: .3; }
+[data-theme="dark"] .farm-cell-expand { background: #201810; border: 2px dashed #5a4530; }
 
-[data-theme="dark"] .farm-inv-wrap { background: #1a2535; border-color: #2a3a4a; }
+[data-theme="dark"] .farm-inv-wrap { background: linear-gradient(160deg, #1e1810 0%, #1a1510 100%); border: 1px solid #3a2a1a; }
 [data-theme="dark"] .farm-inv-header-right { color: #fbbf24; }
 [data-theme="dark"] .farm-inv-slot-seed { background: #1a3a28; border-color: #2a6a40; }
 [data-theme="dark"] .farm-inv-slot-harvest { background: #3a2a10; border-color: #6a4a10; }
-[data-theme="dark"] .farm-inv-slot-empty { background: #1e2838; border: 1.5px dashed #3a4a5a; }
-[data-theme="dark"] .farm-inv-slot-expand { background: #1e2838; border: 1.5px dashed #3a4a5a; }
+[data-theme="dark"] .farm-inv-slot-empty { background: #201810; border: 1.5px dashed #4a3520; }
+[data-theme="dark"] .farm-inv-slot-expand { background: #201810; border: 1.5px dashed #4a3520; }
 [data-theme="dark"] .farm-inv-qty { border-color: #1a2030; }
 
 [data-theme="dark"] .farm-csm-acc { background: #2a1a40; color: #c4b5fd; border-color: #4a2a6a; }
-[data-theme="dark"] .farm-csm-nut { background: #1a3a28; color: #6ee7b7; border-color: #2a5a3a; }
+[data-theme="dark"] .farm-csm-nut { background: #1a3a28; color: #86ceac; border-color: #2a5a3a; }
 
 [data-theme="dark"] .farm-btn { background: #252d3a; border-color: #3a4a5a; color: #fbbf24; }
 [data-theme="dark"] .farm-btn-dark { background: linear-gradient(135deg,#78350f,#92400e); border-color: #5a3008; color: #fcd34d; }
@@ -2789,13 +2852,13 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 
 [data-theme="dark"] .farm-section-title { color: #e2e8f0; }
 [data-theme="dark"] .farm-txt-brown { color: #e2e8f0; }
-[data-theme="dark"] .farm-txt-green { color: #86efac; }
-[data-theme="dark"] .farm-txt-gold { color: #fbbf24; }
-[data-theme="dark"] .farm-txt-muted { color: #fbbf24; }
+[data-theme="dark"] .farm-txt-green { color: #86ceac; }
+[data-theme="dark"] .farm-txt-gold { color: #e0b050; }
+[data-theme="dark"] .farm-txt-muted { color: #d4a060; }
 [data-theme="dark"] .farm-cell-label { color: #e2e8f0; }
-[data-theme="dark"] .farm-cell-timer { color: #86efac; }
-[data-theme="dark"] .farm-cell-label.farm-txt-gold { color: #fbbf24; }
-[data-theme="dark"] .farm-cell-label.farm-txt-green { color: #86efac; }
+[data-theme="dark"] .farm-cell-timer { color: #86ceac; }
+[data-theme="dark"] .farm-cell-label.farm-txt-gold { color: #e0b050; }
+[data-theme="dark"] .farm-cell-label.farm-txt-green { color: #86ceac; }
 
 /* ═══════════════════════════════════════════════════════
    🌙 전역 인라인 스타일 다크모드 오버라이드
@@ -2830,14 +2893,14 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 [data-theme="dark"] [style*="background:#ede9fe"] { background: #201530 !important; }
 [data-theme="dark"] [style*="background:#e5e7eb"] { background: #242c3a !important; }
 
-/* ── [전역] 인라인 어두운 텍스트 → 채도 있는 밝은 색 ── */
-[data-theme="dark"] [style*="color:#1f2937"] { color: #fbbf24 !important; }
-[data-theme="dark"] [style*="color:#111827"] { color: #fbbf24 !important; }
-[data-theme="dark"] [style*="color:#374151"] { color: #6ee7b7 !important; }
-[data-theme="dark"] [style*="color:#4b5563"] { color: #fb923c !important; }
-[data-theme="dark"] [style*="color:#6b7280"] { color: #c084fc !important; }
-[data-theme="dark"] [style*="color:#9ca3af"] { color: #d97706 !important; }
-[data-theme="dark"] [style*="color:#d1d5db"] { color: #fb923c !important; }
+/* ── [전역] 인라인 어두운 텍스트 → 채도 있는 밝은 색 (차분한 톤) ── */
+[data-theme="dark"] [style*="color:#1f2937"] { color: #e2e8f0 !important; }
+[data-theme="dark"] [style*="color:#111827"] { color: #e2e8f0 !important; }
+[data-theme="dark"] [style*="color:#374151"] { color: #e2e8f0 !important; }
+[data-theme="dark"] [style*="color:#4b5563"] { color: #d4a060 !important; }
+[data-theme="dark"] [style*="color:#6b7280"] { color: #b0a090 !important; }
+[data-theme="dark"] [style*="color:#9ca3af"] { color: #c0a060 !important; }
+[data-theme="dark"] [style*="color:#d1d5db"] { color: #d4a060 !important; }
 
 /* ── [전역] 인라인 보더 → 솔리드 다크 보더 ── */
 [data-theme="dark"] [style*="border-color:#e5e7eb"],
@@ -2884,9 +2947,9 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 [data-theme="dark"] [style*="background:#f0fdf4"][style*="border-radius:14px"] {
   background: #1a3a28 !important;
 }
-[data-theme="dark"] [style*="color:#15803d"] { color: #4ade80 !important; }
-[data-theme="dark"] [style*="color:#16a34a"] { color: #34d399 !important; }
-[data-theme="dark"] [style*="color:#86efac"] { color: #6ee7b7 !important; }
+[data-theme="dark"] [style*="color:#15803d"] { color: #5cb87a !important; }
+[data-theme="dark"] [style*="color:#16a34a"] { color: #5cb87a !important; }
+[data-theme="dark"] [style*="color:#86efac"] { color: #86ceac !important; }
 
 /* ── 등급 뱃지(이름 옆 작은 태그) — 8자리 hex alpha 오버라이드 ── */
 /* 레전드 #dc262615 → 진한 빨강 배경 */
@@ -2902,7 +2965,7 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 /* 농부 뱃지 */
 [data-theme="dark"] [style*="background:#ecfdf5"][style*="color:#15803d"] {
   background: #1a4a30 !important;
-  color: #6ee7b7 !important;
+  color: #86ceac !important;
 }
 
 /* ── 마이페이지 인벤토리 테두리 줄이기 ── */
@@ -2915,7 +2978,7 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
   border: none !important;
 }
 [data-theme="dark"] .ic2-name { color: #fbbf24 !important; }
-[data-theme="dark"] .ic2-held { color: #c084fc !important; }
+[data-theme="dark"] .ic2-held { color: #a889d4 !important; }
 [data-theme="dark"] .ic2-pending { color: #f59e0b !important; }
 [data-theme="dark"] .inv-empty2 { color: #4a5568 !important; }
 
@@ -2927,28 +2990,28 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 }
 
 /* ══════════════════════════════════════════════════════
-   🌙 농장 밭 칸 — 색감이 확실히 느껴지는 색상
+   🌙 농장 밭 칸 — 흙/밭 느낌의 색상
    ══════════════════════════════════════════════════════ */
 [data-theme="dark"] .farm-cell-empty {
-  background: #1a2838 !important;
-  border: 2px dashed #3a5a6a !important;
+  background: #251c14 !important;
+  border: 2px dashed #5a4030 !important;
 }
 [data-theme="dark"] .farm-cell-locked {
-  background: #10151e !important;
-  border: 1.5px solid #1a2030 !important;
+  background: #1a1410 !important;
+  border: 1.5px solid #30251a !important;
   opacity: 0.3 !important;
 }
 [data-theme="dark"] .farm-cell-growing {
-  background: #1a4a30 !important;
+  background: linear-gradient(145deg, #1a4a30, #1e3a22) !important;
   border: 2px solid #2a7a4a !important;
 }
 [data-theme="dark"] .farm-cell-ready {
-  background: #4a3a10 !important;
+  background: linear-gradient(145deg, #4a3a10, #5a4515) !important;
   border: 2px solid #8a6a18 !important;
 }
 [data-theme="dark"] .farm-cell-expand {
-  background: #1a3040 !important;
-  border: 2px dashed #3a6a5a !important;
+  background: #201810 !important;
+  border: 2px dashed #5a4530 !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2963,7 +3026,7 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 /* 농부로 전직 */
 [data-theme="dark"] [style*="background:#ecfdf5"] {
   background: #1a4a30 !important;
-  color: #6ee7b7 !important;
+  color: #86ceac !important;
   border: 1px solid #2a7a4a !important;
 }
 /* 비활성 버튼 */
@@ -3021,15 +3084,15 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
   font-size: 11px !important;
 }
 [data-theme="dark"] #sqFuseGrid > div > div[onclick] [style*="color:#9ca3af"] {
-  color: #fb923c !important;
+  color: #d4a060 !important;
   font-size: 10px !important;
 }
 [data-theme="dark"] #sqFuseGrid > div > div[onclick] [style*="color:#059669"] {
-  color: #4ade80 !important;
+  color: #5cb87a !important;
   font-size: 10px !important;
 }
 [data-theme="dark"] #sqFuseGrid > div > div[onclick] [style*="color:#7c3aed"] {
-  color: #c084fc !important;
+  color: #a889d4 !important;
   font-size: 10px !important;
 }
 /* 합성 슬롯 빈 상태 */
