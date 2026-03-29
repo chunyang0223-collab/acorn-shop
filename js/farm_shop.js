@@ -123,11 +123,11 @@ async function farmDoDeposit() {
 
     playSound('farmSell');
     toast('🌰', `${amt} 도토리 입금 완료!`);
-    if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+    // DB에서 최신 도토리 잔액 다시 로드
+    await _farmRefreshMyAcorns();
     await _farmReloadAll();
     closeModal();
     farmRenderMain();
-    // 상점이 열려있었으면 다시 상점 열기
     if (_farmShopWasOpen) { _farmShopWasOpen = false; farmShowShop(); }
   } catch (e) {
     console.error('[farm deposit]', e);
@@ -148,16 +148,27 @@ async function farmDoWithdraw() {
 
     playSound('farmBuy');
     toast('🌰', `${amt} 도토리 출금 완료!`);
-    if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+    // DB에서 최신 도토리 잔액 다시 로드
+    await _farmRefreshMyAcorns();
     await _farmReloadAll();
     closeModal();
     farmRenderMain();
-    // 상점이 열려있었으면 다시 상점 열기
     if (_farmShopWasOpen) { _farmShopWasOpen = false; farmShowShop(); }
   } catch (e) {
     console.error('[farm withdraw]', e);
     toast('❌', '출금 실패: ' + (e?.message || ''));
   }
+}
+
+// ── 상단 도토리 실시간 갱신 (DB에서 다시 가져오기) ──
+async function _farmRefreshMyAcorns() {
+  try {
+    const { data } = await sb.from('users').select('acorns').eq('id', myProfile.id).maybeSingle();
+    if (data && data.acorns !== undefined) {
+      myProfile.acorns = data.acorns;
+      if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+    }
+  } catch (e) { console.warn('[_farmRefreshMyAcorns]', e); }
 }
 
 // ================================================================
