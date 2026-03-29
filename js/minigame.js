@@ -159,11 +159,6 @@ async function renderMinigameHub() {
     roulette: `<svg viewBox="0 0 200 80" style="display:block;width:100%;border-radius:16px 16px 0 0" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="mgcasino" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5c3a12"/><stop offset="100%" stop-color="#7a4e1a"/></linearGradient><radialGradient id="mggglow" cx="50%" cy="50%"><stop offset="0%" stop-color="#ffd780" stop-opacity=".12"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><rect width="200" height="80" fill="url(#mgcasino)"/><rect width="200" height="80" fill="url(#mggglow)"/><rect x="10" y="8" width="180" height="64" rx="6" fill="none" stroke="#d4a520" stroke-width=".8" opacity=".35"/><rect x="16" y="14" width="168" height="52" rx="4" fill="none" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="10" y1="8" x2="16" y2="14" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="190" y1="8" x2="184" y2="14" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="10" y1="72" x2="16" y2="66" stroke="#d4a520" stroke-width=".4" opacity=".25"/><line x1="190" y1="72" x2="184" y2="66" stroke="#d4a520" stroke-width=".4" opacity=".25"/><circle cx="100" cy="40" r="20" fill="none" stroke="#e8b830" stroke-width="1" opacity=".25"/><circle cx="100" cy="40" r="13" fill="none" stroke="#e8b830" stroke-width=".6" opacity=".2"/><circle cx="100" cy="40" r="4" fill="#e8b830" opacity=".18"/><text x="38" y="38" font-size="16" fill="#e8b830" opacity=".2" font-weight="700" font-family="serif">♠</text><text x="158" y="38" font-size="16" fill="#e8b830" opacity=".2" font-weight="700" font-family="serif">♦</text><text x="38" y="64" font-size="14" fill="#e8b830" opacity=".15" font-weight="700" font-family="serif">♥</text><text x="158" y="64" font-size="14" fill="#e8b830" opacity=".15" font-weight="700" font-family="serif">♣</text><circle cx="30" cy="20" r="2" fill="#e8c840" opacity=".25"/><circle cx="170" cy="20" r="2" fill="#e8c840" opacity=".25"/><circle cx="30" cy="60" r="2" fill="#e8c840" opacity=".2"/><circle cx="170" cy="60" r="2" fill="#e8c840" opacity=".2"/></svg>`
   };
 
-  const _mgStyle = {
-    catch:    { card:'background:#e6f9f0;border-top:1.5px solid rgba(255,255,255,.7);border-left:1.5px solid rgba(255,255,255,.5);border-right:1.5px solid rgba(16,185,129,.15);border-bottom:5px solid rgba(4,120,87,.35);box-shadow:0 6px 0 rgba(4,120,87,.18),0 8px 16px rgba(16,185,129,.14)', active:'border-bottom-width:1px;box-shadow:0 0 0 transparent,0 1px 4px rgba(16,185,129,.1)', title:'#065f46', sub:'#047857', tagBg:'rgba(4,120,87,.08)', tagColor:'#065f46' },
-    '2048':   { card:'background:#2a1e50;border-top:1.5px solid rgba(200,160,255,.15);border-left:1.5px solid rgba(200,160,255,.1);border-right:1.5px solid rgba(160,100,255,.15);border-bottom:5px solid rgba(60,30,120,.7);box-shadow:0 6px 0 rgba(80,40,160,.3),0 8px 16px rgba(139,92,246,.2)', active:'border-bottom-width:1px;box-shadow:0 0 0 transparent,0 1px 4px rgba(139,92,246,.1)', title:'#e8d8ff', sub:'#c4b0e8', tagBg:'rgba(167,139,250,.15)', tagColor:'#d8c4f8' },
-    roulette: { card:'background:#3d2810;border-top:1.5px solid rgba(255,200,80,.18);border-left:1.5px solid rgba(255,200,80,.12);border-right:1.5px solid rgba(220,160,60,.2);border-bottom:5px solid rgba(140,80,15,.6);box-shadow:0 6px 0 rgba(120,65,10,.3),0 8px 16px rgba(220,160,50,.15)', active:'border-bottom-width:1px;box-shadow:0 0 0 transparent,0 1px 4px rgba(220,160,50,.08)', title:'#fad080', sub:'#d8b060', tagBg:'rgba(232,184,48,.12)', tagColor:'#f0c868' }
-  };
 
   grid.innerHTML = MINIGAMES.map(g => {
     const pLimit    = getPlayLimit(g.id);
@@ -179,7 +174,6 @@ async function renderMinigameHub() {
     const unlimited = getMgSetting(g.id, 'unlimitedPlays');
     const exhausted = !unlimited && pRemain <= 0 && g.ready;
     const blocked   = !g.ready || maint || exhausted;
-    const s = _mgStyle[g.id] || _mgStyle.catch;
     const svg = _mgSvg[g.id] || '';
 
     // overlay for blocked states
@@ -199,21 +193,21 @@ async function renderMinigameHub() {
       countTags.push(`🎮 ${pRemain}/${pLimit}`);
       if (g.id !== '2048') countTags.push(`🌰 ${rRemain}/${rLimit}`);
     }
-    const _tagSpan = t => `<span style="font-size:10px;padding:2px 7px;border-radius:6px;background:${s.tagBg};color:${s.tagColor};font-weight:600">${t}</span>`;
+    const _tagSpan = t => `<span class="mg-tag mg-tag-${g.id}">${t}</span>`;
     const tagsHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap">${infoTags.map(_tagSpan).join('')}</div>`
       + (countTags.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${countTags.map(_tagSpan).join('')}</div>` : '');
 
     return `
-    <div style="position:relative;border-radius:16px;overflow:hidden;cursor:${blocked?'default':'pointer'};${s.card};transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent"
-         class="mg-hub-card ${blocked ? 'mg-hub-blocked' : 'mg-hub-active'}"
+    <div style="position:relative;cursor:${blocked?'default':'pointer'}"
+         class="mg-card mg-card-${g.id} ${blocked ? '' : 'active'} ${blocked ? 'mg-hub-blocked' : 'mg-hub-active'}"
          ${!blocked ? `onclick="startMinigame('${g.id}')"` : ''}>
       ${overlayHtml}
       ${svg}
       <div style="padding:12px 14px 11px">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
-          <span style="font-size:13.5px;font-weight:700;color:${s.title}">${g.name}</span>
+          <span class="mg-card-title-${g.id}" style="font-size:13.5px;font-weight:700">${g.name}</span>
         </div>
-        <p style="font-size:11px;color:${s.sub};margin:0 0 7px;line-height:1.3">${g.desc}</p>
+        <p class="mg-card-sub-${g.id}" style="font-size:11px;margin:0 0 7px;line-height:1.3">${g.desc}</p>
         ${tagsHtml}
       </div>
     </div>`;

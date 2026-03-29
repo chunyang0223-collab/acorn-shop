@@ -465,7 +465,7 @@ async function sqRenderGrid() {
 
   const filterBtn = (val, label) => {
     const active = filter === val;
-    return `<button onclick="window._sqFilter='${val}';sqRenderGrid()" style="padding:5px 14px;border-radius:20px;border:1.5px solid ${active ? '#f59e0b' : '#e5e7eb'};background:${active ? '#fef3c7' : 'white'};color:${active ? '#92400e' : '#6b7280'};font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s">${label}</button>`;
+    return `<button onclick="window._sqFilter='${val}';sqRenderGrid()" class="sq-filter-btn ${active ? 'active' : ''}">${label}</button>`;
   };
 
   const filterHTML = `<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
@@ -1026,9 +1026,8 @@ async function sqFeedSquirrel(id) {
     // 게이지 업데이트
     const gauge = document.getElementById('sqGauge-' + id);
     if (gauge) {
-      gauge.style.background = isGood
-        ? 'linear-gradient(90deg,#fbbf24,#f59e0b,#10b981)'
-        : 'linear-gradient(90deg,#fb923c,#f97316)';
+      gauge.classList.remove('sq-gauge-good', 'sq-gauge-bad');
+      gauge.classList.add(isGood ? 'sq-gauge-good' : 'sq-gauge-bad');
       requestAnimationFrame(() => { gauge.style.width = newPct + '%'; });
     }
 
@@ -1407,15 +1406,19 @@ async function sqStartExpeditionFlow() {
 
 function sqToggleExpSelect(id) {
   const idx = window._sqExpSelected.indexOf(id);
+  const cardEl = document.getElementById('expcard-' + id);
+  const checkEl = document.getElementById('expcheck-' + id);
   if (idx >= 0) {
     window._sqExpSelected.splice(idx, 1);
-    document.getElementById('expcard-' + id).style.borderColor = 'transparent';
-    document.getElementById('expcheck-' + id).textContent = '⬜';
+    cardEl?.classList.remove('exp-card-selected');
+    cardEl?.classList.add('exp-card-deselected');
+    if (checkEl) checkEl.textContent = '⬜';
   } else {
     if (window._sqExpSelected.length >= 3) { toast('⚠️','최대 3마리까지 선택할 수 있어요'); return; }
     window._sqExpSelected.push(id);
-    document.getElementById('expcard-' + id).style.borderColor = '#3b82f6';
-    document.getElementById('expcheck-' + id).textContent = '✅';
+    cardEl?.classList.remove('exp-card-deselected');
+    cardEl?.classList.add('exp-card-selected');
+    if (checkEl) checkEl.textContent = '✅';
   }
 }
 
@@ -1480,13 +1483,25 @@ function sqFuseRenderSlots() {
           <div style="font-size:10px;font-weight:800;color:${gs.color}">${gs.label}</div>
           <div style="font-size:9px;font-weight:700;color:${sq.status==='explorer'?'#059669':'#7c3aed'};margin-top:1px">${sq.status==='explorer'?'탐험형':'애완형'}</div>
         </div>`;
-      slot.style.border = '3px solid ' + gs.color;
-      slot.style.background = gs.bg;
+      // Add filled and grade-specific classes
+      slot.classList.remove('fuse-slot-empty', 'fuse-slot-picking', 'fuse-slot-common', 'fuse-slot-rare', 'fuse-slot-epic', 'fuse-slot-legend');
+      slot.classList.add('fuse-slot-filled');
+      switch(grade) {
+        case 'legend': slot.classList.add('fuse-slot-legend'); break;
+        case 'epic': slot.classList.add('fuse-slot-epic'); break;
+        case 'rare': slot.classList.add('fuse-slot-rare'); break;
+        default: slot.classList.add('fuse-slot-common');
+      }
     } else {
       const isPicking = _sqFuseSlotPicking === i;
-      slot.innerHTML = `<span style="font-size:32px;color:${isPicking ? '#f59e0b' : '#d1d5db'}">＋</span>`;
-      slot.style.border = isPicking ? '3px solid #f59e0b' : '3px dashed #d1d5db';
-      slot.style.background = isPicking ? '#fffbeb' : '#f9fafb';
+      slot.innerHTML = `<span style="font-size:32px">${isPicking ? '⏳' : '＋'}</span>`;
+      // Remove filled and grade classes
+      slot.classList.remove('fuse-slot-filled', 'fuse-slot-common', 'fuse-slot-rare', 'fuse-slot-epic', 'fuse-slot-legend');
+      if (isPicking) {
+        slot.classList.add('fuse-slot-picking');
+      } else {
+        slot.classList.add('fuse-slot-empty');
+      }
     }
   }
 

@@ -895,9 +895,10 @@ function _btlBuildParty() {
 }
 
 function _btlHpColor(pct) {
-  return pct <= 20 ? 'linear-gradient(90deg,#d42020,#f03838)'
-       : pct <= 50 ? 'linear-gradient(90deg,#c88c10,#ecc028)'
-                   : 'linear-gradient(90deg,#1ea81e,#4edf4e)';
+  // Returns the appropriate HP bar class based on percentage
+  if (pct <= 20) return 'hp-bar-low';
+  if (pct <= 50) return 'hp-bar-mid';
+  return 'hp-bar-high';
 }
 
 function _btlRender() {
@@ -905,7 +906,12 @@ function _btlRender() {
   // 몬스터 HP
   var mpct = b.mon.hp / b.mon.maxHp * 100;
   var mb = document.getElementById('btlMHpBar');
-  if (mb) { mb.style.width = mpct + '%'; mb.style.background = _btlHpColor(mpct); }
+  if (mb) {
+    mb.style.width = mpct + '%';
+    var hpClass = _btlHpColor(mpct);
+    mb.classList.remove('hp-bar-low', 'hp-bar-mid', 'hp-bar-high');
+    mb.classList.add(hpClass);
+  }
   var mt = document.getElementById('btlMHpTxt');
   if (mt) mt.textContent = b.mon.hp + '/' + b.mon.maxHp;
 
@@ -913,7 +919,12 @@ function _btlRender() {
   b.party.forEach(function(p, i) {
     var pct = Math.max(0, p.hp / p.maxHp * 100);
     var bar = document.getElementById('btlPhp' + i);
-    if (bar) { bar.style.width = pct + '%'; bar.style.background = _btlHpColor(pct); }
+    if (bar) {
+      bar.style.width = pct + '%';
+      var hpClass = _btlHpColor(pct);
+      bar.classList.remove('hp-bar-low', 'hp-bar-mid', 'hp-bar-high');
+      bar.classList.add(hpClass);
+    }
     var txt = document.getElementById('btlPhp' + i + 'txt');
     if (txt) txt.textContent = Math.max(0, p.hp) + '/' + p.maxHp;
     var card = document.getElementById('btlPc' + i);
@@ -957,7 +968,7 @@ function _btlUpdateSpBtn() {
 function _btlFlash(col) {
   var f = document.getElementById('btlFlash');
   if (!f) return;
-  f.style.background = col;
+  f.style.setProperty('--flash-color', col);
   f.style.opacity = '.55';
   setTimeout(function() { f.style.opacity = '0'; }, 90);
 }
@@ -972,6 +983,7 @@ function _btlPopNum(txt, targetId, col) {
   d.className = 'btl-pop';
   d.style.left = (er.left - wr.left + er.width / 2 - 18) + 'px';
   d.style.top = (er.top - wr.top + 12) + 'px';
+  d.style.setProperty('--dmg-color', col);
   d.style.color = col;
   d.textContent = txt;
   wrap.appendChild(d);
@@ -1419,7 +1431,8 @@ function _btlSelectCard(idx) {
   var hint = document.getElementById('btlCardHint');
   if (hint) {
     hint.textContent = r.grade + '등급 획득! ' + _btlRewardText(r);
-    hint.style.color = r.grade === 'A' ? '#f0c040' : r.grade === 'B' ? '#60a8f0' : '#60c060';
+    var gradeClass = r.grade === 'A' ? 'grade-text-a' : r.grade === 'B' ? 'grade-text-b' : 'grade-text-c';
+    hint.className = gradeClass;
   }
   _btl.loot.acorns += r.acorns;
   if (r.item) _btl.loot.items.push(r.item);

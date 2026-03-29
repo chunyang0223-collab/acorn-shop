@@ -58,7 +58,8 @@ function toggleTheme() {
     const left  = (Math.random() * 100).toFixed(1) + 'vw';
     const blur  = (Math.random() * 0.8).toFixed(1) + 'px';       // 0~0.8px 번짐
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    el.style.cssText = `width:${size}px;height:${size}px;top:${top};left:${left};--peak:${peak};--dur:${dur};--delay:${delay};filter:blur(${blur});background:${color}`;
+    el.style.cssText = `width:${size}px;height:${size}px;top:${top};left:${left};--peak:${peak};--dur:${dur};--delay:${delay};filter:blur(${blur});--particle-color:${color}`;
+    el.style.background = `var(--particle-color)`;
     document.body.appendChild(el);
   }
 })();

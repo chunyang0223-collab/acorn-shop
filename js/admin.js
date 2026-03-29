@@ -350,12 +350,11 @@ async function renderQuestAdmin() {
   const pendingCount = qcrs?.length || 0;
   // 대기 건수에 따라 카드 강조
   if (apCard) {
-    apCard.style.border = pendingCount > 0 ? '2px solid rgba(236,72,153,0.5)' : '';
-    apCard.style.background = pendingCount > 0 ? 'rgba(253,242,248,0.8)' : '';
+    apCard.classList.toggle('adm-pending-highlight', pendingCount > 0);
   }
   if (apTitle) {
     apTitle.textContent = pendingCount > 0 ? `✋ 완료 승인 요청 (${pendingCount}건 대기중)` : '✋ 완료 승인 요청';
-    apTitle.style.color = pendingCount > 0 ? '#be185d' : '';
+    apTitle.classList.toggle('adm-pending-text', pendingCount > 0);
   }
   apEl.innerHTML = qcrs?.length
     ? qcrs.map(r => `<div class="p-4 rounded-2xl bg-pink-50 border border-pink-100 flex flex-col gap-2">
@@ -592,8 +591,8 @@ async function renderTxLog() {
   // 사용자 버튼 목록
   window._logUsers = users;
   btnList.innerHTML = users.map(u => `
-    <button id="logBtn-${u.id}" onclick="selectLogUser('${u.id}')"
-      style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;border:1.5px solid rgba(200,180,240,0.3);background:rgba(255,255,255,0.7);font-family:'Jua',sans-serif;font-size:13px;color:#4b3060;cursor:pointer;transition:all .15s;flex-shrink:0;white-space:nowrap">
+    <button id="logBtn-${u.id}" onclick="selectLogUser('${u.id}')" class="adm-log-tab"
+      style="display:flex;align-items:center;gap:6px;font-family:'Jua',sans-serif;font-size:13px;flex-shrink:0;white-space:nowrap">
       <span>${u.avatar_emoji || '🐿️'}</span>
       <span>${u.display_name}</span>
       <span style="font-size:11px;color:#a78bfa">🌰${u.acorns||0}</span>
@@ -605,15 +604,11 @@ async function renderTxLog() {
 function selectLogUser(uid) {
   // 버튼 활성화 표시
   document.querySelectorAll('[id^="logBtn-"]').forEach(b => {
-    b.style.background = 'rgba(255,255,255,0.7)';
-    b.style.borderColor = 'rgba(200,180,240,0.3)';
-    b.style.color = '#4b3060';
+    b.classList.remove('active');
   });
   const activeBtn = document.getElementById('logBtn-' + uid);
   if (activeBtn) {
-    activeBtn.style.background = 'linear-gradient(135deg,#ff8fab,#c084fc)';
-    activeBtn.style.borderColor = 'transparent';
-    activeBtn.style.color = '#fff';
+    activeBtn.classList.add('active');
   }
 
   // 카드 렌더 (날짜 인덱스 리셋, 캐시는 유지)

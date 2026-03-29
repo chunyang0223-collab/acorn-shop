@@ -295,7 +295,8 @@ function renderEventAdmin() {
     const statusEl = document.getElementById(`${type}EventStatus`);
     if (!statusEl) return;
 
-    let text = '비활성', bg = '#fee2e2', color = '#b91c1c';
+    let text = '비활성';
+    let statusClass = 'evt-status-inactive';
     let evActive = false;
 
     // 기간 이벤트 상태
@@ -305,13 +306,13 @@ function renderEventAdmin() {
       if (started && notEnded) {
         evActive = true;
         text = `✅ 활성 ${ev.discountPct}%`;
-        bg = '#dcfce7'; color = '#166534';
+        statusClass = 'evt-status-active';
         if (ev.endAt) {
           text += ` (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.endAt - now)}</span> 남음)`;
         }
       } else if (ev.startAt && now < ev.startAt) {
         text = `⏳ 예약 ${ev.discountPct}% (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.startAt - now)}</span> 후 시작)`;
-        bg = '#fef9c3'; color = '#854d0e';
+        statusClass = 'evt-status-scheduled';
       }
     }
 
@@ -319,16 +320,19 @@ function renderEventAdmin() {
     if (!evActive) {
       const disc = getActiveEventDiscount(type);
       if (disc > 0) {
-        text = `✅ 요일반복 ${disc}% 활성`; bg = '#dcfce7'; color = '#166534';
+        text = `✅ 요일반복 ${disc}% 활성`;
+        statusClass = 'evt-status-active';
       } else {
         const hasRepeat = _repeats.some(r => r.active && r.type === type);
-        if (hasRepeat) { text = '📆 요일반복 대기'; bg = '#fef9c3'; color = '#854d0e'; }
+        if (hasRepeat) {
+          text = '📆 요일반복 대기';
+          statusClass = 'evt-status-scheduled';
+        }
       }
     }
 
     statusEl.innerHTML = text;
-    statusEl.style.background = bg;
-    statusEl.style.color = color;
+    statusEl.className = 'evt-status ' + statusClass;
   });
 
   // 활성 배너

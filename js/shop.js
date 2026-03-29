@@ -124,13 +124,15 @@ function updatePurchasePrice(originalPrice, evtDiscountedBase) {
   const canAfford = myAcorns >= finalPrice;
   if (label) {
     label.textContent = `최종 결제: 🌰 ${finalPrice}${pct > 0 ? ` (쿠폰 ${pct}% 추가 할인)` : ''}`;
-    label.style.color = canAfford ? '#059669' : '#dc2626';
+    label.classList.toggle('price-affordable', canAfford);
+    label.classList.toggle('price-unaffordable', !canAfford);
   }
   // 보유 도토리 상태 텍스트 업데이트
   const acornStatus = label?.nextElementSibling;
   if (acornStatus && acornStatus.tagName === 'P') {
     acornStatus.textContent = `보유 도토리: 🌰 ${myAcorns}`;
-    acornStatus.style.color = canAfford ? '#6b7280' : '#dc2626';
+    acornStatus.classList.toggle('price-affordable', canAfford);
+    acornStatus.classList.toggle('price-unaffordable', !canAfford);
   }
   window._purchaseBasePrice = finalPrice;
   window._selectedCouponId = (sel && sel.value) ? sel.value : null;
