@@ -218,6 +218,13 @@ function farmRenderDepositBadge() {
 // ================================================================
 //  밭 그리드 (3x3) — 픽셀아트
 // ================================================================
+// 작물별 풀잎 색상 클래스 매핑 (5가지 돌려가며 사용)
+const _farmCropColorClasses = ['crop-green', 'crop-lime', 'crop-deep', 'crop-olive', 'crop-teal'];
+function _farmGetCropColorClass(cropId) {
+  if (!cropId) return 'crop-green';
+  return _farmCropColorClasses[(cropId - 1) % _farmCropColorClasses.length];
+}
+
 function farmRenderFieldGrid() {
   const plotCount = _farmData?.plot_count || 1;
   const maxPlots = _farmSettings.max_plots || 9;
@@ -240,29 +247,16 @@ function farmRenderFieldGrid() {
         const isGrowing = !ready && remaining > 0;
         const alreadyAccelerated = !!plot.accelerated;
         const alreadyNourished = !!plot.nourished;
-        let itemBtns = '';
-        if (isGrowing) {
-          itemBtns += `<div class="farm-cell-item-btns">`;
-          if (hasAcc && !alreadyAccelerated) {
-            itemBtns += `<div onclick="event.stopPropagation();farmUseAccelerator(${i})" class="farm-cell-item-btn farm-cell-item-btn-acc" title="촉진제">⚡</div>`;
-          } else if (alreadyAccelerated) {
-            itemBtns += `<div class="farm-cell-item-btn farm-cell-item-btn-used" title="이미 사용됨">⚡</div>`;
-          }
-          if (hasNut && !alreadyNourished) {
-            itemBtns += `<div onclick="event.stopPropagation();farmUseNutrient(${i})" class="farm-cell-item-btn farm-cell-item-btn-nut" title="영양제">🧪</div>`;
-          } else if (alreadyNourished) {
-            itemBtns += `<div class="farm-cell-item-btn farm-cell-item-btn-used" title="이미 사용됨">🧪</div>`;
-          }
-          itemBtns += `</div>`;
-        }
-        const cellClass = ready ? 'farm-cell farm-cell-ready farm-cell-clickable' : 'farm-cell farm-cell-growing';
+        // 촉진제/영양제 상태를 data attribute로 저장 (팝업에서 사용)
+        const cropColor = _farmGetCropColorClass(plot.crop_id);
+        const cellClass = ready ? 'farm-cell farm-cell-ready farm-cell-clickable' : `farm-cell farm-cell-growing ${cropColor} farm-cell-clickable`;
+        const growingClick = isGrowing ? `onclick="farmShowCropPopup(${i})"` : '';
         gridHtml += `
-          <div id="farm-cell-${i}" class="${cellClass}" data-harvest="${plot.harvest_at || ''}" ${ready ? `onclick="farmHarvest(${i})"` : ''}>
+          <div id="farm-cell-${i}" class="${cellClass}" data-harvest="${plot.harvest_at || ''}" data-acc="${alreadyAccelerated?1:0}" data-nut="${alreadyNourished?1:0}" data-has-acc="${hasAcc?1:0}" data-has-nut="${hasNut?1:0}" ${ready ? `onclick="farmHarvest(${i})"` : growingClick}>
             <div class="farm-cell-emoji">${crop?.emoji || '🌱'}</div>
             <div id="farm-cell-label-${i}" class="farm-cell-label ${ready ? 'farm-txt-gold' : 'farm-txt-green'}">${ready ? '수확!' : (crop?.name || '')}</div>
             <div id="farm-cell-timer-${i}" class="farm-cell-timer">${!ready && remainStr ? remainStr : ''}</div>
             ${myProfile?.is_admin ? `<div id="farm-cell-skip-${i}" onclick="event.stopPropagation();farmAdminSkipGrow(${i})" style="position:absolute;top:1px;right:1px;font-size:7px;background:#ef4444;color:white;border-radius:4px;padding:1px 3px;cursor:pointer;font-weight:800;opacity:0.8;display:${ready ? 'none' : 'block'}">⏩</div>` : ''}
-            ${itemBtns}
           </div>`;
       } else {
         gridHtml += `
@@ -287,8 +281,11 @@ function farmRenderFieldGrid() {
   }
 
   return `
-    <div class="farm-field-grid">
-      ${gridHtml}
+    <div class="farm-field-wrap">
+      <div class="farm-field-label">🌱 나의 밭</div>
+      <div class="farm-field-grid">
+        ${gridHtml}
+      </div>
     </div>`;
 }
 
@@ -450,4 +447,87 @@ function _farmFmtTime(ms) {
 
 function _farmClearTimer() {
   if (_farmTimer) { clearInterval(_farmTimer); _farmTimer = null; }
+}
+
+// ================================================================
+//  작물 클릭 팝업 (촉진제/영양제 사용)
+// ================================================================
+function farmShowCropPopup(slot) {
+  const plot = _farmPlots.find(p => p.slot === slot);
+  if (!plot || !plot.crop_id) return;
+  const crop = _farmCrops.find(c => c.id === plot.crop_id);
+  const accInv = (_farmInventory || []).find(iv => iv.item_type === 'accelerator');
+  const nutInv = (_farmInventory || []).find(iv => iv.item_type === 'nutrient');
+  const hasAcc = accInv && accInv.quantity > 0;
+  const hasNut = nutInv && nutInv.quantity > 0;
+  const alreadyAcc = !!plot.accelerated;
+  const alreadyNut = !!plot.nourished;
+
+  // 촉진제 버튼
+  let accBtn = '';
+  if (alreadyAcc) {
+    accBtn = `<div class="farm-crop-popup-btn farm-crop-popup-btn-used">
+      <span class="farm-crop-popup-btn-icon">⚡</span>
+      <span class="farm-crop-popup-btn-label">촉진제</span>
+      <span class="farm-crop-popup-btn-qty">사용 완료</span>
+    </div>`;
+  } else if (hasAcc) {
+    accBtn = `<div class="farm-crop-popup-btn farm-crop-popup-btn-acc" onclick="event.stopPropagation();farmCloseCropPopup();farmUseAccelerator(${slot})">
+      <span class="farm-crop-popup-btn-icon">⚡</span>
+      <span class="farm-crop-popup-btn-label">촉진제</span>
+      <span class="farm-crop-popup-btn-qty">보유 ${accInv.quantity}개</span>
+    </div>`;
+  } else {
+    accBtn = `<div class="farm-crop-popup-btn farm-crop-popup-btn-used">
+      <span class="farm-crop-popup-btn-icon">⚡</span>
+      <span class="farm-crop-popup-btn-label">촉진제</span>
+      <span class="farm-crop-popup-btn-qty">없음</span>
+    </div>`;
+  }
+
+  // 영양제 버튼
+  let nutBtn = '';
+  if (alreadyNut) {
+    nutBtn = `<div class="farm-crop-popup-btn farm-crop-popup-btn-used">
+      <span class="farm-crop-popup-btn-icon">🧪</span>
+      <span class="farm-crop-popup-btn-label">영양제</span>
+      <span class="farm-crop-popup-btn-qty">사용 완료</span>
+    </div>`;
+  } else if (hasNut) {
+    nutBtn = `<div class="farm-crop-popup-btn farm-crop-popup-btn-nut" onclick="event.stopPropagation();farmCloseCropPopup();farmUseNutrient(${slot})">
+      <span class="farm-crop-popup-btn-icon">🧪</span>
+      <span class="farm-crop-popup-btn-label">영양제</span>
+      <span class="farm-crop-popup-btn-qty">보유 ${nutInv.quantity}개</span>
+    </div>`;
+  } else {
+    nutBtn = `<div class="farm-crop-popup-btn farm-crop-popup-btn-used">
+      <span class="farm-crop-popup-btn-icon">🧪</span>
+      <span class="farm-crop-popup-btn-label">영양제</span>
+      <span class="farm-crop-popup-btn-qty">없음</span>
+    </div>`;
+  }
+
+  const remaining = plot.harvest_at ? Math.max(0, new Date(plot.harvest_at) - Date.now()) : 0;
+  const remainStr = _farmFmtTime(remaining);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'farm-crop-popup-overlay';
+  overlay.id = 'farmCropPopupOverlay';
+  overlay.onclick = (e) => { if (e.target === overlay) farmCloseCropPopup(); };
+  overlay.innerHTML = `
+    <div class="farm-crop-popup">
+      <div class="farm-crop-popup-title">${crop?.emoji || '🌱'} ${crop?.name || '작물'}</div>
+      <div class="farm-crop-popup-sub">남은 시간: ${remainStr}</div>
+      <div class="farm-crop-popup-btns">
+        ${accBtn}
+        ${nutBtn}
+      </div>
+      <button class="farm-crop-popup-close" onclick="farmCloseCropPopup()">닫기</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function farmCloseCropPopup() {
+  const overlay = document.getElementById('farmCropPopupOverlay');
+  if (overlay) overlay.remove();
 }
