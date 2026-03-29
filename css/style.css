@@ -2636,7 +2636,7 @@ body {
 .farm-shop-btn:hover { transform: scale(1.05); }
 .farm-shop-btn:active { transform: scale(0.92); }
 .farm-shop-btn::after { content: '🏪'; font-size: 14px; }
-.farm-shop-lbl { font-size: 8px; font-weight: 800; color: #fff; }
+.farm-shop-lbl { font-size: 11px; font-weight: 800; color: #fff; }
 
 /* ── 밭 그리드 ── */
 .farm-field-grid {
@@ -2656,8 +2656,8 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 .farm-cell-growing { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border: 1.5px solid #86efac; }
 .farm-cell-ready { background: linear-gradient(135deg,#fef9c3,#fef3c7); border: 1.5px solid #fbbf24; animation: farm-cell-pulse 1.2s ease-in-out infinite; }
 .farm-cell-empty { background: rgba(0,0,0,.015); border: 1.5px dashed rgba(0,0,0,.07); }
-.farm-cell-locked { background: rgba(0,0,0,.015); border: 1.5px solid rgba(0,0,0,.04); opacity: .22; }
-.farm-cell-expand { background: rgba(0,0,0,.015); border: 1.5px dashed rgba(0,0,0,.07); cursor: pointer; opacity: 0.5; }
+.farm-cell-locked { background: rgba(0,0,0,.015); border: 1.5px solid rgba(0,0,0,.04); opacity: .4; }
+.farm-cell-expand { background: rgba(0,0,0,.015); border: 1.5px dashed rgba(0,0,0,.07); cursor: pointer; }
 .farm-cell-expand:active { transform: scale(0.94); }
 
 @keyframes farm-cell-pulse {
@@ -2666,9 +2666,9 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 }
 
 /* ── 밭 셀 내부 ── */
-.farm-cell-emoji { font-size: 18px; line-height: 1; }
-.farm-cell-label { font-size: 7px; font-weight: 700; margin-top: 1px; font-family: 'Pretendard', sans-serif; }
-.farm-cell-timer { font-size: 6px; font-weight: 600; margin-top: 1px; font-family: 'Pretendard', sans-serif; }
+.farm-cell-emoji { font-size: 30px; line-height: 1; }
+.farm-cell-label { font-size: 11px; font-weight: 700; margin-top: 2px; font-family: 'Pretendard', sans-serif; }
+.farm-cell-timer { font-size: 10px; font-weight: 600; margin-top: 1px; font-family: 'Pretendard', sans-serif; }
 
 .farm-cell-item-btns { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
 .farm-cell-item-btn { font-size: 11px; line-height: 1; padding: 2px 4px; border-radius: 5px; cursor: pointer; font-weight: 800; border: none; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
@@ -2682,7 +2682,7 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
   background: rgba(255,255,255,.45); border: 1px solid rgba(0,0,0,.04);
 }
 .farm-inv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
-.farm-inv-header-right { font-size: 8px; font-weight: 700; color: #374151; font-family: 'Pretendard', sans-serif; display: flex; align-items: center; gap: 4px; }
+.farm-inv-header-right { font-size: 11px; font-weight: 700; color: #374151; font-family: 'Pretendard', sans-serif; display: flex; align-items: center; gap: 4px; }
 .farm-inv-grid { display: flex; flex-wrap: wrap; gap: 4px; }
 .farm-inv-slot {
   width: 50px; height: 50px; border-radius: 10px;
@@ -2692,15 +2692,15 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 .farm-inv-slot-seed { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border: 1.5px solid #86efac; }
 .farm-inv-slot-harvest { background: linear-gradient(135deg,#fef9c3,#fef3c7); border: 1.5px solid #fbbf24; }
 .farm-inv-slot-empty { background: rgba(0,0,0,.01); border: 1.5px dashed rgba(0,0,0,.07); }
-.farm-inv-slot-expand { background: rgba(0,0,0,.01); border: 1.5px dashed rgba(0,0,0,.07); cursor: pointer; opacity: 0.6; }
+.farm-inv-slot-expand { background: rgba(0,0,0,.01); border: 1.5px dashed rgba(0,0,0,.07); cursor: pointer; }
 .farm-inv-slot-expand:active { transform: scale(0.92); }
 
 .farm-inv-qty {
   position: absolute; bottom: -2px; right: -2px;
   min-width: 13px; height: 13px; border-radius: 7px;
-  font-size: 6px; font-weight: 900; color: #fff;
+  font-size: 9px; font-weight: 900; color: #fff;
   display: flex; align-items: center; justify-content: center;
-  padding: 0 2px; font-family: 'Pretendard', sans-serif;
+  padding: 0 3px; font-family: 'Pretendard', sans-serif;
   background: #16a34a; border: 1.5px solid #fff;
 }
 .farm-inv-slot-harvest .farm-inv-qty { background: #d97706; }
@@ -2709,14 +2709,14 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 .farm-csm-tag {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 2px 7px; border-radius: 8px;
-  font-size: 9px; font-weight: 800;
+  font-size: 11px; font-weight: 800;
 }
 .farm-csm-acc { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
 .farm-csm-nut { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
 
 /* ── 섹션 제목 ── */
 .farm-section-title {
-  font-family: 'Pretendard', sans-serif; font-size: 10px; font-weight: 900;
+  font-family: 'Pretendard', sans-serif; font-size: 13px; font-weight: 900;
   color: #374151; display: flex; align-items: center; gap: 4px;
 }
 
@@ -2753,8 +2753,8 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 [data-theme="dark"] .farm-cell-growing { background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.25); }
 [data-theme="dark"] .farm-cell-ready { background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.28); }
 [data-theme="dark"] .farm-cell-empty { background: rgba(255,255,255,.015); border: 1.5px dashed rgba(255,255,255,.07); }
-[data-theme="dark"] .farm-cell-locked { background: rgba(255,255,255,.015); border: 1.5px solid rgba(255,255,255,.03); opacity: .22; }
-[data-theme="dark"] .farm-cell-expand { background: rgba(255,255,255,.015); border: 1.5px dashed rgba(255,255,255,.07); opacity: 0.5; }
+[data-theme="dark"] .farm-cell-locked { background: rgba(255,255,255,.02); border: 1.5px solid rgba(255,255,255,.06); opacity: .4; }
+[data-theme="dark"] .farm-cell-expand { background: rgba(255,255,255,.02); border: 1.5px dashed rgba(255,255,255,.1); }
 
 [data-theme="dark"] .farm-inv-wrap { background: rgba(255,255,255,.025); border-color: rgba(255,255,255,.05); }
 [data-theme="dark"] .farm-inv-header-right { color: #fbbf24; }
@@ -2780,3 +2780,87 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 [data-theme="dark"] .farm-cell-timer { color: #86efac; }
 [data-theme="dark"] .farm-cell-label.farm-txt-gold { color: #fbbf24; }
 [data-theme="dark"] .farm-cell-label.farm-txt-green { color: #86efac; }
+
+/* ═══════════════════════════════════════════════════════
+   🐿️ 다람쥐 카드 / 합성 탭 — 다크모드 오버라이드
+   (인라인 background:white 등을 !important로 덮어씀)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── 다람쥐 카드 본체 ── */
+[data-theme="dark"] [id^="sqCard-"] {
+  background: rgba(30,41,59,.85) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,.35) !important;
+}
+
+/* ── 다람쥐 스탯 박스 (HP/공격/방어) ── */
+[data-theme="dark"] [id^="sqCard-"] div[style*="background:#f9fafb"] {
+  background: rgba(255,255,255,.06) !important;
+}
+
+/* ── 먹이 영역 (초록 배경) ── */
+[data-theme="dark"] [id^="sqCard-"] div[style*="background:#f0fdf4"] {
+  background: rgba(34,197,94,.08) !important;
+  color: #86efac !important;
+}
+
+/* ── 회복/수습 영역 (노란 배경) ── */
+[data-theme="dark"] [id^="sqCard-"] div[style*="background:#fef3c7"] {
+  background: rgba(245,158,11,.1) !important;
+  color: #fbbf24 !important;
+}
+
+/* ── 먹이 +/- 버튼 ── */
+[data-theme="dark"] [id^="sqCard-"] button[style*="background:#fffbeb"] {
+  background: rgba(245,158,11,.15) !important;
+  border-color: rgba(253,230,138,.25) !important;
+  color: #fbbf24 !important;
+}
+
+/* ── 합성 탭: 다람쥐 선택 카드 ── */
+[data-theme="dark"] [id^="expcard-"] {
+  background: rgba(30,41,59,.85) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,.3) !important;
+}
+
+/* ── 합성 탭: 합성 가능 목록 카드 ── */
+[data-theme="dark"] #sqSynthGrid div[style*="background:white"] {
+  background: rgba(30,41,59,.85) !important;
+}
+
+/* ── 농장 상점/심기 모달 내 흰색 카드들 ── */
+[data-theme="dark"] .modal-box div[style*="background:white"] {
+  background: rgba(30,41,59,.85) !important;
+}
+
+/* ── 다람쥐 카드 내 어두운 텍스트 → 밝게 ── */
+[data-theme="dark"] [id^="sqCard-"] div[style*="color:#1f2937"],
+[data-theme="dark"] [id^="expcard-"] div[style*="color:#1f2937"] {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] [id^="sqCard-"] span[style*="color:#6b7280"],
+[data-theme="dark"] [id^="sqCard-"] div[style*="color:#6b7280"],
+[data-theme="dark"] [id^="sqCard-"] p[style*="color:#6b7280"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] [id^="sqCard-"] div[style*="color:#374151"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] [id^="sqCard-"] div[style*="color:#4b5563"] {
+  color: #94a3b8 !important;
+}
+
+/* ── 합성 탭 내 텍스트 ── */
+[data-theme="dark"] #sqSynthGrid div[style*="color:#1f2937"] {
+  color: #e2e8f0 !important;
+}
+
+/* ── 펫샵에 팔기 버튼 (분홍 배경) ── */
+[data-theme="dark"] [id^="sqCard-"] div[style*="background:#fef2f2"],
+[data-theme="dark"] [id^="sqCard-"] button[style*="background:#fef2f2"] {
+  background: rgba(239,68,68,.12) !important;
+}
+
+/* ── 아기 다람쥐 이미지 배경 ── */
+[data-theme="dark"] [id^="sqCard-"] img[style*="background:#fff8f0"] {
+  background: rgba(255,248,240,.1) !important;
+}
