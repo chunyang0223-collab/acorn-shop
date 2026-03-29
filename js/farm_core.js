@@ -58,6 +58,19 @@ async function farmAdminLoadSettingsUI() {
   set('farmSet_acceleratorPct', s.accelerator_pct ?? 50);
   set('farmSet_nutrientCost', s.nutrient_cost ?? 5);
   set('farmSet_nutrientBumperBoost', s.nutrient_bumper_boost ?? 20);
+  // 등급별 버프
+  set('farmSet_gradeRareBumper', s.grade_rare_bumper ?? 0);
+  set('farmSet_gradeRarePoor', s.grade_rare_poor ?? 12);
+  set('farmSet_gradeRareGrow', s.grade_rare_grow ?? 0);
+  set('farmSet_gradeEpicBumper', s.grade_epic_bumper ?? 10);
+  set('farmSet_gradeEpicPoor', s.grade_epic_poor ?? 20);
+  set('farmSet_gradeEpicGrow', s.grade_epic_grow ?? 5);
+  set('farmSet_gradeUniqueBumper', s.grade_unique_bumper ?? 20);
+  set('farmSet_gradeUniquePoor', s.grade_unique_poor ?? 28);
+  set('farmSet_gradeUniqueGrow', s.grade_unique_grow ?? 8);
+  set('farmSet_gradeLegendBumper', s.grade_legend_bumper ?? 35);
+  set('farmSet_gradeLegendPoor', s.grade_legend_poor ?? 40);
+  set('farmSet_gradeLegendGrow', s.grade_legend_grow ?? 12);
 }
 
 async function farmSaveSettings() {
@@ -97,6 +110,19 @@ async function farmSaveSettings() {
     accelerator_pct:       get('farmSet_acceleratorPct', 50),
     nutrient_cost:         get('farmSet_nutrientCost', 5),
     nutrient_bumper_boost: get('farmSet_nutrientBumperBoost', 20),
+    // 등급별 버프
+    grade_rare_bumper:     get('farmSet_gradeRareBumper', 0),
+    grade_rare_poor:       get('farmSet_gradeRarePoor', 12),
+    grade_rare_grow:       get('farmSet_gradeRareGrow', 0),
+    grade_epic_bumper:     get('farmSet_gradeEpicBumper', 10),
+    grade_epic_poor:       get('farmSet_gradeEpicPoor', 20),
+    grade_epic_grow:       get('farmSet_gradeEpicGrow', 5),
+    grade_unique_bumper:   get('farmSet_gradeUniqueBumper', 20),
+    grade_unique_poor:     get('farmSet_gradeUniquePoor', 28),
+    grade_unique_grow:     get('farmSet_gradeUniqueGrow', 8),
+    grade_legend_bumper:   get('farmSet_gradeLegendBumper', 35),
+    grade_legend_poor:     get('farmSet_gradeLegendPoor', 40),
+    grade_legend_grow:     get('farmSet_gradeLegendGrow', 12),
   });
   const { error } = await sb.from('app_settings')
     .upsert({ key: 'farm_settings', value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
@@ -292,6 +318,25 @@ function farmRenderFieldGrid() {
 // ================================================================
 //  농부 슬롯 (상단 인라인) — 픽셀아트
 // ================================================================
+function _farmGradeBuff(grade) {
+  const s = _farmSettings;
+  const icons = { legend:'🔥', unique:'⚡', epic:'💎', rare:'🍀', normal:'🌱' };
+  const icon = icons[grade] || '🌱';
+
+  if (grade === 'normal') return { icon, text:'기본 농부' };
+
+  const bm = s[`grade_${grade}_bumper`] ?? { rare:0, epic:10, unique:20, legend:35 }[grade] ?? 0;
+  const pm = s[`grade_${grade}_poor`]   ?? { rare:12, epic:20, unique:28, legend:40 }[grade] ?? 0;
+  const gm = s[`grade_${grade}_grow`]   ?? { rare:0, epic:5, unique:8, legend:12 }[grade] ?? 0;
+
+  const parts = [];
+  if (bm > 0) parts.push(`풍작 +${bm}%`);
+  if (pm > 0) parts.push(`흉작 -${pm}%`);
+  if (gm > 0) parts.push(`성장 -${gm}%`);
+
+  return { icon, text: parts.length > 0 ? parts.join(' · ') : '기본 농부' };
+}
+
 function farmRenderFarmerSlot() {
   const activeSq = _farmData?.active_farmer_id
     ? _sqSquirrels.find(s => s.id === _farmData.active_farmer_id)
@@ -300,15 +345,20 @@ function farmRenderFarmerSlot() {
   if (activeSq) {
     const grade = _sqCalcGrade(activeSq);
     const gs = _sqGradeStyle(grade);
+    const buff = _farmGradeBuff(grade);
     const spriteFile = activeSq.sprite || 'sq_acorn';
     return `
-      <div class="farm-farmer-slot" onclick="farmShowChangeFarmer()">
-        <div class="farm-farmer-avatar">
+      <div class="farm-farmer-slot farm-farmer-slot--active" onclick="farmShowChangeFarmer()">
+        <div class="farm-farmer-avatar" style="${gs.border};background:${gs.bg}">
           <img src="images/squirrels/${spriteFile}.png" style="width:34px;height:34px;object-fit:contain;display:block" onerror="this.outerHTML='<div style=\\'font-size:24px;line-height:34px;text-align:center\\'>🐱</div>'">
         </div>
-        <div style="min-width:0;position:relative;z-index:1">
-          <div class="farm-txt-brown farm-txt-bold" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;font-family:'Pretendard',sans-serif">${activeSq.name} 🌾</div>
-          <div style="font-size:11px;font-weight:700;color:${gs.color};font-family:'Pretendard',sans-serif">${gs.label}</div>
+        <div class="farm-farmer-info">
+          <div class="farm-farmer-name">${activeSq.name} 🌾</div>
+          <div class="farm-farmer-grade" style="color:${gs.color}">${gs.label}</div>
+        </div>
+        <div class="farm-farmer-buff" style="border-color:${gs.color}30;background:${gs.bg}">
+          <span class="farm-farmer-buff-icon">${buff.icon}</span>
+          <span class="farm-farmer-buff-text">${buff.text}</span>
         </div>
       </div>`;
   }
