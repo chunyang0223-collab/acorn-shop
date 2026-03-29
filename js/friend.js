@@ -15,40 +15,61 @@ var _friendSentReqs = []; // 보낸 요청 (pending)
 async function friendInit() {
   const area = document.getElementById('utab-friend');
   if (!area) return;
-  await Promise.all([_loadFriends(), _loadFriendRequests()]);
+  try {
+    await Promise.all([_loadFriends(), _loadFriendRequests()]);
+  } catch (e) {
+    console.warn('friendInit: DB 로드 실패 (테이블 미생성?)', e);
+    _friendList = [];
+    _friendRequests = [];
+    _friendSentReqs = [];
+  }
   _renderFriendTab();
 }
 
 // ── 데이터 로드 ──
 async function _loadFriends() {
-  const uid = myProfile.id;
-  const { data } = await sb.from('friends')
-    .select('id, requester_id, receiver_id, accepted_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji,acorns), receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji,acorns)')
-    .eq('status', 'accepted')
-    .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`)
-    .order('accepted_at', { ascending: false });
-  _friendList = (data || []).map(f => {
-    const isMeReq = f.requester_id === uid;
-    const friend = isMeReq ? f.receiver : f.requester;
-    return { friendshipId: f.id, ...friend, accepted_at: f.accepted_at };
-  });
+  try {
+    const uid = myProfile.id;
+    const { data, error } = await sb.from('friends')
+      .select('id, requester_id, receiver_id, accepted_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji,acorns), receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji,acorns)')
+      .eq('status', 'accepted')
+      .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`)
+      .order('accepted_at', { ascending: false });
+    if (error) { console.warn('_loadFriends error:', error); _friendList = []; return; }
+    _friendList = (data || []).map(f => {
+      const isMeReq = f.requester_id === uid;
+      const friend = isMeReq ? f.receiver : f.requester;
+      return { friendshipId: f.id, ...friend, accepted_at: f.accepted_at };
+    });
+  } catch (e) {
+    console.warn('_loadFriends exception:', e);
+    _friendList = [];
+  }
 }
 
 async function _loadFriendRequests() {
-  const uid = myProfile.id;
-  // 받은 요청
-  const { data: received } = await sb.from('friends')
-    .select('id, requester_id, created_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji)')
-    .eq('receiver_id', uid).eq('status', 'pending')
-    .order('created_at', { ascending: false });
-  _friendRequests = received || [];
+  try {
+    const uid = myProfile.id;
+    // 받은 요청
+    const { data: received, error: err1 } = await sb.from('friends')
+      .select('id, requester_id, created_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji)')
+      .eq('receiver_id', uid).eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (err1) console.warn('_loadFriendRequests received error:', err1);
+    _friendRequests = received || [];
 
-  // 보낸 요청
-  const { data: sent } = await sb.from('friends')
-    .select('id, receiver_id, created_at, receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji)')
-    .eq('requester_id', uid).eq('status', 'pending')
-    .order('created_at', { ascending: false });
-  _friendSentReqs = sent || [];
+    // 보낸 요청
+    const { data: sent, error: err2 } = await sb.from('friends')
+      .select('id, receiver_id, created_at, receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji)')
+      .eq('requester_id', uid).eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (err2) console.warn('_loadFriendRequests sent error:', err2);
+    _friendSentReqs = sent || [];
+  } catch (e) {
+    console.warn('_loadFriendRequests exception:', e);
+    _friendRequests = [];
+    _friendSentReqs = [];
+  }
 }
 
 // ── 메인 렌더 ──
