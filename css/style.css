@@ -677,8 +677,8 @@ body {
   100% { opacity: 0;           transform: scale(0.7); }
 }
 [data-theme="dark"] .clay-card {
-  background: #1a2030 !important;
-  border-color: #2a3a4a !important;
+  background: #1e2a3a !important;
+  border-color: #344a5e !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 /* 다크모드 버튼: 채도·밝기 낮춰 형광 제거 */
@@ -735,18 +735,26 @@ body {
 [data-theme="dark"] .text-amber-500 { color: #f59e0b !important; }
 
 /* 다크: 배경 뱃지/박스 */
-[data-theme="dark"] .bg-gray-50    { background: #1e2838 !important; }
-[data-theme="dark"] .bg-amber-50   { background: #2e2210 !important; }
-[data-theme="dark"] .bg-pink-50    { background: #2e1525 !important; }
-[data-theme="dark"] .bg-yellow-100 { background: #3a2a10 !important; }
-[data-theme="dark"] .bg-green-100  { background: #1a3a28 !important; }
-[data-theme="dark"] .bg-white      { background: #1a2030 !important; }
+[data-theme="dark"] .bg-gray-50    { background: #242e3e !important; }
+[data-theme="dark"] .bg-amber-50   { background: #382e18 !important; }
+[data-theme="dark"] .bg-pink-50    { background: #381a2a !important; }
+[data-theme="dark"] .bg-yellow-50  { background: #332a16 !important; }
+[data-theme="dark"] .bg-yellow-100 { background: #433218 !important; }
+[data-theme="dark"] .bg-green-50   { background: #1a3528 !important; }
+[data-theme="dark"] .bg-green-100  { background: #1e4030 !important; }
+[data-theme="dark"] .bg-purple-50  { background: #261a38 !important; }
+[data-theme="dark"] .bg-white      { background: #1e2a3a !important; }
 [data-theme="dark"] .divide-gray-50 > * + * { border-color: #2a3545 !important; }
-[data-theme="dark"] .border-gray-100 { border-color: #2a3a4a !important; }
-[data-theme="dark"] .border-b-2 { border-color: #2a3a4a !important; }
+[data-theme="dark"] .border-gray-100   { border-color: #344a5e !important; }
+[data-theme="dark"] .border-gray-200   { border-color: #344a5e !important; }
+[data-theme="dark"] .border-yellow-200 { border-color: #6a5020 !important; }
+[data-theme="dark"] .border-green-200  { border-color: #2a6a40 !important; }
+[data-theme="dark"] .border-purple-200 { border-color: #4a3070 !important; }
+[data-theme="dark"] .border-amber-100  { border-color: #5a4018 !important; }
+[data-theme="dark"] .border-b-2 { border-color: #344a5e !important; }
 [data-theme="dark"] select,
 [data-theme="dark"] option { background: #1e1e2e !important; color: #e2e8f0 !important; }
-[data-theme="dark"] .stat-card { background: #1a2030 !important; border-color: #2a3a4a !important; }
+[data-theme="dark"] .stat-card { background: #1e2a3a !important; border-color: #344a5e !important; }
 [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; }
 [data-theme="dark"] .login-card { background: #141420 !important; }
 [data-theme="dark"] .h-px { background: #2a3a4a !important; }
@@ -755,6 +763,8 @@ body {
 /* ── 다크: 누락 텍스트 색상 ── */
 [data-theme="dark"] .text-amber-800  { color: #fbbf24 !important; }
 [data-theme="dark"] .text-gray-300   { color: #d97706 !important; }
+[data-theme="dark"] .text-yellow-700 { color: #fcd34d !important; }
+[data-theme="dark"] .text-yellow-800 { color: #fbbf24 !important; }
 [data-theme="dark"] .text-green-700  { color: #4ade80 !important; }
 [data-theme="dark"] .text-green-600  { color: #34d399 !important; }
 [data-theme="dark"] .text-red-600    { color: #f87171 !important; }
@@ -767,13 +777,19 @@ body {
 
 /* ── 다크: 누락 배경 색상 ── */
 [data-theme="dark"] .bg-amber-100  { background: #3a2a10 !important; }
-[data-theme="dark"] .bg-gray-100   { background: #1e2535 !important; }
-[data-theme="dark"] .bg-gray-200   { background: #242c3a !important; }
-[data-theme="dark"] .bg-red-50     { background: #3a1a1a !important; }
-[data-theme="dark"] .bg-red-100    { background: #4a1a1a !important; }
-[data-theme="dark"] .bg-blue-100   { background: #1a3060 !important; }
-[data-theme="dark"] .bg-purple-100 { background: #201530 !important; }
+[data-theme="dark"] .bg-gray-100   { background: #242e3e !important; }
+[data-theme="dark"] .bg-gray-200   { background: #2a3445 !important; }
+[data-theme="dark"] .bg-red-50     { background: #3e1e1e !important; }
+[data-theme="dark"] .bg-red-100    { background: #4e2020 !important; }
+[data-theme="dark"] .bg-blue-100   { background: #1e3565 !important; }
+[data-theme="dark"] .bg-purple-100 { background: #2a1e3e !important; }
 [data-theme="dark"] .bg-pink-100   { background: #2a1525 !important; }
+
+/* ── 소스 태그 (뽑기/구매/선물) ── */
+.it-store { color: #78350f; font-weight: 700; }
+.it-gacha { color: #6d28d9; font-weight: 700; }
+[data-theme="dark"] .it-store { color: #fbbf24 !important; }
+[data-theme="dark"] .it-gacha { color: #c084fc !important; }
 
 /* ── 다크: 커스텀 배지 ── */
 [data-theme="dark"] .qs-done       { background: #1a3a28 !important; color: #4ade80 !important; }
@@ -2635,7 +2651,7 @@ body {
 }
 .farm-shop-btn:hover { transform: scale(1.05); }
 .farm-shop-btn:active { transform: scale(0.92); }
-.farm-shop-btn::after { content: '🏪'; font-size: 14px; }
+.farm-shop-btn::after { content: ''; font-size: 0; }
 .farm-shop-lbl { font-size: 11px; font-weight: 800; color: #fff; }
 
 /* ── 밭 그리드 ── */
@@ -3082,10 +3098,10 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 [data-theme="dark"] [style*="background: white"],
 [data-theme="dark"] [style*="background:#fff"],
 [data-theme="dark"] [style*="background: #fff"] {
-  background: #1a2535 !important;
+  background: #1e2a3a !important;
 }
-[data-theme="dark"] [style*="background:#f9fafb"] { background: #1e2838 !important; }
-[data-theme="dark"] [style*="background:#f3f4f6"] { background: #222c3a !important; }
+[data-theme="dark"] [style*="background:#f9fafb"] { background: #222e40 !important; }
+[data-theme="dark"] [style*="background:#f3f4f6"] { background: #283348 !important; }
 
 /* ══════════════════════════════════════════════════════
    🛒 농장 상점 — 고정 레이아웃
@@ -3213,4 +3229,92 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 [data-theme="dark"] .farm-shop-timer { color: #fbbf24; }
 [data-theme="dark"] .farm-shop-close-btn {
   background: #222c3a; border-color: #3a4a5a; color: #fbbf24;
+}
+
+/* ══════════════════════════════════════════════════════
+   🎬 상점 잔고 애니메이션 — 플로팅 차감
+   ══════════════════════════════════════════════════════ */
+
+/* ── 플로팅 텍스트 (▼3.50 둥실 떠오름) ── */
+@keyframes farmBalFloat {
+  0%   { opacity: 1; transform: translateY(0); }
+  65%  { opacity: 1; transform: translateY(-26px); }
+  100% { opacity: 0; transform: translateY(-34px); }
+}
+.farm-bal-float {
+  position: absolute; left: 0; top: -2px;
+  font-size: 13px; font-weight: 900; color: #ef4444;
+  pointer-events: none; white-space: nowrap;
+  animation: farmBalFloat .9s ease-out forwards;
+  text-shadow: 0 1px 3px rgba(0,0,0,.1);
+  z-index: 10;
+}
+.farm-bal-float-plus { color: #16a34a; }
+
+/* 다크모드 */
+[data-theme="dark"] .farm-bal-float { color: #f87171; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
+[data-theme="dark"] .farm-bal-float-plus { color: #4ade80; }
+
+/* ── 잔고 숫자 깜빡 (차감) ── */
+@keyframes farmBalNumFlash {
+  0%   { color: inherit; transform: scale(1); }
+  20%  { color: #ef4444; transform: scale(1.15); }
+  60%  { color: #ef4444; transform: scale(1.05); }
+  100% { color: inherit; transform: scale(1); }
+}
+.farm-bal-num-flash { animation: farmBalNumFlash .55s ease-out; }
+
+/* ── 잔고 숫자 깜빡 (입금) ── */
+@keyframes farmBalNumFlashPlus {
+  0%   { color: inherit; transform: scale(1); }
+  20%  { color: #16a34a; transform: scale(1.15); }
+  60%  { color: #16a34a; transform: scale(1.05); }
+  100% { color: inherit; transform: scale(1); }
+}
+.farm-bal-num-flash-plus { animation: farmBalNumFlashPlus .55s ease-out; }
+
+/* 다크모드 숫자 */
+[data-theme="dark"] .farm-bal-num-flash { animation-name: farmBalNumFlashDark; }
+@keyframes farmBalNumFlashDark {
+  0%   { color: #fcd34d; transform: scale(1); }
+  20%  { color: #f87171; transform: scale(1.15); }
+  60%  { color: #f87171; transform: scale(1.05); }
+  100% { color: #fcd34d; transform: scale(1); }
+}
+[data-theme="dark"] .farm-bal-num-flash-plus { animation-name: farmBalNumFlashPlusDark; }
+@keyframes farmBalNumFlashPlusDark {
+  0%   { color: #fcd34d; transform: scale(1); }
+  20%  { color: #4ade80; transform: scale(1.15); }
+  60%  { color: #4ade80; transform: scale(1.05); }
+  100% { color: #fcd34d; transform: scale(1); }
+}
+
+/* ── 잔고 바 배경 번쩍 (차감) ── */
+@keyframes farmBalBarFlash {
+  0%   { box-shadow: inset 0 0 0 0 rgba(239,68,68,0); }
+  30%  { box-shadow: inset 0 0 20px 2px rgba(239,68,68,.15); }
+  100% { box-shadow: inset 0 0 0 0 rgba(239,68,68,0); }
+}
+.farm-bal-bar-flash { animation: farmBalBarFlash .5s ease-out; }
+
+/* ── 잔고 바 배경 번쩍 (입금) ── */
+@keyframes farmBalBarFlashPlus {
+  0%   { box-shadow: inset 0 0 0 0 rgba(22,163,74,0); }
+  30%  { box-shadow: inset 0 0 20px 2px rgba(22,163,74,.15); }
+  100% { box-shadow: inset 0 0 0 0 rgba(22,163,74,0); }
+}
+.farm-bal-bar-flash-plus { animation: farmBalBarFlashPlus .5s ease-out; }
+
+/* 다크모드 바 번쩍 */
+[data-theme="dark"] .farm-bal-bar-flash { animation-name: farmBalBarFlashDark; }
+@keyframes farmBalBarFlashDark {
+  0%   { box-shadow: inset 0 0 0 0 rgba(248,113,113,0); }
+  30%  { box-shadow: inset 0 0 24px 3px rgba(248,113,113,.2); }
+  100% { box-shadow: inset 0 0 0 0 rgba(248,113,113,0); }
+}
+[data-theme="dark"] .farm-bal-bar-flash-plus { animation-name: farmBalBarFlashPlusDark; }
+@keyframes farmBalBarFlashPlusDark {
+  0%   { box-shadow: inset 0 0 0 0 rgba(74,222,128,0); }
+  30%  { box-shadow: inset 0 0 24px 3px rgba(74,222,128,.2); }
+  100% { box-shadow: inset 0 0 0 0 rgba(74,222,128,0); }
 }
