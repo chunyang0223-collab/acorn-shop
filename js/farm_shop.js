@@ -14,33 +14,31 @@ function farmShowDeposit() {
   showModal(`
     <div style="padding:4px 0">
       <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:14px;font-weight:900;color:#1f2937">🌰 농장 예치금</div>
-        <div style="margin:12px auto;display:inline-block;border:3px solid #d97706;border-radius:16px;padding:3px">
-          <div style="border:2px solid #fbbf24;border-radius:12px;padding:10px 20px;background:linear-gradient(135deg,#fffbeb,#fef3c7)">
-            <div style="font-size:22px;font-weight:900;color:#78350f">${acorns} <span style="font-size:12px">도토리</span></div>
-            <div style="font-size:11px;color:#92400e">${crumbs} 부스러기</div>
-          </div>
+        <div style="font-family:'Pretendard',sans-serif;font-size:15px;font-weight:900;color:#374151">🌰 농장 예치금</div>
+        <div style="margin:12px auto;display:inline-block;background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #fbbf24;border-radius:14px;padding:10px 24px">
+          <div class="farm-dep-num" style="font-size:24px;font-weight:900;font-family:'Pretendard',sans-serif">${acorns} <span style="font-size:12px">도토리</span></div>
+          <div class="farm-dep-sub" style="font-size:11px;font-family:'Pretendard',sans-serif">${crumbs} 부스러기</div>
         </div>
-        <div style="font-size:11px;color:#6b7280">보유 도토리: 🌰 ${myAcorns}</div>
+        <div style="font-size:11px;color:#9ca3af;font-family:'Pretendard',sans-serif">보유 도토리: 🌰 ${myAcorns}</div>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div style="flex:1">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;font-weight:700">입금할 도토리</div>
-          <input id="farmDepositAmt" type="number" min="1" max="${myAcorns}" value="10" style="width:100%;padding:8px 10px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-weight:700;text-align:center">
+          <div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:700;font-family:'Pretendard',sans-serif">입금할 도토리</div>
+          <input id="farmDepositAmt" type="number" min="1" max="${myAcorns}" value="10" style="width:100%;padding:8px 10px;border:2px solid #d1d5db;border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:#f9fafb">
         </div>
-        <button onclick="farmDoDeposit()" class="btn btn-primary" style="align-self:flex-end;padding:8px 16px;font-size:12px;font-weight:800">입금</button>
+        <button onclick="farmDoDeposit()" class="farm-btn farm-btn-dark" style="align-self:flex-end;padding:8px 16px;font-size:12px">입금</button>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div style="flex:1">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;font-weight:700">출금할 도토리 <span style="font-size:9px;color:#9ca3af">(정수 단위만)</span></div>
-          <input id="farmWithdrawAmt" type="number" min="1" max="${acorns}" value="${Math.min(acorns, 10)}" style="width:100%;padding:8px 10px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-weight:700;text-align:center">
+          <div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:700;font-family:'Pretendard',sans-serif">출금할 도토리 <span style="font-size:9px;color:#d1d5db">(정수 단위만)</span></div>
+          <input id="farmWithdrawAmt" type="number" min="1" max="${acorns}" value="${Math.min(acorns, 10)}" style="width:100%;padding:8px 10px;border:2px solid #d1d5db;border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:#f9fafb">
         </div>
-        <button onclick="farmDoWithdraw()" class="btn" style="align-self:flex-end;padding:8px 16px;font-size:12px;font-weight:800;background:#f3f4f6;color:#6b7280">출금</button>
+        <button onclick="farmDoWithdraw()" class="farm-btn" style="align-self:flex-end;padding:8px 16px;font-size:12px">출금</button>
       </div>
 
-      <button onclick="closeModal()" class="btn w-full" style="background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">닫기</button>
+      <button onclick="closeModal()" class="farm-btn w-full" style="font-size:13px;padding:12px;text-align:center">닫기</button>
     </div>
   `);
 }
