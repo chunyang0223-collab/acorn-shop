@@ -685,7 +685,7 @@ function _expShowOverlay(emoji, title, body, btn1Text, btn1Fn, btn2Text, btn2Fn)
   overlay.id = 'expOverlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);animation:expFadeIn .25s ease';
 
-  var btn1Style = 'flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#d97706);color:#78350f;box-shadow:0 3px 0 #b45309';
+  var btn1Style = 'flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);box-shadow:0 3px 0 #b45309';
   var btn2Style = 'flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:transparent;color:#a5b4fc';
 
   overlay.innerHTML =
@@ -995,6 +995,26 @@ var _sndBGM = null; // 현재 재생 중인 배경음
 var _sndLastSFX = null; // 마지막 재생 SFX (정리용)
 var _sndVolSFX = 0.7;
 var _sndVolBGM = 0.3;
+var _sndUnlocked = false; // 모바일 오디오 잠금 해제 여부
+var _sndPendingBGM = null; // 잠금 해제 전 대기 중인 BGM 타입
+
+// 모바일 오디오 잠금 해제 (첫 터치 시)
+function _sndUnlock() {
+  if (_sndUnlocked) return;
+  var silent = new Audio();
+  silent.play().then(function() {
+    silent.pause();
+    _sndUnlocked = true;
+    // 대기 중이던 BGM이 있으면 재생
+    if (_sndPendingBGM) {
+      _sndPlayBGM(_sndPendingBGM);
+      _sndPendingBGM = null;
+    }
+  }).catch(function(){});
+}
+['touchstart','touchend','click'].forEach(function(evt) {
+  document.addEventListener(evt, _sndUnlock, { once: false, passive: true });
+});
 
 // 효과음 재생 (1회)
 function _btlSound(type) {
@@ -1036,6 +1056,8 @@ function _sndPlayBGM(type) {
     'my':       ['sounds/menu_bgm_my_squirrels.mp3'],
     'shop':     ['sounds/menu_bgm_squirrel_shop.mp3'],
     'explorer': ['sounds/menu_bgm_explorer.mp3'],
+    'fuse':     ['sounds/menu_bgm_fuse.mp3'],
+    'farm':     ['sounds/farm_bgm.mp3'],
     'battle':   ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
     'boss':     ['sounds/battle_boss_1.mp3','sounds/battle_boss_2.mp3','sounds/battle_boss_3.mp3'],
     'defeat':   ['sounds/explorer_complete_defeat.mp3'],
@@ -1047,11 +1069,18 @@ function _sndPlayBGM(type) {
   _sndBGM = new Audio(file);
   _sndBGM.volume = _sndVolBGM;
   _sndBGM.loop = true;
-  _sndBGM.play().catch(function(){});
+  _sndBGM.play().then(function() {
+    _sndUnlocked = true;
+    _sndPendingBGM = null;
+  }).catch(function() {
+    // 모바일: 아직 잠금 해제 안 됐으면 다음 터치 때 재생되도록 대기
+    _sndPendingBGM = type;
+  });
 }
 
 // 배경음 정지
 function _sndStopBGM() {
+  _sndPendingBGM = null;
   if (_sndBGM) {
     _sndBGM.pause();
     _sndBGM.currentTime = 0;
