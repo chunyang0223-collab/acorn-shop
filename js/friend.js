@@ -83,7 +83,7 @@ function _renderFriendTab() {
   area.innerHTML = `
     <!-- 검색 바 -->
     <div class="fr-search-wrap clay-card p-4 mb-4">
-      <p class="text-sm font-black mb-2" class="fr-text">🔍 친구 찾기</p>
+      <p class="text-sm font-black mb-2 fr-text">🔍 친구 찾기</p>
       <div class="flex gap-2">
         <input class="field flex-1" type="text" id="friendSearchInput" placeholder="닉네임으로 검색..." onkeydown="if(event.key==='Enter')searchFriend()">
         <button class="btn btn-primary px-4" onclick="searchFriend()">검색</button>
@@ -94,14 +94,14 @@ function _renderFriendTab() {
     <!-- 받은 요청 -->
     ${reqCount > 0 ? `
     <div class="clay-card p-4 mb-4">
-      <p class="text-sm font-black mb-3" class="fr-text">📬 받은 요청 ${reqBadge}</p>
+      <p class="text-sm font-black mb-3 fr-text">📬 받은 요청 ${reqBadge}</p>
       <div class="space-y-2" id="friendReqList">
         ${_friendRequests.map(r => `
           <div class="fr-req-row">
             <div class="flex items-center gap-2 min-w-0">
               <span class="text-xl">${r.requester?.avatar_emoji || '🐿️'}</span>
               <div class="min-w-0">
-                <p class="text-sm font-black truncate" class="fr-text">${_escHtml(r.requester?.display_name || '???')}</p>
+                <p class="text-sm font-black truncate fr-text">${_escHtml(r.requester?.display_name || '???')}</p>
                 <p class="text-xs" style="color:#fbbf24">${fmtTs(r.created_at)}</p>
               </div>
             </div>
@@ -116,13 +116,13 @@ function _renderFriendTab() {
     <!-- 보낸 요청 -->
     ${_friendSentReqs.length > 0 ? `
     <div class="clay-card p-4 mb-4">
-      <p class="text-sm font-black mb-3" class="fr-text">📤 보낸 요청</p>
+      <p class="text-sm font-black mb-3 fr-text">📤 보낸 요청</p>
       <div class="space-y-2">
         ${_friendSentReqs.map(r => `
           <div class="fr-req-row">
             <div class="flex items-center gap-2 min-w-0">
               <span class="text-xl">${r.receiver?.avatar_emoji || '🐿️'}</span>
-              <p class="text-sm font-black truncate" class="fr-text">${_escHtml(r.receiver?.display_name || '???')}</p>
+              <p class="text-sm font-black truncate fr-text">${_escHtml(r.receiver?.display_name || '???')}</p>
             </div>
             <button class="fr-cancel-btn" onclick="cancelFriendReq('${r.id}')">취소</button>
           </div>`).join('')}
@@ -132,7 +132,7 @@ function _renderFriendTab() {
     <!-- 친구 목록 -->
     <div class="clay-card p-4">
       <div class="flex items-center justify-between mb-3">
-        <p class="text-sm font-black" class="fr-text">👥 친구 목록 <span style="color:#fbbf24">(${_friendList.length}명)</span></p>
+        <p class="text-sm font-black fr-text">👥 친구 목록 <span style="color:#fbbf24">(${_friendList.length}명)</span></p>
       </div>
       ${_friendList.length === 0
         ? '<p class="text-sm text-center py-6" style="color:#fbbf24">아직 친구가 없어요. 위에서 검색해서 추가해보세요!</p>'
@@ -142,7 +142,7 @@ function _renderFriendTab() {
                 <div class="flex items-center gap-3 min-w-0">
                   <span class="text-2xl">${f.avatar_emoji || '🐿️'}</span>
                   <div class="min-w-0">
-                    <p class="text-sm font-black truncate" class="fr-text">${_escHtml(f.display_name || '???')}</p>
+                    <p class="text-sm font-black truncate fr-text">${_escHtml(f.display_name || '???')}</p>
                     <p class="text-xs" style="color:#86efac">🌰 ${f.acorns ?? 0}</p>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ async function searchFriend() {
       <div class="fr-search-row">
         <div class="flex items-center gap-2 min-w-0">
           <span class="text-xl">${u.avatar_emoji || '🐿️'}</span>
-          <p class="text-sm font-black truncate" class="fr-text">${_escHtml(u.display_name || '???')}</p>
+          <p class="text-sm font-black truncate fr-text">${_escHtml(u.display_name || '???')}</p>
         </div>
         ${actionBtn}
       </div>`;
@@ -267,7 +267,7 @@ async function removeFriend(friendshipId) {
   showModal(`
     <div class="text-center">
       <div style="font-size:2.5rem;margin-bottom:8px">😢</div>
-      <p class="text-sm font-black mb-3" class="fr-text">정말 친구를 삭제할까요?</p>
+      <p class="text-sm font-black mb-3 fr-text">정말 친구를 삭제할까요?</p>
       <div class="flex gap-2 mt-3">
         <button class="btn flex-1" style="background:#fee2e2;color:#dc2626;font-weight:800" onclick="confirmRemoveFriend('${friendshipId}')">삭제</button>
         <button class="btn flex-1" onclick="closeModal()">취소</button>

@@ -186,17 +186,20 @@ function _buildMinigameStats(plays) {
 
   const rows = gameIds.map(gid => {
     const score = bestScores[gid];
+    const icon = gameNames[gid]?.split(' ')[0] || '🎮';
+    const name = (gameNames[gid] || gid).replace(/^[^\s]+\s/, '');
     return `
-      <div class="pf-mini-row">
-        <span class="pf-mini-name">${gameNames[gid] || gid}</span>
-        <span class="pf-mini-score">${score !== undefined ? score.toLocaleString() : '-'}</span>
+      <div class="pf-mini-card">
+        <span class="pf-mini-card-icon">${icon}</span>
+        <span class="pf-mini-card-name">${name}</span>
+        <span class="pf-mini-card-score">${score !== undefined ? score.toLocaleString() : '-'}</span>
       </div>`;
   }).join('');
 
   return `
     <div class="pf-section">
       <p class="pf-section-title">🎮 미니게임 최고점수</p>
-      ${rows}
+      <div class="pf-mini-grid">${rows}</div>
     </div>`;
 }
 
@@ -218,16 +221,19 @@ function _buildExpeditionStats(expeditions) {
     <div class="pf-section">
       <p class="pf-section-title">⚔️ 탐험 기록</p>
       <div class="pf-exp-stats">
-        <div class="pf-exp-stat">
-          <span class="pf-exp-num" style="color:#4ade80">${totalCompleted}</span>
+        <div class="pf-exp-stat pf-exp-stat--clear">
+          <span class="pf-exp-icon">🏆</span>
+          <span class="pf-exp-num">${totalCompleted}</span>
           <span class="pf-exp-label">완료</span>
         </div>
-        <div class="pf-exp-stat">
-          <span class="pf-exp-num" style="color:#fbbf24">${totalRetreated}</span>
+        <div class="pf-exp-stat pf-exp-stat--retreat">
+          <span class="pf-exp-icon">🏃</span>
+          <span class="pf-exp-num">${totalRetreated}</span>
           <span class="pf-exp-label">퇴각</span>
         </div>
-        <div class="pf-exp-stat">
-          <span class="pf-exp-num" style="color:#f87171">${bossKills}</span>
+        <div class="pf-exp-stat pf-exp-stat--boss">
+          <span class="pf-exp-icon">💀</span>
+          <span class="pf-exp-num">${bossKills}</span>
           <span class="pf-exp-label">보스 격파</span>
         </div>
       </div>
@@ -252,15 +258,15 @@ function _buildFarmStats(farmData) {
     <div class="pf-section">
       <p class="pf-section-title">🌾 농장</p>
       <div class="pf-farm-row">
-        <div class="pf-farm-stat">
-          <span class="pf-farm-icon">⭐</span>
-          <span class="pf-farm-label">레벨</span>
-          <span class="pf-farm-val">${level}</span>
+        <div class="pf-farm-card">
+          <span class="pf-farm-card-icon">⭐</span>
+          <span class="pf-farm-card-val">${level}</span>
+          <span class="pf-farm-card-label">레벨</span>
         </div>
-        <div class="pf-farm-stat">
-          <span class="pf-farm-icon">💰</span>
-          <span class="pf-farm-label">골드</span>
-          <span class="pf-farm-val">${gold.toLocaleString()}</span>
+        <div class="pf-farm-card">
+          <span class="pf-farm-card-icon">💰</span>
+          <span class="pf-farm-card-val">${gold.toLocaleString()}</span>
+          <span class="pf-farm-card-label">골드</span>
         </div>
       </div>
     </div>`;
@@ -285,12 +291,12 @@ async function openPrivacySettings() {
 
   showModal(`
     <div class="pf-privacy-modal">
-      <h2 class="text-lg font-black mb-3" class="fr-text">🔒 프로필 공개 설정</h2>
+      <h2 class="text-lg font-black mb-3 fr-text">🔒 프로필 공개 설정</h2>
       <p class="text-xs mb-4" style="color:#fbbf24">친구에게 어떤 정보를 보여줄지 선택하세요</p>
       <div class="space-y-3">
         ${fields.map(f => `
           <label class="pf-privacy-row">
-            <span class="text-sm font-bold" class="fr-text">${f.label}</span>
+            <span class="text-sm font-bold fr-text">${f.label}</span>
             <input type="checkbox" class="pf-toggle" data-key="${f.key}" ${f.val ? 'checked' : ''}>
           </label>`).join('')}
       </div>
