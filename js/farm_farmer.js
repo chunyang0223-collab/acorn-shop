@@ -33,6 +33,7 @@ async function farmConfirmApprentice(squirrelId) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('approve');
     toast('🌾', '수습 농부로 출발했어요!');
     await _farmReloadAll();
     if (document.getElementById('sqFarmArea')) farmRenderMain();
@@ -143,6 +144,7 @@ async function farmAfterReveal(success) {
 //  농부 교체/해제 모달
 // ================================================================
 function farmShowChangeFarmer() {
+  playSound('click');
   const hasGrowingCrop = (_farmPlots || []).some(p => p.crop_id != null);
   const canUnequip = _farmData?.active_farmer_id && !hasGrowingCrop;
   showModal(`
@@ -189,11 +191,12 @@ async function farmEquipFarmer(squirrelId) {
     const { data, error } = await sb.rpc('farm_set_active_farmer', { p_user_id: myProfile.id, p_squirrel_id: squirrelId });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('reward');
     toast('🌾', '농부를 장착했어요!');
     closeModal();
     await _farmReloadAll();
     farmRenderMain();
-  } catch (e) { console.error('[farm equip]', e); toast('❌', '장착 실패'); }
+  } catch (e) { console.error('[farm equip]', e); playSound('farmError'); toast('❌', '장착 실패'); }
 }
 
 async function farmUnequipFarmer() {
@@ -201,11 +204,12 @@ async function farmUnequipFarmer() {
     const { data, error } = await sb.rpc('farm_set_active_farmer', { p_user_id: myProfile.id, p_squirrel_id: null });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('click');
     toast('🌾', '농부를 해제했어요');
     closeModal();
     await _farmReloadAll();
     farmRenderMain();
-  } catch (e) { console.error('[farm unequip]', e); toast('❌', '해제 실패'); }
+  } catch (e) { console.error('[farm unequip]', e); playSound('farmError'); toast('❌', '해제 실패'); }
 }
 
 // ================================================================

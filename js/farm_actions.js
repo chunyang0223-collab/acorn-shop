@@ -9,6 +9,7 @@ const _FARM_STACK_MAX = 10; // 인벤토리 슬롯당 최대 스택
 //  파종 모달 (인벤토리 씨앗 선택 → 밭에 심기)
 // ================================================================
 function farmShowPlantModal(slot) {
+  playSound('click');
   if (!_farmData?.active_farmer_id) {
     toast('⚠️', '농부가 장착되어 있어야 씨앗을 심을 수 있어요');
     return;
@@ -56,11 +57,13 @@ async function farmDoPlant(slot, cropId) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('click');
     toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗을 심었어요!`);
     await _farmReloadAll();
     farmRenderMain();
   } catch(e) {
     console.error('[farm plant]', e);
+    playSound('farmError');
     toast('❌', '심기 실패: ' + (e?.message || ''));
   }
 }

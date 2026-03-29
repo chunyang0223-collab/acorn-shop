@@ -78,6 +78,23 @@ function playSound(name) {
       _playTone(220, 'sawtooth', 0.2, 0.088); break;
     case 'error':
       _playTone(180, 'square', 0.15, 0.077); break;
+    case 'farmBuy':
+      // 도토리 톡 — 나무 두드리는 톡 + 반동
+      _playTone(800, 'triangle', 0.06, 0.22);
+      setTimeout(() => { _playTone(500, 'sine', 0.07, 0.10); }, 70);
+      setTimeout(() => { _playTone(300, 'sine', 0.06, 0.06); }, 120);
+      break;
+    case 'farmSell':
+      // 코인 쌓기 — 딸랑딸랑 동전
+      [0,1,2,3,4].forEach(i => {
+        setTimeout(() => _playTone(1200 + i*200, 'triangle', 0.06, 0.11), i*50);
+      });
+      break;
+    case 'farmError':
+      // 잔고 부족 삐-
+      _playTone(200, 'square', 0.12, 0.088);
+      setTimeout(() => _playTone(180, 'square', 0.12, 0.066), 100);
+      break;
   }
 }
 

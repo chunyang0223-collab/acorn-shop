@@ -24,6 +24,9 @@ function _farmBalanceAnim(costCrumbs, isSell, label) {
   // 새 잔고 (서버에서 이미 갱신된 _farmData 기준)
   const endVal = (_farmData?.deposit_acorns || 0) * 100 + (_farmData?.deposit_crumbs || 0);
 
+  // ⓪ 사운드
+  playSound(isSell ? 'farmSell' : 'farmBuy');
+
   // ① 플로팅 텍스트 생성
   const float = document.createElement('div');
   float.className = 'farm-bal-float' + (isSell ? ' farm-bal-float-plus' : '');
@@ -68,6 +71,7 @@ function _farmBalanceAnim(costCrumbs, isSell, label) {
 //  예치금 모달
 // ================================================================
 function farmShowDeposit() {
+  playSound('click');
   // 상점 모달에서 호출된 경우 추적
   _farmShopWasOpen = !!document.getElementById('farmShopContent');
   const acorns = _farmData?.deposit_acorns || 0;
@@ -117,6 +121,7 @@ async function farmDoDeposit() {
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
 
+    playSound('farmSell');
     toast('🌰', `${amt} 도토리 입금 완료!`);
     if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
     await _farmReloadAll();
@@ -141,6 +146,7 @@ async function farmDoWithdraw() {
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
 
+    playSound('farmBuy');
     toast('🌰', `${amt} 도토리 출금 완료!`);
     if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
     await _farmReloadAll();
@@ -158,7 +164,7 @@ async function farmDoWithdraw() {
 //  상점 — 고정 레이아웃 (메뉴 / 아이템 / 잔고 영역 분리)
 // ================================================================
 async function farmShowShop(tab) {
-  if (tab) _farmShopTab = tab;
+  if (tab) { _farmShopTab = tab; playSound('tab'); }
   if (_farmShopTab === 'sell') {
     try {
       const { data } = await sb.rpc('farm_get_sell_status', { p_user_id: myProfile.id });
@@ -447,10 +453,11 @@ async function farmSellSeed(cropId) {
       if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
       _farmBalanceAnim(revenue, true, (crop?.name||'') + ' 씨앗 ' + qty + '개');
     } else {
+      playSound('farmSell');
       toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗 ${qty}개 판매! (+🌰${_farmFmtPrice(revenue)})`);
     }
     farmRenderMain();
-  } catch(e) { console.error('[farm sell seed]', e); toast('❌', '판매 실패'); }
+  } catch(e) { console.error('[farm sell seed]', e); playSound('farmError'); toast('❌', '판매 실패'); }
 }
 
 // ── 작물 판매 실행 ──
@@ -478,10 +485,11 @@ async function farmSellCrop(cropId) {
       if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
       _farmBalanceAnim(revenue, true, (crop?.name||'') + ' ' + qty + '개');
     } else {
+      playSound('farmSell');
       toast(crop?.emoji || '🥕', `${crop?.name || ''} ${qty}개 판매! (+🌰${_farmFmtPrice(revenue)})`);
     }
     farmRenderMain();
-  } catch(e) { console.error('[farm sell crop]', e); toast('❌', '판매 실패'); }
+  } catch(e) { console.error('[farm sell crop]', e); playSound('farmError'); toast('❌', '판매 실패'); }
 }
 
 // ── 씨앗 구매 실행 ──
@@ -511,18 +519,21 @@ async function farmBuySeed(cropId) {
       if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
       _farmBalanceAnim(unitPrice, false, crop.name + ' 씨앗');
     } else {
+      playSound('farmBuy');
       const priceStr = _farmFmtPrice(unitPrice);
       toast(crop.emoji, `${crop.name} 씨앗 구매! (🌰${priceStr})`);
     }
     farmRenderMain();
   } catch (e) {
     console.error('[farm buy]', e);
+    playSound('farmError');
     toast('❌', '구매 실패: ' + (e?.message || ''));
   }
 }
 
 // ── 인벤토리 확장 ──
 async function farmExpandInventory() {
+  playSound('click');
   const cap = _farmData?.inventory_capacity || 3;
   const cost = (cap - 3 + 1) * 10;
   showModal(`
@@ -544,16 +555,18 @@ async function farmDoExpandInventory() {
     const { data, error } = await sb.rpc('farm_expand_inventory', { p_user_id: myProfile.id });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('reward');
     toast('📦', `인벤토리 ${data.new_capacity}칸으로 확장! (🌰${data.cost} 사용)`);
     await _farmReloadAll();
     farmRenderMain();
-  } catch (e) { console.error('[farm expand inv]', e); toast('❌', '확장 실패: ' + (e?.message || '')); }
+  } catch (e) { console.error('[farm expand inv]', e); playSound('farmError'); toast('❌', '확장 실패: ' + (e?.message || '')); }
 }
 
 // ================================================================
 //  밭 확장 모달
 // ================================================================
 function farmShowExpandPlot(cost) {
+  playSound('click');
   const plotCount = _farmData?.plot_count || 1;
   const depositAcorns = _farmData?.deposit_acorns || 0;
   showModal(`
@@ -576,10 +589,11 @@ async function farmDoExpandPlot() {
     const { data, error } = await sb.rpc('farm_expand_plot', { p_user_id: myProfile.id });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('reward');
     toast('🌾', `밭 ${data.new_plot_count}칸으로 확장! (🌰${data.cost} 사용)`);
     await _farmReloadAll();
     farmRenderMain();
-  } catch (e) { console.error('[farm expand plot]', e); toast('❌', '확장 실패: ' + (e?.message || '')); }
+  } catch (e) { console.error('[farm expand plot]', e); playSound('farmError'); toast('❌', '확장 실패: ' + (e?.message || '')); }
 }
 
 // ================================================================
@@ -656,11 +670,13 @@ async function farmBuyItem(itemType) {
       if (balCrumb) balCrumb.textContent = `+${_prevCrumbs}부스러기`;
       _farmBalanceAnim(itemCost, false, label);
     } else {
+      playSound('farmBuy');
       toast(emoji, `${label} 구매 완료! (🌰${_farmFmtPrice(itemCost)})`);
     }
     farmRenderMain();
   } catch (e) {
     console.error('[farm buy item]', e);
+    playSound('farmError');
     toast('❌', '구매 실패: ' + (e?.message || ''));
   }
 }
@@ -675,11 +691,13 @@ async function farmUseAccelerator(slot) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('click');
     toast('⚡', `촉진제 사용! 성장시간 ${_farmSettings.accelerator_pct ?? 50}% 단축`);
     await _farmReloadAll();
     farmRenderMain();
   } catch (e) {
     console.error('[farm use accelerator]', e);
+    playSound('farmError');
     toast('❌', '사용 실패: ' + (e?.message || ''));
   }
 }
@@ -694,11 +712,13 @@ async function farmUseNutrient(slot) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+    playSound('click');
     toast('🧪', '영양제 사용! 풍작 확률 UP');
     await _farmReloadAll();
     farmRenderMain();
   } catch (e) {
     console.error('[farm use nutrient]', e);
+    playSound('farmError');
     toast('❌', '사용 실패: ' + (e?.message || ''));
   }
 }
