@@ -995,6 +995,26 @@ var _sndBGM = null; // 현재 재생 중인 배경음
 var _sndLastSFX = null; // 마지막 재생 SFX (정리용)
 var _sndVolSFX = 0.7;
 var _sndVolBGM = 0.3;
+var _sndUnlocked = false; // 모바일 오디오 잠금 해제 여부
+var _sndPendingBGM = null; // 잠금 해제 전 대기 중인 BGM 타입
+
+// 모바일 오디오 잠금 해제 (첫 터치 시)
+function _sndUnlock() {
+  if (_sndUnlocked) return;
+  var silent = new Audio();
+  silent.play().then(function() {
+    silent.pause();
+    _sndUnlocked = true;
+    // 대기 중이던 BGM이 있으면 재생
+    if (_sndPendingBGM) {
+      _sndPlayBGM(_sndPendingBGM);
+      _sndPendingBGM = null;
+    }
+  }).catch(function(){});
+}
+['touchstart','touchend','click'].forEach(function(evt) {
+  document.addEventListener(evt, _sndUnlock, { once: false, passive: true });
+});
 
 // 효과음 재생 (1회)
 function _btlSound(type) {
@@ -1049,11 +1069,18 @@ function _sndPlayBGM(type) {
   _sndBGM = new Audio(file);
   _sndBGM.volume = _sndVolBGM;
   _sndBGM.loop = true;
-  _sndBGM.play().catch(function(){});
+  _sndBGM.play().then(function() {
+    _sndUnlocked = true;
+    _sndPendingBGM = null;
+  }).catch(function() {
+    // 모바일: 아직 잠금 해제 안 됐으면 다음 터치 때 재생되도록 대기
+    _sndPendingBGM = type;
+  });
 }
 
 // 배경음 정지
 function _sndStopBGM() {
+  _sndPendingBGM = null;
   if (_sndBGM) {
     _sndBGM.pause();
     _sndBGM.currentTime = 0;
