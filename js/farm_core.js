@@ -157,17 +157,14 @@ function farmRenderMain() {
   html += farmRenderFarmerSlot();
   html += `<div class="farm-right-col">`;
   html += farmRenderDepositBadge();
-  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><span class="farm-shop-lbl" style="font-size:11px;font-weight:800;color:#fff">상점</span></div>`;
+  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><span class="farm-shop-lbl" style="font-size:8px;font-weight:800;color:#fff">상점</span></div>`;
   html += `</div>`;
   html += `</div>`;
 
-  // ── 밭 그리드 (픽셀 패널) ──
+  // ── 밭 그리드 ──
   html += farmRenderFieldGrid();
 
-  // ── 소비 아이템 바 ──
-  html += farmRenderConsumableBar();
-
-  // ── 인벤토리 ──
+  // ── 인벤토리 (소비아이템 태그 포함) ──
   html += farmRenderInventory();
 
   area.innerHTML = html;
@@ -212,9 +209,9 @@ function farmRenderDepositBadge() {
   const crumbs = _farmData?.deposit_crumbs || 0;
   return `
     <div class="farm-deposit-badge" onclick="farmShowDeposit()">
-      <div style="font-size:13px">🌰</div>
-      <div class="farm-dep-num" style="font-size:17px;font-weight:900;line-height:1;font-family:'Pretendard',sans-serif">${acorns}</div>
-      <div class="farm-dep-sub" style="font-size:9px;font-weight:700;font-family:'Pretendard',sans-serif">+${crumbs}조각</div>
+      <div style="font-size:10px">🌰</div>
+      <div class="farm-dep-num" style="font-size:14px;font-weight:900;line-height:1;font-family:'Pretendard',sans-serif">${acorns}</div>
+      <div class="farm-dep-sub" style="font-size:7px;font-weight:700;font-family:'Pretendard',sans-serif">+${crumbs}조각</div>
     </div>`;
 }
 
@@ -313,8 +310,8 @@ function farmRenderFarmerSlot() {
           <img src="images/squirrels/${spriteFile}.png" style="width:34px;height:34px;object-fit:contain;display:block" onerror="this.outerHTML='<div style=\\'font-size:24px;line-height:34px;text-align:center\\'>🐱</div>'">
         </div>
         <div style="min-width:0;position:relative;z-index:1">
-          <div class="farm-txt-brown farm-txt-bold" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;font-family:'Pretendard',sans-serif">${activeSq.name} 🌾</div>
-          <div style="font-size:11px;font-weight:700;color:${gs.color};font-family:'Pretendard',sans-serif">${gs.label}</div>
+          <div class="farm-txt-brown farm-txt-bold" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;font-family:'Pretendard',sans-serif">${activeSq.name} 🌾</div>
+          <div style="font-size:8px;font-weight:700;color:${gs.color};font-family:'Pretendard',sans-serif">${gs.label}</div>
         </div>
       </div>`;
   }
@@ -337,38 +334,17 @@ function farmRenderFarmerSlot() {
 // ================================================================
 //  소비 아이템 바 (촉진제/영양제) — 밭과 인벤토리 사이
 // ================================================================
-function farmRenderConsumableBar() {
+// 소비아이템을 인벤토리 헤더에 인라인 태그로 표시 (프리뷰 D7 원본 방식)
+function _farmRenderConsumableTags() {
   const items = _farmInventory || [];
   const accItem = items.find(i => i.item_type === 'accelerator');
   const nutItem = items.find(i => i.item_type === 'nutrient');
   const accQty = accItem?.quantity || 0;
   const nutQty = nutItem?.quantity || 0;
-
-  if (accQty <= 0 && nutQty <= 0) return '';
-
-  let html = `<div class="farm-consumable-bar">`;
-  if (accQty > 0) {
-    html += `
-      <div class="farm-consumable-item farm-consumable-acc">
-        <span style="font-size:18px">⚡</span>
-        <div>
-          <div style="font-size:11px;font-weight:700;font-family:'Pretendard',sans-serif">촉진제</div>
-          <div style="font-size:16px;font-weight:900;font-family:'Pretendard',sans-serif">${accQty}개</div>
-        </div>
-      </div>`;
-  }
-  if (nutQty > 0) {
-    html += `
-      <div class="farm-consumable-item farm-consumable-nut">
-        <span style="font-size:18px">🧪</span>
-        <div>
-          <div style="font-size:11px;font-weight:700;font-family:'Pretendard',sans-serif">영양제</div>
-          <div style="font-size:16px;font-weight:900;font-family:'Pretendard',sans-serif">${nutQty}개</div>
-        </div>
-      </div>`;
-  }
-  html += `</div>`;
-  return html;
+  let tags = '';
+  if (accQty > 0) tags += `<span class="farm-csm-tag farm-csm-acc">⚡${accQty}</span>`;
+  if (nutQty > 0) tags += `<span class="farm-csm-tag farm-csm-nut">🧪${nutQty}</span>`;
+  return tags;
 }
 
 // ================================================================
@@ -408,14 +384,14 @@ function farmRenderInventory() {
       const slotClass = isSeed ? 'farm-inv-slot farm-inv-slot-seed' : 'farm-inv-slot farm-inv-slot-harvest';
       gridHtml += `
         <div class="${slotClass}">
-          <div style="font-size:24px">${s.emoji}</div>
-          <div class="${isSeed ? 'farm-txt-green' : 'farm-txt-gold'}" style="font-size:8px;font-weight:800;margin-top:1px;white-space:nowrap;font-family:'Pretendard',sans-serif">${isSeed ? s.name + ' 씨앗' : s.name}</div>
+          <div style="font-size:18px">${s.emoji}</div>
+          <div class="${isSeed ? 'farm-txt-green' : 'farm-txt-gold'}" style="font-size:6px;font-weight:700;margin-top:1px;white-space:nowrap;font-family:'Pretendard',sans-serif">${isSeed ? s.name + ' 씨앗' : s.name}</div>
           <div class="farm-inv-qty">${s.qty}</div>
         </div>`;
     } else {
       gridHtml += `
         <div class="farm-inv-slot farm-inv-slot-empty">
-          <div style="font-size:16px;opacity:0.25">📦</div>
+          <div style="font-size:13px;opacity:0.1">📦</div>
         </div>`;
     }
   }
@@ -429,11 +405,13 @@ function farmRenderInventory() {
   const usedSlots = slots.length;
   const totalItems = cropItems.reduce((sum, inv) => sum + inv.quantity, 0);
 
+  const csmTags = _farmRenderConsumableTags();
+
   return `
-    <div style="margin-top:6px;padding:8px;background:rgba(255,255,255,.45);border:1px solid rgba(0,0,0,.04);border-radius:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div class="farm-inv-wrap">
+      <div class="farm-inv-header">
         <div class="farm-section-title">📦 인벤토리</div>
-        <div class="farm-txt-muted" style="font-size:11px;font-weight:700;font-family:'Pretendard',sans-serif">${usedSlots}/${capacity}칸 · 총 ${totalItems}개</div>
+        <div class="farm-inv-header-right">${usedSlots}/${capacity}칸 ${csmTags}</div>
       </div>
       <div class="farm-inv-grid">
         ${gridHtml}
