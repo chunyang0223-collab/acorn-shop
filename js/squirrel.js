@@ -437,11 +437,30 @@ async function sqRenderGrid() {
 
   // 필터
   const filter = window._sqFilter || 'all';
-  const filtered = filter === 'all' ? _sqSquirrels : _sqSquirrels.filter(sq => {
+  const filtered = filter === 'all' ? [..._sqSquirrels] : _sqSquirrels.filter(sq => {
     if (filter === 'baby') return sq.status === 'baby';
     if (filter === 'pet') return sq.status === 'pet';
     if (filter === 'explorer') return sq.status === 'explorer' || sq.status === 'exploring' || sq.status === 'recovering';
     return true;
+  });
+
+  // 등급순 자동정렬 (높은 등급이 위)
+  const _gradeRank = { legend: 5, unique: 4, epic: 3, rare: 2, normal: 1 };
+  const _typeRank = (sq) => {
+    const isExplorer = sq.status === 'explorer' || sq.status === 'exploring' || sq.status === 'recovering';
+    if (isExplorer) return 3;
+    const isFarmer = typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id);
+    if (sq.status === 'pet' && isFarmer) return 1;
+    if (sq.status === 'pet') return 2;
+    if (sq.status === 'baby') return 0;
+    return 0;
+  };
+  filtered.sort((a, b) => {
+    const ta = _typeRank(a), tb = _typeRank(b);
+    if (ta !== tb) return tb - ta; // 탐험형 > 애완형 > 애완형+농부 > 아기
+    const ga = _gradeRank[_sqCalcGrade(a)] || 0;
+    const gb = _gradeRank[_sqCalcGrade(b)] || 0;
+    return gb - ga; // 높은 등급 우선
   });
 
   const filterBtn = (val, label) => {
