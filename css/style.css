@@ -2613,18 +2613,18 @@ body {
 /* ── 상단 바 (D7 레이아웃) ── */
 .farm-topbar {
   display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 /* ── 농부 카드 (D7 farmer-card) ── */
 .farm-farmer-slot {
   flex: 1;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -2651,13 +2651,13 @@ body {
 
 /* 농부 아바타 원형 */
 .farm-farmer-avatar {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
   position: relative;
   z-index: 1;
   background: linear-gradient(135deg, #dcfce7, #bbf7d0);
@@ -2669,14 +2669,14 @@ body {
 .farm-right-col {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   flex-shrink: 0;
-  width: 90px;
+  width: 100px;
 }
 
 /* ── 예치금 뱃지 (D7 dep) ── */
 .farm-deposit-badge {
-  padding: 6px 8px;
+  padding: 7px 10px;
   border-radius: 12px;
   text-align: center;
   cursor: pointer;
@@ -2688,10 +2688,10 @@ body {
 
 /* ── 상점 버튼 (D7 shop) ── */
 .farm-shop-btn {
-  padding: 5px;
+  padding: 7px;
   border-radius: 10px;
   text-align: center;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: transform 0.15s;
   background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -2706,18 +2706,18 @@ body {
 .farm-shop-btn:active { transform: scale(0.92); }
 .farm-shop-btn::after {
   content: '🏪';
-  font-size: 14px;
+  font-size: 15px;
 }
 
 /* ── 밭 그리드 ── */
 .farm-field-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  padding: 8px;
+  gap: 6px;
+  padding: 10px;
   background: rgba(255,255,255,.45);
   border: 1px solid rgba(0,0,0,.04);
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 /* ── 밭 셀 ── */
@@ -2777,10 +2777,10 @@ body {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
+  gap: 8px;
+  padding: 8px 12px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 .farm-consumable-acc {
@@ -2798,11 +2798,11 @@ body {
 .farm-inv-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 .farm-inv-slot {
-  width: 54px;
-  height: 54px;
+  width: 58px;
+  height: 58px;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -2834,12 +2834,12 @@ body {
   position: absolute;
   bottom: -3px;
   right: -3px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
   background: #16a34a;
   color: white;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
   display: flex;
   align-items: center;
@@ -2855,7 +2855,7 @@ body {
 /* ── 농장 섹션 제목 ── */
 .farm-section-title {
   font-family: 'Pretendard', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   color: #374151;
   display: flex;
@@ -2868,30 +2868,30 @@ body {
 .farm-txt-green { color: #16a34a; }
 .farm-txt-gold { color: #92400e; }
 .farm-txt-muted { color: #9ca3af; }
-.farm-txt-xs { font-size: 9px; }
-.farm-txt-sm { font-size: 11px; }
-.farm-txt-md { font-size: 13px; }
-.farm-txt-lg { font-size: 16px; }
+.farm-txt-xs { font-size: 11px; }
+.farm-txt-sm { font-size: 13px; }
+.farm-txt-md { font-size: 14px; }
+.farm-txt-lg { font-size: 17px; }
 .farm-txt-bold { font-weight: 800; }
 
 /* ── 밭 셀 내부 아이콘 & 텍스트 ── */
-.farm-cell-emoji { font-size: 22px; line-height: 1; }
-.farm-cell-label { font-size: 8px; font-weight: 700; margin-top: 2px; font-family: 'Pretendard', sans-serif; }
-.farm-cell-timer { font-size: 7px; font-weight: 600; color: #9ca3af; margin-top: 1px; font-family: 'Pretendard', sans-serif; }
+.farm-cell-emoji { font-size: 30px; line-height: 1; }
+.farm-cell-label { font-size: 11px; font-weight: 800; margin-top: 3px; font-family: 'Pretendard', sans-serif; }
+.farm-cell-timer { font-size: 10px; font-weight: 700; color: #6b7280; margin-top: 2px; font-family: 'Pretendard', sans-serif; }
 
 /* ── 밭 셀 내부 아이템 사용 버튼 ── */
 .farm-cell-item-btns {
   position: absolute;
-  bottom: 1px;
+  bottom: 2px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 2px;
+  gap: 3px;
 }
 .farm-cell-item-btn {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1;
-  padding: 2px 4px;
+  padding: 3px 5px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 800;
@@ -3019,7 +3019,7 @@ body {
 [data-theme="dark"] .farm-txt-gold { color: #fbbf24; }
 [data-theme="dark"] .farm-txt-muted { color: #9ca3af; }
 [data-theme="dark"] .farm-cell-label { color: #e2e8f0; }
-[data-theme="dark"] .farm-cell-timer { color: #9ca3af; }
+[data-theme="dark"] .farm-cell-timer { color: #d1d5db; }
 [data-theme="dark"] .farm-cell-label.farm-txt-gold { color: #fbbf24; }
 [data-theme="dark"] .farm-cell-label.farm-txt-green { color: #86efac; }
 
