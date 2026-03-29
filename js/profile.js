@@ -285,12 +285,12 @@ async function openPrivacySettings() {
 
   showModal(`
     <div class="pf-privacy-modal">
-      <h2 class="text-lg font-black mb-3" style="color:var(--text-primary,#1f2937)">🔒 프로필 공개 설정</h2>
+      <h2 class="text-lg font-black mb-3" class="fr-text">🔒 프로필 공개 설정</h2>
       <p class="text-xs mb-4" style="color:#fbbf24">친구에게 어떤 정보를 보여줄지 선택하세요</p>
       <div class="space-y-3">
         ${fields.map(f => `
           <label class="pf-privacy-row">
-            <span class="text-sm font-bold" style="color:var(--text-primary,#1f2937)">${f.label}</span>
+            <span class="text-sm font-bold" class="fr-text">${f.label}</span>
             <input type="checkbox" class="pf-toggle" data-key="${f.key}" ${f.val ? 'checked' : ''}>
           </label>`).join('')}
       </div>
