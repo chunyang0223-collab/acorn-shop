@@ -157,7 +157,7 @@ function farmRenderMain() {
   html += farmRenderFarmerSlot();
   html += `<div class="farm-right-col">`;
   html += farmRenderDepositBadge();
-  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><span class="farm-shop-lbl" style="font-size:8px;font-weight:800;color:#fff">상점</span></div>`;
+  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><span class="farm-shop-lbl" style="font-size:11px;font-weight:800;color:#fff">상점</span></div>`;
   html += `</div>`;
   html += `</div>`;
 
@@ -212,9 +212,9 @@ function farmRenderDepositBadge() {
   const crumbs = _farmData?.deposit_crumbs || 0;
   return `
     <div class="farm-deposit-badge" onclick="farmShowDeposit()">
-      <div style="font-size:10px">🌰</div>
-      <div class="farm-dep-num" style="font-size:14px;font-weight:900;line-height:1;font-family:'Pretendard',sans-serif">${acorns}</div>
-      <div class="farm-dep-sub" style="font-size:7px;font-weight:600;font-family:'Pretendard',sans-serif">+${crumbs}조각</div>
+      <div style="font-size:13px">🌰</div>
+      <div class="farm-dep-num" style="font-size:17px;font-weight:900;line-height:1;font-family:'Pretendard',sans-serif">${acorns}</div>
+      <div class="farm-dep-sub" style="font-size:9px;font-weight:700;font-family:'Pretendard',sans-serif">+${crumbs}조각</div>
     </div>`;
 }
 
@@ -310,11 +310,11 @@ function farmRenderFarmerSlot() {
     return `
       <div class="farm-farmer-slot" onclick="farmShowChangeFarmer()">
         <div class="farm-farmer-avatar">
-          <img src="images/squirrels/${spriteFile}.png" style="width:28px;height:28px;object-fit:contain;display:block" onerror="this.outerHTML='<div style=\\'font-size:20px;line-height:28px;text-align:center\\'>🐱</div>'">
+          <img src="images/squirrels/${spriteFile}.png" style="width:34px;height:34px;object-fit:contain;display:block" onerror="this.outerHTML='<div style=\\'font-size:24px;line-height:34px;text-align:center\\'>🐱</div>'">
         </div>
         <div style="min-width:0;position:relative;z-index:1">
-          <div class="farm-txt-brown farm-txt-bold" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;font-family:'Pretendard',sans-serif">${activeSq.name} 🌾</div>
-          <div style="font-size:8px;font-weight:700;color:${gs.color};font-family:'Pretendard',sans-serif">${gs.label}</div>
+          <div class="farm-txt-brown farm-txt-bold" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;font-family:'Pretendard',sans-serif">${activeSq.name} 🌾</div>
+          <div style="font-size:11px;font-weight:700;color:${gs.color};font-family:'Pretendard',sans-serif">${gs.label}</div>
         </div>
       </div>`;
   }
@@ -350,20 +350,20 @@ function farmRenderConsumableBar() {
   if (accQty > 0) {
     html += `
       <div class="farm-consumable-item farm-consumable-acc">
-        <span style="font-size:16px">⚡</span>
+        <span style="font-size:18px">⚡</span>
         <div>
-          <div style="font-size:9px;font-weight:700;font-family:'Pretendard',sans-serif">촉진제</div>
-          <div style="font-size:14px;font-weight:900;font-family:'Pretendard',sans-serif">${accQty}개</div>
+          <div style="font-size:11px;font-weight:700;font-family:'Pretendard',sans-serif">촉진제</div>
+          <div style="font-size:16px;font-weight:900;font-family:'Pretendard',sans-serif">${accQty}개</div>
         </div>
       </div>`;
   }
   if (nutQty > 0) {
     html += `
       <div class="farm-consumable-item farm-consumable-nut">
-        <span style="font-size:16px">🧪</span>
+        <span style="font-size:18px">🧪</span>
         <div>
-          <div style="font-size:9px;font-weight:700;font-family:'Pretendard',sans-serif">영양제</div>
-          <div style="font-size:14px;font-weight:900;font-family:'Pretendard',sans-serif">${nutQty}개</div>
+          <div style="font-size:11px;font-weight:700;font-family:'Pretendard',sans-serif">영양제</div>
+          <div style="font-size:16px;font-weight:900;font-family:'Pretendard',sans-serif">${nutQty}개</div>
         </div>
       </div>`;
   }
@@ -408,8 +408,8 @@ function farmRenderInventory() {
       const slotClass = isSeed ? 'farm-inv-slot farm-inv-slot-seed' : 'farm-inv-slot farm-inv-slot-harvest';
       gridHtml += `
         <div class="${slotClass}">
-          <div style="font-size:22px">${s.emoji}</div>
-          <div class="${isSeed ? 'farm-txt-green' : 'farm-txt-gold'}" style="font-size:7px;font-weight:700;margin-top:1px;white-space:nowrap;font-family:'Pretendard',sans-serif">${isSeed ? s.name + ' 씨앗' : s.name}</div>
+          <div style="font-size:24px">${s.emoji}</div>
+          <div class="${isSeed ? 'farm-txt-green' : 'farm-txt-gold'}" style="font-size:8px;font-weight:800;margin-top:1px;white-space:nowrap;font-family:'Pretendard',sans-serif">${isSeed ? s.name + ' 씨앗' : s.name}</div>
           <div class="farm-inv-qty">${s.qty}</div>
         </div>`;
     } else {
@@ -422,8 +422,8 @@ function farmRenderInventory() {
 
   gridHtml += `
     <div class="farm-inv-slot farm-inv-slot-expand" onclick="farmExpandInventory()" title="인벤토리 확장 (🌰${expandCost})">
-      <div style="font-size:16px;opacity:0.5">+</div>
-      <div class="farm-txt-muted" style="font-size:7px;font-weight:700;font-family:'Pretendard',sans-serif">🌰${expandCost}</div>
+      <div style="font-size:18px;opacity:0.5">+</div>
+      <div class="farm-txt-muted" style="font-size:9px;font-weight:700;font-family:'Pretendard',sans-serif">🌰${expandCost}</div>
     </div>`;
 
   const usedSlots = slots.length;
@@ -433,7 +433,7 @@ function farmRenderInventory() {
     <div style="margin-top:6px;padding:8px;background:rgba(255,255,255,.45);border:1px solid rgba(0,0,0,.04);border-radius:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div class="farm-section-title">📦 인벤토리</div>
-        <div class="farm-txt-muted" style="font-size:8px;font-weight:700;font-family:'Pretendard',sans-serif">${usedSlots}/${capacity}칸 <span style="margin-left:2px">총 ${totalItems}개</span></div>
+        <div class="farm-txt-muted" style="font-size:11px;font-weight:700;font-family:'Pretendard',sans-serif">${usedSlots}/${capacity}칸 · 총 ${totalItems}개</div>
       </div>
       <div class="farm-inv-grid">
         ${gridHtml}
