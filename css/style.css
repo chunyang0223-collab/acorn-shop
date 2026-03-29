@@ -2616,54 +2616,108 @@ body {
 /* ── 상단 바 ── */
 .farm-topbar { display: flex; gap: 8px; margin-bottom: 10px; }
 
-/* ── 농부 카드 ── */
-.farm-farmer-slot {
-  flex: 1; padding: 10px 12px; border-radius: 14px;
-  display: flex; align-items: center; gap: 10px;
-  cursor: pointer; position: relative; overflow: hidden;
-  background: #e0ecd8; border: 2px solid #a0c490;
+/* ── 농부 카드 (4존 그리드) ── */
+.fc-card {
+  flex: 1; border-radius: 14px; cursor: pointer; overflow: hidden;
+  display: grid; grid-template-columns: 0.87fr 1.08fr 1.12fr;
+  grid-template-rows: 1fr 1fr; position: relative;
   transition: transform 0.12s;
 }
-.farm-farmer-slot::before {
-  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: radial-gradient(circle at 20% 50%, rgba(34,197,94,.08), transparent 60%);
-  pointer-events: none;
-}
-.farm-farmer-slot:active { transform: scale(0.97); }
-.farm-farmer-slot-empty { background: #e8e4d8; border: 2px dashed #c0b8a0; box-shadow: none; }
-.farm-farmer-slot-empty::before { display: none; }
+.fc-card:active { transform: scale(0.97); }
 
-.farm-farmer-slot--active {
-  flex-wrap: wrap; gap: 8px;
+/* 등급별 외곽 + 글로우 */
+.fc-grade-normal { border: 2px solid #a0b8a0; box-shadow: 0 2px 8px rgba(100,140,100,.15); }
+.fc-grade-rare   { border: 2px solid #4ade80; box-shadow: 0 2px 12px rgba(34,197,94,.2), inset 0 0 20px rgba(34,197,94,.03); }
+.fc-grade-epic   { border: 2px solid #60a5fa; box-shadow: 0 2px 14px rgba(59,130,246,.25), inset 0 0 20px rgba(59,130,246,.04); }
+.fc-grade-unique { border: 2px solid #facc15; box-shadow: 0 2px 16px rgba(234,179,8,.3), inset 0 0 24px rgba(234,179,8,.05); }
+.fc-grade-legend { border: 2px solid #f87171; box-shadow: 0 2px 20px rgba(239,68,68,.35), 0 0 30px rgba(239,68,68,.1), inset 0 0 24px rgba(239,68,68,.05); }
+@keyframes fcLegendPulse {
+  0%, 100% { box-shadow: 0 2px 20px rgba(239,68,68,.35), 0 0 30px rgba(239,68,68,.1); }
+  50% { box-shadow: 0 2px 24px rgba(239,68,68,.5), 0 0 40px rgba(239,68,68,.2); }
 }
-.farm-farmer-avatar {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; position: relative; z-index: 1;
-  background: #f5e8d0; border: 2px solid #c8b090; flex-shrink: 0;
+.fc-grade-legend { animation: fcLegendPulse 2.5s ease-in-out infinite; }
+
+/* 존1: 다람쥐 이미지 */
+.fc-zone1 {
+  grid-column: 1; grid-row: 1 / 3;
+  display: flex; align-items: center; justify-content: center; padding: 6px;
 }
-.farm-farmer-info {
-  flex: 1; min-width: 0; position: relative; z-index: 1;
+.fc-grade-normal .fc-zone1 { background: linear-gradient(160deg, #c5d4bc, #b8c8ae); }
+.fc-grade-rare   .fc-zone1 { background: linear-gradient(160deg, #b8e0c0, #a0d4a8); }
+.fc-grade-epic   .fc-zone1 { background: linear-gradient(160deg, #b8cfe8, #a0bce0); }
+.fc-grade-unique .fc-zone1 { background: linear-gradient(160deg, #e8dca0, #dcd098); }
+.fc-grade-legend .fc-zone1 { background: linear-gradient(160deg, #e8b8b0, #dca8a0); }
+.fc-zone1 img {
+  width: 100%; max-width: 64px; height: auto; object-fit: contain; display: block;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
 }
-.farm-farmer-name {
-  font-size: 14px; font-weight: 900; color: #1f2937;
+.fc-emoji-fb { font-size: 44px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.15)); }
+
+/* 존2: 이름 */
+.fc-zone2 {
+  grid-column: 2; grid-row: 1;
+  display: flex; align-items: center; justify-content: center; padding: 6px;
+}
+.fc-grade-normal .fc-zone2 { background: #d8e4d0; }
+.fc-grade-rare   .fc-zone2 { background: #d0ecd4; }
+.fc-grade-epic   .fc-zone2 { background: #d0dced; }
+.fc-grade-unique .fc-zone2 { background: #ede4c0; }
+.fc-grade-legend .fc-zone2 { background: #ecd4d0; }
+.fc-name {
+  font-size: 13px; font-weight: 900; color: #1f2937;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 120px; font-family: 'Pretendard', sans-serif;
+  text-align: center; font-family: 'Pretendard', sans-serif;
 }
-.farm-farmer-grade {
-  font-size: 11px; font-weight: 700; font-family: 'Pretendard', sans-serif;
+
+/* 존3: 등급 */
+.fc-zone3 {
+  grid-column: 2; grid-row: 2;
+  display: flex; align-items: center; justify-content: center; padding: 6px;
 }
-.farm-farmer-buff {
-  width: 100%; display: flex; align-items: center; gap: 5px;
-  padding: 4px 8px; border-radius: 8px;
-  border: 1.5px solid #c8b09030; background: #fefce8;
-  position: relative; z-index: 1;
+.fc-grade-normal .fc-zone3 { background: #e4eede; }
+.fc-grade-rare   .fc-zone3 { background: #e0f4e4; }
+.fc-grade-epic   .fc-zone3 { background: #e0e8f4; }
+.fc-grade-unique .fc-zone3 { background: #f4ecd4; }
+.fc-grade-legend .fc-zone3 { background: #f4e0dc; }
+.fc-grade {
+  font-size: 12px; font-weight: 800; text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,.06); font-family: 'Pretendard', sans-serif;
 }
-.farm-farmer-buff-icon { font-size: 12px; flex-shrink: 0; }
-.farm-farmer-buff-text {
-  font-size: 10px; font-weight: 700; color: #92400e;
-  font-family: 'Pretendard', sans-serif;
+.fc-grade-normal .fc-grade { color: #6b8068; }
+.fc-grade-rare   .fc-grade { color: #16a34a; }
+.fc-grade-epic   .fc-grade { color: #2563eb; }
+.fc-grade-unique .fc-grade { color: #b8860b; }
+.fc-grade-legend .fc-grade { color: #dc2626; }
+
+/* 존4: 버프 효과 */
+.fc-zone4 {
+  grid-column: 3; grid-row: 1 / 3;
+  display: flex; align-items: center; justify-content: center; padding: 6px 8px;
 }
+.fc-grade-normal .fc-zone4 { background: linear-gradient(160deg, #eef3ea, #e8ede4); }
+.fc-grade-rare   .fc-zone4 { background: linear-gradient(160deg, #eafaee, #e4f4e8); }
+.fc-grade-epic   .fc-zone4 { background: linear-gradient(160deg, #eaf0fa, #e4eaf6); }
+.fc-grade-unique .fc-zone4 { background: linear-gradient(160deg, #faf4e0, #f6f0da); }
+.fc-grade-legend .fc-zone4 { background: linear-gradient(160deg, #faece8, #f6e4e0); }
+.fc-buff {
+  font-size: 10px; font-weight: 700; color: #115e59;
+  line-height: 1.7; text-align: center; font-family: 'Pretendard', sans-serif;
+}
+.fc-buff-line { display: block; }
+.fc-buff-default { font-size: 12px; }
+
+/* 빈 슬롯 */
+.fc-card-empty {
+  flex: 1; padding: 16px; border-radius: 14px;
+  background: #e8e4d8; border: 2px dashed #c0b8a0;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: transform 0.12s;
+}
+.fc-card-empty:active { transform: scale(0.97); }
+.fc-card-none { cursor: default; }
+.fc-card-none:active { transform: none; }
+.fc-empty-emoji { font-size: 24px; opacity: 0.5; }
+.fc-empty-label { font-size: 12px; font-weight: 700; color: #8a7a60; }
 
 /* ── 우측 컬럼 ── */
 .farm-right-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; width: 90px; }
@@ -2891,14 +2945,46 @@ body {
 /* ═══════════════════════════════════════════════════════
    다크모드 — 프리뷰 body.dark 원본값 그대로
    ═══════════════════════════════════════════════════════ */
-/* ── 다크: 농부/상단 ── */
-[data-theme="dark"] .farm-farmer-slot { background: #2a2015; border: 1.5px solid #4a3520; box-shadow: none; }
-[data-theme="dark"] .farm-farmer-slot::before { display: none; }
-[data-theme="dark"] .farm-farmer-slot-empty { background: #1e1a12; border-color: #3a3020; }
-[data-theme="dark"] .farm-farmer-avatar { background: #3a2a18; border-color: #5a4228; }
-[data-theme="dark"] .farm-farmer-name { color: #e2e8f0; }
-[data-theme="dark"] .farm-farmer-buff { background: #2a2015; border-color: #4a352040; }
-[data-theme="dark"] .farm-farmer-buff-text { color: #fbbf24; }
+/* ── 다크: 농부 카드 (4존) ── */
+[data-theme="dark"] .fc-grade-normal { border-color: #506050; box-shadow: 0 2px 8px rgba(60,80,60,.3); }
+[data-theme="dark"] .fc-grade-rare   { border-color: #2a8a4a; box-shadow: 0 2px 12px rgba(34,197,94,.25); }
+[data-theme="dark"] .fc-grade-epic   { border-color: #3070c0; box-shadow: 0 2px 14px rgba(59,130,246,.3); }
+[data-theme="dark"] .fc-grade-unique { border-color: #a08020; box-shadow: 0 2px 16px rgba(234,179,8,.35); }
+[data-theme="dark"] .fc-grade-legend { border-color: #c04040; box-shadow: 0 2px 20px rgba(239,68,68,.4), 0 0 30px rgba(239,68,68,.15); }
+@keyframes fcLegendPulseDark {
+  0%, 100% { box-shadow: 0 2px 20px rgba(239,68,68,.4), 0 0 30px rgba(239,68,68,.15); }
+  50% { box-shadow: 0 2px 28px rgba(239,68,68,.6), 0 0 44px rgba(239,68,68,.25); }
+}
+[data-theme="dark"] .fc-grade-legend { animation: fcLegendPulseDark 2.5s ease-in-out infinite; }
+[data-theme="dark"] .fc-grade-normal .fc-zone1 { background: linear-gradient(160deg, #1e2818, #1a2214); }
+[data-theme="dark"] .fc-grade-rare   .fc-zone1 { background: linear-gradient(160deg, #142818, #102014); }
+[data-theme="dark"] .fc-grade-epic   .fc-zone1 { background: linear-gradient(160deg, #141e30, #101828); }
+[data-theme="dark"] .fc-grade-unique .fc-zone1 { background: linear-gradient(160deg, #2a2410, #24200c); }
+[data-theme="dark"] .fc-grade-legend .fc-zone1 { background: linear-gradient(160deg, #301414, #281010); }
+[data-theme="dark"] .fc-grade-normal .fc-zone2 { background: #242e20; }
+[data-theme="dark"] .fc-grade-rare   .fc-zone2 { background: #1a3020; }
+[data-theme="dark"] .fc-grade-epic   .fc-zone2 { background: #1a2238; }
+[data-theme="dark"] .fc-grade-unique .fc-zone2 { background: #302a14; }
+[data-theme="dark"] .fc-grade-legend .fc-zone2 { background: #381a1a; }
+[data-theme="dark"] .fc-grade-normal .fc-zone3 { background: #2a3426; }
+[data-theme="dark"] .fc-grade-rare   .fc-zone3 { background: #203826; }
+[data-theme="dark"] .fc-grade-epic   .fc-zone3 { background: #20283e; }
+[data-theme="dark"] .fc-grade-unique .fc-zone3 { background: #363018; }
+[data-theme="dark"] .fc-grade-legend .fc-zone3 { background: #3e2020; }
+[data-theme="dark"] .fc-grade-normal .fc-zone4 { background: linear-gradient(160deg, #303a2c, #2a3426); }
+[data-theme="dark"] .fc-grade-rare   .fc-zone4 { background: linear-gradient(160deg, #26402c, #203a26); }
+[data-theme="dark"] .fc-grade-epic   .fc-zone4 { background: linear-gradient(160deg, #263044, #20283e); }
+[data-theme="dark"] .fc-grade-unique .fc-zone4 { background: linear-gradient(160deg, #3c361e, #363018); }
+[data-theme="dark"] .fc-grade-legend .fc-zone4 { background: linear-gradient(160deg, #442626, #3e2020); }
+[data-theme="dark"] .fc-name { color: #e2e8f0; }
+[data-theme="dark"] .fc-grade-normal .fc-grade { color: #86efac; }
+[data-theme="dark"] .fc-grade-rare   .fc-grade { color: #4ade80; }
+[data-theme="dark"] .fc-grade-epic   .fc-grade { color: #60a5fa; }
+[data-theme="dark"] .fc-grade-unique .fc-grade { color: #fbbf24; }
+[data-theme="dark"] .fc-grade-legend .fc-grade { color: #f87171; }
+[data-theme="dark"] .fc-buff { color: #fbbf24; }
+[data-theme="dark"] .fc-card-empty { background: #1e1a12; border-color: #3a3020; }
+[data-theme="dark"] .fc-empty-label { color: #fbbf24; }
 [data-theme="dark"] .farm-right-col .farm-deposit-badge { background: #2e2210; border-color: #5a4218; }
 [data-theme="dark"] .farm-dep-num { color: #fcd34d; }
 [data-theme="dark"] .farm-dep-sub { color: #c49a50; }
