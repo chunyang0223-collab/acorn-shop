@@ -139,6 +139,7 @@
       <button class="tab-btn" onclick="uTab('minigame',this)" style="flex-shrink:0">🎮 미니게임</button>
       <button class="tab-btn" onclick="uTab('squirrel',this)" style="flex-shrink:0">🐿️ 다람쥐</button>
       <button class="tab-btn" onclick="uTab('ranking',this)" style="flex-shrink:0">🏆 랭킹</button>
+      <button class="tab-btn" onclick="uTab('friend',this)" style="flex-shrink:0;position:relative">🤝 친구<span class="notif-dot hidden" id="friendReqDot" style="position:absolute;top:2px;right:2px"></span></button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0">👤 마이</button>
     </div></div>
     <div id="utab-shop">
@@ -1228,6 +1229,11 @@
         <div id="myTxList" class="space-y-2"></div>
       </div>
     </div>
+
+    <!-- 🤝 친구 탭 -->
+    <div id="utab-friend" class="hidden">
+      <div id="friendContent"></div>
+    </div>
   </div>
 
   <!-- ── 관리자 모드 ── -->
@@ -1923,6 +1929,8 @@
 <script src="js/farm_shop.js"></script>
 <script src="js/farm_farmer.js"></script>
 <script src="js/farm_actions.js"></script>
+<script src="js/friend.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/app.js"></script>
 <script>
 // ── 앱 볼륨: UI 컨트롤 + 적용 함수 ──
