@@ -2278,11 +2278,11 @@ body {
   cursor: pointer;
 }
 [data-theme="dark"] .vol-control {
-  background: rgba(255,255,255,0.06) !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  background: #151c28 !important;
+  border-color: #2a3545 !important;
 }
 [data-theme="dark"] .vol-slider {
-  background: rgba(255,255,255,0.08) !important;
+  background: #1a2535 !important;
 }
 [data-theme="dark"] .vol-slider::-webkit-slider-thumb {
   background: linear-gradient(135deg, #b05878, #8050b8) !important;
@@ -2293,12 +2293,12 @@ body {
    인라인 style="" 의 어두운 색상을 밝게 변환
    ══════════════════════════════════════════════════════ */
 
-/* ── 다크: 어두운 텍스트 → 밝은 텍스트 ── */
-[data-theme="dark"] [style*="color:#1f2937"] { color: #e2e8f0 !important; }
-[data-theme="dark"] [style*="color:#374151"] { color: #cbd5e1 !important; }
-[data-theme="dark"] [style*="color:#4b5563"] { color: #a0aec0 !important; }
-[data-theme="dark"] [style*="color:#6b7280"] { color: #94a3b8 !important; }
-[data-theme="dark"] [style*="color:#9ca3af"] { color: #78849e !important; }
+/* ── 다크: 어두운 텍스트 → 채도 있는 밝은 색 ── */
+[data-theme="dark"] [style*="color:#1f2937"] { color: #fbbf24 !important; }
+[data-theme="dark"] [style*="color:#374151"] { color: #6ee7b7 !important; }
+[data-theme="dark"] [style*="color:#4b5563"] { color: #fb923c !important; }
+[data-theme="dark"] [style*="color:#6b7280"] { color: #c084fc !important; }
+[data-theme="dark"] [style*="color:#9ca3af"] { color: #d97706 !important; }
 [data-theme="dark"] [style*="color:#78350f"] { color: #fcd34d !important; }
 [data-theme="dark"] [style*="color:#92400e"] { color: #fbbf24 !important; }
 [data-theme="dark"] [style*="color:#b45309"] { color: #f59e0b !important; }
@@ -2373,41 +2373,41 @@ body {
   background: rgba(34,197,94,0.12) !important;
 }
 [data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#fefce8"] {
-  background: rgba(245,158,11,0.08) !important;
+  background: #2e2510 !important;
 }
 [data-theme="dark"] .clay-card [style*="border:2px solid #fbbf24"] {
-  border-color: rgba(245,158,11,0.4) !important;
+  border-color: #5a3a08 !important;
 }
 [data-theme="dark"] .clay-card [style*="border:2px solid #86efac"] {
-  border-color: rgba(34,197,94,0.35) !important;
+  border-color: #1a6a3a !important;
 }
 [data-theme="dark"] .clay-card [style*="border:2px dashed #d1d5db"] {
-  border-color: rgba(255,255,255,0.15) !important;
+  border-color: #2a3a4a !important;
 }
 [data-theme="dark"] .clay-card [style*="background:#f9fafb"] {
-  background: rgba(255,255,255,0.06) !important;
+  background: #1a2030 !important;
 }
 [data-theme="dark"] .clay-card [style*="background:#f3f4f6"] {
-  background: rgba(255,255,255,0.06) !important;
+  background: #1a2030 !important;
 }
 
 /* 인벤토리 슬롯 배경 */
 [data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#ecfdf5,#d1fae5)"] {
-  background: rgba(34,197,94,0.15) !important;
+  background: #0f2518 !important;
 }
 [data-theme="dark"] .clay-card [style*="background:linear-gradient(135deg,#fef9c3,#fef3c7)"] {
-  background: rgba(245,158,11,0.15) !important;
+  background: #2e2510 !important;
 }
 
 /* 예치금 뱃지 */
 [data-theme="dark"] [style*="background:linear-gradient(135deg,#fffbeb,#fef3c7)"] {
-  background: rgba(245,158,11,0.15) !important;
+  background: linear-gradient(135deg,#2e2210,#3a2a10) !important;
 }
 [data-theme="dark"] [style*="border:3px solid #d97706"] {
-  border-color: rgba(217,119,6,0.35) !important;
+  border-color: #6a4a10 !important;
 }
 [data-theme="dark"] [style*="border:2px solid #fbbf24"] {
-  border-color: rgba(245,158,11,0.30) !important;
+  border-color: #5a3a08 !important;
 }
 
 /* 농부 슬롯 */
@@ -2512,15 +2512,15 @@ body {
 
 /* 2048 스코어 박스 */
 [data-theme="dark"] .mg2048-sbox {
-  background: rgba(255,255,255,0.06) !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  background: #1a2535 !important;
+  border-color: #2a3a4a !important;
 }
 [data-theme="dark"] .mg2048-sbox-val { color: #e2e8f0 !important; }
 
 /* 원정대 도움말 카드 */
 [data-theme="dark"] .sq-help-card {
-  background: rgba(255,255,255,0.04) !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  background: #151c28 !important;
+  border-color: #2a3545 !important;
 }
 [data-theme="dark"] .sq-help-card-title { color: #e2e8f0 !important; }
 [data-theme="dark"] .sq-help-card-desc { color: #94a3b8 !important; }
@@ -2530,12 +2530,12 @@ body {
    🌙 다크: 원정대 아이템 선택 칩
    ══════════════════════════════════════════════════════ */
 [data-theme="dark"] .exp-item-select-wrap {
-  background: rgba(255,255,255,0.04) !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  background: #151c28 !important;
+  border-color: #2a3a4a !important;
 }
 [data-theme="dark"] .exp-item-chip {
-  border-color: rgba(255,255,255,0.12) !important;
-  background: rgba(255,255,255,0.05) !important;
+  border-color: #2a3a4a !important;
+  background: #1a2535 !important;
 }
 [data-theme="dark"] .exp-item-chip-name { color: #e2e8f0 !important; }
 
@@ -2847,3 +2847,125 @@ body .farm-field-grid { background: rgba(255,255,255,.45); border: 1px solid rgb
 [data-theme="dark"] .modal-box [style*="background:#fff"] {
   background: #1a2030 !important;
 }
+
+/* ══════════════════════════════════════════════════════
+   🌙 Issue 1: 수습완료 영역 / 예치금 모달 색상 대비
+   베이지 배경(#fef3c7, #fde68a)에 베이지 텍스트 → 진한 색으로
+   ══════════════════════════════════════════════════════ */
+/* 예치금 배지 + 수습완료 카드: 그라데이션 배경 */
+[data-theme="dark"] [style*="background:linear-gradient(135deg,#fef3c7,#fde68a)"] {
+  background: linear-gradient(135deg, #3a2a10, #4a3510) !important;
+  border-color: #6a4a10 !important;
+}
+/* 예치금 배지 숫자 */
+[data-theme="dark"] .farm-dep-num { color: #fcd34d !important; }
+[data-theme="dark"] .farm-dep-sub { color: #f59e0b !important; }
+/* 수습완료 카드 내부 텍스트 */
+[data-theme="dark"] [style*="color:#78350f"] { color: #fcd34d !important; }
+[data-theme="dark"] [style*="color:#92400e"] { color: #f59e0b !important; }
+/* 수습 진행중 배경 */
+[data-theme="dark"] [style*="background:#f0fdf4"][style*="border-radius:14px"] {
+  background: #0f2518 !important;
+}
+[data-theme="dark"] [style*="color:#15803d"] { color: #4ade80 !important; }
+[data-theme="dark"] [style*="color:#16a34a"] { color: #34d399 !important; }
+[data-theme="dark"] [style*="color:#86efac"] { color: #6ee7b7 !important; }
+
+/* ══════════════════════════════════════════════════════
+   🌙 Issue 2: 마이페이지 인벤토리 아이템 테두리 줄이기
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .inv-chip2 {
+  background: #1a2030 !important;
+  border: 1px solid #2a3545 !important;
+}
+[data-theme="dark"] .inv-chip2.pending {
+  background: #2a2010 !important;
+  border-color: #4a3510 !important;
+}
+[data-theme="dark"] .ic2-name { color: #fbbf24 !important; }
+[data-theme="dark"] .ic2-held { color: #c084fc !important; }
+[data-theme="dark"] .ic2-pending { color: #f59e0b !important; }
+[data-theme="dark"] .inv-empty2 { color: #4a5568 !important; }
+
+/* ══════════════════════════════════════════════════════
+   🌙 Issue 3: 알림(종 아이콘) 내역 구분선 추가
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .notif-scroll .row-item-bg {
+  background: #1a2535 !important;
+  border: 1px solid #2a3a4a !important;
+  margin-bottom: 6px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   🌙 Issue 4: 농장 밭 칸 색상 — 투명도 없이 실제 색상 구분
+   빈 칸: 은은한 밝은 배경 (클릭 가능 표시)
+   잠금 칸: 어두운 배경 (비활성)
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .farm-cell-empty {
+  background: #1e2838 !important;
+  border: 1.5px dashed #3a5060 !important;
+}
+[data-theme="dark"] .farm-cell-locked {
+  background: #0e1420 !important;
+  border: 1.5px solid #1a2030 !important;
+  opacity: 0.35 !important;
+}
+[data-theme="dark"] .farm-cell-growing {
+  background: #0f2518 !important;
+  border-color: #1a7a3a !important;
+}
+[data-theme="dark"] .farm-cell-ready {
+  background: #2e2510 !important;
+  border-color: #8a6a10 !important;
+}
+[data-theme="dark"] .farm-cell-expand {
+  background: #1a2535 !important;
+  border: 1.5px dashed #3a6a4a !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   🌙 Issue 5: 농부 전직 버튼 색상 강화
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] [style*="background:#ecfdf5"][style*="color:#15803d"] {
+  background: #0f2518 !important;
+  color: #4ade80 !important;
+  border: 1px solid #1a6a3a !important;
+}
+/* 팔기 버튼도 진하게 */
+[data-theme="dark"] [style*="background:#fee2e2"][style*="color:#dc2626"] {
+  background: #2a1515 !important;
+  color: #f87171 !important;
+  border: 1px solid #5a2020 !important;
+}
+/* 비활성 전직 버튼 */
+[data-theme="dark"] [style*="background:#f3f4f6"][style*="color:#9ca3af"] {
+  background: #1a2030 !important;
+  color: #4a5568 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   🌙 Issue 6: 전체적 진하기 보강 — 대비 강화
+   ══════════════════════════════════════════════════════ */
+/* 모달 배경 더 진하게 */
+[data-theme="dark"] .modal-box {
+  background: #151c28 !important;
+  border: 1px solid #2a3a4a !important;
+}
+/* clay-card 배경 진하게 */
+[data-theme="dark"] .clay-card {
+  background: #151c28 !important;
+  border-color: #2a3a4a !important;
+}
+/* row-item-bg 더 진하게 */
+[data-theme="dark"] .row-item-bg {
+  background: #1a2535 !important;
+}
+/* 전역 흰 배경 → 더 진한 배경 */
+[data-theme="dark"] [style*="background:white"],
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background:#fff"],
+[data-theme="dark"] [style*="background: #fff"] {
+  background: #151c28 !important;
+}
+[data-theme="dark"] [style*="background:#f9fafb"] { background: #1a2030 !important; }
+[data-theme="dark"] [style*="background:#f3f4f6"] { background: #1a2535 !important; }
