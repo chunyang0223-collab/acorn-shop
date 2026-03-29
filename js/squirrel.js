@@ -213,6 +213,8 @@ function sqTab(tab) {
     if (tab === 'shop') _sndPlayBGM('shop');
     else if (tab === 'expedition') _sndPlayBGM('explorer');
     else if (tab === 'my') _sndPlayBGM('my');
+    else if (tab === 'fuse') _sndPlayBGM('fuse');
+    else if (tab === 'farm') _sndPlayBGM('farm');
     else _sndStopBGM();
   }
 }

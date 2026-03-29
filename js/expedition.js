@@ -1036,6 +1036,8 @@ function _sndPlayBGM(type) {
     'my':       ['sounds/menu_bgm_my_squirrels.mp3'],
     'shop':     ['sounds/menu_bgm_squirrel_shop.mp3'],
     'explorer': ['sounds/menu_bgm_explorer.mp3'],
+    'fuse':     ['sounds/menu_bgm_fuse.mp3'],
+    'farm':     ['sounds/farm_bgm.mp3'],
     'battle':   ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
     'boss':     ['sounds/battle_boss_1.mp3','sounds/battle_boss_2.mp3','sounds/battle_boss_3.mp3'],
     'defeat':   ['sounds/explorer_complete_defeat.mp3'],
