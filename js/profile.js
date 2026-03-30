@@ -51,6 +51,14 @@ async function openProfile(userId) {
         </div>
       </div>`;
 
+    // 본인 프로필: 공개 설정 버튼 (헤더 바로 아래)
+    if (isMe) {
+      html += `
+        <div class="pf-privacy-btn-wrap">
+          <button class="btn btn-primary px-4 py-2 text-xs" onclick="openPrivacySettings()">🔒 공개 설정</button>
+        </div>`;
+    }
+
     // 도토리
     if (isMe || privacy.show_acorns) {
       html += `
@@ -81,14 +89,8 @@ async function openProfile(userId) {
       html += _buildFarmStats(farmData);
     }
 
-    // 본인 프로필: 공개 설정 버튼
-    if (isMe) {
-      html += `
-        <div class="pf-privacy-btn-wrap">
-          <button class="btn btn-primary px-4 py-2 text-xs" onclick="openPrivacySettings()">🔒 공개 설정</button>
-        </div>`;
-    } else {
-      // 친구 삭제 버튼
+    // 타인 프로필: 친구 삭제 버튼
+    if (!isMe) {
       const friendship = _friendList.find(f => f.id === userId);
       if (friendship) {
         html += `

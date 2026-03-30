@@ -143,7 +143,6 @@ function _renderFriendTab() {
                   <span class="text-2xl">${f.avatar_emoji || '🐿️'}</span>
                   <div class="min-w-0">
                     <p class="text-sm font-black truncate fr-text">${_escHtml(f.display_name || '???')}</p>
-                    <p class="text-xs" style="color:#86efac">🌰 ${f.acorns ?? 0}</p>
                   </div>
                 </div>
                 <span class="text-xs" style="color:#fbbf24">프로필 →</span>
