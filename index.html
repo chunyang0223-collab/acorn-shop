@@ -1671,6 +1671,90 @@
           </div>
         </div>
 
+          <!-- 회복속도 부스트 -->
+          <div class="mt-4 mb-4 p-4 rounded-2xl" style="background:rgba(167,243,208,0.25);border:1.5px solid rgba(16,185,129,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">💊</span><p class="font-black text-gray-800 text-sm">회복속도 부스트</p></div>
+              <div id="recoveryEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="recoveryDiscountPct" placeholder="부스트 %" min="1" max="90" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 빠르게</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="recoveryEventPreset" onchange="applyEventPreset('recovery')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('recovery')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="recoveryEventStart">
+              <input class="field text-xs" type="datetime-local" id="recoveryEventEnd">
+              <p class="text-xs text-gray-400">※ 탐험 복귀 시 회복시간이 설정한 %만큼 단축됩니다.</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('recovery')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('recovery')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 미니게임 참가비 할인 -->
+          <div class="mb-4 p-4 rounded-2xl" style="background:rgba(253,186,116,0.2);border:1.5px solid rgba(251,146,60,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🎮</span><p class="font-black text-gray-800 text-sm">미니게임 참가비 할인</p></div>
+              <div id="minigameEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="minigameDiscountPct" placeholder="할인 도토리" min="1" max="100" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">🌰 할인</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="minigameEventPreset" onchange="applyEventPreset('minigame')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('minigame')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="minigameEventStart">
+              <input class="field text-xs" type="datetime-local" id="minigameEventEnd">
+              <p class="text-xs text-gray-400">※ 참가비에서 설정한 도토리만큼 차감됩니다. (최소 참가비 0)</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('minigame')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('minigame')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 농장 성장속도 부스트 -->
+          <div class="p-4 rounded-2xl" style="background:rgba(187,247,208,0.25);border:1.5px solid rgba(74,222,128,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🌾</span><p class="font-black text-gray-800 text-sm">농장 성장속도 부스트</p></div>
+              <div id="farm_growthEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="farm_growthDiscountPct" placeholder="부스트 %" min="1" max="90" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 빠르게</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="farm_growthEventPreset" onchange="applyEventPreset('farm_growth')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('farm_growth')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="farm_growthEventStart">
+              <input class="field text-xs" type="datetime-local" id="farm_growthEventEnd">
+              <p class="text-xs text-gray-400">※ 씨앗 심기 시 성장시간이 설정한 %만큼 단축됩니다.</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('farm_growth')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('farm_growth')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+
         <!-- ── 요일 반복 패널 ── -->
         <div id="evtPane-repeat" class="hidden">
           <div class="p-3 rounded-2xl mb-4" style="background:rgba(219,234,254,0.4);border:1.5px solid rgba(96,165,250,0.3)">
@@ -1683,6 +1767,9 @@
               <select class="field flex-1" id="rpt-target">
                 <option value="store">🛍️ 상점 할인</option>
                 <option value="gacha">🎲 뽑기 할인</option>
+                <option value="recovery">💊 회복속도 부스트</option>
+                <option value="minigame">🎮 미니게임 참가비 할인</option>
+                <option value="farm_growth">🌾 농장 성장속도 부스트</option>
               </select>
               <input class="field" type="number" id="rpt-pct" placeholder="%" min="1" max="100" style="width:70px;flex-shrink:0">
               <span class="text-sm font-bold text-gray-500 flex-shrink-0">%</span>
