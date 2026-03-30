@@ -600,9 +600,12 @@ async function _2048_finish(score, reward, itemReward) {
   // 뽑기 티켓 지급
   if (itemReward > 0) {
     try {
-      await sb.rpc('adjust_gacha_tickets', { p_user_id: myProfile.id, p_amount: itemReward, p_reason: '2048 아이템 드롭' });
-      window._gachaTicketCount = (window._gachaTicketCount || 0) + itemReward;
-      if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+      const { data: tRes, error: tErr } = await sb.rpc('adjust_gacha_tickets', { p_user_id: myProfile.id, p_amount: itemReward });
+      if (tErr) console.warn('[2048 ticket]', tErr);
+      else {
+        window._gachaTicketCount = tRes?.count ?? ((window._gachaTicketCount || 0) + itemReward);
+        if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+      }
       toast('🎫', `+${itemReward} 뽑기 티켓을 받았어요!`);
     } catch (e) {
       console.warn('[2048 item drop]', e);
