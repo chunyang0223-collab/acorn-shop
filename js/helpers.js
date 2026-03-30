@@ -68,9 +68,21 @@ function _blockScroll(e) {
   if (!e.target.closest('.modal-box')) e.preventDefault();
 }
 function showModal(html) {
+  const modal = document.getElementById('modal');
+  const wasVisible = !modal.classList.contains('hidden');
+  // 이미 열린 상태에서 내용만 교체할 때는 팝 애니메이션 억제
+  if (wasVisible) {
+    const box = modal.querySelector('.modal-box');
+    if (box) box.style.animation = 'none';
+  }
   document.getElementById('modalContent').innerHTML = html;
-  document.getElementById('modal').classList.remove('hidden');
-  document.getElementById('modal').addEventListener('touchmove', _blockScroll, { passive: false });
+  modal.classList.remove('hidden');
+  modal.addEventListener('touchmove', _blockScroll, { passive: false });
+  // 새로 열리는 경우 애니메이션 복원 (CSS 기본값 사용)
+  if (!wasVisible) {
+    const newBox = modal.querySelector('.modal-box');
+    if (newBox) newBox.style.animation = '';
+  }
 }
 function closeModal() {
   document.getElementById('modal').classList.add('hidden');
