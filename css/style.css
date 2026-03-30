@@ -4503,7 +4503,7 @@ input[type="checkbox"]:active,
    ══════════════════════════════════════════════════════ */
 @font-face {
   font-family: 'SproutPixel';
-  src: url('../nyangsheet/pixelFont-7-8x14-sproutLands.ttf') format('truetype');
+  src: url('../fonts/pixel_font.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
