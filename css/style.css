@@ -5663,6 +5663,17 @@ input[type="checkbox"]:active,
 .pf-farm-card-val { font-size: 1.2rem; font-weight: 900; color: var(--pf-farm-card-val); }
 .pf-farm-card-label { font-size: 0.65rem; font-weight: 700; color: var(--pf-farm-card-label); }
 
+/* ── 농장 작물 그리드 (프로필) ── */
+.pf-farm-crop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
+.pf-farm-crop-card {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 6px; border-radius: 12px;
+  background: var(--pf-farm-card-bg);
+  border: 1.5px solid var(--pf-farm-card-border);
+}
+.pf-farm-crop-name { font-size: 0.7rem; font-weight: 800; color: var(--pf-farm-card-val); }
+.pf-farm-crop-status { font-size: 0.6rem; font-weight: 700; }
+
 /* ── 공개 설정 ── */
 .pf-privacy-btn-wrap { text-align: center; margin-top: 14px; }
 .pf-privacy-modal { max-width: 360px; margin: 0 auto; }
@@ -5721,6 +5732,8 @@ input[type="checkbox"]:active,
   border-color: var(--pf-farm-card-border);
 }
 [data-theme="dark"] .pf-farm-card-label { color: var(--pf-farm-card-label-color); }
+[data-theme="dark"] .pf-farm-crop-card { background: var(--pf-farm-card-bg); border-color: var(--pf-farm-card-border); }
+[data-theme="dark"] .pf-farm-crop-name { color: var(--pf-farm-card-val-color); }
 [data-theme="dark"] .pf-privacy-row { background: var(--pf-privacy-row-bg); }
 [data-theme="dark"] .pf-toggle { background: var(--pf-toggle-bg); }
 [data-theme="dark"] .pf-toggle:checked { background: var(--pf-toggle-checked-bg); }
