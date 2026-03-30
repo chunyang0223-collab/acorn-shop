@@ -4,6 +4,8 @@
    ================================================================ */
 
 var _farmShopWasOpen = false;  // 상점에서 입출금 열었는지 추적
+var _farmShopModalOpen = false; // 상점 모달 열림 상태 (DOM 조회 대신 플래그로 관리)
+var _farmShopReqId = 0;         // 탭 전환 비동기 요청 ID (경쟁 상태 방지)
 
 // ================================================================
 //  잔고 애니메이션 (플로팅 차감/증가)
@@ -72,8 +74,10 @@ function _farmBalanceAnim(costCrumbs, isSell, label) {
 // ================================================================
 function farmShowDeposit() {
   playSound('click');
-  // 상점 모달에서 호출된 경우 추적
-  _farmShopWasOpen = !!document.getElementById('farmShopContent');
+  // 상점 모달에서 호출된 경우 추적 (플래그 기반)
+  _farmShopWasOpen = _farmShopModalOpen;
+  _farmShopModalOpen = false;  // 입출금 모달이 상점을 대체
+  _farmShopReqId++;            // 진행 중인 상점 비동기 요청 무효화
   const acorns = _farmData?.deposit_acorns || 0;
   const crumbs = _farmData?.deposit_crumbs || 0;
   const myAcorns = myProfile?.acorns ?? 0;
@@ -171,54 +175,30 @@ async function _farmRefreshMyAcorns() {
   } catch (e) { console.warn('[_farmRefreshMyAcorns]', e); }
 }
 
-// ── 입출금 후 상점 복귀 (애니메이션 억제) ──
-function _farmReopenShopSilent() {
-  // 상점을 다시 열되, 열기 애니메이션 없이 즉시 표시
-  farmShowShop();
-  // showModal이 호출된 직후 modal-box의 애니메이션 제거
-  requestAnimationFrame(() => {
-    const box = document.querySelector('#modal .modal-box');
-    if (box) box.style.animation = 'none';
-  });
+// ── 상점 닫기 (플래그 관리 + 모달 닫기) ──
+function farmCloseShop() {
+  _farmShopModalOpen = false;
+  _farmShopReqId++;  // 진행 중인 비동기 요청 무효화
+  closeModal();
 }
 
-// ================================================================
-//  상점 — 고정 레이아웃 (메뉴 / 아이템 / 잔고 영역 분리)
-// ================================================================
-async function farmShowShop(tab) {
-  if (tab) { _farmShopTab = tab; playSound('tab'); }
+// ── 입출금 후 상점 복귀 (애니메이션 억제) ──
+function _farmReopenShopSilent() {
+  _farmShopModalOpen = true;
+  _farmOpenShopFull();
+  // showModal 직후 modal-box 애니메이션 제거
+  const box = document.querySelector('#modal .modal-box');
+  if (box) box.style.animation = 'none';
+}
 
-  // 비동기 호출 전에 모달 열림 상태를 기억
-  const modalWasVisible = !document.getElementById('modal').classList.contains('hidden');
-
-  if (_farmShopTab === 'sell') {
-    try {
-      const { data } = await sb.rpc('farm_get_sell_status', { p_user_id: myProfile.id });
-      _farmSellStatus = data?.sales || {};
-    } catch(e) { console.warn('[farm sell status]', e); }
-  }
-
-  // 비동기 호출 중 모달이 닫혔으면 중단 (닫기 버튼 여러 번 눌러야 하는 문제 방지)
-  const modalNowVisible = !document.getElementById('modal').classList.contains('hidden');
-  if (modalWasVisible && !modalNowVisible) return;
-
-  // 탭 변경 시 컨텐츠만 교체 (모달이 이미 열려있고 보이는 상태일 때만)
-  const existing = document.getElementById('farmShopContent');
-  if (existing && modalNowVisible) {
-    existing.innerHTML = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
-    _farmShopUpdateTabs();
-    _farmShopUpdateFooter();
-    return;
-  }
-
-  // 최초 열기 — 전체 고정 레이아웃 생성
+// ── 상점 전체 레이아웃 생성 (내부용) ──
+function _farmOpenShopFull() {
   const depositAcorns = _farmData?.deposit_acorns || 0;
   const depositCrumbs = _farmData?.deposit_crumbs || 0;
-  let contentHtml = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
+  const contentHtml = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
 
   showModal(`
     <div class="farm-shop-page">
-      <!-- ■ 상단 고정: 헤더 + 메뉴바 -->
       <div class="farm-shop-header">
         <div class="farm-shop-title">🏪 농장 상점</div>
         <div class="farm-shop-tabs" id="farmShopTabs">
@@ -227,13 +207,9 @@ async function farmShowShop(tab) {
           <button onclick="farmShowShop('item')" class="farm-shop-tab ${_farmShopTab === 'item' ? 'active' : ''}" data-tab="item">⚗️ 아이템</button>
         </div>
       </div>
-
-      <!-- ■ 중앙 스크롤: 아이템 영역 -->
       <div class="farm-shop-body" id="farmShopContent">
         ${contentHtml}
       </div>
-
-      <!-- ■ 하단 고정: 잔고 + 닫기 -->
       <div class="farm-shop-footer" id="farmShopFooter">
         <div class="farm-shop-balance">
           <div class="farm-shop-bal-icon">🌰</div>
@@ -244,10 +220,49 @@ async function farmShowShop(tab) {
           <button onclick="farmShowDeposit()" class="farm-shop-deposit-btn">입출금</button>
         </div>
         ${_farmShopTimeLeftHtml()}
-        <button onclick="closeModal()" class="farm-shop-close-btn">닫기</button>
+        <button onclick="farmCloseShop()" class="farm-shop-close-btn">닫기</button>
       </div>
     </div>
   `);
+}
+
+// ================================================================
+//  상점 — 고정 레이아웃 (메뉴 / 아이템 / 잔고 영역 분리)
+// ================================================================
+async function farmShowShop(tab) {
+  if (tab) { _farmShopTab = tab; playSound('tab'); }
+
+  // 요청 ID 발급 — 비동기 완료 후 이 ID가 바뀌었으면 무시
+  const myReqId = ++_farmShopReqId;
+
+  // 판매 탭은 서버에서 판매 현황 조회 필요 (비동기)
+  if (_farmShopTab === 'sell') {
+    try {
+      const { data } = await sb.rpc('farm_get_sell_status', { p_user_id: myProfile.id });
+      _farmSellStatus = data?.sales || {};
+    } catch(e) { console.warn('[farm sell status]', e); }
+  }
+
+  // 비동기 중 상점이 닫혔거나 다른 탭이 요청됐으면 중단
+  if (myReqId !== _farmShopReqId) return;
+  if (!_farmShopModalOpen) {
+    // 최초 열기
+    _farmShopModalOpen = true;
+    _farmOpenShopFull();
+    return;
+  }
+
+  // 이미 열린 상태 — 컨텐츠만 교체 (애니메이션 없음)
+  const existing = document.getElementById('farmShopContent');
+  if (existing) {
+    existing.innerHTML = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
+    _farmShopUpdateTabs();
+    _farmShopUpdateFooter();
+    return;
+  }
+
+  // fallback: DOM이 없으면 전체 재생성
+  _farmOpenShopFull();
 }
 
 // ── 탭 활성 상태 업데이트 ──
@@ -274,7 +289,7 @@ function _farmShopUpdateFooter() {
       <button onclick="farmShowDeposit()" class="farm-shop-deposit-btn">입출금</button>
     </div>
     ${_farmShopTimeLeftHtml()}
-    <button onclick="closeModal()" class="farm-shop-close-btn">닫기</button>
+    <button onclick="farmCloseShop()" class="farm-shop-close-btn">닫기</button>
   `;
 }
 
@@ -474,7 +489,7 @@ async function farmSellSeed(cropId) {
     const _prevAcorns = _farmData?.deposit_acorns || 0;
     const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
-    const shopOpen = !!document.getElementById('farmShopContent');
+    const shopOpen = _farmShopModalOpen;
     if (shopOpen) {
       await farmShowShop('sell');
       const balAcorn = document.querySelector('.farm-shop-bal-acorn');
@@ -506,7 +521,7 @@ async function farmSellCrop(cropId) {
     const _prevAcorns = _farmData?.deposit_acorns || 0;
     const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
-    const shopOpen = !!document.getElementById('farmShopContent');
+    const shopOpen = _farmShopModalOpen;
     if (shopOpen) {
       await farmShowShop('sell');
       const balAcorn = document.querySelector('.farm-shop-bal-acorn');
@@ -538,7 +553,7 @@ async function farmBuySeed(cropId) {
     const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
     // 잔고 애니메이션 (상점이 열려있을 때만, 아니면 toast)
-    const shopOpen = !!document.getElementById('farmShopContent');
+    const shopOpen = _farmShopModalOpen;
     if (shopOpen) {
       // 먼저 이전 잔고로 표시 유지한 채 컨텐츠 갱신
       await farmShowShop('buy');
@@ -691,7 +706,7 @@ async function farmBuyItem(itemType) {
     const _prevAcorns = _farmData?.deposit_acorns || 0;
     const _prevCrumbs = _farmData?.deposit_crumbs || 0;
     await _farmReloadAll();
-    const shopOpen = !!document.getElementById('farmShopContent');
+    const shopOpen = _farmShopModalOpen;
     if (shopOpen) {
       await farmShowShop('item');
       const balAcorn = document.querySelector('.farm-shop-bal-acorn');
