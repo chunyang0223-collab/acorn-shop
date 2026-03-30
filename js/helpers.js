@@ -85,8 +85,11 @@ function showModal(html) {
   }
 }
 function closeModal() {
-  document.getElementById('modal').classList.add('hidden');
-  document.getElementById('modal').removeEventListener('touchmove', _blockScroll);
+  const modal = document.getElementById('modal');
+  modal.classList.add('hidden');
+  modal.removeEventListener('touchmove', _blockScroll);
+  // 모달 내용 비우기 — 잔존 DOM이 상태 판별을 오염시키는 것 방지
+  document.getElementById('modalContent').innerHTML = '';
 }
 
 let _toastT;

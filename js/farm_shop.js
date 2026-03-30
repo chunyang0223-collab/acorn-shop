@@ -128,7 +128,7 @@ async function farmDoDeposit() {
     await _farmReloadAll();
     closeModal();
     farmRenderMain();
-    if (_farmShopWasOpen) { _farmShopWasOpen = false; farmShowShop(); }
+    if (_farmShopWasOpen) { _farmShopWasOpen = false; _farmReopenShopSilent(); }
   } catch (e) {
     console.error('[farm deposit]', e);
     toast('❌', '입금 실패: ' + (e?.message || ''));
@@ -153,7 +153,7 @@ async function farmDoWithdraw() {
     await _farmReloadAll();
     closeModal();
     farmRenderMain();
-    if (_farmShopWasOpen) { _farmShopWasOpen = false; farmShowShop(); }
+    if (_farmShopWasOpen) { _farmShopWasOpen = false; _farmReopenShopSilent(); }
   } catch (e) {
     console.error('[farm withdraw]', e);
     toast('❌', '출금 실패: ' + (e?.message || ''));
@@ -171,11 +171,26 @@ async function _farmRefreshMyAcorns() {
   } catch (e) { console.warn('[_farmRefreshMyAcorns]', e); }
 }
 
+// ── 입출금 후 상점 복귀 (애니메이션 억제) ──
+function _farmReopenShopSilent() {
+  // 상점을 다시 열되, 열기 애니메이션 없이 즉시 표시
+  farmShowShop();
+  // showModal이 호출된 직후 modal-box의 애니메이션 제거
+  requestAnimationFrame(() => {
+    const box = document.querySelector('#modal .modal-box');
+    if (box) box.style.animation = 'none';
+  });
+}
+
 // ================================================================
 //  상점 — 고정 레이아웃 (메뉴 / 아이템 / 잔고 영역 분리)
 // ================================================================
 async function farmShowShop(tab) {
   if (tab) { _farmShopTab = tab; playSound('tab'); }
+
+  // 비동기 호출 전에 모달 열림 상태를 기억
+  const modalWasVisible = !document.getElementById('modal').classList.contains('hidden');
+
   if (_farmShopTab === 'sell') {
     try {
       const { data } = await sb.rpc('farm_get_sell_status', { p_user_id: myProfile.id });
@@ -183,10 +198,13 @@ async function farmShowShop(tab) {
     } catch(e) { console.warn('[farm sell status]', e); }
   }
 
+  // 비동기 호출 중 모달이 닫혔으면 중단 (닫기 버튼 여러 번 눌러야 하는 문제 방지)
+  const modalNowVisible = !document.getElementById('modal').classList.contains('hidden');
+  if (modalWasVisible && !modalNowVisible) return;
+
   // 탭 변경 시 컨텐츠만 교체 (모달이 이미 열려있고 보이는 상태일 때만)
   const existing = document.getElementById('farmShopContent');
-  const modalVisible = !document.getElementById('modal').classList.contains('hidden');
-  if (existing && modalVisible) {
+  if (existing && modalNowVisible) {
     existing.innerHTML = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
     _farmShopUpdateTabs();
     _farmShopUpdateFooter();
