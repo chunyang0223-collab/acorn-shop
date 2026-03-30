@@ -17,6 +17,7 @@ const MG_DEFAULTS = {
     playLimit: 10, rewardLimit: 3, unlimitedPlays: false,
     entryFee: 0, duration: 30,
     dropChance: 20, dropMin: 1, dropMax: 1,
+    itemDropChance: 0, itemDropAmount: 1,
     bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5
   },
   roulette: {
@@ -503,7 +504,18 @@ async function renderMinigameAdmin() {
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-400 whitespace-nowrap">최대 드롭 개수</label>
           <input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropMax" value="${val('dropMax') ?? 1}">
-        </div>` : ''}
+        </div>
+        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
+        <div class="text-xs font-black text-gray-600 mb-1">🎫 아이템 드롭 (뽑기 티켓)</div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">합칠 때 드롭 확률(%)</label>
+          <input class="field text-center" type="number" min="0" max="100" step="0.1" style="width:80px" id="mg-2048-itemDropChance" value="${val('itemDropChance') ?? 0}">
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">드롭 개수</label>
+          <input class="field text-center" type="number" min="1" max="10" style="width:80px" id="mg-2048-itemDropAmount" value="${val('itemDropAmount') ?? 1}">
+        </div>
+        <p class="text-xs text-gray-400 mt-1">0%로 두면 아이템 꺼짐. 도토리와 독립 확률.</p>` : ''}
         ${def.duration > 0 || id === 'catch' || id === '2048' ? `
         <div class="flex items-center justify-between gap-3">
           <label class="text-xs font-bold text-gray-500 whitespace-nowrap">⏱ 게임 시간(초)</label>
@@ -547,8 +559,8 @@ async function renderMinigameAdmin() {
 }
 
 async function saveMinigameSetting(gameId) {
-  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropMin', 'dropMax'];
-  const floatKeys = ['baseSpeed', 'maxSpeed', 'defuseBonus', 'comboBonus'];
+  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropMin', 'dropMax', 'itemDropAmount'];
+  const floatKeys = ['baseSpeed', 'maxSpeed', 'defuseBonus', 'comboBonus', 'itemDropChance'];
   const updated = {};
   for (const key of intKeys) {
     const el = document.getElementById(`mg-${gameId}-${key}`);
