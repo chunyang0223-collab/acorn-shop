@@ -663,7 +663,7 @@ function sqCardHTML(sq) {
 
     if (_isActiveFarmer) {
       // 장착된 농부 → 판매 불가 안내
-      sellBtn = `<div style="margin-top:12px;text-align:center;font-size:12px;font-weight:800;color:#9ca3af;background:#f3f4f6;border-radius:10px;padding:8px">🚫 농장에서 장착 해제 후 판매/합성 가능</div>`;
+      sellBtn = `<div style="margin-top:12px;text-align:center;font-size:12px;font-weight:800;color:#9ca3af;background:#f3f4f6;border-radius:10px;padding:8px">🌾 농장에서 열심히 일하고 있어요!</div>`;
     } else if (sq.status === 'pet' && !isFarmer && !isApprentice) {
       // 애완형 + 농부 아님 + 수습 아님 → 버튼 2개 (펫샵에 팔기 / 농부로 전직)
       const apprenticeDisabled = hasApprentice;
