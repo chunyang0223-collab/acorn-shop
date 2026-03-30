@@ -183,9 +183,10 @@ async function farmShowShop(tab) {
     } catch(e) { console.warn('[farm sell status]', e); }
   }
 
-  // 탭 변경 시 컨텐츠만 교체 (모달이 이미 열려있으면)
+  // 탭 변경 시 컨텐츠만 교체 (모달이 이미 열려있고 보이는 상태일 때만)
   const existing = document.getElementById('farmShopContent');
-  if (existing) {
+  const modalVisible = !document.getElementById('modal').classList.contains('hidden');
+  if (existing && modalVisible) {
     existing.innerHTML = _farmShopTab === 'item' ? _farmRenderItemTab() : (_farmShopTab === 'buy' ? _farmRenderBuyTab() : _farmRenderSellTab());
     _farmShopUpdateTabs();
     _farmShopUpdateFooter();
