@@ -169,24 +169,43 @@ function installPWA() {
   });
 }
 
-// ── 관리자 공지 팝업 ──
+// ── 관리자 공지 팝업 (DB 기반 읽음 처리) ──
+var _cachedNotice = null; // 현재 공지 캐시 (알림벨에서 재사용)
+
 async function checkAdminNotice() {
   try {
     const { data } = await sb.from('app_settings').select('value').eq('key', 'admin_notice').maybeSingle();
-    if (!data?.value?.message) return;
+    if (!data?.value?.message) { _cachedNotice = null; return; }
     const notice = data.value;
-    const lastSeen = localStorage.getItem('notice_seen_id');
-    if (lastSeen === notice.id) return;
+    _cachedNotice = notice;
+
+    // DB에서 읽음 여부 확인
+    const { data: readRow } = await sb.from('notice_reads')
+      .select('notice_id')
+      .eq('user_id', myProfile.id)
+      .eq('notice_id', notice.id)
+      .maybeSingle();
+    if (readRow) return; // 이미 읽음
+
     showModal(`
       <div style="text-align:center;padding:8px 0">
         <div style="font-size:36px;margin-bottom:8px">📢</div>
         <div style="font-size:16px;font-weight:900;color:#1f2937;margin-bottom:12px">공지사항</div>
         <div style="font-size:13px;color:#4b5563;line-height:1.7;white-space:pre-wrap;text-align:left;background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">${notice.message.replace(/</g,'&lt;')}</div>
         <div style="font-size:10px;color:#9ca3af;margin-bottom:12px">${notice.date || ''}</div>
-        <button class="btn btn-primary w-full" onclick="localStorage.setItem('notice_seen_id','${notice.id}');closeModal()">확인</button>
+        <button class="btn btn-primary w-full" onclick="markNoticeRead('${notice.id}')">확인</button>
       </div>
     `);
   } catch (e) { console.warn('[notice]', e); }
+}
+
+async function markNoticeRead(noticeId) {
+  closeModal();
+  try {
+    await sb.from('notice_reads')
+      .upsert({ user_id: myProfile.id, notice_id: noticeId, read_at: new Date().toISOString() },
+              { onConflict: 'user_id,notice_id' });
+  } catch (e) { console.warn('[notice-read]', e); }
 }
 
 async function adminSaveNotice() {
@@ -202,13 +221,34 @@ async function adminSaveNotice() {
   if (error) { toast('❌', '공지 저장 실패'); return; }
   toast('✅', '공지가 등록되었어요! 사용자 접속 시 팝업됩니다.');
   document.getElementById('adminNoticeText').value = '';
+  adminLoadCurrentNotice();
 }
 
 async function adminClearNotice() {
   const { error } = await sb.from('app_settings')
     .upsert({ key: 'admin_notice', value: {}, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-  if (!error) toast('✅', '공지가 삭제되었어요');
+  if (!error) { toast('✅', '공지가 삭제되었어요'); adminLoadCurrentNotice(); }
   else toast('❌', '삭제 실패');
+}
+
+// 관리자: 현재 등록된 공지 표시
+async function adminLoadCurrentNotice() {
+  const el = document.getElementById('adminCurrentNotice');
+  if (!el) return;
+  try {
+    const { data } = await sb.from('app_settings').select('value').eq('key', 'admin_notice').maybeSingle();
+    if (!data?.value?.message) {
+      el.innerHTML = '<div style="font-size:12px;color:#9ca3af;padding:8px 0">등록된 공지가 없습니다.</div>';
+      return;
+    }
+    const n = data.value;
+    el.innerHTML = `
+      <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:12px;margin-top:8px">
+        <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:4px">📌 현재 공지</div>
+        <div style="font-size:13px;color:#78350f;white-space:pre-wrap;line-height:1.6">${n.message.replace(/</g,'&lt;')}</div>
+        <div style="font-size:10px;color:#b45309;margin-top:6px">${n.date || ''}</div>
+      </div>`;
+  } catch (e) { el.innerHTML = ''; }
 }
 
 // ── 브라우저 알림 ──

@@ -17,6 +17,7 @@ async function initAppUI() {
     populateLogFilter();
     updateReqBadge();
     loadAdminPins();
+    adminLoadCurrentNotice();
   } else {
     document.getElementById('headerUserLabel').textContent = myProfile.display_name;
     document.getElementById('headerRight').style.display = 'flex';

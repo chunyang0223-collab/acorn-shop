@@ -655,12 +655,16 @@ function sqCardHTML(sq) {
   }
 
   let sellBtn = '';
+  const _isActiveFarmer = typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id;
   if (sq.status === 'pet' || sq.status === 'explorer') {
     const isFarmer = typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id);
     const isApprentice = _isThisApprentice;
     const hasApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice';
 
-    if (sq.status === 'pet' && !isFarmer && !isApprentice) {
+    if (_isActiveFarmer) {
+      // 장착된 농부 → 판매 불가 안내
+      sellBtn = `<div style="margin-top:12px;text-align:center;font-size:12px;font-weight:800;color:#9ca3af;background:#f3f4f6;border-radius:10px;padding:8px">🚫 농장에서 장착 해제 후 판매/합성 가능</div>`;
+    } else if (sq.status === 'pet' && !isFarmer && !isApprentice) {
       // 애완형 + 농부 아님 + 수습 아님 → 버튼 2개 (펫샵에 팔기 / 농부로 전직)
       const apprenticeDisabled = hasApprentice;
       const apprenticeLabel = hasApprentice ? '다른 수습 중' : '🌾 농부로 전직';
@@ -668,7 +672,7 @@ function sqCardHTML(sq) {
         <button onclick="sqSellSquirrel('${sq.id}')" style="flex:1;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>
         <button onclick="${apprenticeDisabled ? '' : `farmStartApprentice('${sq.id}')`}" style="flex:1;height:32px;border-radius:10px;border:none;background:${apprenticeDisabled ? '#f3f4f6' : '#ecfdf5'};color:${apprenticeDisabled ? '#9ca3af' : '#15803d'};font-size:12px;font-weight:900;cursor:${apprenticeDisabled ? 'default' : 'pointer'};font-family:inherit;${apprenticeDisabled ? 'opacity:0.7' : ''}">${apprenticeLabel}</button>
       </div>`;
-    } else if (!isApprentice) {
+    } else if (!isApprentice && !_isActiveFarmer) {
       // 탐험형 or 이미 농부 or 수습 중 아닌 일반 → 팔기 버튼만
       sellBtn = `<button onclick="sqSellSquirrel('${sq.id}')" style="margin-top:12px;width:100%;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>`;
     }
@@ -685,7 +689,7 @@ function sqCardHTML(sq) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
           <span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
-          ${(sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#ecfdf5;color:#15803d">농부</span>' : ''}
+          ${(sq.status !== 'baby' && typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#dcfce7;color:#15803d;border:1.5px solid #86efac">🌾 농부</span>' : (sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#ecfdf5;color:#15803d">농부</span>' : ''}
         </div>
       </div>
       ${babyHTML}${statsHTML}${recoverHTML}${apprenticeHTML}${sellBtn}
@@ -1537,9 +1541,10 @@ function sqFuseRenderGrid() {
   const grid = document.getElementById('sqFuseGrid');
   if (!grid) return;
 
-  // baby, exploring, recovering 제외
+  // baby, exploring, recovering, 장착 농부 제외
+  const activeFarmerId = typeof _farmData !== 'undefined' ? _farmData?.active_farmer_id : null;
   const fusable = _sqSquirrels.filter(sq =>
-    sq.status === 'explorer' || sq.status === 'pet'
+    (sq.status === 'explorer' || sq.status === 'pet') && sq.id !== activeFarmerId
   );
 
   if (!fusable.length) {

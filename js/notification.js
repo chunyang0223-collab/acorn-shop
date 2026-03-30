@@ -47,9 +47,13 @@ async function showNotifications() {
   // 모달 즉시 열기 → 로딩 느낌 없애기
   showModal(`
     <h2 class="text-lg font-black text-gray-800 mb-3">🔔 알림</h2>
+    <div id="notifNoticeArea"></div>
     <div class="notif-scroll" id="notifContent">
       <p class="text-sm text-gray-400 text-center py-6">불러오는 중...</p>
     </div>`);
+
+  // 공지사항 영역 렌더
+  _renderNoticeInNotif();
 
   const typeIcon = { reward:'🎁', quest:'📋', admin:'👑', gachaReward:'🎲', request:'📬', quest_approved:'✅', quest_rejected:'❌' };
   const [{ data: notifs }] = await Promise.all([
@@ -69,5 +73,18 @@ async function showNotifications() {
           <p class="text-xs text-gray-400 mt-1">${fmtTs(n.created_at)}</p>
         </div>
       </div>`).join('');
+}
+
+function _renderNoticeInNotif() {
+  const area = document.getElementById('notifNoticeArea');
+  if (!area) return;
+  const notice = typeof _cachedNotice !== 'undefined' ? _cachedNotice : null;
+  if (!notice?.message) { area.innerHTML = ''; return; }
+  area.innerHTML = `
+    <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:900;color:#92400e;margin-bottom:6px">📢 공지사항</div>
+      <div style="font-size:13px;color:#78350f;white-space:pre-wrap;line-height:1.6">${notice.message.replace(/</g,'&lt;')}</div>
+      <div style="font-size:10px;color:#b45309;margin-top:6px">${notice.date || ''}</div>
+    </div>`;
 }
 
