@@ -219,12 +219,11 @@ function _buildExpeditionStats(expeditions) {
   const totalCompleted = expeditions.filter(e => e.status === 'completed').length;
   const totalRetreated = expeditions.filter(e => e.status === 'retreated').length;
 
-  // 보스 격파 횟수: completed 탐험의 loot에서 boss battle 찾기
-  let bossKills = 0;
+  // 몬스터 격퇴: 모든 탐험의 loot에서 battle 타입 카운트 (보스 포함 전체 전투 승리)
+  let totalBattles = 0;
   for (const exp of expeditions) {
-    if (exp.status === 'completed' && exp.loot) {
-      // completed = 마지막 보스 타일까지 클리어 = 보스 격파 1회
-      bossKills++;
+    if (Array.isArray(exp.loot)) {
+      totalBattles += exp.loot.filter(l => l.type === 'battle').length;
     }
   }
 
@@ -232,20 +231,20 @@ function _buildExpeditionStats(expeditions) {
     <div class="pf-section">
       <p class="pf-section-title">⚔️ 탐험 기록</p>
       <div class="pf-exp-stats">
-        <div class="pf-exp-stat pf-exp-stat--clear">
-          <span class="pf-exp-icon">🏆</span>
-          <span class="pf-exp-num">${totalCompleted}</span>
-          <span class="pf-exp-label">완료</span>
+        <div class="pf-exp-stat pf-exp-stat--boss">
+          <span class="pf-exp-icon">⚔️</span>
+          <span class="pf-exp-num">${totalBattles}</span>
+          <span class="pf-exp-label">몬스터 격퇴</span>
         </div>
         <div class="pf-exp-stat pf-exp-stat--retreat">
           <span class="pf-exp-icon">🏃</span>
           <span class="pf-exp-num">${totalRetreated}</span>
           <span class="pf-exp-label">퇴각</span>
         </div>
-        <div class="pf-exp-stat pf-exp-stat--boss">
-          <span class="pf-exp-icon">💀</span>
-          <span class="pf-exp-num">${bossKills}</span>
-          <span class="pf-exp-label">보스 격파</span>
+        <div class="pf-exp-stat pf-exp-stat--clear">
+          <span class="pf-exp-icon">🏆</span>
+          <span class="pf-exp-num">${totalCompleted}</span>
+          <span class="pf-exp-label">완료</span>
         </div>
       </div>
     </div>`;
