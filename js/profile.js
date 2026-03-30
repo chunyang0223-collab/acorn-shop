@@ -39,6 +39,8 @@ async function openProfile(userId) {
     const expeditions = expRes.data || [];
     const minigamePlays = minigameRes.data || [];
     const farmData = farmRes.data;
+    if (plotsRes.error) console.warn('[profile] farm_plots query error:', plotsRes.error.message);
+    if (cropsRes.error) console.warn('[profile] farm_crops query error:', cropsRes.error.message);
     const farmPlots = plotsRes.data || [];
     const farmCrops = cropsRes.data || [];
 

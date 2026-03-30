@@ -177,25 +177,30 @@ async function checkAdminNotice() {
     const { data } = await sb.from('app_settings').select('value').eq('key', 'admin_notice').maybeSingle();
     if (!data?.value?.message) { _cachedNotice = null; return; }
     const notice = data.value;
+    // id를 항상 문자열로 정규화 (JSONB에서 숫자로 변환되는 문제 방지)
+    const noticeId = String(notice.id || '');
+    notice.id = noticeId;
     _cachedNotice = notice;
 
-    // 읽음 여부 확인 (DB 우선, localStorage 폴백)
+    if (!noticeId) return;
+
+    // 읽음 여부 확인 (localStorage 먼저 — 빠르고 확실)
     var alreadyRead = false;
     try {
-      const { data: readRow, error: readErr } = await sb.from('notice_reads')
-        .select('notice_id')
-        .eq('user_id', myProfile.id)
-        .eq('notice_id', notice.id)
-        .maybeSingle();
-      if (readErr) console.warn('[notice] DB read check failed:', readErr.message);
-      if (readRow) alreadyRead = true;
-    } catch(e) { console.warn('[notice] DB read check error:', e); }
-    // localStorage 폴백
+      var readIds = JSON.parse(localStorage.getItem('notice_read_ids') || '[]');
+      if (readIds.includes(noticeId)) alreadyRead = true;
+    } catch(e) {}
+    // DB 확인
     if (!alreadyRead) {
       try {
-        var readIds = JSON.parse(localStorage.getItem('notice_read_ids') || '[]');
-        if (readIds.includes(notice.id)) alreadyRead = true;
-      } catch(e) {}
+        const { data: readRow, error: readErr } = await sb.from('notice_reads')
+          .select('notice_id')
+          .eq('user_id', myProfile.id)
+          .eq('notice_id', noticeId)
+          .maybeSingle();
+        if (readErr) console.warn('[notice] DB read check failed:', readErr.message);
+        if (readRow) alreadyRead = true;
+      } catch(e) { console.warn('[notice] DB read check error:', e); }
     }
     if (alreadyRead) return;
 
@@ -205,7 +210,7 @@ async function checkAdminNotice() {
         <div style="font-size:16px;font-weight:900;color:#1f2937;margin-bottom:12px">공지사항</div>
         <div style="font-size:13px;color:#4b5563;line-height:1.7;white-space:pre-wrap;text-align:left;background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">${notice.message.replace(/</g,'&lt;')}</div>
         <div style="font-size:10px;color:#9ca3af;margin-bottom:12px">${notice.date || ''}</div>
-        <button class="btn btn-primary w-full" onclick="markNoticeRead('${notice.id}')">확인</button>
+        <button class="btn btn-primary w-full" onclick="markNoticeRead('${noticeId}')">확인</button>
       </div>
     `);
   } catch (e) { console.warn('[notice]', e); }
@@ -213,6 +218,7 @@ async function checkAdminNotice() {
 
 async function markNoticeRead(noticeId) {
   closeModal();
+  noticeId = String(noticeId);
   // localStorage에 즉시 저장 (DB 실패해도 팝업 반복 방지)
   try {
     var readIds = JSON.parse(localStorage.getItem('notice_read_ids') || '[]');
