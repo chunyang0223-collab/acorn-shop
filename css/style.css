@@ -2280,13 +2280,15 @@ body {
   animation: clayJelly var(--duration-slow) var(--ease-bounce);
 }
 
-/* 전역 커서 피드백: 클릭 가능 요소 */
-[onclick],
+/* 전역 커서 피드백: 클릭 가능한 버튼/링크 요소만 (컨테이너 제외) */
+button[onclick],
+a[onclick],
 [role="button"] {
   transition: transform var(--duration-normal) var(--ease-bounce);
   -webkit-tap-highlight-color: transparent;
 }
-[onclick]:active,
+button[onclick]:active,
+a[onclick]:active,
 [role="button"]:active {
   transform: scale(0.96);
   transition-duration: var(--duration-fast);
