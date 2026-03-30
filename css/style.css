@@ -788,23 +788,6 @@
   --status-danger: #e07070;
   --status-info: #a889d4;
 
-  /* === 배지 색상 - 다크 모드 === */
-  --badge-common-bg: #3a2a60;
-  --badge-common-text: #c084fc;
-  --badge-rare-bg: #1a3a50;
-  --badge-rare-text: #60a5fa;
-  --badge-epic-bg: #4a2a40;
-  --badge-epic-text: #f472b6;
-  --badge-legend-bg: #4a2a2a;
-  --badge-legend-text: #f87171;
-
-  --badge-pending-bg: #3a3a20;
-  --badge-pending-text: #fbbf24;
-  --badge-approved-bg: #1a4a2a;
-  --badge-approved-text: #5cb87a;
-  --badge-rejected-bg: #4a2a2a;
-  --badge-rejected-text: #f87171;
-
   /* === Gacha 버튼 색상 - 다크 모드 === */
   --gacha-btn-free-bg: linear-gradient(135deg, #16a34a, #15803d);
   --gacha-btn-free-text: #ffffff;
@@ -885,16 +868,339 @@
   --font-body: 'Nunito', sans-serif;
 
   /* === 버튼 색상 - 다크 모드 === */
-  --btn-primary: linear-gradient(135deg, #7c3aed, #a855f7);
+  --btn-primary: linear-gradient(135deg, #c4607a, #b04d70);
   --btn-primary-text: #ffffff;
-  --btn-primary-shadow: 0 4px 18px rgba(139,92,246,0.3);
-  --btn-primary-shadow-hover: 0 6px 26px rgba(139,92,246,0.45);
+  --btn-primary-shadow: 0 4px 14px rgba(180,80,110,0.3), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 4px rgba(0,0,0,0.18);
+  --btn-primary-shadow-hover: 0 6px 26px rgba(180,80,110,0.45);
+  --btn-purple-bg: linear-gradient(135deg, #7c6bbf, #6657b0);
+  --btn-purple-text: #e8e0ff;
+  --btn-purple-shadow: 0 4px 14px rgba(100,90,170,0.3), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 4px rgba(0,0,0,0.18);
+  --btn-green-bg: linear-gradient(135deg, #3a9b6e, #2d7d58);
+  --btn-green-text: #d1fae5;
+  --btn-green-shadow: 0 4px 14px rgba(45,125,90,0.3), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 4px rgba(0,0,0,0.18);
+  --btn-pink-bg: linear-gradient(135deg, #b06080, #904060);
+  --btn-pink-text: #fce4ec;
+  --btn-pink-shadow: 0 4px 12px rgba(144,64,96,0.3), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 4px rgba(0,0,0,0.18);
+  --btn-gray-bg: #2a3540;
+  --btn-gray-text: #fbbf24;
+  --btn-gray-border: #3a4a55;
+  --btn-gray-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1.5px 3px rgba(0,0,0,0.15);
 
   /* === 컴포넌트 다크 토큰 === */
   --tab-inactive-text: #9490b8;
-  --tab-active-bg: linear-gradient(135deg, #7c3aed, #a855f7);
+  --tab-active-bg: linear-gradient(135deg, #b05878, #8050b8);
   --tab-active-text: #ffffff;
-  --tab-active-shadow: 0 4px 16px rgba(124,58,237,0.35);
+  --tab-active-shadow: 0 4px 16px rgba(160,80,160,0.25), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 4px rgba(0,0,0,0.15);
+  /* clay-card 다크 오버라이드 */
+  --clay-card-bg: #161e2a;
+  --clay-card-border: rgba(255,255,255,0.04);
+  --clay-card-shadow:
+    0 6px 24px rgba(0,0,0,0.45),
+    0 2px 6px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -1.5px 4px rgba(0,0,0,0.2);
+  /* sqCard (다람쥐 카드) 다크 오버라이드 */
+  --sqcard-bg: #1a2535;
+  --sqcard-shadow: none;
+  /* body 다크 배경 */
+  --body-bg: linear-gradient(-45deg, #0d0b1e, #1a1035, #0b1528, #1e1040, #0a1020, #160d30);
+  --body-bg-size: 400% 400%;
+  /* tab-bar-wrap 다크 오버라이드 */
+  --tab-bar-fade: linear-gradient(90deg, transparent, rgba(38,36,58,0.9) 40%);
+  --tab-bar-fade-color: #a78bfa;
+  /* catch-hud-danger 다크 오버라이드 */
+  --catch-hud-danger-bg: rgba(127,29,29,0.4);
+  /* rank-row-me 다크 오버라이드 */
+  --rank-row-me-bg: rgba(192,132,252,0.08);
+  --rank-row-me-border: rgba(192,132,252,0.15);
+  /* vol-control / vol-slider 다크 오버라이드 */
+  --vol-control-bg: #151c28;
+  --vol-control-border: #2a3545;
+  --vol-slider-bg: #1a2535;
+  --vol-slider-thumb: linear-gradient(135deg, #b05878, #8050b8);
+  /* modal-box input 다크 오버라이드 */
+  --modal-input-bg: #151d2a;
+  --modal-input-border: #2a3a4a;
+  --modal-input-color: #fbbf24;
+  /* expcard 다크 오버라이드 */
+  --expcard-bg: #1a2030;
+  --expcard-shadow: 0 2px 12px rgba(0,0,0,.4);
+  /* inv-chip2 다크 오버라이드 */
+  --inv-chip2-bg: #1e2838;
+  --inv-chip2-pending-bg: #3a2a10;
+  /* notif-scroll row-item-bg 다크 오버라이드 */
+  --notif-row-bg: #1e2838;
+  --notif-row-border: 1px solid #2a3a4a;
+  /* farm-cell 다크 오버라이드 */
+  --farm-empty-bg: rgba(255,255,255,0.03);
+  --farm-empty-border: 1.5px dashed rgba(42,106,64,0.3);
+  --farm-locked-bg: rgba(255,255,255,0.02);
+  --farm-locked-border: 1.5px solid rgba(42,106,64,0.15);
+  --farm-growing-bg: linear-gradient(145deg, #1a4a30, #1e3a22);
+  --farm-growing-border: 1.5px solid #2a7a4a;
+  --farm-ready-bg: linear-gradient(145deg, #4a3a10, #5a4515);
+  --farm-ready-border: 1.5px solid #8a6a18;
+  --farm-expand-bg: rgba(255,255,255,0.03);
+  --farm-expand-border: 1.5px dashed rgba(42,106,64,0.35);
+  /* sqFuseGrid 다크 오버라이드 */
+  --sqfuse-card-bg: #1e2838;
+  /* adm-grid-item 다크 오버라이드 */
+  --adm-grid-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1.5px 3px rgba(0,0,0,0.15);
+  /* adm-maint-chip 다크 오버라이드 */
+  --adm-maint-color: #fb923c;
+  /* um-card 다크 오버라이드 */
+  --um-card-bg: #1e2838;
+  --um-card-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1.5px 3px rgba(0,0,0,0.15);
+  /* adm-pin / grid-label / back-btn 다크 오버라이드 */
+  --adm-pin-bar-bg: #1e2838;
+  --adm-pin-tab-color: #6b7280;
+  --adm-grid-label-color: #d1d5db;
+  --adm-back-btn-color: #a78bfa;
+  /* adm-subtab 다크 오버라이드 */
+  --adm-subtab-bar-bg: #1e2838;
+  --adm-subtab-home-bg: #1e2535;
+  --adm-subtab-home-border: #2a3a4a;
+  --adm-subtab-home-color: #a78bfa;
+  --adm-subtab-color: #9ca3af;
+  --adm-subtab-hover-bg: #1e2838;
+  --adm-subtab-active-bg: #201530;
+  --adm-subtab-active-color: #c4b5fd;
+  --adm-subtab-active-border: #3a2560;
+  /* mg-recent 다크 오버라이드 */
+  --mg-recent-row-bg: rgba(255,255,255,0.04);
+  --mg-recent-row-border: rgba(255,255,255,0.06);
+  --mg-recent-name-color: #d1d5db;
+  --mg-recent-time-color: #6b7280;
+  /* catch 다크 오버라이드 */
+  --catch-hud-item-bg: rgba(30,30,40,0.7);
+  --catch-hud-item-border: rgba(255,255,255,0.08);
+  --catch-hud-label-color: #6b7280;
+  --catch-hud-value-color: #fbbf24;
+  --catch-hud-timer-color: #34d399;
+  --catch-exit-bg: rgba(255,255,255,0.08);
+  --catch-exit-color: #6b7280;
+  --catch-field-bg: linear-gradient(180deg, #1e3a5f 0%, #2d4a6f 40%, #2d5a3f 70%, #1e4a2f 100%);
+  --catch-field-shadow: inset 0 0 60px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.3);
+  --catch-overlay-bg: rgba(20,20,30,0.88);
+  --catch-legend-color: #fbbf24;
+  --catch-result-stat-bg: rgba(255,255,255,0.05);
+  --catch-result-stat-border: rgba(255,255,255,0.08);
+  --catch-result-label-color: #6b7280;
+  --catch-reward-bg: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.05));
+  --catch-reward-border: rgba(251,191,36,0.15);
+  --catch-float-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  /* rank 다크 오버라이드 */
+  --rank-period-bg: rgba(255,255,255,0.05);
+  --rank-period-border: rgba(255,255,255,0.1);
+  --rank-period-color: #6b7280;
+  --rank-period-active-bg: linear-gradient(135deg, #9333ea, #7c3aed);
+  --rank-period-active-color: #fff;
+  --rank-row-bg: rgba(255,255,255,0.04);
+  --rank-row-border: rgba(255,255,255,0.08);
+  --rank-row-top-bg: rgba(251,191,36,0.06);
+  --rank-row-top-border: rgba(251,191,36,0.12);
+  --rank-name-color: #e5e7eb;
+  --rank-num-color: #6b7280;
+  --rank-me-badge-bg: #201530;
+  --rank-me-badge-color: #c4b5fd;
+  --rank-my-stat-bg: rgba(255,255,255,0.04);
+  --rank-my-stat-border: rgba(255,255,255,0.08);
+  --rank-my-label-color: #6b7280;
+  /* mg-log 다크 오버라이드 */
+  --mg-log-row-bg: rgba(255,255,255,0.04);
+  --mg-log-row-border: rgba(255,255,255,0.06);
+  --mg-log-user-color: #d1d5db;
+  --mg-log-time-color: #6b7280;
+  /* header-stat 다크 오버라이드 */
+  --header-stat-acorn-color: #fde68a;
+  --header-stat-ticket-color: #c4b5fd;
+  /* mg-coming-soon / mg-tag 다크 오버라이드 */
+  --mg-coming-soon-bg: rgba(0,0,0,0.55);
+  --mg-tag-bg: #3a2a10;
+  --mg-tag-color: #fbbf24;
+  /* mgc (미니게임 도전) 다크 오버라이드 */
+  --mgc-status-bg: #201530;
+  --mgc-status-border: #3a2560;
+  --mgc-adjust-row-border: #2a3545;
+  --mgc-adjust-label-color: #e5e7eb;
+  --mgc-btn-bg: #1e2535;
+  --mgc-btn-border: #2a3a4a;
+  --mgc-btn-hover-bg: #242c3a;
+  --mgc-btn-hover-border: #c084fc;
+  --mgc-val-color: #e5e7eb;
+  /* um (유저 관리) 다크 오버라이드 */
+  --um-card-hover-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  --um-avatar-bg: #3a2a10;
+  --um-name-color: #e5e7eb;
+  --um-sub-color: #6b7280;
+  --um-acorn-color: #fbbf24;
+  --um-btn-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  --um-btn-delete-border: #4a2020;
+  --um-btn-delete-color: #fca5a5;
+  --um-btn-delete-hover-bg: #3a1a1a;
+  /* btl 다크 오버라이드 */
+  --btl-card-grade-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  /* farm-crop-popup 다크 오버라이드 */
+  --fcp-title-color: #e2e8f0;
+  --fcp-sub-color: #d4a060;
+  --fcp-btn-acc-bg: #5a28b0;
+  --fcp-btn-acc-color: #e0d0f8;
+  --fcp-btn-nut-bg: #1a6840;
+  --fcp-btn-nut-color: #b0e8c8;
+  --fcp-btn-used-bg: #201810;
+  --fcp-btn-used-color: #d4a060;
+  --fcp-close-bg: #3a2e18;
+  --fcp-close-color: #d4a060;
+  --fcp-close-border: 1px solid #5a4428;
+  /* fc-grade (농부카드) 다크 오버라이드 */
+  --fc-normal-border: #607060;
+  --fc-normal-shadow: 0 2px 10px rgba(80,110,80,.35);
+  --fc-rare-border: #34b45e;
+  --fc-rare-shadow: 0 2px 14px rgba(34,197,94,.35), 0 0 20px rgba(34,197,94,.12);
+  --fc-epic-border: #4488e0;
+  --fc-epic-shadow: 0 2px 16px rgba(59,130,246,.4), 0 0 22px rgba(59,130,246,.15);
+  --fc-unique-border: #c0a030;
+  --fc-unique-shadow: 0 2px 18px rgba(234,179,8,.45), 0 0 24px rgba(234,179,8,.15);
+  --fc-legend-border: #e05050;
+  --fc-legend-shadow: 0 2px 22px rgba(239,68,68,.5), 0 0 34px rgba(239,68,68,.2);
+  /* fc zone1 */
+  --fc-normal-z1: linear-gradient(160deg, #263822, #20301c);
+  --fc-rare-z1: linear-gradient(160deg, #1a3822, #14301a);
+  --fc-epic-z1: linear-gradient(160deg, #1a284a, #142040);
+  --fc-unique-z1: linear-gradient(160deg, #38301a, #302a14);
+  --fc-legend-z1: linear-gradient(160deg, #3e1a1a, #361414);
+  /* fc zone2 */
+  --fc-normal-z2: #2e3c28;
+  --fc-rare-z2: #20402a;
+  --fc-epic-z2: #203050;
+  --fc-unique-z2: #3e3620;
+  --fc-legend-z2: #482222;
+  /* fc zone3 */
+  --fc-normal-z3: #344630;
+  --fc-rare-z3: #284a32;
+  --fc-epic-z3: #283a5a;
+  --fc-unique-z3: #484024;
+  --fc-legend-z3: #522a2a;
+  /* fc zone4 */
+  --fc-normal-z4: linear-gradient(160deg, #3a4e36, #344630);
+  --fc-rare-z4: linear-gradient(160deg, #30543a, #284a32);
+  --fc-epic-z4: linear-gradient(160deg, #304468, #283a5a);
+  --fc-unique-z4: linear-gradient(160deg, #524a2a, #484024);
+  --fc-legend-z4: linear-gradient(160deg, #5c3232, #522a2a);
+  /* fc misc */
+  --fc-name-color: #e2e8f0;
+  --fc-normal-grade-color: #86efac;
+  --fc-rare-grade-color: #4ade80;
+  --fc-epic-grade-color: #60a5fa;
+  --fc-unique-grade-color: #fbbf24;
+  --fc-legend-grade-color: #f87171;
+  --fc-buff-color: #fbbf24;
+  --fc-card-empty-bg: #1e1a12;
+  --fc-card-empty-border: #3a3020;
+  --fc-empty-label-color: #fbbf24;
+  /* farm-deposit / shop 다크 오버라이드 */
+  --farm-deposit-bg: #2e2210;
+  --farm-deposit-border: #5a4218;
+  --farm-shop-btn-color: #fef3c7;
+  --farm-shop-lbl-color: #fef3c7;
+  /* farm-field 다크 오버라이드 */
+  --farm-field-wrap-bg: #342818;
+  --farm-field-wrap-border: 3.5px solid #6a4e28;
+  --farm-field-wrap-shadow: inset 0 1px 0 #4a3820, 0 0 0 1.5px #1a1208, 0 0 0 5px #2e2214;
+  --farm-field-label-after-bg: #4a3820;
+  /* farm-cell crop variants 다크 오버라이드 */
+  --farm-crop-green-bg: #2a5a30;
+  --farm-crop-green-border: #3a7a40;
+  --farm-crop-green-shadow: inset 0 -3px 0 #1e4a24;
+  --farm-crop-lime-bg: #4a6a20;
+  --farm-crop-lime-border: #6a8a30;
+  --farm-crop-lime-shadow: inset 0 -3px 0 #3a5518;
+  --farm-crop-deep-bg: #1e4830;
+  --farm-crop-deep-border: #2e6840;
+  --farm-crop-deep-shadow: inset 0 -3px 0 #143820;
+  --farm-crop-olive-bg: #4a5a18;
+  --farm-crop-olive-border: #6a7828;
+  --farm-crop-olive-shadow: inset 0 -3px 0 #384810;
+  --farm-crop-teal-bg: #1a5048;
+  --farm-crop-teal-border: #287068;
+  --farm-crop-teal-shadow: inset 0 -3px 0 #103a34;
+  /* farm-inv 다크 오버라이드 */
+  --farm-inv-harvest-qty-bg: #b87010;
+  /* farm-csm 다크 오버라이드 */
+  --farm-csm-acc-color: #b89cd4;
+  --farm-csm-nut-color: #86ceac;
+  /* farm-btn 다크 오버라이드 */
+  --farm-btn-bg: #252d3a;
+  --farm-btn-border: #3a4a5a;
+  --farm-btn-color: #fbbf24;
+  --farm-btn-dark-bg: #78350f;
+  --farm-btn-dark-border: #5a3008;
+  --farm-btn-dark-color: #fcd34d;
+  --farm-btn-green-bg: #1a4a30;
+  --farm-btn-green-border: #2a7a4a;
+  --farm-btn-green-color: #86efac;
+  /* farm-txt 다크 오버라이드 */
+  --farm-section-title-color: #e2e8f0;
+  --farm-txt-brown-color: #e2e8f0;
+  --farm-txt-green-color: #86ceac;
+  --farm-txt-gold-color: #e0b050;
+  --farm-txt-muted-color: #d4a060;
+  --farm-cell-ready-label-color: #fcd34d;
+  --farm-cell-ready-timer-color: #e0b850;
+  --farm-cell-label-gold-color: #e0b050;
+  --farm-cell-label-green-color: #86ceac;
+  /* farm-inv text 다크 오버라이드 */
+  --farm-inv-name-color: #86ceac;
+  --farm-inv-harvest-name-color: #e0b850;
+  /* farm-shop 다크 오버라이드 */
+  --farm-shop-tabs-bg: #1a1608;
+  --farm-shop-tab-color: #fbbf24;
+  --farm-shop-tab-active-color: #fcd34d;
+  --farm-shop-tab-hover-bg: rgba(255,255,255,.05);
+  --farm-shop-body-scrollbar: #3a4a5a;
+  --farm-shop-bal-acorn-dk: #fcd34d;
+  --farm-shop-bal-crumb-dk: #fbbf24;
+  --farm-shop-deposit-dk-bg: #2a2010;
+  --farm-shop-deposit-dk-border: #6a4a10;
+  --farm-shop-deposit-dk-color: #fbbf24;
+  --farm-shop-deposit-active-bg: #3a2a10;
+  --farm-shop-timer-dk: #fbbf24;
+  --farm-shop-close-dk-bg: #222c3a;
+  --farm-shop-close-dk-border: #3a4a5a;
+  --farm-shop-close-dk-color: #fbbf24;
+  /* farm-bal-float 다크 오버라이드 */
+  --farm-bal-float-color: #f87171;
+  --farm-bal-float-shadow: 0 1px 4px rgba(0,0,0,.4);
+  --farm-bal-float-plus-color: #4ade80;
+  /* fr (친구) 다크 오버라이드 */
+  --fr-text-color: #e2e8f0;
+  --fr-friend-row-hover-bg: rgba(255,255,255,0.08);
+  --fr-cancel-btn-color: #fbbf24;
+  /* pf (프로필) 다크 오버라이드 */
+  --pf-mini-card-name-color: #fbbf24;
+  --pf-mini-card-score-color: #fcd34d;
+  --pf-exp-clear-bg: linear-gradient(135deg, rgba(74,222,128,0.15), rgba(34,197,94,0.06));
+  --pf-exp-clear-border: rgba(74,222,128,0.25);
+  --pf-exp-retreat-bg: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.06));
+  --pf-exp-retreat-border: rgba(251,191,36,0.25);
+  --pf-exp-boss-bg: linear-gradient(135deg, rgba(248,113,113,0.15), rgba(239,68,68,0.06));
+  --pf-exp-boss-border: rgba(248,113,113,0.25);
+  --pf-exp-label-color: #86efac;
+  --pf-farm-card-label-color: #86efac;
+  --pf-farm-card-val-color: #4ade80;
+  --pf-toggle-checked-bg: #22c55e;
+  --pf-spinner-border: rgba(255,255,255,0.1);
+  --pf-spinner-top-border: #fbbf24;
+  --pf-name-color: #e2e8f0;
+  --pf-stat-label-color: #fbbf24;
+  --pf-stat-value-color: #fcd34d;
+  --pf-section-title-color: #fcd34d;
+  --pf-sq-name-color: #e2e8f0;
+  --pf-empty-msg-color: #fbbf24;
+  --pf-privacy-h2-color: #fcd34d;
+  --pf-privacy-row-span-color: #e2e8f0;
+  /* field 다크 오버라이드 */
+  --field-shadow: inset 0 2px 5px rgba(0,0,0,0.25), inset 0 1px 2px rgba(0,0,0,0.15);
 
   /* === 배지 다크 토큰 === */
   --badge-common-bg: rgba(139,92,246,0.15);
@@ -928,10 +1234,10 @@
   --page-nav-border: rgba(255,255,255,0.1);
 
   /* === acorn pill === */
-  --acorn-pill-bg: rgba(245,158,11,0.2);
-  --acorn-pill-text: #fcd34d;
+  --acorn-pill-bg: linear-gradient(135deg,#92400e,#b45309);
+  --acorn-pill-text: #fde68a;
   --acorn-pill-border: rgba(245,158,11,0.3);
-  --acorn-pill-shadow: 0 2px 10px rgba(245,158,11,0.15);
+  --acorn-pill-shadow: inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1.5px 3px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.25);
 
   /* === Inline Icon/Element Replacements (Dark) === */
   --icon-bg-amber-light: rgba(217,119,6,0.15);
@@ -1066,7 +1372,7 @@
 
   /* === Farm Inventory Wrap (Dark) === */
   --farm-inv-wrap-bg: #1a1628;
-  --farm-inv-wrap-border: #302848;
+  --farm-inv-wrap-border: 1.5px solid #302848;
   --farm-inv-header-right-color: #d4a060;
 
   /* === Farm Inventory Slots (Dark) === */
@@ -1075,7 +1381,7 @@
   --farm-inv-slot-harvest-bg: #3a2e10;
   --farm-inv-slot-harvest-border: #6a5018;
   --farm-inv-slot-empty-bg: #18142a;
-  --farm-inv-slot-empty-border: #302848;
+  --farm-inv-slot-empty-border: 1.5px dashed #302848;
 
   /* === Farm Inventory - Qty Badge (Dark) === */
   --farm-inv-qty-bg: #3a7a30;
@@ -1152,7 +1458,7 @@
 
   /* === Farm Dep Numbers (Dark) === */
   --farm-dep-num-color: #fcd34d;
-  --farm-dep-sub-color: #c49a50;
+  --farm-dep-sub-color: #f59e0b;
 
   /* === Farm Card Empty (Dark) === */
   --farm-fc-card-empty-bg: #1e1a12;
@@ -1212,8 +1518,6 @@
   --pf-section-title: #fcd34d;
   --pf-empty-msg: #fbbf24;
   --pf-sq-cell-bg: rgba(255,255,255,0.06);
-  --pf-sq-empty-border: rgba(255,255,255,0.1);
-  --pf-sq-empty-bg: rgba(255,255,255,0.02);
   --pf-sq-name: #e2e8f0;
   --pf-sq-grade-bg: rgba(30,41,59,0.9);
   --pf-mini-card-bg: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06));
@@ -1288,6 +1592,262 @@
   /* === Squirrel Feed Gauge (Dark Mode) === */
   --sq-gauge-good-bg: linear-gradient(90deg,#f59e0b,#d97706,#4ade80);
   --sq-gauge-bad-bg: linear-gradient(90deg,#f97316,#ea580c);
+
+  /* === 유틸리티 클래스 다크 매핑 토큰 === */
+  /* -- 텍스트 -- */
+  --util-text-gray-800: #e2e8f0;
+  --util-text-gray-700: #e2e8f0;
+  --util-text-gray-600: #fbbf24;
+  --util-text-gray-500: #e2a84c;
+  --util-text-gray-400: #d4a040;
+  --util-text-gray-300: #d4a040;
+  --util-text-amber-900: #fcd34d;
+  --util-text-amber-800: #fbbf24;
+  --util-text-amber-700: #fbbf24;
+  --util-text-amber-600: #f59e0b;
+  --util-text-amber-500: #f59e0b;
+  --util-text-yellow-800: #fbbf24;
+  --util-text-yellow-700: #fcd34d;
+  --util-text-green-700: #5cb87a;
+  --util-text-green-600: #5cb87a;
+  --util-text-red-600: #e07070;
+  --util-text-red-500: #d88888;
+  --util-text-red-400: #d8a0a0;
+  --util-text-purple-600: #a889d4;
+  --util-text-blue-700: #60a5fa;
+  --util-text-orange-700: #fb923c;
+  --util-text-orange-500: #fdba74;
+  /* -- 배경 -- */
+  --util-bg-white: #1e2a3a;
+  --util-bg-gray-50: #242e3e;
+  --util-bg-gray-100: #242e3e;
+  --util-bg-gray-200: #2a3445;
+  --util-bg-amber-50: #382e18;
+  --util-bg-amber-100: #3a2a10;
+  --util-bg-pink-50: #381a2a;
+  --util-bg-pink-100: #2a1525;
+  --util-bg-yellow-50: #332a16;
+  --util-bg-yellow-100: #433218;
+  --util-bg-green-50: #1a3528;
+  --util-bg-green-100: #1e4030;
+  --util-bg-purple-50: #261a38;
+  --util-bg-purple-100: #2a1e3e;
+  --util-bg-red-50: #3e1e1e;
+  --util-bg-red-100: #4e2020;
+  --util-bg-blue-100: #1e3565;
+  /* -- 보더 -- */
+  --util-border-gray-100: #344a5e;
+  --util-border-gray-200: #344a5e;
+  --util-border-yellow-200: #6a5020;
+  --util-border-green-200: #2a6a40;
+  --util-border-purple-200: #4a3070;
+  --util-border-amber-100: #5a4018;
+  --util-border-b-2: #344a5e;
+  --util-divide-gray-50: #2a3545;
+  /* -- 기타 컴포넌트 -- */
+  --util-select-bg: #1e1e2e;
+  --util-select-text: #e2e8f0;
+  --util-login-card-bg: #141420;
+  --util-h-px-bg: #2a3a4a;
+  /* -- 소스 태그 -- */
+  --it-store-dark: #fbbf24;
+  --it-gacha-dark: #a889d4;
+
+  /* === 커스텀 배지/상태 다크 토큰 === */
+  --qs-done-bg: #1a3a28;
+  --qs-done-text: #5cb87a;
+  --qs-pending-bg: #3a2a10;
+  --qs-pending-text: #e0b050;
+  --qs-inprogress-bg: #201530;
+  --qs-inprogress-text: #a889d4;
+  --ct-auto-bg: #3a2a10;
+  --ct-auto-text: #fcd34d;
+  --ct-approval-bg: #2a1525;
+  --ct-approval-text: #f9a8d4;
+  --tx-plus-text: #5cb87a;
+  --tx-minus-text: #e07070;
+  --badge-soldout-bg: #4a1a1a;
+  --badge-soldout-text: #fca5a5;
+  --badge-stock-bg: #201530;
+  --badge-stock-text: #a889d4;
+  --badge-unlimited-bg: #1a3a28;
+  --badge-unlimited-text: #5cb87a;
+  --badge-gacha-pct-bg: #201530;
+  --badge-gacha-pct-text: #a889d4;
+  --badge-prob-bg: #201530;
+  --badge-prob-text: #a889d4;
+
+  /* === stat-card 변형 다크 토큰 === */
+  --sc-orange-bg-dk: #2e2010;
+  --sc-orange-border-dk: #5a3510;
+  --sc-blue-bg-dk: #1a3060;
+  --sc-blue-border-dk: #1a3560;
+  --sc-green-bg-dk: #1a3a28;
+  --sc-green-border-dk: #1a4a35;
+  --sc-purple-bg-dk: #201530;
+  --sc-purple-border-dk: #3a2560;
+  /* sc 내부 텍스트 */
+  --sc-text-orange-700: #e0a050;
+  --sc-text-blue-700: #7aabe0;
+  --sc-text-green-700: #5cb87a;
+  --sc-text-purple-700: #a889d4;
+  --sc-text-orange-500: #e0a060;
+  --sc-text-blue-500: #7aabe0;
+  --sc-text-green-500: #5cb87a;
+  --sc-text-purple-500: #b89cd4;
+
+  /* === row-item 다크 토큰 === */
+  --row-item-bg-dk: #1e2838;
+
+  /* === 등급 배지 (rc-*) 다크 토큰 === */
+  --rc-common-bg: #201530;
+  --rc-common-text: #c4b5fd;
+  --rc-rare-bg: #1a3060;
+  --rc-rare-text: #93c5fd;
+  --rc-epic-bg: #2a1525;
+  --rc-epic-text: #f9a8d4;
+  --rc-legend-bg: #3a1a1a;
+  --rc-legend-text: #fca5a5;
+
+  /* === 심사 상태 (st-*) 다크 토큰 === */
+  --st-pending-bg: #3a2a10;
+  --st-pending-text: #fcd34d;
+  --st-approved-bg: #1a3a28;
+  --st-approved-text: #5cb87a;
+  --st-rejected-bg: #3a1a1a;
+  --st-rejected-text: #fca5a5;
+
+  /* === 반복 배지 (rep-*) 다크 토큰 === */
+  --rep-once-bg: #201530;
+  --rep-once-text: #c4b5fd;
+  --rep-daily-bg: #1a3060;
+  --rep-daily-text: #93c5fd;
+  --rep-weekly-bg: #2a1525;
+  --rep-weekly-text: #f9a8d4;
+
+  /* === 보상 유형 (rt-*) 다크 토큰 === */
+  --rt-auto-bg: #1a3a28;
+  --rt-auto-text: #5cb87a;
+  --rt-manual-bg: #201530;
+  --rt-manual-text: #c4b5fd;
+
+  /* === 리사이클 배지 다크 토큰 === */
+  --recycle-badge-active-bg: #1a3a28;
+  --recycle-badge-active-text: #5cb87a;
+  --recycle-badge-inactive-bg: #3a1a1a;
+  --recycle-badge-inactive-text: #fca5a5;
+
+  /* === 품절 리본 다크 토큰 === */
+  --soldout-ribbon-bg: linear-gradient(135deg, #b05060, #904050);
+
+  /* === 모달 안내박스 다크 토큰 === */
+  --modal-notice-box-bg: rgba(245,158,11,0.1);
+  --modal-notice-box-border: rgba(245,158,11,0.2);
+  --modal-notice-box-text: #fcd34d;
+  --modal-notice-sub-text: #5cb87a;
+
+  /* === 모달 박스 다크 토큰 === */
+  --modal-box-bg: #161e2a;
+  --modal-box-border: #2a3a4a;
+  --modal-box-shadow:
+    0 16px 60px rgba(0,0,0,0.6),
+    0 4px 16px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -2px 6px rgba(0,0,0,0.18);
+
+  /* === 헤더 아이콘 다크 토큰 === */
+  --header-icon-btn-bg: rgba(45,40,70,0.9);
+  --header-icon-btn-border: rgba(255,255,255,0.1);
+
+  /* === 로그아웃 버튼 다크 토큰 === */
+  --btn-logout-text: #d97706;
+  --btn-logout-text-hover: #f59e0b;
+
+  /* === 필드 placeholder 다크 토큰 === */
+  --field-placeholder-dk: #d97706;
+
+  /* === 탭 버튼 다크 토큰 === */
+  --tab-btn-dk-text: #d4a060;
+  --tab-btn-dk-active-text: #fff;
+
+  /* === 리사이클 다크 토큰 === */
+  --rt-coupon-bg: #3a2a10;
+  --rt-coupon-text: #fcd34d;
+  --rc-scope-btn-bg: #1e2838;
+  --rc-scope-btn-border: #2a3a4a;
+  --rc-scope-btn-text: #fb923c;
+  --rc-scope-btn-active-bg: linear-gradient(135deg,#7c3aed,#4f46e5);
+  --rc-scope-btn-active-text: #fff;
+  --recycle-hero-bg: linear-gradient(135deg,#0a2e20,#0d3828);
+  --recycle-item-card-bg: #0e2a1e;
+  --recycle-item-card-border: #1a4a35;
+  --recycle-item-card-selected-bg: #153a28;
+  --recycle-inv-card-bg: #0c2518;
+  --recycle-inv-card-selected-bg: #153a28;
+
+  /* === 이벤트 요일 버튼 다크 토큰 === */
+  --evt-day-btn-bg: #1e2838;
+  --evt-day-btn-border: #2a3a4a;
+  --evt-day-btn-text: #fb923c;
+  --evt-day-btn-checked-bg: linear-gradient(135deg,#b05878,#7c6bbf);
+
+  /* === 캐치 오버레이 다크 토큰 === */
+  --catch-overlay-h2: #fbbf24;
+  --catch-overlay-p: #d97706;
+
+  /* === 미니게임 태그 다크 토큰 === */
+  --mg-tag-danger-bg: #3a1a1a;
+  --mg-tag-danger-text: #fca5a5;
+  --mg-tag-reward-bg: #1a3a28;
+  --mg-tag-reward-text: #86ceac;
+
+  /* === 2048 미니게임 다크 토큰 === */
+  --mg2048-title-text: #fcd34d;
+  --mg2048-exit-bg: #1e2838;
+  --mg2048-exit-text: #fb923c;
+  --mg2048-sbox-label-text: #fbbf24;
+  --mg2048-combo-text: #fbbf24;
+  --mg2048-overlay-h3-text: #fcd34d;
+  --mg2048-overlay-rules-text: #fb923c;
+  --mg2048-sbox-val-text: #e2e8f0;
+
+  /* === 배틀 카드 다크 토큰 === */
+  --btl-card-reward-text: #fff;
+  --btl-card-hint-text: #80a880;
+
+  /* === 다람쥐 도움말 다크 토큰 === */
+  --sq-help-card-title-text: #e2e8f0;
+  --sq-help-card-desc-text: #94a3b8;
+  --sq-help-acc-summary-text: #cbd5e1;
+
+  /* === 탐험 아이템 칩 다크 토큰 === */
+  --exp-item-chip-name-text: #e2e8f0;
+
+  /* === 인벤토리2 다크 토큰 === */
+  --ic2-name-text: #fbbf24;
+  --ic2-held-text: #a889d4;
+  --ic2-pending-text: #f59e0b;
+  --inv-empty2-text: #4a5568;
+
+  /* farm-dep-num-text/sub-text — --farm-dep-*-color로 통합됨, 제거 */
+
+  /* === 프로필 다람쥐 empty 다크 토큰 === */
+  --pf-sq-empty-border: rgba(255,255,255,0.1);
+  --pf-sq-empty-bg: rgba(255,255,255,0.02);
+
+  /* === 2048 스코어박스 다크 토큰 === */
+  --mg2048-sbox-bg: #1a2535;
+  --mg2048-sbox-border: #2a3a4a;
+
+  /* === 도움말 카드 다크 토큰 === */
+  --sq-help-card-bg: #151c28;
+  --sq-help-card-border: #2a3545;
+
+  /* === 원정대 아이템칩 다크 토큰 === */
+  --exp-item-select-bg: #151c28;
+  --exp-item-select-border: #2a3a4a;
+  --exp-item-chip-bg: #1a2535;
+  --exp-item-chip-border: #2a3a4a;
 }
 
 /* ── Tailwind 핵심 유틸리티 (CDN 대체) ── */
@@ -1834,7 +2394,7 @@ input[type="checkbox"]:active,
 
 
 .rt-coupon { background: rgba(251,191,36,0.18); color: #92400e; border-radius: 8px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
-[data-theme="dark"] .rt-coupon { background: #3a2a10 !important; color: #fcd34d !important; }
+[data-theme="dark"] .rt-coupon { background: var(--rt-coupon-bg); color: var(--rt-coupon-text); }
 /* ── 재활용센터 ── */
 .recycle-hero {
   background: linear-gradient(135deg, rgba(209,250,229,0.9), rgba(167,243,208,0.7));
@@ -1907,14 +2467,14 @@ input[type="checkbox"]:active,
 .recycle-badge-active { background: var(--green-100); color: var(--green-800); font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
 .rc-scope-btn { background: rgba(255,255,255,0.5); border: 2px solid rgba(200,180,240,0.3); color: #9c87b8; cursor: pointer; transition: all .15s; font-family: 'Jua',sans-serif; }
 .rc-scope-btn.active { background: linear-gradient(135deg,#c084fc,#818cf8); border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(192,132,252,.35); }
-[data-theme="dark"] .rc-scope-btn { background: #1e2838 !important; border-color: #2a3a4a !important; color: #fb923c !important; }
-[data-theme="dark"] .rc-scope-btn.active { background: linear-gradient(135deg,#7c3aed,#4f46e5) !important; border-color: transparent !important; color: #fff !important; }
+[data-theme="dark"] .rc-scope-btn { background: var(--rc-scope-btn-bg); border-color: var(--rc-scope-btn-border); color: var(--rc-scope-btn-text); }
+[data-theme="dark"] .rc-scope-btn.active { background: var(--rc-scope-btn-active-bg); border-color: transparent; color: var(--rc-scope-btn-active-text); }
 .recycle-badge-inactive { background: var(--badge-legend-bg); color: var(--red-700); font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
-[data-theme="dark"] .recycle-hero { background: linear-gradient(135deg,#0a2e20,#0d3828) !important; }
-[data-theme="dark"] .recycle-item-card { background: #0e2a1e !important; border-color: #1a4a35 !important; }
-[data-theme="dark"] .recycle-item-card.selected { background: #153a28 !important; }
-[data-theme="dark"] .recycle-inv-card { background: #0c2518 !important; }
-[data-theme="dark"] .recycle-inv-card.selected { background: #153a28 !important; }
+[data-theme="dark"] .recycle-hero { background: var(--recycle-hero-bg); }
+[data-theme="dark"] .recycle-item-card { background: var(--recycle-item-card-bg); border-color: var(--recycle-item-card-border); }
+[data-theme="dark"] .recycle-item-card.selected { background: var(--recycle-item-card-selected-bg); }
+[data-theme="dark"] .recycle-inv-card { background: var(--recycle-inv-card-bg); }
+[data-theme="dark"] .recycle-inv-card.selected { background: var(--recycle-inv-card-selected-bg); }
 
 /* ── 요일 선택 버튼 (label+checkbox 방식) ── */
 .evt-day-btn { cursor: pointer; }
@@ -1935,8 +2495,8 @@ input[type="checkbox"]:active,
   color: #fff; border-color: transparent;
   box-shadow: 0 3px 8px rgba(192,132,252,0.4);
 }
-[data-theme="dark"] .evt-day-btn span { background: #1e2838 !important; border-color: #2a3a4a !important; color: #fb923c !important; }
-[data-theme="dark"] .evt-day-btn input:checked + span { background: linear-gradient(135deg,#b05878,#7c6bbf) !important; border-color: transparent !important; }
+[data-theme="dark"] .evt-day-btn span { background: var(--evt-day-btn-bg); border-color: var(--evt-day-btn-border); color: var(--evt-day-btn-text); }
+[data-theme="dark"] .evt-day-btn input:checked + span { background: var(--evt-day-btn-checked-bg); border-color: transparent; }
 
 /* ── 탭 콘텐츠 상단 여백 통일 ── */
 [id^="utab-"] { padding-top: 12px; }
@@ -2036,34 +2596,12 @@ input[type="checkbox"]:active,
 }
 
 /* 설정 패널 다크모드 */
-[data-theme="dark"] .cfg-panel .fc-header h2 { color:#f0f0f0; }
-[data-theme="dark"] .cfg-panel .fc-section { background:#1a2030; border-color:#2a3a4a; }
-[data-theme="dark"] .cfg-panel .fc-sec-head:hover { background:#202a3a; }
-[data-theme="dark"] .cfg-panel .fc-sec-head .fc-title { color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-sec-head .fc-subtitle { color:#fb923c; }
-[data-theme="dark"] .cfg-panel .fc-sec-head .fc-arrow { color:#fb923c; }
-[data-theme="dark"] .cfg-panel .fc-divider { background:#2a3a4a; }
-[data-theme="dark"] .cfg-panel .fc-row-label { color:#e2e8f0; }
-[data-theme="dark"] .cfg-panel .fc-row-input input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-row-input input:focus { border-color:#f59e0b; }
-[data-theme="dark"] .cfg-panel .fc-cell-label { color:#e2e8f0; }
-[data-theme="dark"] .cfg-panel .fc-cell input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-cell input:focus { border-color:#f59e0b; }
-[data-theme="dark"] .cfg-panel .fc-expand-table th { color:#e2e8f0; }
-[data-theme="dark"] .cfg-panel .fc-expand-table td:first-child { color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-expand-table input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-tier-grid .tg-head { color:#e2e8f0; }
-[data-theme="dark"] .cfg-panel .fc-tier-grid .tg-num { color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-tier-grid input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-gt-header > div { color:#e2e8f0; }
-[data-theme="dark"] .cfg-panel .fc-gt-row input { background:#151d2a; border-color:#2a3a4a; color:#fbbf24; }
-[data-theme="dark"] .cfg-panel .fc-sub-title { color:#e2e8f0; }
-[data-theme="dark"] .cfg-panel .fc-desc { color:#d4a060; }
+/* cfg-panel — 베이스 규칙이 var(--cfg-*) 사용, 다크 토큰 블록에서 값 정의됨. 중복 오버라이드 제거 완료 */
 
 /* ── 테마: 다크모드 ── */
 [data-theme="dark"] body {
-  background: linear-gradient(-45deg, #0d0b1e, #1a1035, #0b1528, #1e1040, #0a1020, #160d30) !important;
-  background-size: 400% 400% !important;
+  background: var(--body-bg) !important;
+  background-size: var(--body-bg-size) !important;
   animation: bgShift 24s ease infinite !important;
 }
 /* ── 별 (다크모드 전용) ── */
@@ -2085,151 +2623,155 @@ input[type="checkbox"]:active,
   100% { opacity: 0;           transform: scale(0.7); }
 }
 [data-theme="dark"] .clay-card {
-  background: #1e2a3a !important;
-  border-color: #344a5e !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3) !important;
+  background: var(--clay-card-bg);
+  border: 1px solid var(--clay-card-border);
+  box-shadow: var(--clay-card-shadow);
 }
 /* 다크모드 버튼: 채도·밝기 낮춰 형광 제거 */
 [data-theme="dark"] .btn-primary {
-  background: linear-gradient(135deg, #c4607a, #b04d70) !important;
-  box-shadow: 0 4px 14px rgba(180,80,110,0.3) !important;
+  background: var(--btn-primary);
+  box-shadow: var(--btn-primary-shadow);
 }
 [data-theme="dark"] .btn-purple {
-  background: linear-gradient(135deg, #7c6bbf, #6657b0) !important;
-  color: #e8e0ff !important;
-  box-shadow: 0 4px 14px rgba(100,90,170,0.3) !important;
+  background: var(--btn-purple-bg);
+  color: var(--btn-purple-text);
+  box-shadow: var(--btn-purple-shadow);
 }
 [data-theme="dark"] .btn-green {
-  background: linear-gradient(135deg, #3a9b6e, #2d7d58) !important;
-  color: #d1fae5 !important;
-  box-shadow: 0 4px 14px rgba(45,125,90,0.3) !important;
+  background: var(--btn-green-bg);
+  color: var(--btn-green-text);
+  box-shadow: var(--btn-green-shadow);
 }
 [data-theme="dark"] .btn-pink {
-  background: linear-gradient(135deg, #b06080, #904060) !important;
-  color: #fce4ec !important;
-  box-shadow: 0 4px 12px rgba(144,64,96,0.3) !important;
+  background: var(--btn-pink-bg);
+  color: var(--btn-pink-text);
+  box-shadow: var(--btn-pink-shadow);
 }
 [data-theme="dark"] .btn-gray {
-  background: #2a3540 !important;
-  color: #fbbf24 !important;
-  border-color: #3a4a55 !important;
+  background: var(--btn-gray-bg);
+  color: var(--btn-gray-text);
+  border-color: var(--btn-gray-border);
+  box-shadow: var(--btn-gray-shadow);
 }
 [data-theme="dark"] .tab-btn.active {
-  background: linear-gradient(135deg, #b05878, #8050b8) !important;
+  background: var(--tab-active-bg);
+  box-shadow: var(--tab-active-shadow);
+  color: var(--tab-btn-dk-active-text);
 }
 [data-theme="dark"] .field {
-  background: #151d2a !important;
-  border-color: #2a3a4a !important;
-  color: #fbbf24 !important;
+  background: var(--field-bg);
+  border-color: var(--field-border);
+  color: var(--field-text);
+  box-shadow: var(--field-shadow);
 }
-[data-theme="dark"] .field::placeholder { color: #d97706 !important; }
-[data-theme="dark"] .tab-btn { color: #d4a060 !important; }
-[data-theme="dark"] .tab-btn.active { color: #fff !important; }
+[data-theme="dark"] .field::placeholder { color: var(--field-placeholder-dk); }
+[data-theme="dark"] .tab-btn { color: var(--tab-btn-dk-text); }
 [data-theme="dark"] .acorn-pill {
-  background: linear-gradient(135deg,#92400e,#b45309) !important;
-  color: #fde68a !important;
+  background: var(--acorn-pill-bg);
+  color: var(--acorn-pill-text);
+  box-shadow: var(--acorn-pill-shadow);
 }
 
 /* 다크: 텍스트 — 채도 있는 색상 (회색 금지, 차분한 톤) */
 [data-theme="dark"] .text-gray-800,
-[data-theme="dark"] .font-black.text-gray-800 { color: #e2e8f0 !important; }
-[data-theme="dark"] .text-gray-700 { color: #e2e8f0 !important; }
-[data-theme="dark"] .text-gray-600 { color: #fbbf24 !important; }
-[data-theme="dark"] .text-gray-500 { color: #e2a84c !important; }
-[data-theme="dark"] .text-gray-400 { color: #d4a040 !important; }
-[data-theme="dark"] .text-amber-900 { color: #fcd34d !important; }
-[data-theme="dark"] .text-amber-700 { color: #fbbf24 !important; }
-[data-theme="dark"] .text-amber-600 { color: #f59e0b !important; }
-[data-theme="dark"] .text-amber-500 { color: #f59e0b !important; }
+[data-theme="dark"] .font-black.text-gray-800 { color: var(--util-text-gray-800); }
+[data-theme="dark"] .text-gray-700 { color: var(--util-text-gray-700); }
+[data-theme="dark"] .text-gray-600 { color: var(--util-text-gray-600); }
+[data-theme="dark"] .text-gray-500 { color: var(--util-text-gray-500); }
+[data-theme="dark"] .text-gray-400 { color: var(--util-text-gray-400); }
+[data-theme="dark"] .text-amber-900 { color: var(--util-text-amber-900); }
+[data-theme="dark"] .text-amber-700 { color: var(--util-text-amber-700); }
+[data-theme="dark"] .text-amber-600 { color: var(--util-text-amber-600); }
+[data-theme="dark"] .text-amber-500 { color: var(--util-text-amber-500); }
 
 /* 다크: 배경 뱃지/박스 */
-[data-theme="dark"] .bg-gray-50    { background: #242e3e !important; }
-[data-theme="dark"] .bg-amber-50   { background: #382e18 !important; }
-[data-theme="dark"] .bg-pink-50    { background: #381a2a !important; }
-[data-theme="dark"] .bg-yellow-50  { background: #332a16 !important; }
-[data-theme="dark"] .bg-yellow-100 { background: #433218 !important; }
-[data-theme="dark"] .bg-green-50   { background: #1a3528 !important; }
-[data-theme="dark"] .bg-green-100  { background: #1e4030 !important; }
-[data-theme="dark"] .bg-purple-50  { background: #261a38 !important; }
-[data-theme="dark"] .bg-white      { background: #1e2a3a !important; }
-[data-theme="dark"] .divide-gray-50 > * + * { border-color: #2a3545 !important; }
-[data-theme="dark"] .border-gray-100   { border-color: #344a5e !important; }
-[data-theme="dark"] .border-gray-200   { border-color: #344a5e !important; }
-[data-theme="dark"] .border-yellow-200 { border-color: #6a5020 !important; }
-[data-theme="dark"] .border-green-200  { border-color: #2a6a40 !important; }
-[data-theme="dark"] .border-purple-200 { border-color: #4a3070 !important; }
-[data-theme="dark"] .border-amber-100  { border-color: #5a4018 !important; }
-[data-theme="dark"] .border-b-2 { border-color: #344a5e !important; }
+[data-theme="dark"] .bg-gray-50    { background: var(--util-bg-gray-50); }
+[data-theme="dark"] .bg-amber-50   { background: var(--util-bg-amber-50); }
+[data-theme="dark"] .bg-pink-50    { background: var(--util-bg-pink-50); }
+[data-theme="dark"] .bg-yellow-50  { background: var(--util-bg-yellow-50); }
+[data-theme="dark"] .bg-yellow-100 { background: var(--util-bg-yellow-100); }
+[data-theme="dark"] .bg-green-50   { background: var(--util-bg-green-50); }
+[data-theme="dark"] .bg-green-100  { background: var(--util-bg-green-100); }
+[data-theme="dark"] .bg-purple-50  { background: var(--util-bg-purple-50); }
+[data-theme="dark"] .bg-white      { background: var(--util-bg-white); }
+[data-theme="dark"] .divide-gray-50 > * + * { border-color: var(--util-divide-gray-50); }
+[data-theme="dark"] .border-gray-100   { border-color: var(--util-border-gray-100); }
+[data-theme="dark"] .border-gray-200   { border-color: var(--util-border-gray-200); }
+[data-theme="dark"] .border-yellow-200 { border-color: var(--util-border-yellow-200); }
+[data-theme="dark"] .border-green-200  { border-color: var(--util-border-green-200); }
+[data-theme="dark"] .border-purple-200 { border-color: var(--util-border-purple-200); }
+[data-theme="dark"] .border-amber-100  { border-color: var(--util-border-amber-100); }
+[data-theme="dark"] .border-b-2 { border-color: var(--util-border-b-2); }
 [data-theme="dark"] select,
-[data-theme="dark"] option { background: #1e1e2e !important; color: #e2e8f0 !important; }
-[data-theme="dark"] .stat-card { background: #1e2a3a !important; border-color: #344a5e !important; }
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; }
-[data-theme="dark"] .login-card { background: #141420 !important; }
-[data-theme="dark"] .h-px { background: #2a3a4a !important; }
-[data-theme="dark"] .page-nav-btn { background: #1e2838 !important; color: #fbbf24 !important; border-color: #2a3a4a !important; }
+[data-theme="dark"] option { background: var(--util-select-bg); color: var(--util-select-text); }
+[data-theme="dark"] .stat-card { background: var(--stat-card-bg); border-color: var(--stat-card-border); }
+[data-theme="dark"] .modal-overlay { background: var(--modal-overlay); inset: 0; width: 100vw; height: 100vh; }
+[data-theme="dark"] .login-card { background: var(--util-login-card-bg); }
+[data-theme="dark"] .h-px { background: var(--util-h-px-bg); }
+[data-theme="dark"] .page-nav-btn { background: var(--page-nav-bg); color: var(--page-nav-text); border-color: var(--page-nav-border); }
 
 /* ── 다크: 누락 텍스트 색상 ── */
-[data-theme="dark"] .text-amber-800  { color: #fbbf24 !important; }
-[data-theme="dark"] .text-gray-300   { color: #d4a040 !important; }
-[data-theme="dark"] .text-yellow-700 { color: #fcd34d !important; }
-[data-theme="dark"] .text-yellow-800 { color: #fbbf24 !important; }
-[data-theme="dark"] .text-green-700  { color: #5cb87a !important; }
-[data-theme="dark"] .text-green-600  { color: #5cb87a !important; }
-[data-theme="dark"] .text-red-600    { color: #e07070 !important; }
-[data-theme="dark"] .text-red-500    { color: #d88888 !important; }
-[data-theme="dark"] .text-red-400    { color: #d8a0a0 !important; }
-[data-theme="dark"] .text-purple-600 { color: #a889d4 !important; }
-[data-theme="dark"] .text-blue-700   { color: #60a5fa !important; }
-[data-theme="dark"] .text-orange-700 { color: #fb923c !important; }
-[data-theme="dark"] .text-orange-500 { color: #fdba74 !important; }
+[data-theme="dark"] .text-amber-800  { color: var(--util-text-amber-800); }
+[data-theme="dark"] .text-gray-300   { color: var(--util-text-gray-300); }
+[data-theme="dark"] .text-yellow-700 { color: var(--util-text-yellow-700); }
+[data-theme="dark"] .text-yellow-800 { color: var(--util-text-yellow-800); }
+[data-theme="dark"] .text-green-700  { color: var(--util-text-green-700); }
+[data-theme="dark"] .text-green-600  { color: var(--util-text-green-600); }
+[data-theme="dark"] .text-red-600    { color: var(--util-text-red-600); }
+[data-theme="dark"] .text-red-500    { color: var(--util-text-red-500); }
+[data-theme="dark"] .text-red-400    { color: var(--util-text-red-400); }
+[data-theme="dark"] .text-purple-600 { color: var(--util-text-purple-600); }
+[data-theme="dark"] .text-blue-700   { color: var(--util-text-blue-700); }
+[data-theme="dark"] .text-orange-700 { color: var(--util-text-orange-700); }
+[data-theme="dark"] .text-orange-500 { color: var(--util-text-orange-500); }
 
 /* ── 다크: 누락 배경 색상 ── */
-[data-theme="dark"] .bg-amber-100  { background: #3a2a10 !important; }
-[data-theme="dark"] .bg-gray-100   { background: #242e3e !important; }
-[data-theme="dark"] .bg-gray-200   { background: #2a3445 !important; }
-[data-theme="dark"] .bg-red-50     { background: #3e1e1e !important; }
-[data-theme="dark"] .bg-red-100    { background: #4e2020 !important; }
-[data-theme="dark"] .bg-blue-100   { background: #1e3565 !important; }
-[data-theme="dark"] .bg-purple-100 { background: #2a1e3e !important; }
-[data-theme="dark"] .bg-pink-100   { background: #2a1525 !important; }
+[data-theme="dark"] .bg-amber-100  { background: var(--util-bg-amber-100); }
+[data-theme="dark"] .bg-gray-100   { background: var(--util-bg-gray-100); }
+[data-theme="dark"] .bg-gray-200   { background: var(--util-bg-gray-200); }
+[data-theme="dark"] .bg-red-50     { background: var(--util-bg-red-50); }
+[data-theme="dark"] .bg-red-100    { background: var(--util-bg-red-100); }
+[data-theme="dark"] .bg-blue-100   { background: var(--util-bg-blue-100); }
+[data-theme="dark"] .bg-purple-100 { background: var(--util-bg-purple-100); }
+[data-theme="dark"] .bg-pink-100   { background: var(--util-bg-pink-100); }
 
 /* ── 소스 태그 (뽑기/구매/선물) ── */
 .it-store { color: var(--amber-900); font-weight: 700; }
 .it-gacha { color: #6d28d9; font-weight: 700; }
-[data-theme="dark"] .it-store { color: #fbbf24 !important; }
-[data-theme="dark"] .it-gacha { color: #a889d4 !important; }
+[data-theme="dark"] .it-store { color: var(--it-store-dark); }
+[data-theme="dark"] .it-gacha { color: var(--it-gacha-dark); }
 
 /* ── 다크: 커스텀 배지 ── */
-[data-theme="dark"] .qs-done       { background: #1a3a28 !important; color: #5cb87a !important; }
-[data-theme="dark"] .qs-pending    { background: #3a2a10 !important; color: #e0b050 !important; }
-[data-theme="dark"] .qs-inprogress { background: #201530 !important; color: #a889d4 !important; }
-[data-theme="dark"] .ct-auto       { background: #3a2a10 !important; color: #fcd34d !important; }
-[data-theme="dark"] .ct-approval   { background: #2a1525 !important; color: #f9a8d4 !important; }
-[data-theme="dark"] .tx-plus       { color: #5cb87a !important; }
-[data-theme="dark"] .tx-minus      { color: #e07070 !important; }
-[data-theme="dark"] .badge-soldout    { background: #4a1a1a !important; color: #fca5a5 !important; }
-[data-theme="dark"] .badge-stock      { background: #201530 !important; color: #a889d4 !important; }
-[data-theme="dark"] .badge-unlimited  { background: #1a3a28 !important; color: #5cb87a !important; }
-[data-theme="dark"] .badge-gacha-pct  { background: #201530 !important; color: #a889d4 !important; }
-[data-theme="dark"] .badge-prob       { background: #201530 !important; color: #a889d4 !important; }
+[data-theme="dark"] .qs-done       { background: var(--qs-done-bg); color: var(--qs-done-text); }
+[data-theme="dark"] .qs-pending    { background: var(--qs-pending-bg); color: var(--qs-pending-text); }
+[data-theme="dark"] .qs-inprogress { background: var(--qs-inprogress-bg); color: var(--qs-inprogress-text); }
+[data-theme="dark"] .ct-auto       { background: var(--ct-auto-bg); color: var(--ct-auto-text); }
+[data-theme="dark"] .ct-approval   { background: var(--ct-approval-bg); color: var(--ct-approval-text); }
+[data-theme="dark"] .tx-plus       { color: var(--tx-plus-text); }
+[data-theme="dark"] .tx-minus      { color: var(--tx-minus-text); }
+[data-theme="dark"] .badge-soldout    { background: var(--badge-soldout-bg); color: var(--badge-soldout-text); }
+[data-theme="dark"] .badge-stock      { background: var(--badge-stock-bg); color: var(--badge-stock-text); }
+[data-theme="dark"] .badge-unlimited  { background: var(--badge-unlimited-bg); color: var(--badge-unlimited-text); }
+[data-theme="dark"] .badge-gacha-pct  { background: var(--badge-gacha-pct-bg); color: var(--badge-gacha-pct-text); }
+[data-theme="dark"] .badge-prob       { background: var(--badge-prob-bg); color: var(--badge-prob-text); }
 
 /* ── 다크: stat-card ── */
-[data-theme="dark"] .sc-orange { background: #2e2010 !important; border-color: #5a3510 !important; }
-[data-theme="dark"] .sc-blue   { background: #1a3060 !important; border-color: #1a3560 !important; }
-[data-theme="dark"] .sc-green  { background: #1a3a28 !important; border-color: #1a4a35 !important; }
-[data-theme="dark"] .sc-purple { background: #201530 !important; border-color: #3a2560 !important; }
-[data-theme="dark"] .text-orange-700 { color: #e0a050 !important; }
-[data-theme="dark"] .text-blue-700   { color: #7aabe0 !important; }
-[data-theme="dark"] .text-green-700  { color: #5cb87a !important; }
-[data-theme="dark"] .text-purple-700 { color: #a889d4 !important; }
-[data-theme="dark"] .text-orange-500 { color: #e0a060 !important; }
-[data-theme="dark"] .text-blue-500   { color: #7aabe0 !important; }
-[data-theme="dark"] .text-green-500  { color: #5cb87a !important; }
-[data-theme="dark"] .text-purple-500 { color: #b89cd4 !important; }
+[data-theme="dark"] .sc-orange { background: var(--sc-orange-bg-dk); border-color: var(--sc-orange-border-dk); }
+[data-theme="dark"] .sc-blue   { background: var(--sc-blue-bg-dk); border-color: var(--sc-blue-border-dk); }
+[data-theme="dark"] .sc-green  { background: var(--sc-green-bg-dk); border-color: var(--sc-green-border-dk); }
+[data-theme="dark"] .sc-purple { background: var(--sc-purple-bg-dk); border-color: var(--sc-purple-border-dk); }
+[data-theme="dark"] .sc-orange .text-orange-700 { color: var(--sc-text-orange-700); }
+[data-theme="dark"] .sc-blue .text-blue-700     { color: var(--sc-text-blue-700); }
+[data-theme="dark"] .sc-green .text-green-700   { color: var(--sc-text-green-700); }
+[data-theme="dark"] .sc-purple .text-purple-700 { color: var(--sc-text-purple-700); }
+[data-theme="dark"] .sc-orange .text-orange-500 { color: var(--sc-text-orange-500); }
+[data-theme="dark"] .sc-blue .text-blue-500     { color: var(--sc-text-blue-500); }
+[data-theme="dark"] .sc-green .text-green-500   { color: var(--sc-text-green-500); }
+[data-theme="dark"] .sc-purple .text-purple-500 { color: var(--sc-text-purple-500); }
 
 /* ── 다크: row-item-bg (인라인 bg 대체) ── */
 .row-item-bg { background: rgba(255,255,255,0.5); border-radius: 12px; }
-[data-theme="dark"] .row-item-bg { background: #1e2535 !important; }
+[data-theme="dark"] .row-item-bg { background: var(--row-item-bg-dk); }
 
 /* ── 다크: 모달 안내박스 ── */
 .modal-notice-box {
@@ -2245,25 +2787,24 @@ input[type="checkbox"]:active,
   line-height: 1.55;
 }
 [data-theme="dark"] .modal-notice-box {
-  background: rgba(245,158,11,0.1) !important;
-  border-color: rgba(245,158,11,0.2) !important;
-  color: #fcd34d !important;
+  background: var(--modal-notice-box-bg);
+  border-color: var(--modal-notice-box-border);
+  color: var(--modal-notice-box-text);
 }
 .modal-notice-text { font-size: 14px; font-weight: 700; color: inherit; }
 .modal-notice-sub  { font-size: 12px; font-weight: 700; color: var(--price-affordable-text); margin-top: 4px; }
-[data-theme="dark"] .modal-notice-sub { color: #5cb87a !important; }
+[data-theme="dark"] .modal-notice-sub { color: var(--modal-notice-sub-text); }
 
-/* ── 다크: 모달 오버레이 ── */
-[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7) !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; }
 [data-theme="dark"] .modal-box {
-  background: #1a2030 !important;
-  border-color: #2a3a4a !important;
+  background: var(--modal-box-bg);
+  border: 1px solid var(--modal-box-border);
+  box-shadow: var(--modal-box-shadow);
 }
 
 /* 테마 토글 버튼 */
 /* 다크모드에서 도토리 이모지 어둡게 */
 [data-theme="dark"] #headerAcornEmoji {
-  filter: brightness(0.55) sepia(0.3) !important;
+  filter: brightness(0.55) sepia(0.3);
 }
 /* 헤더 아이콘 버튼 (종) */
 /* 헤더 종 버튼 */
@@ -2288,8 +2829,8 @@ input[type="checkbox"]:active,
   font-size: 22px; line-height: 1;
 }
 [data-theme="dark"] .header-icon-btn {
-  background: rgba(45,40,70,0.9) !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  background: var(--header-icon-btn-bg);
+  border-color: var(--header-icon-btn-border);
 }
 /* 헤더 도토리/티켓 텍스트 */
 .header-stats {
@@ -2305,8 +2846,8 @@ input[type="checkbox"]:active,
   font-size: 14px; font-weight: 900;
   color: var(--amber-900); letter-spacing: -0.3px;
 }
-[data-theme="dark"] .header-stat-acorn { color: #fde68a; }
-[data-theme="dark"] .header-stat-ticket { color: #c4b5fd; }
+[data-theme="dark"] .header-stat-acorn { color: var(--header-stat-acorn-color); }
+[data-theme="dark"] .header-stat-ticket { color: var(--header-stat-ticket-color); }
 /* 하위호환 (acorn-pill-header id는 유지) */
 .acorn-pill-header { display: none; }
 /* 로그아웃 작은 버튼 */
@@ -2323,8 +2864,8 @@ input[type="checkbox"]:active,
   font-family: 'Nunito', sans-serif;
 }
 .btn-logout-sm:hover { color: rgba(120,80,160,0.9); }
-[data-theme="dark"] .btn-logout-sm { color: #d97706 !important; }
-[data-theme="dark"] .btn-logout-sm:hover { color: #f59e0b !important; }
+[data-theme="dark"] .btn-logout-sm { color: var(--btn-logout-text); }
+[data-theme="dark"] .btn-logout-sm:hover { color: var(--btn-logout-text-hover); }
 
 
 /* ── 사용자 현황판 ── */
@@ -2411,8 +2952,8 @@ input[type="checkbox"]:active,
 }
 .tab-bar-wrap.can-scroll::after { opacity: 1; }
 [data-theme="dark"] .tab-bar-wrap::after {
-  background: linear-gradient(90deg, transparent, rgba(38,36,58,0.9) 40%) !important;
-  color: #a78bfa !important;
+  background: var(--tab-bar-fade);
+  color: var(--tab-bar-fade-color);
 }
 
 /* ══════════════════════════════════════════════
@@ -2510,13 +3051,11 @@ input[type="checkbox"]:active,
 .pin-edit-item.pinned .pin-edit-star { color: #c084fc; }
 
 /* 다크모드 */
-[data-theme="dark"] .adm-pin-bar { background: #1e2838; border: none; }
-[data-theme="dark"] .adm-pin-tab { color: #6b7280; }
-[data-theme="dark"] .adm-stats-mini { background: #1e2838; border: none; }
-[data-theme="dark"] .adm-grid-item { background: #1e2838; border: none; box-shadow: none; }
-[data-theme="dark"] .adm-grid-label { color: #d1d5db; }
-[data-theme="dark"] .adm-maint-chip { background: #1e2838; border: none; color: #fb923c; }
-[data-theme="dark"] .adm-back-btn { color: #a78bfa; }
+[data-theme="dark"] .adm-pin-bar { background: var(--adm-pin-bar-bg); border: none; }
+[data-theme="dark"] .adm-pin-tab { color: var(--adm-pin-tab-color); }
+/* adm-stats-mini, adm-grid-item, adm-maint-chip — 후반부 토큰화 규칙에서 처리됨 (중복 제거) */
+[data-theme="dark"] .adm-grid-label { color: var(--adm-grid-label-color); }
+[data-theme="dark"] .adm-back-btn { color: var(--adm-back-btn-color); }
 
 /* ── 카테고리 서브탭 바 ── */
 .adm-subtab-bar {
@@ -2551,11 +3090,11 @@ input[type="checkbox"]:active,
 }
 
 /* 서브탭 다크모드 */
-[data-theme="dark"] .adm-subtab-bar { background: #1e2838; }
-[data-theme="dark"] .adm-subtab-home { background: #1e2535; border-color: #2a3a4a; color: #a78bfa; }
-[data-theme="dark"] .adm-subtab { color: #9ca3af; }
-[data-theme="dark"] .adm-subtab:hover { background: #1e2838; }
-[data-theme="dark"] .adm-subtab.active { background: #201530; color: #c4b5fd; border-color: #3a2560; box-shadow: none; }
+[data-theme="dark"] .adm-subtab-bar { background: var(--adm-subtab-bar-bg); }
+[data-theme="dark"] .adm-subtab-home { background: var(--adm-subtab-home-bg); border-color: var(--adm-subtab-home-border); color: var(--adm-subtab-home-color); }
+[data-theme="dark"] .adm-subtab { color: var(--adm-subtab-color); }
+[data-theme="dark"] .adm-subtab:hover { background: var(--adm-subtab-hover-bg); }
+[data-theme="dark"] .adm-subtab.active { background: var(--adm-subtab-active-bg); color: var(--adm-subtab-active-color); border-color: var(--adm-subtab-active-border); box-shadow: none; }
 
 /* ══════════════════════════════════════════════
    v2 개선: 품절 카드 강화
@@ -2581,30 +3120,30 @@ input[type="checkbox"]:active,
   letter-spacing: 0.5px;
 }
 [data-theme="dark"] .soldout-ribbon {
-  background: linear-gradient(135deg, #b05060, #904050) !important;
+  background: var(--soldout-ribbon-bg);
 }
 
 /* ══════════════════════════════════════════════
    v2 개선: 다크모드 뱃지 오버라이드
    ══════════════════════════════════════════════ */
-[data-theme="dark"] .rc-common  { background: #201530 !important; color: #c4b5fd !important; }
-[data-theme="dark"] .rc-rare    { background: #1a3060 !important; color: #93c5fd !important; }
-[data-theme="dark"] .rc-epic    { background: #2a1525 !important; color: #f9a8d4 !important; }
-[data-theme="dark"] .rc-legend  { background: #3a1a1a !important; color: #fca5a5 !important; }
+[data-theme="dark"] .rc-common  { background: var(--rc-common-bg); color: var(--rc-common-text); }
+[data-theme="dark"] .rc-rare    { background: var(--rc-rare-bg); color: var(--rc-rare-text); }
+[data-theme="dark"] .rc-epic    { background: var(--rc-epic-bg); color: var(--rc-epic-text); }
+[data-theme="dark"] .rc-legend  { background: var(--rc-legend-bg); color: var(--rc-legend-text); }
 
-[data-theme="dark"] .st-pending  { background: #3a2a10 !important; color: #fcd34d !important; }
-[data-theme="dark"] .st-approved { background: #1a3a28 !important; color: #5cb87a !important; }
-[data-theme="dark"] .st-rejected { background: #3a1a1a !important; color: #fca5a5 !important; }
+[data-theme="dark"] .st-pending  { background: var(--st-pending-bg); color: var(--st-pending-text); }
+[data-theme="dark"] .st-approved { background: var(--st-approved-bg); color: var(--st-approved-text); }
+[data-theme="dark"] .st-rejected { background: var(--st-rejected-bg); color: var(--st-rejected-text); }
 
-[data-theme="dark"] .rep-once   { background: #201530 !important; color: #c4b5fd !important; }
-[data-theme="dark"] .rep-daily  { background: #1a3060 !important; color: #93c5fd !important; }
-[data-theme="dark"] .rep-weekly { background: #2a1525 !important; color: #f9a8d4 !important; }
+[data-theme="dark"] .rep-once   { background: var(--rep-once-bg); color: var(--rep-once-text); }
+[data-theme="dark"] .rep-daily  { background: var(--rep-daily-bg); color: var(--rep-daily-text); }
+[data-theme="dark"] .rep-weekly { background: var(--rep-weekly-bg); color: var(--rep-weekly-text); }
 
-[data-theme="dark"] .rt-auto   { background: #1a3a28 !important; color: #5cb87a !important; }
-[data-theme="dark"] .rt-manual { background: #201530 !important; color: #c4b5fd !important; }
+[data-theme="dark"] .rt-auto   { background: var(--rt-auto-bg); color: var(--rt-auto-text); }
+[data-theme="dark"] .rt-manual { background: var(--rt-manual-bg); color: var(--rt-manual-text); }
 
-[data-theme="dark"] .recycle-badge-active   { background: #1a3a28 !important; color: #5cb87a !important; }
-[data-theme="dark"] .recycle-badge-inactive { background: #3a1a1a !important; color: #fca5a5 !important; }
+[data-theme="dark"] .recycle-badge-active   { background: var(--recycle-badge-active-bg); color: var(--recycle-badge-active-text); }
+[data-theme="dark"] .recycle-badge-inactive { background: var(--recycle-badge-inactive-bg); color: var(--recycle-badge-inactive-text); }
 
 /* ══════════════════════════════════════════════
    v2 개선: 관리자 대시보드 모바일 레이아웃
@@ -2671,11 +3210,11 @@ input[type="checkbox"]:active,
 .mg-recent-time { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
 
 [data-theme="dark"] .mg-recent-row {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.06);
+  background: var(--mg-recent-row-bg);
+  border-color: var(--mg-recent-row-border);
 }
-[data-theme="dark"] .mg-recent-name { color: #d1d5db; }
-[data-theme="dark"] .mg-recent-time { color: #6b7280; }
+[data-theme="dark"] .mg-recent-name { color: var(--mg-recent-name-color); }
+[data-theme="dark"] .mg-recent-time { color: var(--mg-recent-time-color); }
 
 /* ══════════════════════════════════════════════
    미니게임 — 허브 (게임 선택 카드)
@@ -2729,12 +3268,12 @@ input[type="checkbox"]:active,
   font-weight: 800;
 }
 [data-theme="dark"] .mg-card-preview { filter: brightness(0.85); }
-[data-theme="dark"] .mg-coming-soon { background: rgba(0,0,0,0.55); }
-[data-theme="dark"] .mg-tag { background: #3a2a10; color: #fbbf24; }
+[data-theme="dark"] .mg-coming-soon { background: var(--mg-coming-soon-bg); }
+[data-theme="dark"] .mg-tag { background: var(--mg-tag-bg); color: var(--mg-tag-color); }
 .mg-tag-danger { background: rgba(239,68,68,0.12) !important; color: var(--red-600) !important; }
 .mg-tag-reward { background: rgba(34,197,94,0.12) !important; color: var(--price-affordable-text) !important; }
-[data-theme="dark"] .mg-tag-danger { background: #3a1a1a !important; color: #fca5a5 !important; }
-[data-theme="dark"] .mg-tag-reward { background: #1a3a28 !important; color: #86ceac !important; }
+[data-theme="dark"] .mg-tag-danger { background: var(--mg-tag-danger-bg); color: var(--mg-tag-danger-text); }
+[data-theme="dark"] .mg-tag-reward { background: var(--mg-tag-reward-bg); color: var(--mg-tag-reward-text); }
 
 /* ══════════════════════════════════════════════
    도토리 캐치 — 게임 컨테이너
@@ -2984,41 +3523,41 @@ input[type="checkbox"]:active,
 
 /* ── 다크모드 ── */
 [data-theme="dark"] .catch-hud-item {
-  background: rgba(30,30,40,0.7);
-  border-color: rgba(255,255,255,0.08);
+  background: var(--catch-hud-item-bg);
+  border-color: var(--catch-hud-item-border);
 }
-[data-theme="dark"] .catch-hud-label { color: #6b7280; }
-[data-theme="dark"] .catch-hud-value { color: #fbbf24; }
-[data-theme="dark"] .catch-hud-timer .catch-hud-value { color: #34d399; }
+[data-theme="dark"] .catch-hud-label { color: var(--catch-hud-label-color); }
+[data-theme="dark"] .catch-hud-value { color: var(--catch-hud-value-color); }
+[data-theme="dark"] .catch-hud-timer .catch-hud-value { color: var(--catch-hud-timer-color); }
 [data-theme="dark"] .catch-hud-danger {
-  background: rgba(127,29,29,0.4) !important;
+  background: var(--catch-hud-danger-bg);
 }
 [data-theme="dark"] .catch-exit-btn {
-  background: rgba(255,255,255,0.08);
-  color: #6b7280;
+  background: var(--catch-exit-bg);
+  color: var(--catch-exit-color);
 }
 [data-theme="dark"] .catch-field {
-  background: linear-gradient(180deg, #1e3a5f 0%, #2d4a6f 40%, #2d5a3f 70%, #1e4a2f 100%);
-  box-shadow: inset 0 0 60px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.3);
+  background: var(--catch-field-bg);
+  box-shadow: var(--catch-field-shadow);
 }
 [data-theme="dark"] .catch-bg-cloud { opacity: 0.15; }
 [data-theme="dark"] .catch-overlay {
-  background: rgba(20,20,30,0.88);
+  background: var(--catch-overlay-bg);
 }
-[data-theme="dark"] .catch-overlay h2 { color: #fbbf24 !important; }
-[data-theme="dark"] .catch-overlay p { color: #d97706 !important; }
-[data-theme="dark"] .catch-legend { color: #fbbf24; }
+[data-theme="dark"] .catch-overlay h2 { color: var(--catch-overlay-h2); }
+[data-theme="dark"] .catch-overlay p { color: var(--catch-overlay-p); }
+[data-theme="dark"] .catch-legend { color: var(--catch-legend-color); }
 [data-theme="dark"] .catch-result-stat {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.08);
+  background: var(--catch-result-stat-bg);
+  border-color: var(--catch-result-stat-border);
 }
-[data-theme="dark"] .catch-result-label { color: #6b7280; }
+[data-theme="dark"] .catch-result-label { color: var(--catch-result-label-color); }
 [data-theme="dark"] .catch-reward-box {
-  background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.05));
-  border-color: rgba(251,191,36,0.15);
+  background: var(--catch-reward-bg);
+  border-color: var(--catch-reward-border);
 }
 [data-theme="dark"] .catch-float-text {
-  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  text-shadow: var(--catch-float-shadow);
 }
 
 /* ══════════════════════════════════════════════
@@ -3045,13 +3584,13 @@ input[type="checkbox"]:active,
   box-shadow: 0 2px 8px rgba(192,132,252,0.3);
 }
 [data-theme="dark"] .rank-period-btn {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.1);
-  color: #6b7280;
+  background: var(--rank-period-bg);
+  border-color: var(--rank-period-border);
+  color: var(--rank-period-color);
 }
 [data-theme="dark"] .rank-period-btn.active {
-  background: linear-gradient(135deg, #9333ea, #7c3aed);
-  color: #fff;
+  background: var(--rank-period-active-bg);
+  color: var(--rank-period-active-color);
 }
 
 /* 랭킹 행 */
@@ -3159,31 +3698,31 @@ input[type="checkbox"]:active,
 
 /* 다크모드 */
 [data-theme="dark"] .rank-row {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.08);
+  background: var(--rank-row-bg);
+  border-color: var(--rank-row-border);
 }
 [data-theme="dark"] .rank-row-top {
-  background: rgba(251,191,36,0.06);
-  border-color: rgba(251,191,36,0.12);
+  background: var(--rank-row-top-bg);
+  border-color: var(--rank-row-top-border);
 }
 [data-theme="dark"] .rank-row-me {
-  background: rgba(192,132,252,0.08) !important;
-  border-color: rgba(192,132,252,0.15) !important;
+  background: var(--rank-row-me-bg);
+  border-color: var(--rank-row-me-border);
 }
-[data-theme="dark"] .rank-name { color: #e5e7eb; }
-[data-theme="dark"] .rank-num { color: #6b7280; }
-[data-theme="dark"] .rank-me-badge { background: #201530; color: #c4b5fd; }
+[data-theme="dark"] .rank-name { color: var(--rank-name-color); }
+[data-theme="dark"] .rank-num { color: var(--rank-num-color); }
+[data-theme="dark"] .rank-me-badge { background: var(--rank-me-badge-bg); color: var(--rank-me-badge-color); }
 [data-theme="dark"] .rank-my-stat {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.08);
+  background: var(--rank-my-stat-bg);
+  border-color: var(--rank-my-stat-border);
 }
-[data-theme="dark"] .rank-my-label { color: #6b7280; }
+[data-theme="dark"] .rank-my-label { color: var(--rank-my-label-color); }
 [data-theme="dark"] .mg-log-row {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.06);
+  background: var(--mg-log-row-bg);
+  border-color: var(--mg-log-row-border);
 }
-[data-theme="dark"] .mg-log-user { color: #d1d5db; }
-[data-theme="dark"] .mg-log-time { color: #6b7280; }
+[data-theme="dark"] .mg-log-user { color: var(--mg-log-user-color); }
+[data-theme="dark"] .mg-log-time { color: var(--mg-log-time-color); }
 
 /* ══════════════════════════════════════════════
    게임횟수 조정 모달
@@ -3263,12 +3802,12 @@ input[type="checkbox"]:active,
 .mgc-diff-plus { color: var(--blue-500); }
 .mgc-diff-minus { color: var(--red-500); }
 
-[data-theme="dark"] .mgc-status { background: #201530; border-color: #3a2560; }
-[data-theme="dark"] .mgc-adjust-row { border-color: #2a3545; }
-[data-theme="dark"] .mgc-adjust-label { color: #e5e7eb; }
-[data-theme="dark"] .mgc-btn { background: #1e2535; border-color: #2a3a4a; }
-[data-theme="dark"] .mgc-btn:hover { background: #242c3a; border-color: #c084fc; }
-[data-theme="dark"] .mgc-val { color: #e5e7eb; }
+[data-theme="dark"] .mgc-status { background: var(--mgc-status-bg); border-color: var(--mgc-status-border); }
+[data-theme="dark"] .mgc-adjust-row { border-color: var(--mgc-adjust-row-border); }
+[data-theme="dark"] .mgc-adjust-label { color: var(--mgc-adjust-label-color); }
+[data-theme="dark"] .mgc-btn { background: var(--mgc-btn-bg); border-color: var(--mgc-btn-border); }
+[data-theme="dark"] .mgc-btn:hover { background: var(--mgc-btn-hover-bg); border-color: var(--mgc-btn-hover-border); }
+[data-theme="dark"] .mgc-val { color: var(--mgc-val-color); }
 
 /* ══════════════════════════════════════════════
    회원관리 카드 (통합)
@@ -3371,19 +3910,15 @@ input[type="checkbox"]:active,
   border: none !important;
 }
 
-/* 다크모드 */
-[data-theme="dark"] .um-card {
-  background: #1e2838;
-  border: none;
-}
-[data-theme="dark"] .um-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
-[data-theme="dark"] .um-avatar { background: #3a2a10; }
-[data-theme="dark"] .um-name { color: #e5e7eb; }
-[data-theme="dark"] .um-sub { color: #6b7280; }
-[data-theme="dark"] .um-acorn { color: #fbbf24; }
-[data-theme="dark"] .um-btn { box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
-[data-theme="dark"] .um-btn-delete { border-color: #4a2020; color: #fca5a5; }
-[data-theme="dark"] .um-btn-delete:hover { background: #3a1a1a; }
+/* 다크모드 — um-card bg/border/shadow는 후반부 토큰화 블록에서 처리 */
+[data-theme="dark"] .um-card:hover { box-shadow: var(--um-card-hover-shadow); }
+[data-theme="dark"] .um-avatar { background: var(--um-avatar-bg); }
+[data-theme="dark"] .um-name { color: var(--um-name-color); }
+[data-theme="dark"] .um-sub { color: var(--um-sub-color); }
+[data-theme="dark"] .um-acorn { color: var(--um-acorn-color); }
+[data-theme="dark"] .um-btn { box-shadow: var(--um-btn-shadow); }
+[data-theme="dark"] .um-btn-delete { border-color: var(--um-btn-delete-border); color: var(--um-btn-delete-color); }
+[data-theme="dark"] .um-btn-delete:hover { background: var(--um-btn-delete-hover-bg); }
 
 /* ================================================================
    🗺️ 탐험 맵 시스템 — 판타지 양피지 테마
@@ -3702,14 +4237,14 @@ input[type="checkbox"]:active,
   cursor: pointer;
 }
 [data-theme="dark"] .vol-control {
-  background: #151c28 !important;
-  border-color: #2a3545 !important;
+  background: var(--vol-control-bg);
+  border-color: var(--vol-control-border);
 }
 [data-theme="dark"] .vol-slider {
-  background: #1a2535 !important;
+  background: var(--vol-slider-bg);
 }
 [data-theme="dark"] .vol-slider::-webkit-slider-thumb {
-  background: linear-gradient(135deg, #b05878, #8050b8) !important;
+  background: var(--vol-slider-thumb);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -3780,9 +4315,9 @@ input[type="checkbox"]:active,
 /* ── 다크: 모달 input → 솔리드 ── */
 [data-theme="dark"] .modal-box input[type="number"],
 [data-theme="dark"] .modal-box input[type="text"] {
-  background: #151d2a !important;
-  border-color: #2a3a4a !important;
-  color: #fbbf24 !important;
+  background: var(--modal-input-bg) !important;
+  border-color: var(--modal-input-border) !important;
+  color: var(--modal-input-color) !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -3855,12 +4390,12 @@ input[type="checkbox"]:active,
 /* ══════════════════════════════════════════════════════
    🌙 다크: 미니게임 (2048·캐치·룰렛)
    ══════════════════════════════════════════════════════ */
-[data-theme="dark"] .mg2048-title { color: #fcd34d !important; }
-[data-theme="dark"] .mg2048-exit-top { background: #1e2838 !important; color: #fb923c !important; }
-[data-theme="dark"] .mg2048-sbox-label { color: #fbbf24 !important; }
-[data-theme="dark"] .mg2048-combo { color: #fbbf24 !important; }
-[data-theme="dark"] .mg2048-overlay h3 { color: #fcd34d !important; }
-[data-theme="dark"] .mg2048-overlay .rules { color: #fb923c !important; }
+[data-theme="dark"] .mg2048-title { color: var(--mg2048-title-text); }
+[data-theme="dark"] .mg2048-exit-top { background: var(--mg2048-exit-bg); color: var(--mg2048-exit-text); }
+[data-theme="dark"] .mg2048-sbox-label { color: var(--mg2048-sbox-label-text); }
+[data-theme="dark"] .mg2048-combo { color: var(--mg2048-combo-text); }
+[data-theme="dark"] .mg2048-overlay h3 { color: var(--mg2048-overlay-h3-text); }
+[data-theme="dark"] .mg2048-overlay .rules { color: var(--mg2048-overlay-rules-text); }
 
 /* ══════════════════════════════════════════════════════
    🌙 다크: 원정대(expedition) 결과 화면
@@ -3916,13 +4451,13 @@ input[type="checkbox"]:active,
 /* ══════════════════════════════════════════════════════
    🌙 다크: 원정대 카드 보상 텍스트 (카드 이미지 배경 위의 어두운 글씨)
    ══════════════════════════════════════════════════════ */
-[data-theme="dark"] .btl-card-reward-txt { color: #fff !important; }
-[data-theme="dark"] .btl-card-grade { text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+[data-theme="dark"] .btl-card-reward-txt { color: var(--btl-card-reward-text); }
+[data-theme="dark"] .btl-card-grade { text-shadow: var(--btl-card-grade-shadow); }
 [data-theme="dark"] .btl-continue-btn {
-  color: #fff !important;
+  color: var(--btl-card-reward-text);
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
-[data-theme="dark"] .btl-card-hint { color: #80a880 !important; }
+[data-theme="dark"] .btl-card-hint { color: var(--btl-card-hint-text); }
 
 /* 원정대 결과 화면 — 파티 카드 내 이름 */
 [data-theme="dark"] [style*="color:#5c4a32"] { color: #e8d5b5 !important; }
@@ -3936,32 +4471,32 @@ input[type="checkbox"]:active,
 
 /* 2048 스코어 박스 */
 [data-theme="dark"] .mg2048-sbox {
-  background: #1a2535 !important;
-  border-color: #2a3a4a !important;
+  background: var(--mg2048-sbox-bg);
+  border-color: var(--mg2048-sbox-border);
 }
-[data-theme="dark"] .mg2048-sbox-val { color: #e2e8f0 !important; }
+[data-theme="dark"] .mg2048-sbox-val { color: var(--mg2048-sbox-val-text); }
 
 /* 원정대 도움말 카드 */
 [data-theme="dark"] .sq-help-card {
-  background: #151c28 !important;
-  border-color: #2a3545 !important;
+  background: var(--sq-help-card-bg);
+  border-color: var(--sq-help-card-border);
 }
-[data-theme="dark"] .sq-help-card-title { color: #e2e8f0 !important; }
-[data-theme="dark"] .sq-help-card-desc { color: #94a3b8 !important; }
-[data-theme="dark"] .sq-help-acc summary { color: #cbd5e1 !important; }
+[data-theme="dark"] .sq-help-card-title { color: var(--sq-help-card-title-text); }
+[data-theme="dark"] .sq-help-card-desc { color: var(--sq-help-card-desc-text); }
+[data-theme="dark"] .sq-help-acc summary { color: var(--sq-help-acc-summary-text); }
 
 /* ══════════════════════════════════════════════════════
    🌙 다크: 원정대 아이템 선택 칩
    ══════════════════════════════════════════════════════ */
 [data-theme="dark"] .exp-item-select-wrap {
-  background: #151c28 !important;
-  border-color: #2a3a4a !important;
+  background: var(--exp-item-select-bg);
+  border-color: var(--exp-item-select-border);
 }
 [data-theme="dark"] .exp-item-chip {
-  border-color: #2a3a4a !important;
-  background: #1a2535 !important;
+  border-color: var(--exp-item-chip-border);
+  background: var(--exp-item-chip-bg);
 }
-[data-theme="dark"] .exp-item-chip-name { color: #e2e8f0 !important; }
+[data-theme="dark"] .exp-item-chip-name { color: var(--exp-item-chip-name-text); }
 
 /* ══════════════════════════════════════════════════════
    🌾 농장 픽셀아트 UI 테마
@@ -4262,12 +4797,12 @@ input[type="checkbox"]:active,
   background: #2a2018; border: 2.5px solid #6a4e28;
   box-shadow: 0 12px 40px #000000cc;
 }
-[data-theme="dark"] .farm-crop-popup-title { color: #e2e8f0; }
-[data-theme="dark"] .farm-crop-popup-sub { color: #d4a060; }
-[data-theme="dark"] .farm-crop-popup-btn-acc { background: #5a28b0; color: #e0d0f8; }
-[data-theme="dark"] .farm-crop-popup-btn-nut { background: #1a6840; color: #b0e8c8; }
-[data-theme="dark"] .farm-crop-popup-btn-used { background: #201810; color: #d4a060; opacity: .4; }
-[data-theme="dark"] .farm-crop-popup-close { background: #3a2e18; color: #d4a060; border: 1px solid #5a4428; }
+[data-theme="dark"] .farm-crop-popup-title { color: var(--fcp-title-color); }
+[data-theme="dark"] .farm-crop-popup-sub { color: var(--fcp-sub-color); }
+[data-theme="dark"] .farm-crop-popup-btn-acc { background: var(--fcp-btn-acc-bg); color: var(--fcp-btn-acc-color); }
+[data-theme="dark"] .farm-crop-popup-btn-nut { background: var(--fcp-btn-nut-bg); color: var(--fcp-btn-nut-color); }
+[data-theme="dark"] .farm-crop-popup-btn-used { background: var(--fcp-btn-used-bg); color: var(--fcp-btn-used-color); opacity: .4; }
+[data-theme="dark"] .farm-crop-popup-close { background: var(--fcp-close-bg); color: var(--fcp-close-color); border: var(--fcp-close-border); }
 
 /* ── 인벤토리 ── */
 .farm-inv-wrap {
@@ -4342,11 +4877,11 @@ input[type="checkbox"]:active,
    다크모드 — 프리뷰 body.dark 원본값 그대로
    ═══════════════════════════════════════════════════════ */
 /* ── 다크: 농부 카드 (4존) ── */
-[data-theme="dark"] .fc-grade-normal { border-color: #607060; box-shadow: 0 2px 10px rgba(80,110,80,.35); }
-[data-theme="dark"] .fc-grade-rare   { border-color: #34b45e; box-shadow: 0 2px 14px rgba(34,197,94,.35), 0 0 20px rgba(34,197,94,.12); }
-[data-theme="dark"] .fc-grade-epic   { border-color: #4488e0; box-shadow: 0 2px 16px rgba(59,130,246,.4), 0 0 22px rgba(59,130,246,.15); }
-[data-theme="dark"] .fc-grade-unique { border-color: #c0a030; box-shadow: 0 2px 18px rgba(234,179,8,.45), 0 0 24px rgba(234,179,8,.15); }
-[data-theme="dark"] .fc-grade-legend { border-color: #e05050; box-shadow: 0 2px 22px rgba(239,68,68,.5), 0 0 34px rgba(239,68,68,.2); }
+[data-theme="dark"] .fc-grade-normal { border-color: var(--fc-normal-border); box-shadow: var(--fc-normal-shadow); }
+[data-theme="dark"] .fc-grade-rare   { border-color: var(--fc-rare-border); box-shadow: var(--fc-rare-shadow); }
+[data-theme="dark"] .fc-grade-epic   { border-color: var(--fc-epic-border); box-shadow: var(--fc-epic-shadow); }
+[data-theme="dark"] .fc-grade-unique { border-color: var(--fc-unique-border); box-shadow: var(--fc-unique-shadow); }
+[data-theme="dark"] .fc-grade-legend { border-color: var(--fc-legend-border); box-shadow: var(--fc-legend-shadow); }
 @keyframes fcLegendPulseDark {
   0%, 100% { box-shadow: 0 2px 22px rgba(239,68,68,.5), 0 0 34px rgba(239,68,68,.2); }
   50% { box-shadow: 0 2px 30px rgba(239,68,68,.7), 0 0 48px rgba(239,68,68,.3); }
@@ -4354,99 +4889,93 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .fc-grade-legend { animation: fcLegendPulseDark 2.5s ease-in-out infinite; }
 
 /* 다크 존1 — 가장 진한 톤 */
-[data-theme="dark"] .fc-grade-normal .fc-zone1 { background: linear-gradient(160deg, #263822, #20301c); }
-[data-theme="dark"] .fc-grade-rare   .fc-zone1 { background: linear-gradient(160deg, #1a3822, #14301a); }
-[data-theme="dark"] .fc-grade-epic   .fc-zone1 { background: linear-gradient(160deg, #1a284a, #142040); }
-[data-theme="dark"] .fc-grade-unique .fc-zone1 { background: linear-gradient(160deg, #38301a, #302a14); }
-[data-theme="dark"] .fc-grade-legend .fc-zone1 { background: linear-gradient(160deg, #3e1a1a, #361414); }
+[data-theme="dark"] .fc-grade-normal .fc-zone1 { background: var(--fc-normal-z1); }
+[data-theme="dark"] .fc-grade-rare   .fc-zone1 { background: var(--fc-rare-z1); }
+[data-theme="dark"] .fc-grade-epic   .fc-zone1 { background: var(--fc-epic-z1); }
+[data-theme="dark"] .fc-grade-unique .fc-zone1 { background: var(--fc-unique-z1); }
+[data-theme="dark"] .fc-grade-legend .fc-zone1 { background: var(--fc-legend-z1); }
 
 /* 다크 존2 — 중간 톤 */
-[data-theme="dark"] .fc-grade-normal .fc-zone2 { background: #2e3c28; }
-[data-theme="dark"] .fc-grade-rare   .fc-zone2 { background: #20402a; }
-[data-theme="dark"] .fc-grade-epic   .fc-zone2 { background: #203050; }
-[data-theme="dark"] .fc-grade-unique .fc-zone2 { background: #3e3620; }
-[data-theme="dark"] .fc-grade-legend .fc-zone2 { background: #482222; }
+[data-theme="dark"] .fc-grade-normal .fc-zone2 { background: var(--fc-normal-z2); }
+[data-theme="dark"] .fc-grade-rare   .fc-zone2 { background: var(--fc-rare-z2); }
+[data-theme="dark"] .fc-grade-epic   .fc-zone2 { background: var(--fc-epic-z2); }
+[data-theme="dark"] .fc-grade-unique .fc-zone2 { background: var(--fc-unique-z2); }
+[data-theme="dark"] .fc-grade-legend .fc-zone2 { background: var(--fc-legend-z2); }
 
 /* 다크 존3 — 중간-밝은 톤 */
-[data-theme="dark"] .fc-grade-normal .fc-zone3 { background: #344630; }
-[data-theme="dark"] .fc-grade-rare   .fc-zone3 { background: #284a32; }
-[data-theme="dark"] .fc-grade-epic   .fc-zone3 { background: #283a5a; }
-[data-theme="dark"] .fc-grade-unique .fc-zone3 { background: #484024; }
-[data-theme="dark"] .fc-grade-legend .fc-zone3 { background: #522a2a; }
+[data-theme="dark"] .fc-grade-normal .fc-zone3 { background: var(--fc-normal-z3); }
+[data-theme="dark"] .fc-grade-rare   .fc-zone3 { background: var(--fc-rare-z3); }
+[data-theme="dark"] .fc-grade-epic   .fc-zone3 { background: var(--fc-epic-z3); }
+[data-theme="dark"] .fc-grade-unique .fc-zone3 { background: var(--fc-unique-z3); }
+[data-theme="dark"] .fc-grade-legend .fc-zone3 { background: var(--fc-legend-z3); }
 
 /* 다크 존4 — 가장 밝은 톤 */
-[data-theme="dark"] .fc-grade-normal .fc-zone4 { background: linear-gradient(160deg, #3a4e36, #344630); }
-[data-theme="dark"] .fc-grade-rare   .fc-zone4 { background: linear-gradient(160deg, #30543a, #284a32); }
-[data-theme="dark"] .fc-grade-epic   .fc-zone4 { background: linear-gradient(160deg, #304468, #283a5a); }
-[data-theme="dark"] .fc-grade-unique .fc-zone4 { background: linear-gradient(160deg, #524a2a, #484024); }
-[data-theme="dark"] .fc-grade-legend .fc-zone4 { background: linear-gradient(160deg, #5c3232, #522a2a); }
+[data-theme="dark"] .fc-grade-normal .fc-zone4 { background: var(--fc-normal-z4); }
+[data-theme="dark"] .fc-grade-rare   .fc-zone4 { background: var(--fc-rare-z4); }
+[data-theme="dark"] .fc-grade-epic   .fc-zone4 { background: var(--fc-epic-z4); }
+[data-theme="dark"] .fc-grade-unique .fc-zone4 { background: var(--fc-unique-z4); }
+[data-theme="dark"] .fc-grade-legend .fc-zone4 { background: var(--fc-legend-z4); }
 
-[data-theme="dark"] .fc-name { color: #e2e8f0; }
-[data-theme="dark"] .fc-grade-normal .fc-grade { color: #86efac; }
-[data-theme="dark"] .fc-grade-rare   .fc-grade { color: #4ade80; }
-[data-theme="dark"] .fc-grade-epic   .fc-grade { color: #60a5fa; }
-[data-theme="dark"] .fc-grade-unique .fc-grade { color: #fbbf24; }
-[data-theme="dark"] .fc-grade-legend .fc-grade { color: #f87171; }
-[data-theme="dark"] .fc-buff { color: #fbbf24; }
-[data-theme="dark"] .fc-card-empty { background: #1e1a12; border-color: #3a3020; }
-[data-theme="dark"] .fc-empty-label { color: #fbbf24; }
-[data-theme="dark"] .farm-right-col .farm-deposit-badge { background: #2e2210; border-color: #5a4218; }
-[data-theme="dark"] .farm-dep-num { color: #fcd34d; }
-[data-theme="dark"] .farm-dep-sub { color: #c49a50; }
-[data-theme="dark"] .farm-shop-btn { background: #8a5a18; color: #fef3c7; }
-[data-theme="dark"] .farm-shop-lbl { color: #fef3c7; }
+[data-theme="dark"] .fc-name { color: var(--fc-name-color); }
+[data-theme="dark"] .fc-grade-normal .fc-grade { color: var(--fc-normal-grade-color); }
+[data-theme="dark"] .fc-grade-rare   .fc-grade { color: var(--fc-rare-grade-color); }
+[data-theme="dark"] .fc-grade-epic   .fc-grade { color: var(--fc-epic-grade-color); }
+[data-theme="dark"] .fc-grade-unique .fc-grade { color: var(--fc-unique-grade-color); }
+[data-theme="dark"] .fc-grade-legend .fc-grade { color: var(--fc-legend-grade-color); }
+[data-theme="dark"] .fc-buff { color: var(--fc-buff-color); }
+[data-theme="dark"] .fc-card-empty { background: var(--fc-card-empty-bg); border-color: var(--fc-card-empty-border); }
+[data-theme="dark"] .fc-empty-label { color: var(--fc-empty-label-color); }
+[data-theme="dark"] .farm-right-col .farm-deposit-badge { background: var(--farm-deposit-bg); border-color: var(--farm-deposit-border); }
+/* farm-dep-num/sub — 베이스 규칙이 var(--farm-dep-*-color) 사용, 다크 토큰에서 값 제공. 중복 제거 */
+[data-theme="dark"] .farm-shop-btn { background: var(--farm-shop-btn-bg); color: var(--farm-shop-btn-color); }
+[data-theme="dark"] .farm-shop-lbl { color: var(--farm-shop-lbl-color); }
 
 /* ── 다크: 밭 (흙 바탕 + 울타리) ── */
-[data-theme="dark"] .farm-field-wrap { background: #342818; border: 3.5px solid #6a4e28; box-shadow: inset 0 1px 0 #4a3820, 0 0 0 1.5px #1a1208, 0 0 0 5px #2e2214; }
-[data-theme="dark"] .farm-field-label { color: #d4a050; }
-[data-theme="dark"] .farm-field-label::after { background: #4a3820; }
+[data-theme="dark"] .farm-field-wrap { background: var(--farm-field-wrap-bg); border: var(--farm-field-wrap-border); box-shadow: var(--farm-field-wrap-shadow); }
+[data-theme="dark"] .farm-field-label { color: var(--farm-field-label-color); }
+[data-theme="dark"] .farm-field-label::after { background: var(--farm-field-label-after-bg); }
 
 /* ── 다크: 밭 셀 (풀잎 알록달록) ── */
-[data-theme="dark"] .farm-cell-growing { background: #2a5a30; border: 2px solid #3a7a40; box-shadow: inset 0 -3px 0 #1e4a24; }
-[data-theme="dark"] .farm-cell-growing.crop-green { background: #2a5a30; border-color: #3a7a40; box-shadow: inset 0 -3px 0 #1e4a24; }
-[data-theme="dark"] .farm-cell-growing.crop-lime  { background: #4a6a20; border-color: #6a8a30; box-shadow: inset 0 -3px 0 #3a5518; }
-[data-theme="dark"] .farm-cell-growing.crop-deep  { background: #1e4830; border-color: #2e6840; box-shadow: inset 0 -3px 0 #143820; }
-[data-theme="dark"] .farm-cell-growing.crop-olive { background: #4a5a18; border-color: #6a7828; box-shadow: inset 0 -3px 0 #384810; }
-[data-theme="dark"] .farm-cell-growing.crop-teal  { background: #1a5048; border-color: #287068; box-shadow: inset 0 -3px 0 #103a34; }
-[data-theme="dark"] .farm-cell-ready { background: #6a5510; border: 2px solid #a88820; box-shadow: inset 0 -3px 0 #504008, 0 0 10px #5a480a; }
-[data-theme="dark"] .farm-cell-empty { background: #2c2018; border: 1.5px dashed #5a4428; }
-[data-theme="dark"] .farm-cell-locked { background: #241c12; border: 1.5px solid #3a3018; opacity: .45; }
-[data-theme="dark"] .farm-cell-expand { background: #2c2018; border: 1.5px dashed #6a5030; }
+[data-theme="dark"] .farm-cell-growing.crop-green { background: var(--farm-crop-green-bg); border-color: var(--farm-crop-green-border); box-shadow: var(--farm-crop-green-shadow); }
+[data-theme="dark"] .farm-cell-growing.crop-lime  { background: var(--farm-crop-lime-bg); border-color: var(--farm-crop-lime-border); box-shadow: var(--farm-crop-lime-shadow); }
+[data-theme="dark"] .farm-cell-growing.crop-deep  { background: var(--farm-crop-deep-bg); border-color: var(--farm-crop-deep-border); box-shadow: var(--farm-crop-deep-shadow); }
+[data-theme="dark"] .farm-cell-growing.crop-olive { background: var(--farm-crop-olive-bg); border-color: var(--farm-crop-olive-border); box-shadow: var(--farm-crop-olive-shadow); }
+[data-theme="dark"] .farm-cell-growing.crop-teal  { background: var(--farm-crop-teal-bg); border-color: var(--farm-crop-teal-border); box-shadow: var(--farm-crop-teal-shadow); }
 
 /* ── 다크: 인벤토리 ── */
-[data-theme="dark"] .farm-inv-wrap { background: #1a1628; border: 1.5px solid #302848; }
-[data-theme="dark"] .farm-inv-header-right { color: #d4a060; }
-[data-theme="dark"] .farm-inv-slot-seed { background: #2a3820; border-color: #3a5028; }
-[data-theme="dark"] .farm-inv-slot-harvest { background: #3a2e10; border-color: #6a5018; }
-[data-theme="dark"] .farm-inv-slot-empty { background: #18142a; border: 1.5px dashed #302848; }
-[data-theme="dark"] .farm-inv-slot-expand { background: #18142a; border: 1.5px dashed #302848; }
-[data-theme="dark"] .farm-inv-qty { border-color: #1a1628; background: #3a7a30; }
-[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-qty { background: #b87010; }
+[data-theme="dark"] .farm-inv-wrap { background: var(--farm-inv-wrap-bg); border: var(--farm-inv-wrap-border); }
+[data-theme="dark"] .farm-inv-header-right { color: var(--farm-inv-header-right-color); }
+[data-theme="dark"] .farm-inv-slot-seed { background: var(--farm-inv-slot-seed-bg); border-color: var(--farm-inv-slot-seed-border); }
+[data-theme="dark"] .farm-inv-slot-harvest { background: var(--farm-inv-slot-harvest-bg); border-color: var(--farm-inv-slot-harvest-border); }
+[data-theme="dark"] .farm-inv-slot-empty { background: var(--farm-inv-slot-empty-bg); border: var(--farm-inv-slot-empty-border); }
+[data-theme="dark"] .farm-inv-slot-expand { background: var(--farm-inv-slot-empty-bg); border: var(--farm-inv-slot-empty-border); }
+[data-theme="dark"] .farm-inv-qty { border-color: var(--farm-inv-qty-border); background: var(--farm-inv-qty-bg); }
+[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-qty { background: var(--farm-inv-harvest-qty-bg); }
 
-[data-theme="dark"] .farm-csm-acc { background: #2a1848; color: #b89cd4; border-color: #3a2860; }
-[data-theme="dark"] .farm-csm-nut { background: #1a3028; color: #86ceac; border-color: #2a4838; }
+[data-theme="dark"] .farm-csm-acc { background: var(--farm-csm-acc-bg); color: var(--farm-csm-acc-color); border-color: var(--farm-csm-acc-border); }
+[data-theme="dark"] .farm-csm-nut { background: var(--farm-csm-nut-bg); color: var(--farm-csm-nut-color); border-color: var(--farm-csm-nut-border); }
 
-[data-theme="dark"] .farm-btn { background: #252d3a; border-color: #3a4a5a; color: #fbbf24; }
-[data-theme="dark"] .farm-btn-dark { background: #78350f; border-color: #5a3008; color: #fcd34d; }
-[data-theme="dark"] .farm-btn-green { background: #1a4a30; border-color: #2a7a4a; color: #86efac; }
+[data-theme="dark"] .farm-btn { background: var(--farm-btn-bg); border-color: var(--farm-btn-border); color: var(--farm-btn-color); }
+[data-theme="dark"] .farm-btn-dark { background: var(--farm-btn-dark-bg); border-color: var(--farm-btn-dark-border); color: var(--farm-btn-dark-color); }
+[data-theme="dark"] .farm-btn-green { background: var(--farm-btn-green-bg); border-color: var(--farm-btn-green-border); color: var(--farm-btn-green-color); }
 
-[data-theme="dark"] .farm-section-title { color: #e2e8f0; }
-[data-theme="dark"] .farm-txt-brown { color: #e2e8f0; }
-[data-theme="dark"] .farm-txt-green { color: #86ceac; }
-[data-theme="dark"] .farm-txt-gold { color: #e0b050; }
-[data-theme="dark"] .farm-txt-muted { color: #d4a060; }
-[data-theme="dark"] .farm-cell-label { color: #e2e8f0; }
-[data-theme="dark"] .farm-cell-timer { color: #86ceac; }
-[data-theme="dark"] .farm-cell-ready .farm-cell-label { color: #fcd34d; }
-[data-theme="dark"] .farm-cell-ready .farm-cell-timer { color: #e0b850; }
-[data-theme="dark"] .farm-cell-label.farm-txt-gold { color: #e0b050; }
-[data-theme="dark"] .farm-cell-label.farm-txt-green { color: #86ceac; }
+[data-theme="dark"] .farm-section-title { color: var(--farm-section-title-color); }
+[data-theme="dark"] .farm-txt-brown { color: var(--farm-txt-brown-color); }
+[data-theme="dark"] .farm-txt-green { color: var(--farm-txt-green-color); }
+[data-theme="dark"] .farm-txt-gold { color: var(--farm-txt-gold-color); }
+[data-theme="dark"] .farm-txt-muted { color: var(--farm-txt-muted-color); }
+[data-theme="dark"] .farm-cell-label { color: var(--farm-cell-label-color); }
+[data-theme="dark"] .farm-cell-timer { color: var(--farm-cell-timer-color); }
+[data-theme="dark"] .farm-cell-ready .farm-cell-label { color: var(--farm-cell-ready-label-color); }
+[data-theme="dark"] .farm-cell-ready .farm-cell-timer { color: var(--farm-cell-ready-timer-color); }
+[data-theme="dark"] .farm-cell-label.farm-txt-gold { color: var(--farm-cell-label-gold-color); }
+[data-theme="dark"] .farm-cell-label.farm-txt-green { color: var(--farm-cell-label-green-color); }
 
 /* ── 다크: 인벤 텍스트 ── */
-[data-theme="dark"] .farm-inv-name { color: #86ceac; }
-[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-name { color: #e0b850; }
-[data-theme="dark"] .farm-inv-count { color: #d4a060; }
-[data-theme="dark"] .farm-inv-title { color: #e2e8f0; }
+[data-theme="dark"] .farm-inv-name { color: var(--farm-inv-name-color); }
+[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-name { color: var(--farm-inv-harvest-name-color); }
+[data-theme="dark"] .farm-inv-count { color: var(--farm-inv-count-color); }
+[data-theme="dark"] .farm-inv-title { color: var(--farm-inv-title-color); }
 
 /* ═══════════════════════════════════════════════════════
    🌙 전역 인라인 스타일 다크모드 오버라이드
@@ -4504,12 +5033,12 @@ input[type="checkbox"]:active,
 
 /* ── 다람쥐 카드 ── */
 [data-theme="dark"] [id^="sqCard-"] {
-  background: #1a2030 !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,.5) !important;
+  background: var(--sqcard-bg);
+  box-shadow: var(--sqcard-shadow);
 }
 [data-theme="dark"] [id^="expcard-"] {
-  background: #1a2030 !important;
-  box-shadow: 0 2px 12px rgba(0,0,0,.4) !important;
+  background: var(--expcard-bg);
+  box-shadow: var(--expcard-shadow);
 }
 
 /* ── 모달 내 흰색 카드 ── */
@@ -4528,8 +5057,7 @@ input[type="checkbox"]:active,
   background: linear-gradient(135deg, #5a4020, #6a4a18) !important;
   border-color: #8a6a20 !important;
 }
-[data-theme="dark"] .farm-dep-num { color: #fcd34d !important; }
-[data-theme="dark"] .farm-dep-sub { color: #f59e0b !important; }
+/* farm-dep-num/sub — 베이스 var(--farm-dep-*-color) 참조, 중복 제거 */
 [data-theme="dark"] [style*="color:#78350f"] { color: #fcd34d !important; }
 [data-theme="dark"] [style*="color:#92400e"] { color: #f59e0b !important; }
 [data-theme="dark"] [style*="background:#f0fdf4"][style*="border-radius:14px"] {
@@ -4558,22 +5086,22 @@ input[type="checkbox"]:active,
 
 /* ── 마이페이지 인벤토리 테두리 줄이기 ── */
 [data-theme="dark"] .inv-chip2 {
-  background: #1e2838 !important;
-  border: none !important;
+  background: var(--inv-chip2-bg);
+  border: none;
 }
 [data-theme="dark"] .inv-chip2.pending {
-  background: #3a2a10 !important;
-  border: none !important;
+  background: var(--inv-chip2-pending-bg);
+  border: none;
 }
-[data-theme="dark"] .ic2-name { color: #fbbf24 !important; }
-[data-theme="dark"] .ic2-held { color: #a889d4 !important; }
-[data-theme="dark"] .ic2-pending { color: #f59e0b !important; }
-[data-theme="dark"] .inv-empty2 { color: #4a5568 !important; }
+[data-theme="dark"] .ic2-name { color: var(--ic2-name-text); }
+[data-theme="dark"] .ic2-held { color: var(--ic2-held-text); }
+[data-theme="dark"] .ic2-pending { color: var(--ic2-pending-text); }
+[data-theme="dark"] .inv-empty2 { color: var(--inv-empty2-text); }
 
 /* ── 알림 내역 구분선 ── */
 [data-theme="dark"] .notif-scroll .row-item-bg {
-  background: #1e2838 !important;
-  border: 1px solid #2a3a4a !important;
+  background: var(--notif-row-bg);
+  border: var(--notif-row-border);
   margin-bottom: 6px !important;
 }
 
@@ -4581,25 +5109,25 @@ input[type="checkbox"]:active,
    🌙 농장 밭 칸 — 짙은 초록/숲 느낌
    ══════════════════════════════════════════════════════ */
 [data-theme="dark"] .farm-cell-empty {
-  background: rgba(255,255,255,0.03) !important;
-  border: 1.5px dashed rgba(42,106,64,0.3) !important;
+  background: var(--farm-empty-bg);
+  border: var(--farm-empty-border);
 }
 [data-theme="dark"] .farm-cell-locked {
-  background: rgba(255,255,255,0.02) !important;
-  border: 1.5px solid rgba(42,106,64,0.15) !important;
+  background: var(--farm-locked-bg);
+  border: var(--farm-locked-border);
   opacity: 0.35 !important;
 }
 [data-theme="dark"] .farm-cell-growing {
-  background: linear-gradient(145deg, #1a4a30, #1e3a22) !important;
-  border: 1.5px solid #2a7a4a !important;
+  background: var(--farm-growing-bg);
+  border: var(--farm-growing-border);
 }
 [data-theme="dark"] .farm-cell-ready {
-  background: linear-gradient(145deg, #4a3a10, #5a4515) !important;
-  border: 1.5px solid #8a6a18 !important;
+  background: var(--farm-ready-bg);
+  border: var(--farm-ready-border);
 }
 [data-theme="dark"] .farm-cell-expand {
-  background: rgba(255,255,255,0.03) !important;
-  border: 1.5px dashed rgba(42,106,64,0.35) !important;
+  background: var(--farm-expand-bg);
+  border: var(--farm-expand-border);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -4664,7 +5192,7 @@ input[type="checkbox"]:active,
    ══════════════════════════════════════════════════════ */
 /* 합성 그리드 다람쥐 카드 */
 [data-theme="dark"] #sqFuseGrid > div > div[onclick] {
-  background: #1e2838 !important;
+  background: var(--sqfuse-card-bg) !important;
   border-color: transparent !important;
 }
 [data-theme="dark"] #sqFuseGrid > div > div[onclick] [style*="color:#1f2937"] {
@@ -4702,45 +5230,31 @@ input[type="checkbox"]:active,
    ══════════════════════════════════════════════════════ */
 /* 관리자 메뉴 카드 테두리 제거 */
 [data-theme="dark"] .adm-grid-item {
-  background: #1e2838 !important;
-  border: none !important;
-  box-shadow: none !important;
+  background: var(--adm-grid-bg);
+  border: none;
+  box-shadow: var(--adm-grid-shadow);
 }
 /* 관리자 통계 바 */
 [data-theme="dark"] .adm-stats-mini {
-  background: #1e2838 !important;
-  border: none !important;
+  background: var(--adm-stats-bg);
+  border: none;
 }
 /* 관리자 점검 칩 */
 [data-theme="dark"] .adm-maint-chip {
-  background: #1e2838 !important;
-  border: none !important;
-  color: #fb923c !important;
+  background: var(--adm-maint-bg);
+  border: none;
+  color: var(--adm-maint-color);
 }
 /* um-card 테두리 제거 */
 [data-theme="dark"] .um-card {
-  background: #1e2838 !important;
-  border: none !important;
+  background: var(--um-card-bg);
+  border: none;
+  box-shadow: var(--um-card-shadow);
 }
-/* clay-card 테두리 약화 */
-[data-theme="dark"] .clay-card {
-  background: #161e2a !important;
-  border: none !important;
-}
-/* 다람쥐 카드 테두리 — border-left(등급색)만 남기고 나머지 제거 */
-[data-theme="dark"] [id^="sqCard-"] {
-  background: #1a2535 !important;
-  box-shadow: none !important;
-}
-/* 모달 */
-[data-theme="dark"] .modal-box {
-  background: #161e2a !important;
-  border: 1px solid #2a3a4a !important;
-}
-/* row-item-bg */
-[data-theme="dark"] .row-item-bg {
-  background: #1e2838 !important;
-}
+/* clay-card — 토큰화 완료 (L2368), 중복 제거됨 */
+/* sqCard — 토큰화 완료 (L4792), 중복 제거됨 */
+/* modal-box — 토큰화 완료 (L2543), 중복 제거됨 */
+/* row-item-bg — 토큰화 완료 (L2517), 중복 제거됨 */
 
 /* ══════════════════════════════════════════════════════
    🌙 전역 인라인 배경 오버라이드 (최종)
@@ -4848,38 +5362,38 @@ input[type="checkbox"]:active,
    🌙 농장 상점 — 다크모드
    ══════════════════════════════════════════════════════ */
 [data-theme="dark"] .farm-shop-header {
-  background: linear-gradient(135deg, #1a1608, #2a2010);
-  border-bottom-color: #4a3a10;
+  background: var(--farm-shop-header-bg);
+  border-bottom-color: var(--farm-shop-header-border);
 }
-[data-theme="dark"] .farm-shop-title { color: #fcd34d; }
-[data-theme="dark"] .farm-shop-tabs { background: #1a1608; }
-[data-theme="dark"] .farm-shop-tab { color: #fbbf24; }
+[data-theme="dark"] .farm-shop-title { color: var(--farm-shop-title-color); }
+[data-theme="dark"] .farm-shop-tabs { background: var(--farm-shop-tabs-bg); }
+[data-theme="dark"] .farm-shop-tab { color: var(--farm-shop-tab-color); }
 [data-theme="dark"] .farm-shop-tab.active {
-  background: #1a2535; color: #fcd34d;
-  border-bottom-color: #f59e0b;
+  background: var(--farm-shop-tab-active-bg); color: var(--farm-shop-tab-active-color);
+  border-bottom-color: var(--farm-shop-tab-active-border);
 }
-[data-theme="dark"] .farm-shop-tab:not(.active):hover { background: rgba(255,255,255,.05); }
+[data-theme="dark"] .farm-shop-tab:not(.active):hover { background: var(--farm-shop-tab-hover-bg); }
 
-[data-theme="dark"] .farm-shop-body { background: #1a2535; }
-[data-theme="dark"] .farm-shop-body::-webkit-scrollbar-thumb { background: #3a4a5a; }
+[data-theme="dark"] .farm-shop-body { background: var(--farm-shop-body-bg); }
+[data-theme="dark"] .farm-shop-body::-webkit-scrollbar-thumb { background: var(--farm-shop-body-scrollbar); }
 
 [data-theme="dark"] .farm-shop-footer {
-  background: linear-gradient(135deg, #1a1608, #2a2010);
-  border-top-color: #4a3a10;
+  background: var(--farm-shop-footer-bg);
+  border-top-color: var(--farm-shop-footer-border);
 }
 [data-theme="dark"] .farm-shop-balance {
-  background: linear-gradient(135deg, #2e2210, #3a2a10);
-  border-color: #6a4a10;
+  background: var(--farm-shop-balance-bg);
+  border-color: var(--farm-shop-balance-border);
 }
-[data-theme="dark"] .farm-shop-bal-acorn { color: #fcd34d; }
-[data-theme="dark"] .farm-shop-bal-crumb { color: #fbbf24; }
+[data-theme="dark"] .farm-shop-bal-acorn { color: var(--farm-shop-bal-acorn-dk); }
+[data-theme="dark"] .farm-shop-bal-crumb { color: var(--farm-shop-bal-crumb-dk); }
 [data-theme="dark"] .farm-shop-deposit-btn {
-  background: #2a2010; border-color: #6a4a10; color: #fbbf24;
+  background: var(--farm-shop-deposit-dk-bg); border-color: var(--farm-shop-deposit-dk-border); color: var(--farm-shop-deposit-dk-color);
 }
-[data-theme="dark"] .farm-shop-deposit-btn:active { background: #3a2a10; }
-[data-theme="dark"] .farm-shop-timer { color: #fbbf24; }
+[data-theme="dark"] .farm-shop-deposit-btn:active { background: var(--farm-shop-deposit-active-bg); }
+[data-theme="dark"] .farm-shop-timer { color: var(--farm-shop-timer-dk); }
 [data-theme="dark"] .farm-shop-close-btn {
-  background: #222c3a; border-color: #3a4a5a; color: #fbbf24;
+  background: var(--farm-shop-close-dk-bg); border-color: var(--farm-shop-close-dk-border); color: var(--farm-shop-close-dk-color);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -4903,8 +5417,8 @@ input[type="checkbox"]:active,
 .farm-bal-float-plus { color: #16a34a; }
 
 /* 다크모드 */
-[data-theme="dark"] .farm-bal-float { color: #f87171; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
-[data-theme="dark"] .farm-bal-float-plus { color: #4ade80; }
+[data-theme="dark"] .farm-bal-float { color: var(--farm-bal-float-color); text-shadow: var(--farm-bal-float-shadow); }
+[data-theme="dark"] .farm-bal-float-plus { color: var(--farm-bal-float-plus-color); }
 
 /* ── 잔고 숫자 깜빡 (차감) ── */
 @keyframes farmBalNumFlash {
@@ -4976,7 +5490,7 @@ input[type="checkbox"]:active,
 
 /* ── 공통 텍스트 (라이트: 다크블루 / 다크: 거의 흰색) ── */
 .fr-text { color: var(--fr-text); }
-[data-theme="dark"] .fr-text { color: #e2e8f0; }
+[data-theme="dark"] .fr-text { color: var(--fr-text-color); }
 
 /* ── 친구 탭 ── */
 .fr-search-wrap { position: relative; }
@@ -5029,10 +5543,10 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .fr-req-row,
 [data-theme="dark"] .fr-search-row,
 [data-theme="dark"] .fr-friend-row {
-  background: rgba(255,255,255,0.05);
+  background: var(--fr-row-bg);
 }
-[data-theme="dark"] .fr-friend-row:hover { background: rgba(255,255,255,0.08); }
-[data-theme="dark"] .fr-cancel-btn { background: rgba(255,255,255,0.1); color: #fbbf24; }
+[data-theme="dark"] .fr-friend-row:hover { background: var(--fr-friend-row-hover-bg); }
+[data-theme="dark"] .fr-cancel-btn { background: var(--fr-cancel-btn-bg); color: var(--fr-cancel-btn-color); }
 [data-theme="dark"] .friend-tab-dot { border-color: var(--card-bg, #1e293b); }
 
 /* ================================================================
@@ -5181,48 +5695,44 @@ input[type="checkbox"]:active,
    🌙 다크모드 - 프로필
    ================================================================ */
 /* 다크모드 배경 */
-[data-theme="dark"] .pf-header { border-bottom-color: rgba(255,255,255,0.08); }
-[data-theme="dark"] .pf-stat-row { background: rgba(251,191,36,0.1); }
-[data-theme="dark"] .pf-section { background: rgba(255,255,255,0.04); }
-[data-theme="dark"] .pf-sq-cell { background: rgba(255,255,255,0.06); }
-[data-theme="dark"] .pf-sq-empty { border-color: rgba(255,255,255,0.1) !important; background: rgba(255,255,255,0.02); }
-[data-theme="dark"] .pf-sq-grade { background: rgba(30,41,59,0.9); }
+[data-theme="dark"] .pf-header { border-bottom-color: var(--pf-header-border); }
+[data-theme="dark"] .pf-stat-row { background: var(--pf-stat-row-bg); }
+[data-theme="dark"] .pf-section { background: var(--pf-section-bg); }
+[data-theme="dark"] .pf-sq-cell { background: var(--pf-sq-cell-bg); }
+[data-theme="dark"] .pf-sq-empty { border-color: var(--pf-sq-empty-border); background: var(--pf-sq-empty-bg); }
+[data-theme="dark"] .pf-sq-grade { background: var(--pf-sq-grade-bg); }
 /* 다크모드 미니게임 카드 */
 [data-theme="dark"] .pf-mini-card {
-  background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06));
-  border-color: rgba(251,191,36,0.2);
+  background: var(--pf-mini-card-bg);
+  border-color: var(--pf-mini-card-border);
 }
-[data-theme="dark"] .pf-mini-card-name { color: #fbbf24; }
-[data-theme="dark"] .pf-mini-card-score { color: #fcd34d; }
+[data-theme="dark"] .pf-mini-card-name { color: var(--pf-mini-card-name-color); }
+[data-theme="dark"] .pf-mini-card-score { color: var(--pf-mini-card-score-color); }
 /* 다크모드 탐험 카드 */
-[data-theme="dark"] .pf-exp-stat--clear { background: linear-gradient(135deg, rgba(74,222,128,0.15), rgba(34,197,94,0.06)); border-color: rgba(74,222,128,0.25); }
-[data-theme="dark"] .pf-exp-stat--retreat { background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.06)); border-color: rgba(251,191,36,0.25); }
-[data-theme="dark"] .pf-exp-stat--boss { background: linear-gradient(135deg, rgba(248,113,113,0.15), rgba(239,68,68,0.06)); border-color: rgba(248,113,113,0.25); }
-[data-theme="dark"] .pf-exp-label { color: #86efac; }
+[data-theme="dark"] .pf-exp-stat--clear { background: var(--pf-exp-clear-bg); border-color: var(--pf-exp-clear-border); }
+[data-theme="dark"] .pf-exp-stat--retreat { background: var(--pf-exp-retreat-bg); border-color: var(--pf-exp-retreat-border); }
+[data-theme="dark"] .pf-exp-stat--boss { background: var(--pf-exp-boss-bg); border-color: var(--pf-exp-boss-border); }
+[data-theme="dark"] .pf-exp-label { color: var(--pf-exp-label-color); }
 /* 다크모드 농장 카드 */
 [data-theme="dark"] .pf-farm-card {
-  background: linear-gradient(135deg, rgba(134,239,172,0.12), rgba(74,222,128,0.06));
-  border-color: rgba(134,239,172,0.25);
+  background: var(--pf-farm-card-bg);
+  border-color: var(--pf-farm-card-border);
 }
-[data-theme="dark"] .pf-farm-card-label { color: #86efac; }
-[data-theme="dark"] .pf-privacy-row { background: rgba(255,255,255,0.06); }
-[data-theme="dark"] .pf-toggle { background: rgba(255,255,255,0.15); }
-[data-theme="dark"] .pf-toggle:checked { background: #22c55e; }
-[data-theme="dark"] .spinner-sm { border-color: rgba(255,255,255,0.1); border-top-color: #fbbf24; }
+[data-theme="dark"] .pf-farm-card-label { color: var(--pf-farm-card-label-color); }
+[data-theme="dark"] .pf-privacy-row { background: var(--pf-privacy-row-bg); }
+[data-theme="dark"] .pf-toggle { background: var(--pf-toggle-bg); }
+[data-theme="dark"] .pf-toggle:checked { background: var(--pf-toggle-checked-bg); }
+[data-theme="dark"] .spinner-sm { border-color: var(--pf-spinner-border); border-top-color: var(--pf-spinner-top-border); }
 
 /* 다크모드 텍스트 — 회색 금지, 채도 있는 색상만 */
-[data-theme="dark"] .pf-name { color: #e2e8f0; }
-[data-theme="dark"] .pf-stat-label { color: #fbbf24; }
-[data-theme="dark"] .pf-stat-value { color: #fcd34d; }
-[data-theme="dark"] .pf-section-title { color: #fcd34d; }
-[data-theme="dark"] .pf-sq-name { color: #e2e8f0; }
-[data-theme="dark"] .pf-mini-card-name { color: #fbbf24; }
-[data-theme="dark"] .pf-mini-card-score { color: #fcd34d; }
-[data-theme="dark"] .pf-exp-label { color: #86efac; }
-[data-theme="dark"] .pf-farm-card-label { color: #86efac; }
-[data-theme="dark"] .pf-farm-card-val { color: #4ade80; }
-[data-theme="dark"] .pf-empty-msg { color: #fbbf24; }
+[data-theme="dark"] .pf-name { color: var(--pf-name-color); }
+[data-theme="dark"] .pf-stat-label { color: var(--pf-stat-label-color); }
+[data-theme="dark"] .pf-stat-value { color: var(--pf-stat-value-color); }
+[data-theme="dark"] .pf-section-title { color: var(--pf-section-title-color); }
+[data-theme="dark"] .pf-sq-name { color: var(--pf-sq-name-color); }
+[data-theme="dark"] .pf-farm-card-val { color: var(--pf-farm-card-val-color); }
+[data-theme="dark"] .pf-empty-msg { color: var(--pf-empty-msg-color); }
 
 /* 다크모드 공개설정 모달 텍스트 */
-[data-theme="dark"] .pf-privacy-modal h2 { color: #fcd34d; }
-[data-theme="dark"] .pf-privacy-row span { color: #e2e8f0; }
+[data-theme="dark"] .pf-privacy-modal h2 { color: var(--pf-privacy-h2-color); }
+[data-theme="dark"] .pf-privacy-row span { color: var(--pf-privacy-row-span-color); }
