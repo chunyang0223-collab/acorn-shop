@@ -179,13 +179,25 @@ async function checkAdminNotice() {
     const notice = data.value;
     _cachedNotice = notice;
 
-    // DB에서 읽음 여부 확인
-    const { data: readRow } = await sb.from('notice_reads')
-      .select('notice_id')
-      .eq('user_id', myProfile.id)
-      .eq('notice_id', notice.id)
-      .maybeSingle();
-    if (readRow) return; // 이미 읽음
+    // 읽음 여부 확인 (DB 우선, localStorage 폴백)
+    var alreadyRead = false;
+    try {
+      const { data: readRow, error: readErr } = await sb.from('notice_reads')
+        .select('notice_id')
+        .eq('user_id', myProfile.id)
+        .eq('notice_id', notice.id)
+        .maybeSingle();
+      if (readErr) console.warn('[notice] DB read check failed:', readErr.message);
+      if (readRow) alreadyRead = true;
+    } catch(e) { console.warn('[notice] DB read check error:', e); }
+    // localStorage 폴백
+    if (!alreadyRead) {
+      try {
+        var readIds = JSON.parse(localStorage.getItem('notice_read_ids') || '[]');
+        if (readIds.includes(notice.id)) alreadyRead = true;
+      } catch(e) {}
+    }
+    if (alreadyRead) return;
 
     showModal(`
       <div style="text-align:center;padding:8px 0">
@@ -201,10 +213,17 @@ async function checkAdminNotice() {
 
 async function markNoticeRead(noticeId) {
   closeModal();
+  // localStorage에 즉시 저장 (DB 실패해도 팝업 반복 방지)
   try {
-    await sb.from('notice_reads')
+    var readIds = JSON.parse(localStorage.getItem('notice_read_ids') || '[]');
+    if (!readIds.includes(noticeId)) { readIds.push(noticeId); localStorage.setItem('notice_read_ids', JSON.stringify(readIds)); }
+  } catch(e) {}
+  // DB에도 저장
+  try {
+    const { error } = await sb.from('notice_reads')
       .upsert({ user_id: myProfile.id, notice_id: noticeId, read_at: new Date().toISOString() },
               { onConflict: 'user_id,notice_id' });
+    if (error) console.warn('[notice-read] DB upsert failed:', error.message);
   } catch (e) { console.warn('[notice-read]', e); }
 }
 
