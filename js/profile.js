@@ -20,13 +20,15 @@ async function openProfile(userId) {
     if (typeof sqLoadSettings === 'function') await sqLoadSettings();
 
     // 병렬로 데이터 로드
-    const [userRes, privacyRes, squirrelRes, expRes, minigameRes, farmRes] = await Promise.all([
+    const [userRes, privacyRes, squirrelRes, expRes, minigameRes, farmRes, plotsRes, cropsRes] = await Promise.all([
       sb.from('users').select('id,display_name,avatar_emoji,acorns,created_at').eq('id', userId).single(),
       sb.from('profile_privacy').select('*').eq('user_id', userId).maybeSingle(),
       sb.from('squirrels').select('*').eq('user_id', userId),
       sb.from('expeditions').select('id,status,loot').eq('user_id', userId),
       sb.from('minigame_plays').select('game_id,score').eq('user_id', userId),
-      sb.from('farm_data').select('*').eq('user_id', userId).maybeSingle()
+      sb.from('farm_data').select('*').eq('user_id', userId).maybeSingle(),
+      sb.from('farm_plots').select('slot,crop_id,harvest_at').eq('user_id', userId).order('slot'),
+      sb.from('farm_crops').select('id,name,emoji').eq('enabled', true)
     ]);
 
     const user = userRes.data;
@@ -37,6 +39,8 @@ async function openProfile(userId) {
     const expeditions = expRes.data || [];
     const minigamePlays = minigameRes.data || [];
     const farmData = farmRes.data;
+    const farmPlots = plotsRes.data || [];
+    const farmCrops = cropsRes.data || [];
 
     // 본인 프로필인지 확인 (본인이면 모든 항목 공개)
     const isMe = userId === myProfile.id;
@@ -89,7 +93,7 @@ async function openProfile(userId) {
 
     // 농장 정보
     if (isMe || privacy.show_farm) {
-      html += _buildFarmStats(farmData);
+      html += _buildFarmStats(farmData, farmPlots, farmCrops);
     }
 
     // 타인 프로필: 친구 삭제 버튼
@@ -246,7 +250,7 @@ function _buildExpeditionStats(expeditions) {
 }
 
 // ── 농장 정보 ──
-function _buildFarmStats(farmData) {
+function _buildFarmStats(farmData, plots, crops) {
   if (!farmData) {
     return `
       <div class="pf-section">
@@ -255,25 +259,38 @@ function _buildFarmStats(farmData) {
       </div>`;
   }
 
-  // farm_data에서 간단 정보 추출
-  const level = farmData.level || 1;
-  const gold = farmData.gold || 0;
+  const activePlots = (plots || []).filter(p => p.crop_id);
+  const totalSlots = farmData.plots_unlocked || plots?.length || 4;
+
+  let plotsHtml = '';
+  if (activePlots.length === 0) {
+    plotsHtml = '<p class="pf-empty-msg" style="margin:8px 0 0">현재 키우는 작물이 없어요</p>';
+  } else {
+    plotsHtml = '<div class="pf-farm-crop-grid">';
+    for (const plot of activePlots) {
+      const crop = (crops || []).find(c => c.id === plot.crop_id);
+      const emoji = crop?.emoji || '🌱';
+      const name = crop?.name || '작물';
+      const now = Date.now();
+      const harvestAt = plot.harvest_at ? new Date(plot.harvest_at).getTime() : 0;
+      const ready = harvestAt > 0 && harvestAt <= now;
+      const statusText = ready ? '수확 가능' : (harvestAt > 0 ? '성장 중' : '심은 직후');
+      const statusColor = ready ? '#16a34a' : '#f59e0b';
+
+      plotsHtml += `
+        <div class="pf-farm-crop-card">
+          <span style="font-size:24px;line-height:1">${emoji}</span>
+          <span class="pf-farm-crop-name">${_escHtml(name)}</span>
+          <span class="pf-farm-crop-status" style="color:${statusColor}">${statusText}</span>
+        </div>`;
+    }
+    plotsHtml += '</div>';
+  }
 
   return `
     <div class="pf-section">
-      <p class="pf-section-title">🌾 농장</p>
-      <div class="pf-farm-row">
-        <div class="pf-farm-card">
-          <span class="pf-farm-card-icon">⭐</span>
-          <span class="pf-farm-card-val">${level}</span>
-          <span class="pf-farm-card-label">레벨</span>
-        </div>
-        <div class="pf-farm-card">
-          <span class="pf-farm-card-icon">💰</span>
-          <span class="pf-farm-card-val">${gold.toLocaleString()}</span>
-          <span class="pf-farm-card-label">골드</span>
-        </div>
-      </div>
+      <p class="pf-section-title">🌾 농장 <span style="color:#86efac">${activePlots.length}/${totalSlots} 칸 사용 중</span></p>
+      ${plotsHtml}
     </div>`;
 }
 
