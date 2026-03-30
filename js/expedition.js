@@ -1779,6 +1779,7 @@ async function _expFinish(status) {
     // 다람쥐 상태 복원 + HP 업데이트
     // HP가 풀이 아니면 recovering 상태로 전환 (시간 경과 후 자동 회복)
     var baseMinutes = (_sqSettings && _sqSettings.recovery_base_minutes) || 60;
+    var recoveryBoost = (typeof getRecoveryBoostPct === 'function') ? getRecoveryBoostPct() : 0;
     for (var i = 0; i < s.party.length; i++) {
       var p = s.party[i];
       var maxHp = p.maxHp || 100;
@@ -1794,6 +1795,8 @@ async function _expFinish(status) {
         // HP 부족 → recovering 상태 + recovers_at 설정
         var lostPct = 1 - (currentHp / maxHp); // 0~1 (0%~100% 손실)
         var recoveryMinutes = Math.max(1, Math.round(baseMinutes * lostPct));
+        // 회복속도 부스트 이벤트 적용
+        if (recoveryBoost > 0) recoveryMinutes = Math.max(1, Math.round(recoveryMinutes * (1 - recoveryBoost / 100)));
         var recoversAt = new Date(Date.now() + recoveryMinutes * 60000).toISOString();
         try {
           await sb.from('squirrels').update({

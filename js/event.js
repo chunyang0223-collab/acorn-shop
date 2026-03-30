@@ -89,6 +89,16 @@ function getActiveEventDiscount(type) {
   return best;
 }
 
+// ── 새 이벤트 타입 getter ──
+// 회복속도 부스트 (% 빠르게)
+function getRecoveryBoostPct() { return getActiveEventDiscount('recovery'); }
+
+// 미니게임 참가비 할인 (도토리 단위)
+function getMinigameDiscount() { return getActiveEventDiscount('minigame'); }
+
+// 농장 성장속도 부스트 (% 빠르게)
+function getFarmGrowthBoostPct() { return getActiveEventDiscount('farm_growth'); }
+
 // ── 이벤트 탭 전환 ────────────────────────────────
 function switchEvtTab(name, btn) {
   ['once','repeat','schedules'].forEach(n => {
@@ -145,13 +155,15 @@ async function activateEvent(type) {
   await _saveEventToDB(type, evData);
   _events[type] = evData; // 캐시 즉시 갱신
 
-  const label    = type === 'store' ? '상점' : '뽑기';
+  const _evtLabels = { store:'상점', gacha:'뽑기', recovery:'회복속도', minigame:'미니게임', farm_growth:'농장성장' };
+  const label    = _evtLabels[type] || type;
   const startStr = startAt ? new Date(startAt).toLocaleString('ko-KR', { timeZone:'Asia/Seoul' }) : '즉시';
   const endStr   = endAt   ? new Date(endAt).toLocaleString('ko-KR',   { timeZone:'Asia/Seoul' }) : '수동 종료까지';
+  const unit = type === 'minigame' ? '🌰' : '%';
   _addEvtHistory({ type, label, pct, mode:'기간', startStr, endStr });
 
   playSound('approve');
-  toast('🎉', `${label} ${pct}% 할인 활성화!`);
+  toast('🎉', `${label} ${pct}${unit} ${type === 'minigame' ? '할인' : type === 'store' || type === 'gacha' ? '할인' : '부스트'} 활성화!`);
   renderEventAdmin();
   renderShopEventBanner();
 }
@@ -161,7 +173,8 @@ async function deactivateEvent(type) {
   if (_events[type]) _events[type].active = false;
   else _events[type] = { active: false, discountPct: 0, startAt: null, endAt: null };
   await _saveEventToDB(type, _events[type]);
-  const label = type === 'store' ? '상점' : '뽑기';
+  const _evtLabels2 = { store:'상점', gacha:'뽑기', recovery:'회복속도', minigame:'미니게임', farm_growth:'농장성장' };
+  const label = _evtLabels2[type] || type;
   toast('⏹', `${label} 이벤트 비활성화`);
   renderEventAdmin();
   renderShopEventBanner();
@@ -247,7 +260,8 @@ function renderScheduleList() {
   if (!repeats.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">등록된 요일반복 이벤트 없음</p>'; return; }
   const now = Date.now();
   el.innerHTML = repeats.map(r => {
-    const label    = r.type === 'store' ? '🛍️ 상점' : '🎲 뽑기';
+    const _schLabels = { store:'🛍️ 상점', gacha:'🎲 뽑기', recovery:'💊 회복속도', minigame:'🎮 미니게임', farm_growth:'🌾 농장성장' };
+    const label    = _schLabels[r.type] || r.type;
     const daysStr  = (r.weekDays||[]).map(d => DOW_KR[d]).join(' ');
     const period   = (r.validFrom||r.validUntil) ? `${r.validFrom||'즉시'} ~ ${r.validUntil||'무기한'}` : '무기한';
     // 현재 활성인지 계산
@@ -290,11 +304,12 @@ function _addEvtHistory({ type, label, pct, mode, startStr, endStr }) {
 function renderEventAdmin() {
   const now = Date.now();
 
-  ['store','gacha'].forEach(type => {
+  ['store','gacha','recovery','minigame','farm_growth'].forEach(type => {
     const ev = _events[type];
     const statusEl = document.getElementById(`${type}EventStatus`);
     if (!statusEl) return;
 
+    const unit = type === 'minigame' ? '🌰' : '%';
     let text = '비활성', bg = '#fee2e2', color = '#b91c1c';
     let evActive = false;
 
@@ -304,13 +319,13 @@ function renderEventAdmin() {
       const notEnded = !ev.endAt   || now <= ev.endAt;
       if (started && notEnded) {
         evActive = true;
-        text = `✅ 활성 ${ev.discountPct}%`;
+        text = `✅ 활성 ${ev.discountPct}${unit}`;
         bg = '#dcfce7'; color = '#166534';
         if (ev.endAt) {
           text += ` (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.endAt - now)}</span> 남음)`;
         }
       } else if (ev.startAt && now < ev.startAt) {
-        text = `⏳ 예약 ${ev.discountPct}% (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.startAt - now)}</span> 후 시작)`;
+        text = `⏳ 예약 ${ev.discountPct}${unit} (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.startAt - now)}</span> 후 시작)`;
         bg = '#fef9c3'; color = '#854d0e';
       }
     }
@@ -319,7 +334,7 @@ function renderEventAdmin() {
     if (!evActive) {
       const disc = getActiveEventDiscount(type);
       if (disc > 0) {
-        text = `✅ 요일반복 ${disc}% 활성`; bg = '#dcfce7'; color = '#166534';
+        text = `✅ 요일반복 ${disc}${unit} 활성`; bg = '#dcfce7'; color = '#166534';
       } else {
         const hasRepeat = _repeats.some(r => r.active && r.type === type);
         if (hasRepeat) { text = '📆 요일반복 대기'; bg = '#fef9c3'; color = '#854d0e'; }
@@ -334,13 +349,16 @@ function renderEventAdmin() {
   // 활성 배너
   const bannerEl = document.getElementById('activeEventsBanner');
   if (bannerEl) {
+    const _evtIcons = { store:'🛍️ 상점', gacha:'🎲 뽑기', recovery:'💊 회복속도', minigame:'🎮 미니게임', farm_growth:'🌾 농장성장' };
+    const _evtSuffix = { store:'할인 중', gacha:'할인 중', recovery:'부스트', minigame:'참가비 할인', farm_growth:'부스트' };
     const msgs = [];
-    ['store','gacha'].forEach(t => {
+    ['store','gacha','recovery','minigame','farm_growth'].forEach(t => {
       const d = getActiveEventDiscount(t);
       if (d > 0) {
         const endAt = _getEventEndAt(t);
+        const unit = t === 'minigame' ? `🌰${d}` : `${d}%`;
         const timeStr = endAt ? ` <span id="adminTopTimer-${t}" style="font-size:11px;font-weight:700;opacity:0.8">⏱️ ${_fmtRemaining(endAt - Date.now())} 남음</span>` : '';
-        msgs.push(`${t==='store'?'🛍️ 상점':'🎲 뽑기'} ${d}% 할인 중!${timeStr}`);
+        msgs.push(`${_evtIcons[t]} ${unit} ${_evtSuffix[t]}!${timeStr}`);
       }
     });
     bannerEl.innerHTML = msgs.length
@@ -350,14 +368,14 @@ function renderEventAdmin() {
 
   // 관리자 이벤트 카운트다운 타이머
   _clearAdminEvtTimer();
-  const adminTimerNeeded = ['store','gacha'].some(type => {
+  const adminTimerNeeded = ['store','gacha','recovery','minigame','farm_growth'].some(type => {
     const ev = _events[type];
     return ev && ev.active && (ev.endAt || ev.startAt);
   });
   if (adminTimerNeeded) {
     window._adminEvtTimer = setInterval(() => {
       const n = Date.now();
-      ['store','gacha'].forEach(type => {
+      ['store','gacha','recovery','minigame','farm_growth'].forEach(type => {
         const ev = _events[type];
         // 상태 카드 타이머
         const el = document.getElementById(`adminEvtTimer-${type}`);
@@ -383,7 +401,7 @@ function renderEventAdmin() {
     histEl.innerHTML = history.length
       ? history.map(h => `<div class="flex items-center gap-3 p-3 rounded-xl row-item-bg">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-black text-gray-800">${h.label==='상점'?'🛍️':'🎲'} ${h.label} ${h.pct}% <span class="text-xs font-bold text-gray-400">[${h.mode||''}]</span></p>
+            <p class="text-sm font-black text-gray-800">${{'상점':'🛍️','뽑기':'🎲','회복속도':'💊','미니게임':'🎮','농장성장':'🌾'}[h.label]||'🎉'} ${h.label} ${h.pct}${h.type==='minigame'?'🌰':'%'} <span class="text-xs font-bold text-gray-400">[${h.mode||''}]</span></p>
             <p class="text-xs text-gray-400 truncate">${h.startStr} ~ ${h.endStr}</p>
           </div>
           <span class="text-xs text-gray-400 shrink-0">${fmtTs(new Date(h.ts).toISOString())}</span>

@@ -57,8 +57,26 @@ async function farmDoPlant(slot, cropId) {
     });
     if (error) throw error;
     if (data?.error) { toast('⚠️', data.error); return; }
+
+    // 농장 성장속도 부스트 이벤트 적용
+    const growBoost = (typeof getFarmGrowthBoostPct === 'function') ? getFarmGrowthBoostPct() : 0;
+    if (growBoost > 0) {
+      // 심은 직후 plot의 harvest_at을 단축
+      await _farmReloadAll();
+      const plot = _farmPlots.find(p => p.slot === slot);
+      if (plot?.harvest_at) {
+        const now = Date.now();
+        const harvestAt = new Date(plot.harvest_at).getTime();
+        const remaining = harvestAt - now;
+        const reduced = Math.max(60000, Math.round(remaining * (1 - growBoost / 100))); // 최소 1분
+        const newHarvest = new Date(now + reduced).toISOString();
+        await sb.from('farm_plots').update({ harvest_at: newHarvest }).eq('user_id', myProfile.id).eq('slot', slot);
+        plot.harvest_at = newHarvest;
+      }
+    }
+
     playSound('click');
-    toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗을 심었어요!`);
+    toast(crop?.emoji || '🌱', `${crop?.name || ''} 씨앗을 심었어요!${growBoost > 0 ? ` (🎉 ${growBoost}% 성장 부스트!)` : ''}`);
     await _farmReloadAll();
     farmRenderMain();
   } catch(e) {

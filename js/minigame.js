@@ -172,7 +172,10 @@ async function renderMinigameHub() {
     const rewarded  = _mgTodayRewards[g.id] || 0;
     const pRemain   = Math.max(0, pLimit - played);
     const rRemain   = Math.max(0, rLimit - rewarded);
-    const fee       = getMgSetting(g.id, 'entryFee');
+    let fee         = getMgSetting(g.id, 'entryFee');
+    const _mgEvtDisc = (typeof getMinigameDiscount === 'function') ? getMinigameDiscount() : 0;
+    const origFee   = fee;
+    if (_mgEvtDisc > 0 && fee > 0) fee = Math.max(0, fee - _mgEvtDisc);
     const maxReward = getMgSetting(g.id, 'maxReward');
     const duration  = getMgSetting(g.id, 'duration');
     const maint     = getMgSetting(g.id, 'maintenance');
@@ -192,7 +195,10 @@ async function renderMinigameHub() {
     let infoTags = [];
     let countTags = [];
     if (duration > 0) infoTags.push(`⏱ ${duration}초`);
-    if (fee > 0) infoTags.push(`🌰 ${fee} 참가비`); else infoTags.push('무료');
+    if (fee > 0) {
+      if (_mgEvtDisc > 0 && origFee > fee) infoTags.push(`🌰 <s>${origFee}</s> ${fee} 참가비`);
+      else infoTags.push(`🌰 ${fee} 참가비`);
+    } else infoTags.push(origFee > 0 && _mgEvtDisc > 0 ? '🎉 무료!' : '무료');
     if (g.id === '2048') infoTags.push('🌰 드롭');
     else if (maxReward) infoTags.push(`🎁 최대 ${maxReward}`);
     if (g.ready && !maint && !unlimited) {
@@ -293,7 +299,10 @@ async function startMinigame(id) {
     return;
   }
 
-  const fee = getMgSetting(id, 'entryFee');
+  let fee = getMgSetting(id, 'entryFee');
+  // 미니게임 참가비 이벤트 할인 적용
+  const mgDiscount = (typeof getMinigameDiscount === 'function') ? getMinigameDiscount() : 0;
+  if (mgDiscount > 0 && fee > 0) fee = Math.max(0, fee - mgDiscount);
 
   // 룰렛은 배수 선택 화면으로 진입
   if (id === 'roulette') {
@@ -308,9 +317,11 @@ async function startMinigame(id) {
     }
     const rLimit   = getRewardLimit(id);
     const rewarded = _mgTodayRewards[id] || 0;
+    const discountNote = mgDiscount > 0 ? `<p class="text-xs text-green-600 font-bold mb-1">🎉 이벤트 할인 -${mgDiscount}🌰 적용!</p>` : '';
     showModal(`<div class="text-center">
       <div style="font-size:2.5rem;margin-bottom:8px">🎮</div>
       <h2 class="text-lg font-black text-gray-800 mb-2">게임 시작</h2>
+      ${discountNote}
       <p class="text-sm text-gray-500 mb-1">참가비 <span class="font-black text-amber-600">🌰 ${fee}</span>이 차감됩니다.</p>
       ${!unlimited && id !== '2048' ? `<p class="text-xs text-gray-400 mb-1">도전: ${pLimit - played}/${pLimit}회 · 보상: ${rLimit - rewarded}/${rLimit}회</p>` : ''}
       <div class="flex gap-2 mt-3">
