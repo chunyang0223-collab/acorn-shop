@@ -16,6 +16,9 @@ async function openProfile(userId) {
     </div>`);
 
   try {
+    // 다람쥐 등급 계산에 필요한 설정 로드 (탭 미진입 시 기본값 문제 방지)
+    if (typeof sqLoadSettings === 'function') await sqLoadSettings();
+
     // 병렬로 데이터 로드
     const [userRes, privacyRes, squirrelRes, expRes, minigameRes, farmRes] = await Promise.all([
       sb.from('users').select('id,display_name,avatar_emoji,acorns,created_at').eq('id', userId).single(),
