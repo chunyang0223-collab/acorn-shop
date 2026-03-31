@@ -154,13 +154,12 @@ function moveTxPage(dir) {
 async function renderMypage() {
   document.getElementById('mypageHeader').innerHTML = `
     <div class="flex items-center gap-4">
-      <div class="text-5xl">${myProfile.avatar_emoji || '🐿️'}</div>
-      <div>
-        <h2 class="text-xl font-black text-gray-800">${myProfile.display_name}</h2>
+      <div class="text-5xl" style="cursor:pointer" onclick="openMyProfile()" title="내 프로필 보기">${myProfile.avatar_emoji || '🐿️'}</div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-xl font-black text-gray-800 cursor-pointer hover:text-amber-600 transition-colors" onclick="openMyProfile()" title="내 프로필 보기">${myProfile.display_name}</h2>
         <p class="text-xs text-gray-400 font-semibold">${session?.user?.email || ''}</p>
-        <button class="text-xs font-bold mt-1 px-3 py-1 rounded-lg" style="background:rgba(59,130,246,0.1);color:#3b82f6" onclick="openMyProfile()">👤 내 프로필 보기</button>
       </div>
-      <div class="ml-auto text-center">
+      <div class="ml-auto text-center flex-shrink-0">
         <div class="text-3xl font-black text-amber-600" id="myAcornVal">${myProfile.acorns || 0}</div>
         <div class="text-xs text-gray-500 font-bold">🌰 도토리</div>
       </div>
