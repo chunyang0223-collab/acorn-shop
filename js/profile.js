@@ -50,23 +50,16 @@ async function openProfile(userId) {
     // ── 프로필 HTML 빌드 ──
     let html = `<div class="pf-modal">`;
 
-    // 헤더
+    // 헤더 + 공개설정 버튼 (본인 프로필일 때 우측 배치)
     html += `
       <div class="pf-header">
         <span class="pf-avatar">${user.avatar_emoji || '🐿️'}</span>
-        <div>
+        <div class="pf-header-info">
           <p class="pf-name">${_escHtml(user.display_name || '???')}</p>
           <p class="pf-joined">가입일: ${user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '???'}</p>
         </div>
+        ${isMe ? '<button class="btn btn-primary px-4 py-2 text-xs pf-privacy-btn" onclick="openPrivacySettings()">🔒 공개 설정</button>' : ''}
       </div>`;
-
-    // 본인 프로필: 공개 설정 버튼 (헤더 바로 아래)
-    if (isMe) {
-      html += `
-        <div class="pf-privacy-btn-wrap">
-          <button class="btn btn-primary px-4 py-2 text-xs" onclick="openPrivacySettings()">🔒 공개 설정</button>
-        </div>`;
-    }
 
     // 도토리
     if (isMe || privacy.show_acorns) {
@@ -172,7 +165,7 @@ function _buildSquirrelGrid(squirrels) {
         </div>`;
     } else {
       // 빈 슬롯
-      gridHtml += `<div class="pf-sq-cell pf-sq-empty"><span class="pf-sq-empty-icon">🫥</span></div>`;
+      gridHtml += `<div class="pf-sq-cell pf-sq-empty"></div>`;
     }
   }
 
