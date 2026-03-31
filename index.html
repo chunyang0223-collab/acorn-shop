@@ -93,24 +93,22 @@
 
   <!-- 헤더 -->
   <div class="mb-5">
-    <!-- 최상단: 앱 이름 + 로그아웃 -->
-    <div class="flex items-center justify-between mb-3">
+    <!-- 최상단: 볼륨(좌) + 도토리상점(가운데) + 로그아웃(우) -->
+    <div class="header-top-bar">
+      <div class="vol-control" id="volControl" style="display:none">
+        <button class="vol-icon-btn" id="volIconBtn" onclick="toggleMute()" title="음소거 토글">🔊</button>
+        <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="50" oninput="setAppVolume(this.value)">
+      </div>
       <h1 class="header-app-title">도토리 상점</h1>
       <button class="btn-logout-sm hidden" id="logoutBtn" onclick="doLogout()">로그아웃</button>
     </div>
-    <!-- 메인 헤더 -->
-    <div class="flex items-center justify-between">
+    <!-- 메인 헤더: 도토리 이모지 + 닉네임 | 스탯 + 알림 -->
+    <div class="flex items-center justify-between mt-3">
       <!-- 좌측: 도토리 이모지(테마토글) + 닉네임 -->
-      <div class="flex items-center gap-4">
-        <div class="header-acorn-col">
-          <div class="vol-control" id="volControl" style="display:none">
-            <button class="vol-icon-btn" id="volIconBtn" onclick="toggleMute()" title="음소거 토글">🔊</button>
-            <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="50" oninput="setAppVolume(this.value)">
-          </div>
-          <div id="headerAcornEmoji" onclick="toggleTheme()" title="테마 전환"
-            style="font-size:3.2rem;line-height:1;cursor:pointer;transition:filter .3s,transform .2s;filter:drop-shadow(0 2px 8px rgba(180,100,0,0.25));user-select:none"
-            onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">🌰</div>
-        </div>
+      <div class="header-identity">
+        <div id="headerAcornEmoji" onclick="toggleTheme()" title="테마 전환"
+          style="font-size:3.2rem;line-height:1;cursor:pointer;transition:filter .3s,transform .2s;filter:drop-shadow(0 2px 8px rgba(180,100,0,0.25));user-select:none"
+          onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">🌰</div>
         <button class="header-nickname-btn" id="headerUserLabel" onclick="openMyProfile()" title="내 프로필 보기">Acorn Shop ✨</button>
       </div>
       <!-- 우측: 도토리 + 티켓 + 종 -->
