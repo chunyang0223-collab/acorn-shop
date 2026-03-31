@@ -5626,6 +5626,8 @@ input[type="checkbox"]:active,
   padding-bottom: 16px; margin-bottom: 12px;
   border-bottom: 1.5px solid var(--pf-header-border);
 }
+.pf-header-info { flex: 1; min-width: 0; }
+.pf-privacy-btn { flex-shrink: 0; }
 .pf-avatar { font-size: 3rem; line-height: 1; }
 .pf-name { font-size: 1.1rem; font-weight: 900; color: var(--pf-name-text); }
 .pf-joined { font-size: 0.7rem; color: var(--pf-joined-text); margin-top: 2px; }
