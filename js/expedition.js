@@ -1061,7 +1061,8 @@ function _sndPlayBGM(type) {
     'battle':   ['sounds/battle_monster_1.mp3','sounds/battle_monster_2.mp3','sounds/battle_monster_3.mp3','sounds/battle_monster_4.mp3'],
     'boss':     ['sounds/battle_boss_1.mp3','sounds/battle_boss_2.mp3','sounds/battle_boss_3.mp3'],
     'defeat':   ['sounds/explorer_complete_defeat.mp3'],
-    'victory':  ['sounds/explorer_complete_victory.mp3']
+    'victory':  ['sounds/explorer_complete_victory.mp3'],
+    'raid_victory': ['sounds/raid_victory.mp3']
   };
   var files = bgmMap[type];
   if (!files || files.length === 0) return;

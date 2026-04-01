@@ -936,8 +936,6 @@ function _brRenderBattle(container, raid) {
       <!-- 로그 -->
       <div class="br-log-panel" id="brLogPanel"></div>
 
-      <!-- 전투 종료 오버레이 -->
-      <div class="br-end-overlay hidden" id="brBattleEndOverlay"></div>
     </div>`;
 
   // SP 최대값 기억
@@ -965,21 +963,27 @@ function _brStartReplay(log, partyInit) {
       clearInterval(_brReplayTimer);
       _brReplayTimer = null;
       if (typeof _sndStopBGM === 'function') _sndStopBGM();
-      // 자동 전환 대신 결과 확인 버튼 표시
+      // 파티 영역을 결과 카드로 교체
       setTimeout(() => {
         if (!_brState) return;
         const isVictory = _brState.result === 'victory';
+        // 효과음
         if (typeof _btlSound === 'function') _btlSound(isVictory ? 'victory' : 'defeat');
         window._brEndSoundPlayed = true;
-        const wrap = document.getElementById('brBattleEndOverlay');
-        if (wrap) {
-          wrap.classList.remove('hidden');
-          wrap.innerHTML = `
-            <div class="text-4xl mb-2">${isVictory ? '🎉' : '💀'}</div>
-            <p style="font-size:18px;font-weight:900;color:${isVictory ? '#4ade80' : '#f87171'};margin-bottom:4px">${isVictory ? '보스 격파!' : '패배...'}</p>
-            <p style="font-size:11px;color:#94a3b8;margin-bottom:12px">전투 로그를 확인한 뒤 버튼을 눌러주세요</p>
-            <button class="btn btn-primary px-8 py-3 text-sm font-black" onclick="_brGoToResult()" style="animation:br-badge-pop .4s ease">${isVictory ? '보상 받기' : '결과 확인'}</button>
+        // 승리 시 전용 BGM 재생
+        if (isVictory && typeof _sndPlayBGM === 'function') _sndPlayBGM('raid_victory');
+
+        const partyGrid = document.querySelector('.br-party-grid');
+        if (partyGrid) {
+          partyGrid.innerHTML = `
+            <div class="br-end-card">
+              <div style="font-size:3rem;margin-bottom:4px">${isVictory ? '🎉' : '💀'}</div>
+              <p style="font-size:22px;font-weight:900;color:${isVictory ? '#4ade80' : '#f87171'};margin-bottom:2px">${isVictory ? '보스 격파!' : '패배...'}</p>
+              <p style="font-size:11px;color:#94a3b8;margin-bottom:14px">전투 로그를 확인한 뒤 버튼을 눌러주세요</p>
+              <button class="btn btn-primary px-8 py-3 text-sm font-black" onclick="_brGoToResult()" style="animation:br-badge-pop .4s ease">${isVictory ? '보상 받기' : '결과 확인'}</button>
+            </div>
           `;
+          partyGrid.className = 'br-party-grid br-end-mode';
         }
       }, 800);
       return;
@@ -1214,6 +1218,7 @@ function _brUpdateDmgMeter() {
 }
 
 function _brGoToResult() {
+  if (typeof _sndStopBGM === 'function') _sndStopBGM();
   if (_brState) _brRenderResult(document.getElementById('utab-bossraid'), _brState);
 }
 
