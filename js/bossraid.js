@@ -1167,10 +1167,10 @@ async function _brRenderResult(container, raid) {
         ${cards.map((c, i) => `
           <div class="br-reward-card" id="brCard${i}" onclick="_brSelectCard(${i})">
             <div class="br-card-back">${isVictory ? '🎁' : '🎀'}</div>
-            <div class="br-card-front br-grade-${(c.grade || 'D').toLowerCase()}">
-              <p class="text-lg font-black">${c.grade ? c.grade + '등급' : ''}</p>
-              ${c.item ? `<p class="text-sm">${c.item.icon} ${c.item.name}</p>` : ''}
-              <p class="text-sm font-bold text-amber-500">🌰 ${c.acorns}</p>
+            <div class="br-card-front br-grade-${(c.grade || 'null').toLowerCase()}">
+              ${c.grade ? `<p style="font-size:15px;font-weight:900;margin:0">${c.grade}등급</p>` : ''}
+              ${c.item ? `<p style="font-size:12px;font-weight:700;margin:2px 0">${c.item.icon} ${c.item.name}</p>` : ''}
+              <p style="font-size:14px;font-weight:800;color:#f59e0b;margin:2px 0">🌰 ${c.acorns}</p>
             </div>
           </div>
         `).join('')}
@@ -1239,12 +1239,21 @@ async function _brSelectCard(idx) {
   for (let i = 0; i < 3; i++) {
     const el = document.getElementById('brCard' + i);
     if (!el) continue;
+    const back = el.querySelector('.br-card-back');
+    const front = el.querySelector('.br-card-front');
+
     if (i === idx) {
+      // 선택한 카드: 뒤집어서 front 표시 + 확대 + 더 이상 hover/click 안되게
       el.classList.add('br-card-chosen');
+      if (back) back.style.display = 'none';
+      if (front) { front.style.backfaceVisibility = 'visible'; front.style.transform = 'none'; }
     } else {
-      // 나머지 카드도 뒤집어서 내용 보여주기 (약간 지연)
+      // 미선택 카드: 약간 후에 뒤집어서 front 표시 (흐리게)
       el.classList.add('br-card-unchosen');
-      setTimeout(() => el.classList.add('br-card-reveal'), 300);
+      setTimeout(() => {
+        if (back) back.style.display = 'none';
+        if (front) { front.style.backfaceVisibility = 'visible'; front.style.transform = 'none'; }
+      }, 400);
     }
   }
 
