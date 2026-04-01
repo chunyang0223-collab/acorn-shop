@@ -22,6 +22,7 @@ var _brConfig = {
   boss_stat_mult: 2.5,
   lv_base_hp: 30, lv_base_atk: 8, lv_base_def: 3,
   lv_grow_hp: 12, lv_grow_atk: 2, lv_grow_def: 1.5,
+  atk_multiplier: 1.0,     // 평타 데미지 배율 (1.0 = 기본)
   skill_multiplier: 1.65,
   skill_swing: 5,
   atk_swing: 3,
@@ -80,6 +81,7 @@ var _brReplayIdx = 0;  // 재생 인덱스
 var _brReplayTimer = null;
 var _brWeeklyDone = false; // 주간 횟수 중복 차감 방지 플래그
 var _brLobbySeq = 0;      // 로비 렌더 race-condition 방지용 시퀀스
+var _brResultRendered = false; // 결과 화면 중복 렌더 방지 플래그
 
 // ── 설정 로드 ──
 async function _brLoadConfig() {
@@ -740,7 +742,7 @@ async function _brSimulateBattle(raid) {
           spLeft: spLeft
         });
       } else {
-        dmg = Math.max(1, sq.atk - Math.floor(boss.def * _brConfig.mon_def_effect / 100)) + _brRand(-_brConfig.atk_swing, _brConfig.atk_swing);
+        dmg = Math.max(1, Math.floor(sq.atk * (_brConfig.atk_multiplier || 1.0)) - Math.floor(boss.def * _brConfig.mon_def_effect / 100)) + _brRand(-_brConfig.atk_swing, _brConfig.atk_swing);
         dmg = Math.max(1, dmg);
         const bigHit = dmg >= sq.atk * 0.9;
         log.push({
@@ -790,6 +792,11 @@ async function _brSimulateBattle(raid) {
     }
   }
 
+  // 보스별 보상 가중치 메타 (없으면 글로벌 사용)
+  if (bossTemplate.reward_weights) {
+    log.push({ type: 'boss_meta', reward_weights: bossTemplate.reward_weights });
+  }
+
   // 결과 판정
   const result = boss.hp <= 0 ? 'victory' : 'defeat';
   log.push({ type: 'result', result: result });
@@ -835,6 +842,10 @@ function _brRenderBattle(container, raid) {
 
   const initEntry = log.find(e => e.type === 'init');
   if (!initEntry) return;
+
+  // 보스별 보상 가중치 메타 추출
+  const metaEntry = log.find(e => e.type === 'boss_meta');
+  window._brBossRewardWeights = metaEntry ? metaEntry.reward_weights : null;
 
   const boss = initEntry.boss;
   const party = initEntry.party;
@@ -1117,6 +1128,15 @@ function _brUpdateDmgMeter() {
   // 딜 높은 순 정렬
   entries.sort((a, b) => b.dmg - a.dmg);
 
+  // DOM 순서도 딜 높은 순으로 재배치
+  const meter = document.getElementById('brDmgMeter');
+  if (meter) {
+    for (const e of entries) {
+      const row = document.getElementById('brDmgRow_' + e.id);
+      if (row) meter.appendChild(row); // 기존 자식을 끝으로 이동 = 순서 재배치
+    }
+  }
+
   for (const e of entries) {
     const pct = Math.round(e.dmg / totalDmg * 100);
     const barW = Math.max(2, e.dmg / maxDmg * 100);
@@ -1143,6 +1163,10 @@ function _brAddLog(text, cls) {
 //  결과 & 보상
 // ══════════════════════════════════════════════
 async function _brRenderResult(container, raid) {
+  // 중복 렌더 방지 (폴링에 의한 재호출 차단)
+  if (_brResultRendered) return;
+  _brResultRendered = true;
+
   if (_brReplayTimer) { clearInterval(_brReplayTimer); _brReplayTimer = null; }
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
 
@@ -1262,7 +1286,8 @@ function _brGenDefeatReward() {
 }
 
 function _brPickGrade() {
-  const w = _brConfig.reward_weights;
+  // 보스별 가중치 우선, 없으면 글로벌 설정 사용
+  const w = window._brBossRewardWeights || _brConfig.reward_weights;
   const total = w.C + w.B + w.A;
   const r = Math.random() * total;
   if (r < w.C) return 'C';
@@ -1401,12 +1426,14 @@ async function _brFinish() {
   _brUnsubscribe();
   _brState = null;
   _brWeeklyDone = false;
+  _brResultRendered = false;
   _brBotSquirrels = null;
   window._brCards = null;
   window._brChosenCard = null;
   window._brIsVictory = null;
   window._brDmgData = null;
   window._brSpMax = null;
+  window._brBossRewardWeights = null;
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
   renderBossRaid();
 }
@@ -1489,7 +1516,8 @@ function _brRenderBossList() {
         '<div style="font-size:11px;font-weight:900;color:var(--text-primary,#374151)">' + b.name + '</div>' +
         '<div style="font-size:10px;color:#9ca3af">Lv.' + b.lvMin + '~' + b.lvMax +
           ' | HP ' + preview.hp + '~' + previewMax.hp +
-          ' 공 ' + preview.atk + '~' + previewMax.atk + '</div>' +
+          ' 공 ' + preview.atk + '~' + previewMax.atk +
+          (b.reward_weights ? ' | <span style="color:#f59e0b;font-weight:700">★</span>' : '') + '</div>' +
       '</div>' +
       '<button onclick="_brAdmEditBoss(' + i + ')" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(59,130,246,0.1);color:#3b82f6;font-size:10px;cursor:pointer;flex-shrink:0">✎</button>' +
     '</div>';
@@ -1516,9 +1544,17 @@ function _brAdmEditBoss(idx) {
         '<input type="text" id="brBE_emoji" value="' + b.emoji + '" style="text-align:center;font-size:16px;padding:4px;border-radius:8px;' + is + '">' +
         '<input type="text" id="brBE_name" value="' + b.name + '" style="padding:4px 8px;border-radius:8px;font-size:12px;font-weight:700;' + is + '">' +
       '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">' +
         '<div><label style="font-size:10px;color:#9ca3af">최소 Lv</label><input type="number" id="brBE_lvMin" value="' + b.lvMin + '" min="1" max="99" style="width:100%;padding:4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;' + is + '"></div>' +
         '<div><label style="font-size:10px;color:#9ca3af">최대 Lv</label><input type="number" id="brBE_lvMax" value="' + b.lvMax + '" min="1" max="99" style="width:100%;padding:4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;' + is + '"></div>' +
+      '</div>' +
+      '<div style="margin-bottom:8px">' +
+        '<p style="font-size:10px;color:#9ca3af;margin-bottom:3px">보상 등급 가중치 <span style="color:#d1d5db">(비우면 글로벌 설정)</span></p>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">' +
+          '<div><label style="font-size:9px;color:#9ca3af">C등급</label><input type="number" id="brBE_rwC" value="' + (b.reward_weights ? b.reward_weights.C : '') + '" min="0" placeholder="' + _brConfig.reward_weights.C + '" style="width:100%;padding:3px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;' + is + '"></div>' +
+          '<div><label style="font-size:9px;color:#9ca3af">B등급</label><input type="number" id="brBE_rwB" value="' + (b.reward_weights ? b.reward_weights.B : '') + '" min="0" placeholder="' + _brConfig.reward_weights.B + '" style="width:100%;padding:3px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;' + is + '"></div>' +
+          '<div><label style="font-size:9px;color:#9ca3af">A등급</label><input type="number" id="brBE_rwA" value="' + (b.reward_weights ? b.reward_weights.A : '') + '" min="0" placeholder="' + _brConfig.reward_weights.A + '" style="width:100%;padding:3px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;' + is + '"></div>' +
+        '</div>' +
       '</div>' +
       '<div style="display:flex;gap:6px">' +
         '<button onclick="_brAdmSaveBossEdit(' + idx + ')" style="flex:1;padding:6px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-size:11px;font-weight:700;cursor:pointer">적용</button>' +
@@ -1536,6 +1572,13 @@ function _brAdmSaveBossEdit(idx) {
   b.lvMin = +(el('brBE_lvMin')?.value) || b.lvMin;
   b.lvMax = +(el('brBE_lvMax')?.value) || b.lvMax;
   if (b.lvMin > b.lvMax) { toast('⚠️', '최소 레벨이 최대보다 높아요'); return; }
+  // 보스별 보상 가중치 (값이 있으면 저장, 없으면 삭제=글로벌 사용)
+  var rwC = el('brBE_rwC')?.value, rwB = el('brBE_rwB')?.value, rwA = el('brBE_rwA')?.value;
+  if (rwC !== '' && rwB !== '' && rwA !== '') {
+    b.reward_weights = { C: +rwC || 0, B: +rwB || 0, A: +rwA || 0 };
+  } else {
+    delete b.reward_weights;
+  }
   var editArea = document.getElementById('brAdmBossEdit');
   if (editArea) editArea.innerHTML = '';
   _brRenderBossList();
@@ -1580,6 +1623,16 @@ async function brAdminOpenSettings() {
         <div style="margin-top:6px">
           <label style="font-size:10px;font-weight:700;color:#9ca3af">보스 스탯 배율</label>
           <input type="number" id="brAdm_bossMult" value="${c.boss_stat_mult}" min="1" max="10" step="0.1" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#9ca3af">평타 배율</label>
+            <input type="number" id="brAdm_atkMult" value="${c.atk_multiplier || 1.0}" min="0.1" max="10" step="0.1" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#9ca3af">스킬 배율</label>
+            <input type="number" id="brAdm_skillMult" value="${c.skill_multiplier}" min="0.1" max="10" step="0.05" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+          </div>
         </div>
       </div>
 
@@ -1732,6 +1785,8 @@ async function brAdminSaveSettings() {
     sp_min: +el('brAdm_spMin').value,
     sp_max: +el('brAdm_spMax').value,
     boss_stat_mult: +el('brAdm_bossMult').value,
+    atk_multiplier: +el('brAdm_atkMult').value || 1.0,
+    skill_multiplier: +el('brAdm_skillMult').value || 1.65,
     // 필살기
     ultimate_uses: +el('brAdm_ultiUses').value || 1,
     ultimate_mult: +el('brAdm_ultiMult').value || 2.0,
