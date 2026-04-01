@@ -294,7 +294,7 @@ function _injectCatSubtabs(tab, tabEl) {
 // ── 점검 상태 도트 (홈 화면용) ──
 function renderMaintDots() {
   const m = window._maintSettings || {};
-  ['shop','gacha','quest','recycle','minigame','squirrel','mypage','sq_farm'].forEach(k => {
+  ['shop','gacha','quest','recycle','minigame','squirrel','bossraid','mypage','sq_farm'].forEach(k => {
     const dot = document.getElementById('maint-dot-' + k);
     if (dot) {
       dot.className = 'maint-dot ' + (m[k] ? 'off' : 'on');
