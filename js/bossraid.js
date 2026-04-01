@@ -935,6 +935,9 @@ function _brRenderBattle(container, raid) {
 
       <!-- 로그 -->
       <div class="br-log-panel" id="brLogPanel"></div>
+
+      <!-- 전투 종료 오버레이 -->
+      <div class="br-end-overlay hidden" id="brBattleEndOverlay"></div>
     </div>`;
 
   // SP 최대값 기억
@@ -962,9 +965,23 @@ function _brStartReplay(log, partyInit) {
       clearInterval(_brReplayTimer);
       _brReplayTimer = null;
       if (typeof _sndStopBGM === 'function') _sndStopBGM();
+      // 자동 전환 대신 결과 확인 버튼 표시
       setTimeout(() => {
-        if (_brState) _brRenderResult(document.getElementById('utab-bossraid'), _brState);
-      }, 1200);
+        if (!_brState) return;
+        const isVictory = _brState.result === 'victory';
+        if (typeof _btlSound === 'function') _btlSound(isVictory ? 'victory' : 'defeat');
+        window._brEndSoundPlayed = true;
+        const wrap = document.getElementById('brBattleEndOverlay');
+        if (wrap) {
+          wrap.classList.remove('hidden');
+          wrap.innerHTML = `
+            <div class="text-4xl mb-2">${isVictory ? '🎉' : '💀'}</div>
+            <p style="font-size:18px;font-weight:900;color:${isVictory ? '#4ade80' : '#f87171'};margin-bottom:4px">${isVictory ? '보스 격파!' : '패배...'}</p>
+            <p style="font-size:11px;color:#94a3b8;margin-bottom:12px">전투 로그를 확인한 뒤 버튼을 눌러주세요</p>
+            <button class="btn btn-primary px-8 py-3 text-sm font-black" onclick="_brGoToResult()" style="animation:br-badge-pop .4s ease">${isVictory ? '보상 받기' : '결과 확인'}</button>
+          `;
+        }
+      }, 800);
       return;
     }
 
@@ -1196,6 +1213,10 @@ function _brUpdateDmgMeter() {
   }
 }
 
+function _brGoToResult() {
+  if (_brState) _brRenderResult(document.getElementById('utab-bossraid'), _brState);
+}
+
 function _brAddLog(text, cls) {
   const panel = document.getElementById('brLogPanel');
   if (!panel) return;
@@ -1221,8 +1242,11 @@ async function _brRenderResult(container, raid) {
   const myRewarded = isHost ? raid.host_rewarded : raid.guest_rewarded;
   const isVictory = raid.result === 'victory';
 
-  // 결과 사운드
-  if (typeof _btlSound === 'function') _btlSound(isVictory ? 'victory' : 'defeat');
+  // 결과 사운드 (오버레이에서 이미 재생된 경우 스킵, 직접 진입 시에만 재생)
+  if (!window._brEndSoundPlayed) {
+    if (typeof _btlSound === 'function') _btlSound(isVictory ? 'victory' : 'defeat');
+  }
+  window._brEndSoundPlayed = false;
 
   if (myRewarded) {
     // 이미 보상 수령 → 완료 화면
@@ -1288,25 +1312,43 @@ async function _brRenderResult(container, raid) {
     ];
   }
 
-  container.innerHTML = `
-    <div class="clay-card p-6 text-center">
-      <div class="text-5xl mb-3">${resultEmoji}</div>
-      <h2 class="text-xl font-black mb-2" style="color:${resultColor}">${resultTitle}</h2>
-      ${resultDesc ? `<p class="text-sm text-gray-400 font-semibold mb-4">${resultDesc}</p>` : '<div class="mb-3"></div>'}
-      <div class="br-card-row">
-        ${cards.map((c, i) => `
-          <div class="br-reward-card" id="brCard${i}" onclick="_brSelectCard(${i})">
-            <div class="br-card-back">${isVictory ? '🎁' : '🎀'}</div>
-            <div class="br-card-front br-grade-${(c.grade || 'null').toLowerCase()}">
-              ${c.grade ? `<p style="font-size:15px;font-weight:900;margin:0">${c.grade}등급</p>` : ''}
-              ${c.item ? `<p style="font-size:12px;font-weight:700;margin:2px 0">${c.item.icon} ${c.item.name}</p>` : ''}
-              <p style="font-size:14px;font-weight:800;color:#f59e0b;margin:2px 0">🌰 ${c.acorns}</p>
+  if (isVictory) {
+    // ── 승리: 탐험 보상 카드 디자인 ──
+    container.innerHTML = `
+      <div class="clay-card p-6 text-center">
+        <div class="text-5xl mb-3">${resultEmoji}</div>
+        <h2 class="text-xl font-black mb-2" style="color:${resultColor}">${resultTitle}</h2>
+        <p class="text-sm text-gray-400 font-semibold mb-4">카드를 선택해서 보상을 받으세요!</p>
+        <div class="br-card-row">
+          ${cards.map((c, i) => `
+            <div class="btl-reward-card" id="brCard${i}" onclick="_brSelectCard(${i})">
+              <div class="btl-card-back"><img src="images/baby-squirrel.png" class="btl-card-baby-bounce"></div>
             </div>
-          </div>
-        `).join('')}
-      </div>
-      <div id="brRewardResult" class="mt-4 hidden"></div>
-    </div>`;
+          `).join('')}
+        </div>
+        <div id="brRewardResult" class="mt-4 hidden"></div>
+      </div>`;
+  } else {
+    // ── 패배: 리본 카드 디자인 ──
+    container.innerHTML = `
+      <div class="clay-card p-6 text-center">
+        <div class="text-5xl mb-3">${resultEmoji}</div>
+        <h2 class="text-xl font-black mb-2" style="color:${resultColor}">${resultTitle}</h2>
+        <div class="mb-3"></div>
+        <div class="br-card-row">
+          ${cards.map((c, i) => `
+            <div class="br-reward-card" id="brCard${i}" onclick="_brSelectCard(${i})">
+              <div class="br-card-back">🎀</div>
+              <div class="br-card-front br-grade-null">
+                ${c.item ? `<p style="font-size:12px;font-weight:700;margin:2px 0">${c.item.icon} ${c.item.name}</p>` : ''}
+                <p style="font-size:14px;font-weight:800;color:#f59e0b;margin:2px 0">🌰 ${c.acorns}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div id="brRewardResult" class="mt-4 hidden"></div>
+      </div>`;
+  }
 
   window._brCards = cards;
   window._brIsVictory = isVictory;
@@ -1364,27 +1406,54 @@ async function _brSelectCard(idx) {
   if (!cards) return;
 
   const chosen = cards[idx];
+  const isVictory = window._brIsVictory;
 
-  // 카드 뒤집기 사운드 + 애니메이션
   if (typeof _btlSound === 'function') _btlSound('cardFlip');
-  for (let i = 0; i < 3; i++) {
-    const el = document.getElementById('brCard' + i);
-    if (!el) continue;
-    const back = el.querySelector('.br-card-back');
-    const front = el.querySelector('.br-card-front');
 
-    if (i === idx) {
-      // 선택한 카드: 뒤집어서 front 표시 + 확대 + 더 이상 hover/click 안되게
-      el.classList.add('br-card-chosen');
-      if (back) back.style.display = 'none';
-      if (front) { front.style.backfaceVisibility = 'visible'; front.style.transform = 'none'; }
-    } else {
-      // 미선택 카드: 약간 후에 뒤집어서 front 표시 (흐리게)
-      el.classList.add('br-card-unchosen');
-      setTimeout(() => {
+  if (isVictory) {
+    // ── 승리: 탐험 카드 방식 ──
+    for (let i = 0; i < 3; i++) {
+      const el = document.getElementById('brCard' + i);
+      if (!el) continue;
+
+      if (i === idx) {
+        // 선택 카드: front 삽입 + chosen 스타일
+        el.innerHTML = _brBuildVictoryFront(cards[i], true);
+        el.className = 'btl-reward-card btl-card-disabled btl-card-chosen';
+      } else {
+        // 미선택 카드: 딜레이 후 front 삽입 + unchosen
+        el.classList.add('btl-card-disabled');
+        (function(j) {
+          setTimeout(function() {
+            if (typeof _btlSound === 'function') _btlSound('cardFlip');
+            var oel = document.getElementById('brCard' + j);
+            if (oel) {
+              oel.innerHTML = _brBuildVictoryFront(cards[j], false);
+              oel.className = 'btl-reward-card btl-card-disabled btl-card-unchosen';
+            }
+          }, j < idx ? j * 150 : (j - 1) * 150);
+        })(i);
+      }
+    }
+  } else {
+    // ── 패배: 리본 카드 방식 ──
+    for (let i = 0; i < 3; i++) {
+      const el = document.getElementById('brCard' + i);
+      if (!el) continue;
+      const back = el.querySelector('.br-card-back');
+      const front = el.querySelector('.br-card-front');
+
+      if (i === idx) {
+        el.classList.add('br-card-chosen');
         if (back) back.style.display = 'none';
         if (front) { front.style.backfaceVisibility = 'visible'; front.style.transform = 'none'; }
-      }, 400);
+      } else {
+        el.classList.add('br-card-unchosen');
+        setTimeout(() => {
+          if (back) back.style.display = 'none';
+          if (front) { front.style.backfaceVisibility = 'visible'; front.style.transform = 'none'; }
+        }, 400);
+      }
     }
   }
 
@@ -1400,8 +1469,21 @@ async function _brSelectCard(idx) {
     `;
   }
 
-  window._brCards = null; // 중복 클릭 방지
+  window._brCards = null;
   window._brChosenCard = chosen;
+}
+
+// 승리 카드 front HTML 빌더 (탐험 카드 디자인)
+function _brBuildVictoryFront(r, chosen) {
+  const gradeClass = 'btl-grade-' + r.grade.toLowerCase();
+  const frontClass = chosen ? 'btl-card-front-chosen' : 'btl-card-front-unchosen';
+  const animClass = chosen ? 'btl-chosen-front' : 'btl-unchosen-front';
+  const rewardText = (r.item ? r.item.icon + ' ' + r.item.name + '<br>' : '') + '🌰 ' + r.acorns + '개';
+  return '<div class="btl-card-front ' + frontClass + ' ' + gradeClass + ' ' + animClass + '">' +
+    '<div class="btl-card-grade">' + r.grade + '등급</div>' +
+    '<div class="btl-card-reward-icon">' + (r.item ? r.item.icon : '🌰') + '</div>' +
+    '<div class="btl-card-reward-txt">' + rewardText + '</div>' +
+  '</div>';
 }
 
 async function _brClaimReward(idx) {
@@ -1481,6 +1563,7 @@ async function _brFinish() {
   window._brDmgData = null;
   window._brSpMax = null;
   window._brBossRewardWeights = null;
+  window._brEndSoundPlayed = false;
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
   renderBossRaid();
 }
