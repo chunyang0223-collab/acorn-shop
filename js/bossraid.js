@@ -1112,7 +1112,7 @@ async function _brRenderResult(container, raid) {
 
   if (!isVictory) {
     resultEmoji = '💀'; resultTitle = '패배...'; resultColor = '#ef4444';
-    resultDesc = '보스에게 패배했어요. 위로 보상 카드를 선택하세요!';
+    resultDesc = '';
 
     // 패배 보상이 비활성이면 카드 없이 종료
     if (!_brConfig.defeat_reward_enabled) {
@@ -1127,10 +1127,17 @@ async function _brRenderResult(container, raid) {
       if (!_brWeeklyDone) {
         _brWeeklyDone = true;
         await _brIncrementWeekly();
-        await sb.from('boss_raids').update({
-          [isHost ? 'host_rewarded' : 'guest_rewarded']: true,
-          status: 'finished'
-        }).eq('id', raid.id);
+        const _isBotMode = raid.host_id === raid.guest_id;
+        if (_isBotMode) {
+          await sb.from('boss_raids').update({
+            host_rewarded: true, guest_rewarded: true, status: 'finished'
+          }).eq('id', raid.id);
+        } else {
+          await sb.from('boss_raids').update({
+            [isHost ? 'host_rewarded' : 'guest_rewarded']: true,
+            status: 'finished'
+          }).eq('id', raid.id);
+        }
       }
       return;
     }
@@ -1155,13 +1162,13 @@ async function _brRenderResult(container, raid) {
     <div class="clay-card p-6 text-center">
       <div class="text-5xl mb-3">${resultEmoji}</div>
       <h2 class="text-xl font-black mb-2" style="color:${resultColor}">${resultTitle}</h2>
-      <p class="text-sm text-gray-400 font-semibold mb-4">${resultDesc}</p>
+      ${resultDesc ? `<p class="text-sm text-gray-400 font-semibold mb-4">${resultDesc}</p>` : '<div class="mb-3"></div>'}
       <div class="br-card-row">
         ${cards.map((c, i) => `
           <div class="br-reward-card" id="brCard${i}" onclick="_brSelectCard(${i})">
             <div class="br-card-back">${isVictory ? '🎁' : '🎀'}</div>
             <div class="br-card-front br-grade-${(c.grade || 'D').toLowerCase()}">
-              <p class="text-lg font-black">${c.grade || '위로'}${c.grade ? '등급' : ' 보상'}</p>
+              <p class="text-lg font-black">${c.grade ? c.grade + '등급' : ''}</p>
               ${c.item ? `<p class="text-sm">${c.item.icon} ${c.item.name}</p>` : ''}
               <p class="text-sm font-bold text-amber-500">🌰 ${c.acorns}</p>
             </div>
@@ -1235,7 +1242,9 @@ async function _brSelectCard(idx) {
     if (i === idx) {
       el.classList.add('br-card-chosen');
     } else {
+      // 나머지 카드도 뒤집어서 내용 보여주기 (약간 지연)
       el.classList.add('br-card-unchosen');
+      setTimeout(() => el.classList.add('br-card-reveal'), 300);
     }
   }
 
@@ -1247,7 +1256,7 @@ async function _brSelectCard(idx) {
     resultEl.innerHTML = `
       <p class="text-lg font-black mb-2" style="color:#fbbf24">${gradeText}</p>
       <p class="text-sm font-bold">${chosen.item ? chosen.item.icon + ' ' + chosen.item.name + ' + ' : ''}🌰 ${chosen.acorns}개</p>
-      <button class="btn btn-primary px-8 py-3 mt-4" onclick="_brClaimReward(${idx})">보상 수령</button>
+      <button class="btn btn-primary px-10 py-4 mt-4 text-base font-black" onclick="_brClaimReward(${idx})">보상 수령</button>
     `;
   }
 
@@ -1293,16 +1302,23 @@ async function _brClaimReward(idx) {
     await _brIncrementWeekly();
   }
 
-  // 보상 수령 완료 표시
-  await sb.from('boss_raids').update({
-    [isHost ? 'host_rewarded' : 'guest_rewarded']: true
-  }).eq('id', _brState.id);
+  // 보상 수령 완료 표시 (봇 모드면 양쪽 다 처리)
+  const isBotMode = _brState.host_id === _brState.guest_id;
+  if (isBotMode) {
+    await sb.from('boss_raids').update({
+      host_rewarded: true, guest_rewarded: true, status: 'finished'
+    }).eq('id', _brState.id);
+  } else {
+    await sb.from('boss_raids').update({
+      [isHost ? 'host_rewarded' : 'guest_rewarded']: true
+    }).eq('id', _brState.id);
 
-  // 양쪽 다 보상 수령했으면 finished
-  const { data: latest } = await sb.from('boss_raids')
-    .select('host_rewarded, guest_rewarded').eq('id', _brState.id).single();
-  if (latest && latest.host_rewarded && latest.guest_rewarded) {
-    await sb.from('boss_raids').update({ status: 'finished' }).eq('id', _brState.id);
+    // 양쪽 다 보상 수령했으면 finished
+    const { data: latest } = await sb.from('boss_raids')
+      .select('host_rewarded, guest_rewarded').eq('id', _brState.id).single();
+    if (latest && latest.host_rewarded && latest.guest_rewarded) {
+      await sb.from('boss_raids').update({ status: 'finished' }).eq('id', _brState.id);
+    }
   }
 
   // 도토리 표시 갱신
