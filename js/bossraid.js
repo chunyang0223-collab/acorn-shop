@@ -32,6 +32,14 @@ var _brConfig = {
   reward_C: { acorns: [8, 15], itemChance: 0.3, items: ['🍄 버섯', '🌿 풀잎'] },
   reward_B: { acorns: [15, 30], itemChance: 0.6, items: ['🍎 사과', '🔮 마석', '🪵 나무'] },
   reward_A: { acorns: [30, 60], itemChance: 0.9, items: ['💎 보석', '⚗️ 비약', '🗡️ 단검'] },
+  // 필살기
+  ultimate_uses: 1,       // 다람쥐당 필살기 사용 횟수
+  ultimate_mult: 2.0,     // 스킬 데미지 대비 배율
+  // 패배 보상
+  defeat_reward_enabled: false,
+  defeat_acorns: [2, 5],
+  defeat_itemChance: 0.1,
+  defeat_items: [],
 };
 
 // ── 상태 ──
@@ -40,6 +48,7 @@ var _brSub = null;     // Realtime 구독
 var _brReplayIdx = 0;  // 재생 인덱스
 var _brReplayTimer = null;
 var _brWeeklyDone = false; // 주간 횟수 중복 차감 방지 플래그
+var _brLobbySeq = 0;      // 로비 렌더 race-condition 방지용 시퀀스
 
 // ── 설정 로드 ──
 async function _brLoadConfig() {
@@ -314,6 +323,8 @@ function _brOnStateChange(raid) {
 //  로비 UI
 // ══════════════════════════════════════════════
 async function _brRenderLobby(container, raid) {
+  const seq = ++_brLobbySeq; // race-condition 방지
+
   const isHost = raid.host_id === myProfile.id;
   const isGuest = raid.guest_id === myProfile.id;
 
@@ -325,11 +336,15 @@ async function _brRenderLobby(container, raid) {
     otherUser = data;
   }
 
+  if (seq !== _brLobbySeq) return; // 더 새로운 호출이 있으면 이전 것 폐기
+
   // 내 다람쥐 목록 로드 (탐험형만 출전 가능)
   const { data: rawSquirrels } = await sb.from('squirrels')
     .select('*')
     .eq('user_id', myProfile.id)
     .eq('status', 'explorer');
+
+  if (seq !== _brLobbySeq) return; // 더 새로운 호출이 있으면 이전 것 폐기
 
   // 등급 높은 순 정렬
   const _brGradeRank = { legend: 5, unique: 4, epic: 3, rare: 2, normal: 1 };
@@ -513,6 +528,7 @@ async function _brSimulateBattle(raid) {
   }
 
   // 파티 구성 (stats가 없을 경우 기본값)
+  const ultiMax = _brConfig.ultimate_uses || 1;
   const party = squirrels.map(sq => {
     const stats = sq.stats || { hp: 50, atk: 10, def: 5 };
     return {
@@ -524,7 +540,8 @@ async function _brSimulateBattle(raid) {
       maxHp: stats.hp || 50,
       atk: stats.atk || 10,
       def: stats.def || 5,
-      alive: true
+      alive: true,
+      ultiLeft: ultiMax  // 필살기 잔여 횟수
     };
   });
 
@@ -543,11 +560,13 @@ async function _brSimulateBattle(raid) {
     def: bossStats.def
   };
 
+  const ultiMult = _brConfig.ultimate_mult || 2.0;
+
   // 전투 로그 생성
   const log = [];
-  log.push({ type: 'init', boss: {...boss}, party: party.map(p => ({...p})), sp: sp });
+  log.push({ type: 'init', boss: {...boss}, party: party.map(p => ({...p})), sp: sp, ultiMax: ultiMax });
   log.push({ type: 'msg', text: `🐉 ${boss.name}(Lv.${boss.lv})이(가) 나타났다!`, cls: 'em' });
-  log.push({ type: 'msg', text: `✨ 스킬 포인트: ${sp}회 사용 가능`, cls: '' });
+  log.push({ type: 'msg', text: `✨ 스킬 포인트: ${sp}회 | 💥 필살기: 다람쥐당 ${ultiMax}회`, cls: '' });
 
   let turnCount = 0;
   const maxTurns = 80;
@@ -559,17 +578,29 @@ async function _brSimulateBattle(raid) {
     for (const sq of party) {
       if (!sq.alive || boss.hp <= 0) continue;
 
-      // 스킬 or 일반공격 결정 (스킬 포인트 있으면 40% 확률로 스킬 사용)
-      const useSkill = spLeft > 0 && Math.random() < 0.4;
+      // 행동 결정: 필살기 > 스킬 > 일반공격
+      // 필살기: 잔여 횟수 있고 25% 확률 (보스 HP가 40% 이하면 50%)
+      const bossHpRatio = boss.hp / boss.maxHp;
+      const useUlti = sq.ultiLeft > 0 && Math.random() < (bossHpRatio < 0.4 ? 0.5 : 0.25);
+      const useSkill = !useUlti && spLeft > 0 && Math.random() < 0.4;
       let dmg;
 
-      if (useSkill) {
+      if (useUlti) {
+        sq.ultiLeft--;
+        dmg = Math.floor(sq.atk * _brConfig.skill_multiplier * ultiMult + _brRand(-_brConfig.skill_swing * 2, _brConfig.skill_swing * 2));
+        dmg = Math.max(1, dmg);
+        log.push({
+          type: 'ultimate', sqId: sq.id, sqName: sq.name, dmg: dmg,
+          text: `💥 ${sq.name}의 필살기! ${dmg} 데미지!`, cls: 'ultimate',
+          ultiLeft: sq.ultiLeft
+        });
+      } else if (useSkill) {
         spLeft--;
         dmg = Math.floor(sq.atk * _brConfig.skill_multiplier + _brRand(-_brConfig.skill_swing, _brConfig.skill_swing));
         dmg = Math.max(1, dmg);
         log.push({
           type: 'skill', sqId: sq.id, sqName: sq.name, dmg: dmg,
-          text: `✨ ${sq.name}의 필살기! ${dmg} 데미지!`, cls: 'skill',
+          text: `✨ ${sq.name}의 스킬! ${dmg} 데미지!`, cls: 'skill',
           spLeft: spLeft
         });
       } else {
@@ -752,6 +783,9 @@ function _brStartReplay(log, partyInit) {
       if (typeof _btlSound === 'function') _btlSound(entry.bigHit ? 'bigHit' : 'attack');
     } else if (entry.type === 'skill') {
       if (typeof _btlSound === 'function') _btlSound('skill');
+    } else if (entry.type === 'ultimate') {
+      if (typeof _btlSound === 'function') _btlSound('skill');
+      if (typeof _btlSound === 'function') setTimeout(() => _btlSound('bigHit'), 150);
     } else if (entry.type === 'boss_attack') {
       if (typeof _btlSound === 'function') _btlSound('hit');
     } else if (entry.type === 'result') {
@@ -774,14 +808,18 @@ function _brStartReplay(log, partyInit) {
       }
     }
 
-    // 공격/스킬 시 공격자 하이라이트
-    if (entry.type === 'attack' || entry.type === 'skill') {
+    // 공격/스킬/필살기 시 공격자 하이라이트
+    if (entry.type === 'attack' || entry.type === 'skill' || entry.type === 'ultimate') {
       const sqIdx = partyInit.findIndex(p => p.id === entry.sqId);
       if (sqIdx >= 0) {
         const card = document.getElementById('brPc' + sqIdx);
         if (card) {
           card.classList.add('br-attacking');
-          setTimeout(() => card.classList.remove('br-attacking'), 300);
+          if (entry.type === 'ultimate') card.classList.add('br-ultimate-glow');
+          setTimeout(() => {
+            card.classList.remove('br-attacking');
+            card.classList.remove('br-ultimate-glow');
+          }, entry.type === 'ultimate' ? 500 : 300);
         }
       }
       // SP 업데이트
@@ -809,7 +847,6 @@ function _brStartReplay(log, partyInit) {
         // 사망 처리
         if (!entry.targetAlive) {
           if (card) card.classList.add('br-dead');
-          if (typeof _btlSound === 'function') _btlSound('defeat');
         }
       }
     }
@@ -854,18 +891,66 @@ async function _brRenderResult(container, raid) {
   }
 
   if (!isVictory) {
-    // 패배 → 보상 없이 종료 (중복 차감 방지)
+    // 패배 보상 여부 확인
+    const defeatReward = _brConfig.defeat_reward_enabled;
+    let defeatAcorns = 0;
+    let defeatItem = null;
+    if (defeatReward) {
+      const dAcMin = (_brConfig.defeat_acorns || [2, 5])[0] || 0;
+      const dAcMax = (_brConfig.defeat_acorns || [2, 5])[1] || 0;
+      defeatAcorns = _brRand(dAcMin, dAcMax);
+      const dItemCh = _brConfig.defeat_itemChance || 0;
+      const dItems = _brConfig.defeat_items || [];
+      if (Math.random() < dItemCh && dItems.length > 0) {
+        const raw = dItems[Math.floor(Math.random() * dItems.length)];
+        if (typeof raw === 'object' && raw.name) {
+          defeatItem = { icon: raw.icon || '🎁', name: raw.name };
+        } else {
+          const parts = (raw + '').split(' ');
+          defeatItem = { icon: parts[0], name: parts.slice(1).join(' ') };
+        }
+      }
+    }
+
+    const defeatRewardText = defeatReward
+      ? `<p class="text-sm font-bold text-amber-400 mt-2">위로 보상: 🌰 ${defeatAcorns}개${defeatItem ? ' + ' + defeatItem.icon + ' ' + defeatItem.name : ''}</p>`
+      : '';
+
     container.innerHTML = `
       <div class="clay-card p-6 text-center">
         <div class="text-5xl mb-3">💀</div>
         <h2 class="text-xl font-black mb-2" style="color:#ef4444">패배...</h2>
-        <p class="text-sm text-gray-400 font-semibold mb-4">보스에게 패배했어요. 다음에 다시 도전하세요!</p>
-        <button class="btn btn-primary px-8 py-3" onclick="_brFinish()">돌아가기</button>
+        <p class="text-sm text-gray-400 font-semibold mb-2">보스에게 패배했어요. 다음에 다시 도전하세요!</p>
+        ${defeatRewardText}
+        <button class="btn btn-primary px-8 py-3 mt-4" onclick="_brFinish()">돌아가기</button>
       </div>`;
-    // 패배도 횟수 차감 (중복 방지 플래그)
+
+    // 패배 처리 (중복 방지 플래그)
     if (!_brWeeklyDone) {
       _brWeeklyDone = true;
       await _brIncrementWeekly();
+
+      // 패배 보상 지급
+      if (defeatReward && defeatAcorns > 0) {
+        await sb.rpc('adjust_acorns', {
+          p_user_id: myProfile.id,
+          p_amount: defeatAcorns,
+          p_reason: '보스레이드 패배 위로 보상'
+        });
+        if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+      }
+      if (defeatReward && defeatItem) {
+        const { data: product } = await sb.from('products')
+          .select('id').eq('name', defeatItem.name).maybeSingle();
+        await sb.from('inventory').insert({
+          user_id: myProfile.id,
+          product_id: product?.id || null,
+          product_snapshot: { name: defeatItem.name, icon: defeatItem.icon, from: 'boss_raid_defeat' },
+          from_gacha: false,
+          status: 'held'
+        });
+      }
+
       await sb.from('boss_raids').update({
         [isHost ? 'host_rewarded' : 'guest_rewarded']: true,
         status: 'finished'
@@ -1256,6 +1341,47 @@ async function brAdminOpenSettings() {
         </div>`;
       }).join('')}
 
+      <!-- 필살기 설정 -->
+      <div style="padding:10px;border-radius:10px;background:rgba(0,0,0,0.03);margin-bottom:8px">
+        <p style="font-size:11px;font-weight:900;color:var(--text-secondary,#6b7280);margin-bottom:6px">💥 필살기 설정</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div>
+            <label style="font-size:10px;color:#9ca3af">다람쥐당 횟수</label>
+            <input type="number" id="brAdm_ultiUses" value="${c.ultimate_uses || 1}" min="0" max="10" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+          </div>
+          <div>
+            <label style="font-size:10px;color:#9ca3af">데미지 배율 (스킬 x)</label>
+            <input type="number" id="brAdm_ultiMult" value="${c.ultimate_mult || 2.0}" min="1" max="10" step="0.1" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+          </div>
+        </div>
+      </div>
+
+      <!-- 패배 보상 -->
+      <div style="padding:10px;border-radius:10px;background:rgba(0,0,0,0.03);margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <p style="font-size:11px;font-weight:900;color:var(--text-secondary,#6b7280)">💀 패배 보상</p>
+          <button id="brAdm_defeatEnabled" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;border:none;cursor:pointer;background:${c.defeat_reward_enabled ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};color:${c.defeat_reward_enabled ? '#22c55e' : '#ef4444'}" onclick="this.dataset.val=this.dataset.val==='true'?'false':'true';this.textContent=this.dataset.val==='true'?'ON':'OFF';this.style.background=this.dataset.val==='true'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)';this.style.color=this.dataset.val==='true'?'#22c55e':'#ef4444'" data-val="${!!c.defeat_reward_enabled}">${c.defeat_reward_enabled ? 'ON' : 'OFF'}</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div>
+            <label style="font-size:10px;color:#9ca3af">도토리 최소</label>
+            <input type="number" id="brAdm_defAcMin" value="${(c.defeat_acorns || [2, 5])[0]}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+          </div>
+          <div>
+            <label style="font-size:10px;color:#9ca3af">도토리 최대</label>
+            <input type="number" id="brAdm_defAcMax" value="${(c.defeat_acorns || [2, 5])[1]}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <label style="font-size:10px;color:#9ca3af">아이템 확률 (%)</label>
+          <input type="number" id="brAdm_defItemCh" value="${Math.round((c.defeat_itemChance || 0) * 100)}" min="0" max="100" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+        </div>
+        <div>
+          <label style="font-size:10px;color:#9ca3af">드랍 아이템 (클릭으로 선택)</label>
+          <div id="brAdm_defItems" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+      </div>
+
       <button onclick="brAdminSaveSettings()" style="width:100%;margin-top:8px;padding:12px;border-radius:10px;border:none;background:var(--primary,#8b5cf6);color:#fff;font-size:14px;font-weight:900;cursor:pointer">💾 저장</button>
     </div>
   `);
@@ -1267,6 +1393,7 @@ async function brAdminOpenSettings() {
   ['C', 'B', 'A'].forEach(function(g) {
     _brRenderItemChips('brAdm_r' + g + '_items', _brConfig['reward_' + g].items || []);
   });
+  _brRenderItemChips('brAdm_defItems', _brConfig.defeat_items || []);
 }
 
 async function brAdminSaveSettings() {
@@ -1279,6 +1406,14 @@ async function brAdminSaveSettings() {
     sp_min: +el('brAdm_spMin').value,
     sp_max: +el('brAdm_spMax').value,
     boss_stat_mult: +el('brAdm_bossMult').value,
+    // 필살기
+    ultimate_uses: +el('brAdm_ultiUses').value || 1,
+    ultimate_mult: +el('brAdm_ultiMult').value || 2.0,
+    // 패배 보상
+    defeat_reward_enabled: el('brAdm_defeatEnabled').dataset.val === 'true',
+    defeat_acorns: [+(el('brAdm_defAcMin')?.value) || 0, +(el('brAdm_defAcMax')?.value) || 0],
+    defeat_itemChance: (+(el('brAdm_defItemCh')?.value) || 0) / 100,
+    defeat_items: _brGetSelectedItems('brAdm_defItems'),
     reward_weights: {
       C: +el('brAdm_wC').value,
       B: +el('brAdm_wB').value,
