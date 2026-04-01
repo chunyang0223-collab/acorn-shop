@@ -840,18 +840,31 @@ function _brRenderBattle(container, raid) {
   const party = initEntry.party;
   const ultiMax = initEntry.ultiMax || 1;
 
+  // 딜 미터기 초기화 데이터
+  window._brDmgData = {};
+  party.forEach(sq => { window._brDmgData[sq.id] = { name: sq.name, ownerName: sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'), owner: sq.owner, dmg: 0 }; });
+
   container.innerHTML = `
     <div class="br-battle-wrap">
       <!-- 보스 영역 -->
       <div class="br-boss-area">
         <div class="br-boss-emoji" id="brBossEmoji">${boss.emoji}</div>
         <div class="br-boss-info">
-          <p class="text-sm font-black" style="color:#f8fafc">${boss.name} <span class="text-xs" style="color:#94a3b8">Lv.${boss.lv}</span></p>
+          <p style="font-size:13px;font-weight:900;color:#f8fafc">${boss.name} <span style="font-size:11px;color:#94a3b8">Lv.${boss.lv}</span></p>
           <div class="br-hp-track">
             <div class="br-hp-bar br-hp-boss" id="brBossHpBar" style="width:100%"></div>
           </div>
-          <p class="text-xs" style="color:#94a3b8" id="brBossHpText">${boss.hp} / ${boss.maxHp}</p>
+          <p style="font-size:10px;color:#94a3b8" id="brBossHpText">${boss.hp} / ${boss.maxHp}</p>
         </div>
+      </div>
+
+      <!-- 팀 SP 바 (공용) -->
+      <div class="br-team-sp">
+        <span class="br-team-sp-label">✨ 팀 SP</span>
+        <div class="br-sp-gauge-track">
+          <div class="br-sp-gauge-fill" id="brSpGauge" style="width:100%"></div>
+        </div>
+        <span class="br-sp-count" id="brSpText">${initEntry.sp} / ${initEntry.sp}</span>
       </div>
 
       <!-- 파티 -->
@@ -860,31 +873,46 @@ function _brRenderBattle(container, raid) {
           <div class="br-pc-card" id="brPc${i}">
             <div class="br-pc-owner" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">${_escHtml(sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'))}</div>
             <div class="br-pc-sprite-wrap">
-              <img src="images/squirrels/${sq.sprite}.png" class="br-pc-img" onerror="this.outerHTML='<div class=\\'text-2xl\\'>🐿️</div>'">
+              <img src="images/squirrels/${sq.sprite}.png" class="br-pc-img" onerror="this.outerHTML='<div style=\\'font-size:22px\\'>🐿️</div>'">
               <div class="br-action-badge" id="brBadge${i}"></div>
-              <div class="br-dmg-popup" id="brDmgPopup${i}"></div>
             </div>
-            <p class="text-xs font-black" style="color:#e2e8f0;margin:2px 0 0">${sq.name}</p>
-            <div class="br-hp-track br-hp-sm" style="margin:3px 0 2px">
+            <p style="font-size:10px;font-weight:900;color:#e2e8f0;margin:1px 0 0">${sq.name}</p>
+            <div class="br-hp-track br-hp-sm" style="margin:3px 4px 2px">
               <div class="br-hp-bar br-hp-ally" id="brPcHp${i}" style="width:100%"></div>
             </div>
             <div class="br-pc-hp-text" id="brPcHpText${i}">${sq.hp}/${sq.maxHp}</div>
-            <div class="br-pc-counters">
-              <span class="br-counter-sp" id="brPcSp${i}" title="SP (팀 공용)">✨${initEntry.sp}</span>
-              <span class="br-counter-ulti" id="brPcUlti${i}" title="필살기 잔여">💥${sq.ultiLeft || ultiMax}</span>
+            <div class="br-pc-ulti-wrap">
+              <span class="br-counter-ulti" id="brPcUlti${i}">💥 ${sq.ultiLeft || ultiMax}</span>
             </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- 딜 미터기 -->
+      <div class="br-dmg-meter" id="brDmgMeter">
+        <div class="br-dmg-meter-title">⚔️ 딜 기여도</div>
+        ${party.map(sq => `
+          <div class="br-dmg-row" id="brDmgRow_${sq.id}">
+            <div class="br-dmg-label" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">
+              <span class="br-dmg-owner">${_escHtml(sq.ownerName || '')}</span>
+              <span class="br-dmg-name">${sq.name}</span>
+            </div>
+            <div class="br-dmg-bar-track">
+              <div class="br-dmg-bar-fill ${sq.owner === 'host' ? 'br-dmg-host' : 'br-dmg-guest'}" id="brDmgBar_${sq.id}" style="width:0%">
+                <span id="brDmgVal_${sq.id}">0</span>
+              </div>
+            </div>
+            <div class="br-dmg-pct" id="brDmgPct_${sq.id}" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">0%</div>
           </div>
         `).join('')}
       </div>
 
       <!-- 로그 -->
       <div class="br-log-panel" id="brLogPanel"></div>
-
-      <!-- SP 요약 (하단) -->
-      <div class="text-center" style="margin-top:8px">
-        <span class="text-xs font-bold" style="color:#fbbf24" id="brSpText">✨ SP: ${initEntry.sp}</span>
-      </div>
     </div>`;
+
+  // SP 최대값 기억
+  window._brSpMax = initEntry.sp;
 
   // 재생 시작
   _brReplayIdx = 0;
@@ -997,14 +1025,22 @@ function _brStartReplay(log, partyInit) {
         _brShowDmgPopup('brBossEmoji', entry.dmg, entry.type);
       }
 
-      // SP 카운터 업데이트 (모든 카드)
-      if (entry.type === 'skill' && entry.spLeft !== undefined) {
-        const spEl = document.getElementById('brSpText');
-        if (spEl) spEl.textContent = '✨ SP: ' + entry.spLeft;
-        for (let si = 0; si < partyInit.length; si++) {
-          const spC = document.getElementById('brPcSp' + si);
-          if (spC) spC.textContent = '✨' + entry.spLeft;
+      // 딜 미터기 업데이트
+      if (entry.dmg && entry.sqId && window._brDmgData) {
+        const dd = window._brDmgData[entry.sqId];
+        if (dd) {
+          dd.dmg += entry.dmg;
+          _brUpdateDmgMeter();
         }
+      }
+
+      // 팀 SP 바 업데이트
+      if (entry.type === 'skill' && entry.spLeft !== undefined) {
+        const spMax = window._brSpMax || 1;
+        const spEl = document.getElementById('brSpText');
+        if (spEl) spEl.textContent = entry.spLeft + ' / ' + spMax;
+        const spGauge = document.getElementById('brSpGauge');
+        if (spGauge) spGauge.style.width = Math.max(0, entry.spLeft / spMax * 100) + '%';
       }
       // 필살기 카운터 업데이트
       if (entry.type === 'ultimate' && entry.ultiLeft !== undefined) {
@@ -1068,6 +1104,29 @@ function _brShowDmgPopup(parentId, dmg, type) {
   parent.style.position = 'relative';
   parent.appendChild(popup);
   setTimeout(() => popup.remove(), 900);
+}
+
+// ── 딜 미터기 갱신 ──
+function _brUpdateDmgMeter() {
+  const dd = window._brDmgData;
+  if (!dd) return;
+  const entries = Object.keys(dd).map(id => ({ id, ...dd[id] }));
+  const totalDmg = entries.reduce((s, e) => s + e.dmg, 0) || 1;
+  const maxDmg = Math.max(...entries.map(e => e.dmg), 1);
+
+  // 딜 높은 순 정렬
+  entries.sort((a, b) => b.dmg - a.dmg);
+
+  for (const e of entries) {
+    const pct = Math.round(e.dmg / totalDmg * 100);
+    const barW = Math.max(2, e.dmg / maxDmg * 100);
+    const bar = document.getElementById('brDmgBar_' + e.id);
+    const val = document.getElementById('brDmgVal_' + e.id);
+    const pctEl = document.getElementById('brDmgPct_' + e.id);
+    if (bar) bar.style.width = barW + '%';
+    if (val) val.textContent = e.dmg;
+    if (pctEl) pctEl.textContent = pct + '%';
+  }
 }
 
 function _brAddLog(text, cls) {
@@ -1346,6 +1405,8 @@ async function _brFinish() {
   window._brCards = null;
   window._brChosenCard = null;
   window._brIsVictory = null;
+  window._brDmgData = null;
+  window._brSpMax = null;
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
   renderBossRaid();
 }
