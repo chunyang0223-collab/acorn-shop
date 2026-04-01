@@ -6123,17 +6123,21 @@ input[type="checkbox"]:active,
   transform: rotateY(180deg); padding: 8px;
 }
 .br-card-chosen {
-  transform: rotateY(180deg) scale(1.1);
+  transform: scale(1.12);
   z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 0 0 2.5px #ffd700, 0 0 18px rgba(255,200,0,.45), 0 4px 12px rgba(0,0,0,.3);
+  animation: br-card-pop .35s ease;
+}
+@keyframes br-card-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(1.12); }
 }
 .br-card-unchosen {
-  opacity: 0.5; transform: scale(0.9);
+  opacity: 0.45; transform: scale(0.88);
   pointer-events: none;
-}
-.br-card-unchosen.br-card-reveal {
-  transform: rotateY(180deg) scale(0.85);
-  opacity: 0.45;
-  transition: transform .5s, opacity .3s;
+  transition: opacity .4s, transform .4s;
 }
 .br-grade-a { border-color: #fbbf24 !important; background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.05)) !important; }
 .br-grade-b { border-color: #a78bfa !important; background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(139,92,246,0.05)) !important; }
