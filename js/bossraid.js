@@ -103,17 +103,18 @@ async function _brGetWeeklyCount() {
     .select('raid_count')
     .eq('user_id', myProfile.id)
     .eq('week_start', weekStart)
-    .maybeSingle();
-  return data?.raid_count || 0;
+    .limit(1);
+  return (data && data.length > 0) ? (data[0].raid_count || 0) : 0;
 }
 
 async function _brIncrementWeekly() {
   const weekStart = _brGetWeekStart();
-  const { data: existing } = await sb.from('boss_raid_weekly')
+  const { data: rows } = await sb.from('boss_raid_weekly')
     .select('id, raid_count')
     .eq('user_id', myProfile.id)
     .eq('week_start', weekStart)
-    .maybeSingle();
+    .limit(1);
+  const existing = (rows && rows.length > 0) ? rows[0] : null;
   if (existing) {
     await sb.from('boss_raid_weekly').update({ raid_count: existing.raid_count + 1 }).eq('id', existing.id);
   } else {
@@ -145,13 +146,13 @@ async function renderBossRaid() {
   const remaining = Math.max(0, _brConfig.weekly_limit - weeklyCount);
 
   // 진행 중인 레이드 확인
-  const { data: activeRaid, error: activeErr } = await sb.from('boss_raids')
+  const { data: activeRaids, error: activeErr } = await sb.from('boss_raids')
     .select('*')
     .or(`host_id.eq.${myProfile.id},guest_id.eq.${myProfile.id}`)
     .in('status', ['waiting', 'selecting', 'ready', 'battling'])
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+  const activeRaid = activeRaids && activeRaids.length > 0 ? activeRaids[0] : null;
 
   // 테이블이 아직 없으면 안내 표시
   if (activeErr && activeErr.code === '42P01') {
@@ -303,9 +304,10 @@ async function _brCreateBotRoom(presetIdx) {
 
   toast('⏳', '봇과 함께 방을 만드는 중...');
 
-  // 봇 다람쥐 가짜 ID 생성
-  const botSq1Id = 'bot-sq-' + Date.now() + '-1';
-  const botSq2Id = 'bot-sq-' + Date.now() + '-2';
+  // 봇 다람쥐 가짜 UUID 생성 (DB UUID[] 컬럼 호환)
+  const _ts = Date.now().toString(16).padStart(12, '0');
+  const botSq1Id = 'b0700001-0000-4000-8000-' + _ts;
+  const botSq2Id = 'b0700002-0000-4000-8000-' + _ts;
 
   // 방 생성: guest=자기자신(RLS용), 봇 다람쥐 ID를 guest측에 세팅
   const { data, error } = await sb.from('boss_raids').insert({
@@ -1499,6 +1501,15 @@ async function brAdminOpenSettings() {
         </div>
       </div>
 
+      <!-- 횟수 리셋 -->
+      <div style="padding:10px;border-radius:10px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);margin-bottom:8px">
+        <p style="font-size:11px;font-weight:900;color:#ef4444;margin-bottom:6px">🔄 주간 참여횟수 리셋</p>
+        <div style="display:flex;gap:6px">
+          <button onclick="_brAdmResetWeeklyAll()" style="flex:1;padding:6px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:11px;font-weight:700;cursor:pointer">전체 리셋</button>
+          <button onclick="_brAdmResetWeeklySelf()" style="flex:1;padding:6px;border-radius:8px;border:none;background:rgba(239,68,68,0.15);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">내 횟수만 리셋</button>
+        </div>
+      </div>
+
       <button onclick="brAdminSaveSettings()" style="width:100%;margin-top:8px;padding:12px;border-radius:10px;border:none;background:var(--primary,#8b5cf6);color:#fff;font-size:14px;font-weight:900;cursor:pointer">💾 저장</button>
     </div>
   `);
@@ -1511,6 +1522,26 @@ async function brAdminOpenSettings() {
     _brRenderItemChips('brAdm_r' + g + '_items', _brConfig['reward_' + g].items || []);
   });
   _brRenderItemChips('brAdm_defItems', _brConfig.defeat_items || []);
+}
+
+async function _brAdmResetWeeklyAll() {
+  if (!confirm('모든 사용자의 이번 주 레이드 횟수를 리셋할까요?')) return;
+  const weekStart = _brGetWeekStart();
+  const { error } = await sb.from('boss_raid_weekly')
+    .update({ raid_count: 0 })
+    .eq('week_start', weekStart);
+  if (error) { toast('❌', '리셋 실패: ' + (error.message || '')); return; }
+  toast('✅', '전체 사용자 레이드 횟수가 리셋되었어요');
+}
+
+async function _brAdmResetWeeklySelf() {
+  const weekStart = _brGetWeekStart();
+  const { error } = await sb.from('boss_raid_weekly')
+    .update({ raid_count: 0 })
+    .eq('user_id', myProfile.id)
+    .eq('week_start', weekStart);
+  if (error) { toast('❌', '리셋 실패'); return; }
+  toast('✅', '내 레이드 횟수가 리셋되었어요');
 }
 
 async function brAdminSaveSettings() {
