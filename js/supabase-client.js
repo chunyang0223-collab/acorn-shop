@@ -141,6 +141,7 @@ const supabase = (() => {
         lte(col, val)  { _filters.push(col + '=lte.'  + encodeURIComponent(val)); return q; },
         gt(col, val)   { _filters.push(col + '=gt.'   + encodeURIComponent(val)); return q; },
         lt(col, val)   { _filters.push(col + '=lt.'   + encodeURIComponent(val)); return q; },
+        is(col, val)   { _filters.push(col + '=is.' + val); return q; },
         or(expr)       { _filters.push('or=(' + expr + ')'); return q; },
         order(col, opts){ _order = col + (opts?.ascending === false ? '.desc' : '.asc'); return q; },
         limit(n)       { _filters.push('limit=' + n); return q; },

@@ -87,6 +87,7 @@ async function renderBossRaid() {
   const container = document.getElementById('utab-bossraid');
   if (!container) return;
 
+  try {
   await _brLoadConfig();
 
   if (!_brConfig.enabled) {
@@ -103,13 +104,24 @@ async function renderBossRaid() {
   const remaining = Math.max(0, _brConfig.weekly_limit - weeklyCount);
 
   // 진행 중인 레이드 확인
-  const { data: activeRaid } = await sb.from('boss_raids')
+  const { data: activeRaid, error: activeErr } = await sb.from('boss_raids')
     .select('*')
     .or(`host_id.eq.${myProfile.id},guest_id.eq.${myProfile.id}`)
     .in('status', ['waiting', 'selecting', 'ready', 'battling'])
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  // 테이블이 아직 없으면 안내 표시
+  if (activeErr && activeErr.code === '42P01') {
+    container.innerHTML = `
+      <div class="clay-card p-6 text-center">
+        <div class="text-5xl mb-3">🐉</div>
+        <h2 class="text-xl font-black text-gray-800 mb-2">보스레이드</h2>
+        <p class="text-sm text-gray-400 font-semibold">DB 테이블 설정이 필요해요.<br>관리자에게 문의하세요.</p>
+      </div>`;
+    return;
+  }
 
   if (activeRaid) {
     _brState = activeRaid;
@@ -162,6 +174,16 @@ async function renderBossRaid() {
         <p class="text-sm text-gray-400 font-semibold">현재 대기 중인 방이 없어요</p>
       </div>`}
   `;
+
+  } catch (e) {
+    console.error('renderBossRaid error:', e);
+    container.innerHTML = `
+      <div class="clay-card p-6 text-center">
+        <div class="text-5xl mb-3">🐉</div>
+        <h2 class="text-xl font-black text-gray-800 mb-2">보스레이드</h2>
+        <p class="text-sm text-gray-400 font-semibold">불러오는 중 오류가 발생했어요.<br>DB 테이블 설정이 필요할 수 있어요.</p>
+      </div>`;
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -213,31 +235,45 @@ async function _brJoinRoom(raidId) {
 }
 
 // ══════════════════════════════════════════════
-//  Realtime 구독
+//  폴링 기반 동기화 (커스텀 클라이언트가 Realtime 미지원)
 // ══════════════════════════════════════════════
+var _brPollInterval = null;
+var _brPollRaidId = null;
+
 function _brSubscribe(raidId) {
   _brUnsubscribe();
-  _brSub = sb.channel('boss_raid_' + raidId)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'boss_raids',
-      filter: `id=eq.${raidId}`
-    }, (payload) => {
-      _brState = payload.new;
-      _brOnStateChange(payload.new);
-    })
-    .subscribe();
+  _brPollRaidId = raidId;
+  _brPollInterval = setInterval(() => _brPoll(raidId), 2000); // 2초 폴링
 }
 
 function _brUnsubscribe() {
-  if (_brSub) {
-    sb.removeChannel(_brSub);
-    _brSub = null;
+  if (_brPollInterval) {
+    clearInterval(_brPollInterval);
+    _brPollInterval = null;
   }
+  _brPollRaidId = null;
   if (_brReplayTimer) {
     clearInterval(_brReplayTimer);
     _brReplayTimer = null;
+  }
+}
+
+async function _brPoll(raidId) {
+  const { data } = await sb.from('boss_raids').select('*').eq('id', raidId).maybeSingle();
+  if (!data) return;
+
+  // 상태가 바뀌었을 때만 처리
+  const prevStatus = _brState?.status;
+  const prevLog = _brState?.battle_log?.length || 0;
+  _brState = data;
+
+  if (data.status !== prevStatus || (data.battle_log?.length || 0) !== prevLog) {
+    _brOnStateChange(data);
+  }
+
+  // 끝난 상태면 폴링 중지
+  if (data.status === 'finished' || data.status === 'cancelled') {
+    _brUnsubscribe();
   }
 }
 
