@@ -1106,93 +1106,62 @@ async function _brRenderResult(container, raid) {
     return;
   }
 
+  // ── 패배 / 승리 공통: 카드 뒤집기 보상 ──
+  let cards;
+  let resultEmoji, resultTitle, resultColor, resultDesc;
+
   if (!isVictory) {
-    // 패배 보상 여부 확인
-    const defeatReward = _brConfig.defeat_reward_enabled;
-    let defeatAcorns = 0;
-    let defeatItem = null;
-    if (defeatReward) {
-      const dAcMin = (_brConfig.defeat_acorns || [2, 5])[0] || 0;
-      const dAcMax = (_brConfig.defeat_acorns || [2, 5])[1] || 0;
-      defeatAcorns = _brRand(dAcMin, dAcMax);
-      const dItemCh = _brConfig.defeat_itemChance || 0;
-      const dItems = _brConfig.defeat_items || [];
-      if (Math.random() < dItemCh && dItems.length > 0) {
-        const raw = dItems[Math.floor(Math.random() * dItems.length)];
-        if (typeof raw === 'object' && raw.name) {
-          defeatItem = { icon: raw.icon || '🎁', name: raw.name };
-        } else {
-          const parts = (raw + '').split(' ');
-          defeatItem = { icon: parts[0], name: parts.slice(1).join(' ') };
-        }
+    resultEmoji = '💀'; resultTitle = '패배...'; resultColor = '#ef4444';
+    resultDesc = '보스에게 패배했어요. 위로 보상 카드를 선택하세요!';
+
+    // 패배 보상이 비활성이면 카드 없이 종료
+    if (!_brConfig.defeat_reward_enabled) {
+      container.innerHTML = `
+        <div class="clay-card p-6 text-center">
+          <div class="text-5xl mb-3">💀</div>
+          <h2 class="text-xl font-black mb-2" style="color:#ef4444">패배...</h2>
+          <p class="text-sm text-gray-400 font-semibold mb-2">보스에게 패배했어요. 다음에 다시 도전하세요!</p>
+          <button class="btn btn-primary px-8 py-3 mt-4" onclick="_brFinish()">돌아가기</button>
+        </div>`;
+      // 주간 횟수만 증가
+      if (!_brWeeklyDone) {
+        _brWeeklyDone = true;
+        await _brIncrementWeekly();
+        await sb.from('boss_raids').update({
+          [isHost ? 'host_rewarded' : 'guest_rewarded']: true,
+          status: 'finished'
+        }).eq('id', raid.id);
       }
+      return;
     }
 
-    const defeatRewardText = defeatReward
-      ? `<p class="text-sm font-bold text-amber-400 mt-2">위로 보상: 🌰 ${defeatAcorns}개${defeatItem ? ' + ' + defeatItem.icon + ' ' + defeatItem.name : ''}</p>`
-      : '';
-
-    container.innerHTML = `
-      <div class="clay-card p-6 text-center">
-        <div class="text-5xl mb-3">💀</div>
-        <h2 class="text-xl font-black mb-2" style="color:#ef4444">패배...</h2>
-        <p class="text-sm text-gray-400 font-semibold mb-2">보스에게 패배했어요. 다음에 다시 도전하세요!</p>
-        ${defeatRewardText}
-        <button class="btn btn-primary px-8 py-3 mt-4" onclick="_brFinish()">돌아가기</button>
-      </div>`;
-
-    // 패배 처리 (중복 방지 플래그)
-    if (!_brWeeklyDone) {
-      _brWeeklyDone = true;
-      await _brIncrementWeekly();
-
-      // 패배 보상 지급
-      if (defeatReward && defeatAcorns > 0) {
-        await sb.rpc('adjust_acorns', {
-          p_user_id: myProfile.id,
-          p_amount: defeatAcorns,
-          p_reason: '보스레이드 패배 위로 보상'
-        });
-        if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
-      }
-      if (defeatReward && defeatItem) {
-        const { data: product } = await sb.from('products')
-          .select('id').eq('name', defeatItem.name).maybeSingle();
-        await sb.from('inventory').insert({
-          user_id: myProfile.id,
-          product_id: product?.id || null,
-          product_snapshot: { name: defeatItem.name, icon: defeatItem.icon, from: 'boss_raid_defeat' },
-          from_gacha: false,
-          status: 'held'
-        });
-      }
-
-      await sb.from('boss_raids').update({
-        [isHost ? 'host_rewarded' : 'guest_rewarded']: true,
-        status: 'finished'
-      }).eq('id', raid.id);
-    }
-    return;
+    // 패배 보상 카드 생성 (패배 전용 보상 풀)
+    cards = [
+      _brGenDefeatReward(),
+      _brGenDefeatReward(),
+      _brGenDefeatReward()
+    ];
+  } else {
+    resultEmoji = '🎉'; resultTitle = '보스 격파!'; resultColor = '#22c55e';
+    resultDesc = '카드를 선택해서 보상을 받으세요!';
+    cards = [
+      _brGenReward(_brPickGrade()),
+      _brGenReward(_brPickGrade()),
+      _brGenReward(_brPickGrade())
+    ];
   }
-
-  // 승리 → 카드 뒤집기 보상
-  const cards = [
-    _brGenReward(_brPickGrade()),
-    _brGenReward(_brPickGrade()),
-    _brGenReward(_brPickGrade())
-  ];
 
   container.innerHTML = `
     <div class="clay-card p-6 text-center">
-      <div class="text-5xl mb-3">🎉</div>
-      <h2 class="text-xl font-black mb-2" style="color:#22c55e">보스 격파!</h2>
-      <p class="text-sm text-gray-400 font-semibold mb-4">카드를 선택해서 보상을 받으세요!</p>
+      <div class="text-5xl mb-3">${resultEmoji}</div>
+      <h2 class="text-xl font-black mb-2" style="color:${resultColor}">${resultTitle}</h2>
+      <p class="text-sm text-gray-400 font-semibold mb-4">${resultDesc}</p>
       <div class="br-card-row">
         ${cards.map((c, i) => `
           <div class="br-reward-card" id="brCard${i}" onclick="_brSelectCard(${i})">
-            <div class="br-card-back">🎁</div>
-            <div class="br-card-front br-grade-${c.grade.toLowerCase()}">
-              <p class="text-lg font-black">${c.grade}등급</p>
+            <div class="br-card-back">${isVictory ? '🎁' : '🎀'}</div>
+            <div class="br-card-front br-grade-${(c.grade || 'D').toLowerCase()}">
+              <p class="text-lg font-black">${c.grade || '위로'}${c.grade ? '등급' : ' 보상'}</p>
               ${c.item ? `<p class="text-sm">${c.item.icon} ${c.item.name}</p>` : ''}
               <p class="text-sm font-bold text-amber-500">🌰 ${c.acorns}</p>
             </div>
@@ -1202,8 +1171,28 @@ async function _brRenderResult(container, raid) {
       <div id="brRewardResult" class="mt-4 hidden"></div>
     </div>`;
 
-  // 카드 데이터를 임시 저장
   window._brCards = cards;
+  window._brIsVictory = isVictory;
+}
+
+// ── 패배 전용 보상 생성 ──
+function _brGenDefeatReward() {
+  const dAcMin = (_brConfig.defeat_acorns || [2, 5])[0] || 0;
+  const dAcMax = (_brConfig.defeat_acorns || [2, 5])[1] || 0;
+  const acorns = _brRand(dAcMin, dAcMax);
+  let item = null;
+  const dItemCh = _brConfig.defeat_itemChance || 0;
+  const dItems = _brConfig.defeat_items || [];
+  if (Math.random() < dItemCh && dItems.length > 0) {
+    const raw = dItems[Math.floor(Math.random() * dItems.length)];
+    if (typeof raw === 'object' && raw.name) {
+      item = { icon: raw.icon || '🎁', name: raw.name };
+    } else {
+      const parts = (raw + '').split(' ');
+      item = { icon: parts[0], name: parts.slice(1).join(' ') };
+    }
+  }
+  return { grade: null, acorns, item };
 }
 
 function _brPickGrade() {
@@ -1254,8 +1243,9 @@ async function _brSelectCard(idx) {
   const resultEl = document.getElementById('brRewardResult');
   if (resultEl) {
     resultEl.classList.remove('hidden');
+    const gradeText = chosen.grade ? `${chosen.grade}등급 획득!` : '위로 보상!';
     resultEl.innerHTML = `
-      <p class="text-lg font-black mb-2" style="color:#fbbf24">${chosen.grade}등급 획득!</p>
+      <p class="text-lg font-black mb-2" style="color:#fbbf24">${gradeText}</p>
       <p class="text-sm font-bold">${chosen.item ? chosen.item.icon + ' ' + chosen.item.name + ' + ' : ''}🌰 ${chosen.acorns}개</p>
       <button class="btn btn-primary px-8 py-3 mt-4" onclick="_brClaimReward(${idx})">보상 수령</button>
     `;
@@ -1268,26 +1258,30 @@ async function _brSelectCard(idx) {
 async function _brClaimReward(idx) {
   const chosen = window._brChosenCard;
   if (!chosen || !_brState) return;
+  window._brChosenCard = null; // 중복 클릭 방지
 
   const isHost = _brState.host_id === myProfile.id;
+  const wasVictory = window._brIsVictory;
+  const rewardSource = wasVictory ? 'boss_raid' : 'boss_raid_defeat';
 
   // 도토리 지급
-  await sb.rpc('adjust_acorns', {
-    p_user_id: myProfile.id,
-    p_amount: chosen.acorns,
-    p_reason: '보스레이드 보상'
-  });
+  if (chosen.acorns > 0) {
+    await sb.rpc('adjust_acorns', {
+      p_user_id: myProfile.id,
+      p_amount: chosen.acorns,
+      p_reason: wasVictory ? '보스레이드 보상' : '보스레이드 패배 위로 보상'
+    });
+  }
 
   // 아이템 지급
   if (chosen.item) {
-    // products에서 이름으로 검색, 없으면 스냅샷으로 저장
     const { data: product } = await sb.from('products')
       .select('id').eq('name', chosen.item.name).maybeSingle();
 
     await sb.from('inventory').insert({
       user_id: myProfile.id,
       product_id: product?.id || null,
-      product_snapshot: { name: chosen.item.name, icon: chosen.item.icon, from: 'boss_raid' },
+      product_snapshot: { name: chosen.item.name, icon: chosen.item.icon, from: rewardSource },
       from_gacha: false,
       status: 'held'
     });
@@ -1307,12 +1301,12 @@ async function _brClaimReward(idx) {
   // 양쪽 다 보상 수령했으면 finished
   const { data: latest } = await sb.from('boss_raids')
     .select('host_rewarded, guest_rewarded').eq('id', _brState.id).single();
-  if (latest.host_rewarded && latest.guest_rewarded) {
+  if (latest && latest.host_rewarded && latest.guest_rewarded) {
     await sb.from('boss_raids').update({ status: 'finished' }).eq('id', _brState.id);
   }
 
   // 도토리 표시 갱신
-  updateAcornDisplay();
+  if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
 
   if (typeof _btlSound === 'function') _btlSound('reward');
   toast('🎉', `보상 수령 완료! 🌰 ${chosen.acorns}개${chosen.item ? ' + ' + chosen.item.icon + chosen.item.name : ''}`);
@@ -1326,6 +1320,7 @@ async function _brFinish() {
   _brBotSquirrels = null;
   window._brCards = null;
   window._brChosenCard = null;
+  window._brIsVictory = null;
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
   renderBossRaid();
 }
@@ -1625,9 +1620,8 @@ async function brAdminOpenSettings() {
 async function _brAdmResetWeeklyAll() {
   if (!confirm('모든 사용자의 이번 주 레이드 횟수를 리셋할까요?')) return;
   const weekStart = _brGetWeekStart();
-  const { error } = await sb.from('boss_raid_weekly')
-    .update({ raid_count: 0 })
-    .eq('week_start', weekStart);
+  // RLS 때문에 직접 update 불가 → RPC 사용
+  const { error } = await sb.rpc('reset_boss_raid_weekly_all', { p_week_start: weekStart });
   if (error) { toast('❌', '리셋 실패: ' + (error.message || '')); return; }
   toast('✅', '전체 사용자 레이드 횟수가 리셋되었어요');
 }

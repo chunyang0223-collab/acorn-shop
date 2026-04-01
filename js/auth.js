@@ -47,10 +47,61 @@ async function boot() {
   // 현재 세션 확인
   const { data } = await sb.auth.getSession();
   if (data && data.session && data.session.user) {
-    await onSignedIn(data.session);
+    // ── 세션 유효성 서버 검증 (캐시된 토큰이 실제로 동작하는지 확인) ──
+    const _sessionOk = await _validateSession(data.session);
+    if (_sessionOk) {
+      await onSignedIn(data.session);
+    } else {
+      // 세션이 서버에서 유효하지 않음 → 강제 로그아웃
+      console.warn('[auth] 저장된 세션이 만료/무효 → 로그인 화면으로');
+      localStorage.removeItem('sb_session');
+      showLoginScreen();
+    }
   } else {
     showLoginScreen();
   }
+}
+
+// ── 세션 유효성 서버측 검증 ──
+// localStorage에 남은 토큰이 실제로 DB 조회가 가능한지 확인
+async function _validateSession(s) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/users?id=eq.' + s.user.id + '&select=id', {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + s.access_token
+      }
+    });
+    // 401/403 → 토큰 만료 또는 무효
+    if (r.status === 401 || r.status === 403) {
+      // refresh 시도
+      const refreshed = await _tryRefreshToken(s);
+      return refreshed;
+    }
+    return r.ok;
+  } catch(e) {
+    // 네트워크 오류 (오프라인) → 일단 허용하되 maintenance 모드가 폴백으로 방어
+    console.warn('[auth] 세션 검증 네트워크 오류:', e);
+    return true;
+  }
+}
+
+async function _tryRefreshToken(s) {
+  if (!s.refresh_token) return false;
+  try {
+    const r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: s.refresh_token })
+    });
+    const d = await r.json();
+    if (d.access_token) {
+      const ns = { ...d, user: d.user || s.user };
+      localStorage.setItem('sb_session', JSON.stringify(ns));
+      return true;
+    }
+  } catch(e) {}
+  return false;
 }
 
 function showLoginScreen() {

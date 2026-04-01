@@ -2,32 +2,39 @@
 //  미니게임 시스템 v2 (도전/보상 횟수 분리)
 // ──────────────────────────────────────────────
 
+// ⚠️ 기본값은 DB 로드 실패 시 폴백이므로 최대한 보수적으로 설정
+// 실제 운영 값은 반드시 DB(app_settings)에서 로드됨
+// maintenance: true → DB 미로드 시 점검중 표시 (안전장치)
 const MG_DEFAULTS = {
   catch: {
     name: '도토리 캐치', icon: '🧺',
-    playLimit: 10,
-    rewardLimit: 3,
+    maintenance: true,
+    playLimit: 3,
+    rewardLimit: 1,
     entryFee: 0,
-    rewardRate: 10,
-    maxReward: 20,
+    rewardRate: 5,
+    maxReward: 10,
     duration: 30
   },
   '2048': {
     name: '2048 하드코어', icon: '💀',
-    playLimit: 10, rewardLimit: 3, unlimitedPlays: false,
+    maintenance: true,
+    playLimit: 3, rewardLimit: 1, unlimitedPlays: false,
     entryFee: 0, duration: 30,
-    dropChance: 20, dropMin: 1, dropMax: 1,
+    dropChance: 10, dropMin: 1, dropMax: 1,
     itemDropChance: 0, itemDropAmount: 1,
     bombStartTurn: 3, bombMaxChance: 60, defuseBonus: 1.2, comboBonus: 0.5
   },
   roulette: {
     name: '행운의 룰렛', icon: '🎡',
-    playLimit: 10, rewardLimit: 5,
-    entryFee: 5, rewardRate: 1, maxReward: 50, duration: 0
+    maintenance: true,
+    playLimit: 3, rewardLimit: 1,
+    entryFee: 5, rewardRate: 1, maxReward: 10, duration: 0
   }
 };
 
 let _mgSettings = {};
+let _mgSettingsLoaded = false;  // DB 설정 로드 완료 플래그
 let _mgTodayPlays = {};
 let _mgTodayRewards = {};
 let _mgBonusPlays = {};
@@ -38,11 +45,15 @@ async function loadMinigameSettings() {
   try {
     const { data } = await sb.from('app_settings').select('value').eq('key', 'minigame_settings').maybeSingle();
     _mgSettings = _parseValue(data?.value) || {};
+    _mgSettingsLoaded = true;
   } catch(e) { _mgSettings = {}; }
   return _mgSettings;
 }
 
 function getMgSetting(gameId, key) {
+  // DB 설정 미로드 시 maintenance 강제 (안전장치)
+  if (!_mgSettingsLoaded && key === 'maintenance') return true;
+
   if (key === 'playLimit' && _mgSettings?.[gameId]?.playLimit === undefined && _mgSettings?.[gameId]?.dailyLimit !== undefined) {
     return _mgSettings[gameId].dailyLimit;
   }

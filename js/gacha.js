@@ -164,8 +164,9 @@ async function _useGachaTicketAndPull() {
   const sessionId = crypto.randomUUID();
 
   const acornItems  = results.filter(r => r.reward_type === 'AUTO_ACORN' && r.acorn_amt > 0);
+  const ticketItems = results.filter(r => r.reward_type === 'GACHA_TICKET');
   const manualItems = results.filter(r => r.reward_type === 'MANUAL_ITEM' || r.reward_type === 'COUPON'
-    || r.reward_type === 'ACORN_TICKET' || r.reward_type === 'GACHA_TICKET');
+    || r.reward_type === 'ACORN_TICKET');
   const totalAcorn  = acornItems.reduce((s, r) => s + r.acorn_amt, 0);
 
   const tasks = [];
@@ -174,6 +175,11 @@ async function _useGachaTicketAndPull() {
       p_user_id: myProfile.id, p_amount: totalAcorn,
       p_reason: `뽑기 티켓 보상 (${acornItems.map(r=>r.name).join(', ')})`
     }).then(r => { if (r.data?.success) myProfile.acorns = r.data.balance; }));
+  }
+  if (ticketItems.length > 0) {
+    tasks.push(sb.rpc('adjust_gacha_tickets', {
+      p_user_id: myProfile.id, p_amount: ticketItems.length
+    }).then(r => { if (r.data?.success) window._gachaTicketCount = r.data.count; }));
   }
   if (manualItems.length) {
     tasks.push(sb.from('inventory').insert(manualItems.map(item => ({
