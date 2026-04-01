@@ -5940,6 +5940,16 @@ input[type="checkbox"]:active,
 .br-dead {
   filter: grayscale(1); opacity: 0.3;
 }
+.br-ultimate-glow {
+  animation: br-ulti-glow .5s ease !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.6), 0 0 32px rgba(245, 158, 11, 0.3) !important;
+}
+@keyframes br-ulti-glow {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-14px) scale(1.12); }
+  60% { transform: translateY(-4px) scale(1.04); }
+}
 
 /* 로그 패널 */
 .br-log-panel {
@@ -5954,6 +5964,7 @@ input[type="checkbox"]:active,
 .br-log-atk { color: #68c568; }
 .br-log-em { color: #de5e4e; }
 .br-log-skill { color: #debb28; }
+.br-log-ultimate { color: #f59e0b; font-weight: 900; text-shadow: 0 0 6px rgba(245,158,11,0.4); }
 .br-log-heal { color: #48cc88; }
 .br-log-win { color: #ffd700; }
 .br-log-lose { color: #e06060; }
