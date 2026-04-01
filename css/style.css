@@ -5875,9 +5875,11 @@ input[type="checkbox"]:active,
 
 .br-boss-area {
   display: flex; align-items: center; gap: 16px;
-  padding: 16px; margin-bottom: 16px;
-  background: rgba(239,68,68,0.08); border-radius: 16px;
-  border: 1.5px solid rgba(239,68,68,0.15);
+  padding: 16px; margin-bottom: 12px;
+  background: linear-gradient(135deg, rgba(220,38,38,0.15) 0%, rgba(180,30,30,0.08) 100%);
+  border-radius: 16px;
+  border: 1.5px solid rgba(239,68,68,0.25);
+  box-shadow: 0 0 20px rgba(239,68,68,0.08), inset 0 0 30px rgba(239,68,68,0.04);
 }
 .br-boss-emoji {
   font-size: 3.5rem; line-height: 1;
@@ -5934,16 +5936,56 @@ input[type="checkbox"]:active,
   letter-spacing: -0.03em;
 }
 
-/* SP/필살기 카운터 */
-.br-pc-counters {
-  display: flex; gap: 4px; justify-content: center; margin-top: 2px;
-}
-.br-counter-sp, .br-counter-ulti {
+/* 필살기 카운터 (개인) */
+.br-pc-ulti-wrap { margin-top: 2px; }
+.br-counter-ulti {
   font-size: 0.55rem; font-weight: 800;
-  padding: 1px 4px; border-radius: 6px;
+  padding: 1px 5px; border-radius: 5px;
+  background: rgba(245,158,11,0.12); color: #f59e0b;
+  display: inline-block;
 }
-.br-counter-sp { background: rgba(251,191,36,0.15); color: #fbbf24; }
-.br-counter-ulti { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+/* ★ 팀 SP 바 (공용) */
+.br-team-sp {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; margin-bottom: 10px;
+  background: rgba(251,191,36,0.06); border-radius: 10px;
+  border: 1px solid rgba(251,191,36,0.15);
+}
+.br-team-sp-label { font-size: 11px; font-weight: 800; color: #fbbf24; white-space: nowrap; }
+.br-sp-gauge-track { flex: 1; height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+.br-sp-gauge-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #fbbf24, #f59e0b); transition: width .4s; }
+.br-sp-count { font-size: 11px; font-weight: 900; color: #fbbf24; white-space: nowrap; }
+
+/* ★ 딜 미터기 */
+.br-dmg-meter {
+  padding: 9px 11px; margin-bottom: 10px;
+  background: rgba(255,255,255,0.03); border-radius: 11px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.br-dmg-meter-title {
+  font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+.br-dmg-row {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
+}
+.br-dmg-row:last-child { margin-bottom: 0; }
+.br-dmg-label {
+  width: 62px; text-align: right; overflow: hidden;
+  display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15;
+}
+.br-dmg-owner { font-size: 7.5px; font-weight: 700; opacity: 0.7; }
+.br-dmg-name { font-size: 9px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62px; }
+.br-dmg-bar-track { flex: 1; height: 13px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+.br-dmg-bar-fill {
+  height: 100%; border-radius: 6px; transition: width .5s ease;
+  display: flex; align-items: center; padding-left: 6px; min-width: 0;
+}
+.br-dmg-bar-fill span { font-size: 8px; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.5); white-space: nowrap; }
+.br-dmg-host { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.br-dmg-guest { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.br-dmg-pct { font-size: 9px; font-weight: 800; width: 30px; text-align: right; }
 
 /* ── 전투 애니메이션 (강화) ── */
 
