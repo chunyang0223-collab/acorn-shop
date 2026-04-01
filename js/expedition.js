@@ -1033,7 +1033,8 @@ function _btlSound(type) {
       'buy':         ['sounds/squirrel_buy.mp3'],
       'battleStart':  ['sounds/battle_start.mp3'],
       'wind':        ['sounds/explorer_empty.wav'],
-      'treasure':    ['sounds/explorer_card_reward.mp3']
+      'treasure':    ['sounds/explorer_card_reward.mp3'],
+      'raidPick':    ['sounds/raid_card_reward_pick.mp3']
     };
     var files = fileMap[type];
     if (!files || files.length === 0) {

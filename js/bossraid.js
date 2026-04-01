@@ -967,11 +967,12 @@ function _brStartReplay(log, partyInit) {
       setTimeout(() => {
         if (!_brState) return;
         const isVictory = _brState.result === 'victory';
-        // 효과음
-        if (typeof _btlSound === 'function') _btlSound(isVictory ? 'victory' : 'defeat');
-        window._brEndSoundPlayed = true;
-        // 승리 시 전용 BGM 재생
-        if (isVictory && typeof _sndPlayBGM === 'function') _sndPlayBGM('raid_victory');
+        // ① 승리 판정: raid_victory BGM 반복재생 / 패배: 효과음만
+        if (isVictory) {
+          if (typeof _sndPlayBGM === 'function') _sndPlayBGM('raid_victory');
+        } else {
+          if (typeof _btlSound === 'function') _btlSound('defeat');
+        }
 
         const partyGrid = document.querySelector('.br-party-grid');
         if (partyGrid) {
@@ -1247,12 +1248,6 @@ async function _brRenderResult(container, raid) {
   const myRewarded = isHost ? raid.host_rewarded : raid.guest_rewarded;
   const isVictory = raid.result === 'victory';
 
-  // 결과 사운드 (오버레이에서 이미 재생된 경우 스킵, 직접 진입 시에만 재생)
-  if (!window._brEndSoundPlayed) {
-    if (typeof _btlSound === 'function') _btlSound(isVictory ? 'victory' : 'defeat');
-  }
-  window._brEndSoundPlayed = false;
-
   if (myRewarded) {
     // 이미 보상 수령 → 완료 화면
     container.innerHTML = `
@@ -1355,7 +1350,7 @@ async function _brRenderResult(container, raid) {
       </div>`;
   }
 
-  // 카드 등장 사운드
+  // ② 카드 화면 등장: explorer_card_reward 1회
   if (typeof _btlSound === 'function') _btlSound('reward');
 
   window._brCards = cards;
@@ -1416,7 +1411,8 @@ async function _brSelectCard(idx) {
   const chosen = cards[idx];
   const isVictory = window._brIsVictory;
 
-  if (typeof _btlSound === 'function') _btlSound('cardFlip');
+  // ③ 카드 선택(뒤집기): explorer_complete_victory 1회
+  if (typeof _btlSound === 'function') _btlSound('victory');
 
   if (isVictory) {
     // ── 승리: 탐험 카드 방식 ──
@@ -1425,16 +1421,12 @@ async function _brSelectCard(idx) {
       if (!el) continue;
 
       if (i === idx) {
-        // 선택 카드: front 삽입 + chosen 스타일
         el.innerHTML = _brBuildVictoryFront(cards[i], true);
         el.className = 'btl-reward-card btl-card-disabled btl-card-chosen';
-        setTimeout(function() { if (typeof _btlSound === 'function') _btlSound('reward'); }, 300);
       } else {
-        // 미선택 카드: 딜레이 후 front 삽입 + unchosen
         el.classList.add('btl-card-disabled');
         (function(j) {
           setTimeout(function() {
-            if (typeof _btlSound === 'function') _btlSound('cardFlip');
             var oel = document.getElementById('brCard' + j);
             if (oel) {
               oel.innerHTML = _brBuildVictoryFront(cards[j], false);
@@ -1456,7 +1448,6 @@ async function _brSelectCard(idx) {
         el.classList.add('br-card-chosen');
         if (back) back.style.display = 'none';
         if (front) { front.style.backfaceVisibility = 'visible'; front.style.transform = 'none'; }
-        setTimeout(function() { if (typeof _btlSound === 'function') _btlSound('reward'); }, 300);
       } else {
         el.classList.add('br-card-unchosen');
         setTimeout(() => {
@@ -1500,6 +1491,8 @@ async function _brClaimReward(idx) {
   const chosen = window._brChosenCard;
   if (!chosen || !_brState) return;
   window._brChosenCard = null; // 중복 클릭 방지
+  // ④ 보상 수령: raid_card_reward_pick 1회
+  if (typeof _btlSound === 'function') _btlSound('raidPick');
 
   const isHost = _brState.host_id === myProfile.id;
   const wasVictory = window._brIsVictory;
@@ -1573,7 +1566,6 @@ async function _brFinish() {
   window._brDmgData = null;
   window._brSpMax = null;
   window._brBossRewardWeights = null;
-  window._brEndSoundPlayed = false;
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
   renderBossRaid();
 }
