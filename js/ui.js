@@ -151,7 +151,7 @@ async function doSignup() {
 // ──────────────────────────────────────────────
 //  TABS
 // ──────────────────────────────────────────────
-const U_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','ranking','friend','mypage'];
+const U_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','ranking','bossraid','friend','mypage'];
 const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking'];
 
 // ── 관리자 메뉴 정의 (개별 탭) ──
@@ -431,6 +431,7 @@ function uTab(tab, btn) {
   if (tab === 'recycle') renderRecycleTab();
   if (tab === 'minigame') renderMinigameHub();
   if (tab === 'ranking') renderUserRanking();
+  if (tab === 'bossraid') renderBossRaid();
   if (tab === 'friend') friendInit();
   if (tab === 'squirrel') { sqInit(); }
   else if (typeof _sqUnsubscribe === 'function') _sqUnsubscribe();
