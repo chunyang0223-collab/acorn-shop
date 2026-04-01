@@ -5969,6 +5969,7 @@ input[type="checkbox"]:active,
 }
 .br-dmg-row {
   display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 .br-dmg-row:last-child { margin-bottom: 0; }
 .br-dmg-label {
@@ -5986,6 +5987,10 @@ input[type="checkbox"]:active,
 .br-dmg-host { background: linear-gradient(90deg, #22c55e, #4ade80); }
 .br-dmg-guest { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .br-dmg-pct { font-size: 9px; font-weight: 800; width: 30px; text-align: right; }
+.br-dmg-row.br-dmg-top {
+  background: rgba(251,191,36,0.08); border-radius: 6px; padding: 2px 4px; margin-left: -4px; margin-right: -4px;
+}
+.br-dmg-row.br-dmg-top .br-dmg-pct { color: #fbbf24 !important; }
 
 /* ── 전투 애니메이션 (강화) ── */
 
