@@ -680,12 +680,16 @@ async function _brSimulateBattle(raid) {
   const party = squirrels.map(sq => {
     const stats = sq.stats || { hp: 50, atk: 10, def: 5 };
     const isHostSq = hostSqIds.includes(sq.id);
+    // 등급 색상 계산
+    const grade = (typeof _sqCalcGrade === 'function') ? _sqCalcGrade(sq) : 'normal';
+    const gradeStyle = (typeof _sqGradeStyle === 'function') ? _sqGradeStyle(grade) : { color: '#e2e8f0' };
     return {
       id: sq.id,
       name: sq.name,
       sprite: sq.sprite || 'sq_acorn',
       owner: isHostSq ? 'host' : 'guest',
       ownerName: isHostSq ? hostName : guestName,
+      gradeColor: gradeStyle.color,
       hp: stats.hp || 50,
       maxHp: stats.hp || 50,
       atk: stats.atk || 10,
@@ -868,7 +872,7 @@ function _brRenderBattle(container, raid) {
 
   // 딜 미터기 초기화 데이터
   window._brDmgData = {};
-  party.forEach(sq => { window._brDmgData[sq.id] = { name: sq.name, ownerName: sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'), owner: sq.owner, dmg: 0 }; });
+  party.forEach(sq => { window._brDmgData[sq.id] = { name: sq.name, ownerName: sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'), owner: sq.owner, gradeColor: sq.gradeColor || '#e2e8f0', dmg: 0 }; });
 
   container.innerHTML = `
     <div class="br-battle-wrap">
@@ -902,7 +906,7 @@ function _brRenderBattle(container, raid) {
               <img src="images/squirrels/${sq.sprite}.png" class="br-pc-img" onerror="this.outerHTML='<div style=\\'font-size:22px\\'>🐿️</div>'">
               <div class="br-action-badge" id="brBadge${i}"></div>
             </div>
-            <p style="font-size:10px;font-weight:900;color:#e2e8f0;margin:1px 0 0">${sq.name}</p>
+            <p style="font-size:10px;font-weight:900;color:${sq.gradeColor || '#e2e8f0'};margin:1px 0 0;text-shadow:0 1px 3px rgba(0,0,0,0.4)">${sq.name}</p>
             <div class="br-hp-track br-hp-sm" style="margin:3px 4px 2px">
               <div class="br-hp-bar br-hp-ally" id="brPcHp${i}" style="width:100%"></div>
             </div>
@@ -919,9 +923,9 @@ function _brRenderBattle(container, raid) {
         <div class="br-dmg-meter-title">⚔️ 딜 기여도</div>
         ${party.map(sq => `
           <div class="br-dmg-row" id="brDmgRow_${sq.id}">
-            <div class="br-dmg-label" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">
-              <span class="br-dmg-owner">${_escHtml(sq.ownerName || '')}</span>
-              <span class="br-dmg-name">${sq.name}</span>
+            <div class="br-dmg-label">
+              <span class="br-dmg-owner" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">${_escHtml(sq.ownerName || '')}</span>
+              <span class="br-dmg-name" style="color:${sq.gradeColor || '#e2e8f0'}">${sq.name}</span>
             </div>
             <div class="br-dmg-bar-track">
               <div class="br-dmg-bar-fill ${sq.owner === 'host' ? 'br-dmg-host' : 'br-dmg-guest'}" id="brDmgBar_${sq.id}" style="width:0%">
@@ -1549,7 +1553,6 @@ async function _brClaimReward(idx) {
   // 도토리 표시 갱신
   if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
 
-  if (typeof _btlSound === 'function') _btlSound('reward');
   toast('🎉', `보상 수령 완료! 🌰 ${chosen.acorns}개${chosen.item ? ' + ' + chosen.item.icon + chosen.item.name : ''}`);
   _brFinish();
 }
