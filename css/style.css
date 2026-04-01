@@ -6133,6 +6133,7 @@ input[type="checkbox"]:active,
 .br-grade-a { border-color: #fbbf24 !important; background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.05)) !important; }
 .br-grade-b { border-color: #a78bfa !important; background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(139,92,246,0.05)) !important; }
 .br-grade-c { border-color: #94a3b8 !important; }
+.br-grade-null { border-color: #f9a8d4 !important; background: linear-gradient(135deg, rgba(249,168,212,0.15), rgba(244,114,182,0.05)) !important; }
 
 /* ── 다크모드 보스레이드 ── */
 [data-theme="dark"] .br-room-row { background: var(--bg-card); border-color: var(--border-default); }
