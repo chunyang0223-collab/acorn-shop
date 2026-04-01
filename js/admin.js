@@ -585,7 +585,7 @@ async function renderTxLog() {
   window._userLogCache = {};
   _statusPage && Object.keys(_statusPage).forEach(k => delete _statusPage[k]);
 
-  const { data: users, error: uErr } = await sb.from('users').select('id, display_name, acorns, avatar_emoji').order('display_name');
+  const { data: users, error: uErr } = await sb.from('users').select('id, display_name, acorns, avatar_emoji, profile_icon').order('display_name');
   if (uErr) { btnList.innerHTML = `<p class="text-sm text-red-400">로드 실패: ${uErr.message}</p>`; return; }
   if (!users?.length) { btnList.innerHTML = '<p class="text-sm text-gray-400">사용자 없음</p>'; return; }
 
@@ -594,7 +594,7 @@ async function renderTxLog() {
   btnList.innerHTML = users.map(u => `
     <button id="logBtn-${u.id}" onclick="selectLogUser('${u.id}')"
       style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;border:1.5px solid rgba(200,180,240,0.3);background:rgba(255,255,255,0.7);font-family:'Jua',sans-serif;font-size:13px;color:#4b3060;cursor:pointer;transition:all .15s;flex-shrink:0;white-space:nowrap">
-      <span>${u.avatar_emoji || '🐿️'}</span>
+      ${_avatarHtml(u, '1.4rem')}
       <span>${u.display_name}</span>
       <span style="font-size:11px;color:#a78bfa">🌰${u.acorns||0}</span>
     </button>`).join('');
@@ -670,9 +670,8 @@ async function renderUserStatusCard(u, card) {
   if (!_statusPage[uid]) _statusPage[uid] = 0;
   const curIdx = Math.min(_statusPage[uid], Math.max(0, dates.length - 1));
 
-  const avatarEmoji = u.avatar_emoji || '🐿️';
   let html = `<div class="status-card-header">
-    <span class="sc-avatar">${avatarEmoji}</span>
+    <span class="sc-avatar">${_avatarHtml(u, '2rem')}</span>
     <div><div class="sc-name">${u.display_name}</div></div>
     <span class="sc-acorn">🌰 ${u.acorns || 0}</span>
   </div>
@@ -897,7 +896,7 @@ async function renderUserAdmin() {
       const esc = s => s.replace(/'/g, "\\'");
       return `<div class="um-card">
         <div class="um-top">
-          <div class="um-avatar">${u.avatar_emoji||'🐿️'}</div>
+          <div class="um-avatar">${_avatarHtml(u, '2.2rem')}</div>
           <div class="um-info">
             <p class="um-name">${u.display_name}${u.is_admin?' 👑':''}</p>
             <p class="um-sub">가입: ${fmtTs(u.created_at)} · 접속: ${u.last_seen_at ? fmtTs(u.last_seen_at) : '기록없음'}</p>

@@ -1,5 +1,20 @@
 //  HELPERS
 // ──────────────────────────────────────────────
+
+// ── 아바타 렌더링 헬퍼 ──
+// user 객체에 profile_icon이 있으면 이미지, 없으면 avatar_emoji 폴백
+// size: CSS 크기 (예: '3rem', '40px')
+function _avatarHtml(user, size) {
+  size = size || '2.5rem';
+  if (user?.profile_icon) {
+    return '<img src="images/user_profile_icon/' + _escHtml(user.profile_icon) + '" class="avatar-icon" style="width:' + size + ';height:' + size + '" alt="avatar" onerror="this.outerHTML=\'<span class=\\\'avatar-emoji\\\' style=\\\'font-size:' + size + '\\\'>' + (user.avatar_emoji || '🐿️') + '</span>\'">';
+  }
+  return '<span class="avatar-emoji" style="font-size:' + size + '">' + (user?.avatar_emoji || '🐿️') + '</span>';
+}
+
+// profile_icon 총 개수 (선택 UI용)
+var PROFILE_ICON_COUNT = 41;
+
 const stClass = s => ({ pending:'st-pending', approved:'st-approved', rejected:'st-rejected' })[s] || 'st-pending';
 const stLabel = s => ({ pending:'⏳ 대기중', approved:'✅ 승인', rejected:'❌ 거절' })[s] || s;
 
@@ -20,11 +35,9 @@ function fmtTs(iso) {
 // ── 테마 관리 ──
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  // 도토리 이모지 다크모드 시 어둡게
-  const emoji = document.getElementById('headerAcornEmoji');
-  if (emoji) emoji.style.filter = theme === 'dark'
-    ? 'brightness(0.5) sepia(0.3) drop-shadow(0 2px 6px rgba(0,0,0,0.5))'
-    : 'drop-shadow(0 2px 8px rgba(180,100,0,0.25))';
+  // 테마 토글 버튼 아이콘 업데이트
+  const themeBtn = document.getElementById('themeToggleBtn');
+  if (themeBtn) themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
   localStorage.setItem('acornTheme', theme);
 }
 function toggleTheme() {

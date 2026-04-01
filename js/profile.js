@@ -21,7 +21,7 @@ async function openProfile(userId) {
 
     // 병렬로 데이터 로드
     const [userRes, privacyRes, squirrelRes, expRes, minigameRes, farmRes, plotsRes, cropsRes] = await Promise.all([
-      sb.from('users').select('id,display_name,avatar_emoji,acorns,created_at').eq('id', userId).single(),
+      sb.from('users').select('id,display_name,avatar_emoji,profile_icon,acorns,created_at').eq('id', userId).single(),
       sb.from('profile_privacy').select('*').eq('user_id', userId).maybeSingle(),
       sb.from('squirrels').select('*').eq('user_id', userId),
       sb.from('expeditions').select('id,status,loot').eq('user_id', userId),
@@ -53,7 +53,7 @@ async function openProfile(userId) {
     // 헤더 + 공개설정 버튼 (본인 프로필일 때 우측 배치)
     html += `
       <div class="pf-header">
-        <span class="pf-avatar">${user.avatar_emoji || '🐿️'}</span>
+        <span class="pf-avatar">${_avatarHtml(user, '3.5rem')}</span>
         <div class="pf-header-info">
           <p class="pf-name">${_escHtml(user.display_name || '???')}</p>
           <p class="pf-joined">가입일: ${user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '???'}</p>

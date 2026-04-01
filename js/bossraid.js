@@ -195,7 +195,7 @@ async function renderBossRaid() {
 
   // 대기 중인 방 목록
   const { data: openRooms } = await sb.from('boss_raids')
-    .select('id, host_id, created_at, users!boss_raids_host_id_fkey(display_name, avatar_emoji)')
+    .select('id, host_id, created_at, users!boss_raids_host_id_fkey(display_name, avatar_emoji, profile_icon)')
     .eq('status', 'waiting')
     .is('guest_id', null)
     .neq('host_id', myProfile.id)
@@ -235,7 +235,7 @@ async function renderBossRaid() {
             const host = r.users || {};
             return `
               <div class="br-room-row" onclick="_brJoinRoom('${r.id}')">
-                <span class="text-2xl">${host.avatar_emoji || '🐿️'}</span>
+                ${_avatarHtml(host, '2rem')}
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-black text-gray-800">${_escHtml(host.display_name || '???')}</p>
                   <p class="text-xs text-gray-400">대기 중...</p>
@@ -459,7 +459,7 @@ async function _brRenderLobby(container, raid) {
   } else {
     const otherId = isHost ? raid.guest_id : raid.host_id;
     if (otherId) {
-      const { data } = await sb.from('users').select('display_name, avatar_emoji').eq('id', otherId).single();
+      const { data } = await sb.from('users').select('display_name, avatar_emoji, profile_icon').eq('id', otherId).single();
       otherUser = data;
     }
   }
@@ -502,7 +502,7 @@ async function _brRenderLobby(container, raid) {
       <div class="br-players-grid">
         <!-- 나 -->
         <div class="br-player-card ${myReady ? 'br-ready' : ''}">
-          <div class="text-3xl mb-1">${myProfile.avatar_emoji || '🐿️'}</div>
+          <div class="mb-1">${_avatarHtml(myProfile, '2.5rem')}</div>
           <p class="text-sm font-black">${myProfile.display_name}</p>
           <p class="text-xs font-bold ${myReady ? 'text-green-500' : 'text-gray-400'}">${myReady ? '✅ 준비완료' : '⏳ 준비 중'}</p>
         </div>
@@ -512,7 +512,7 @@ async function _brRenderLobby(container, raid) {
         <!-- 상대 -->
         <div class="br-player-card ${otherReady ? 'br-ready' : ''}">
           ${otherUser ? `
-            <div class="text-3xl mb-1">${otherUser.avatar_emoji || '🐿️'}</div>
+            <div class="mb-1">${_avatarHtml(otherUser, '2.5rem')}</div>
             <p class="text-sm font-black">${otherUser.display_name}</p>
             <p class="text-xs font-bold ${otherReady ? 'text-green-500' : 'text-gray-400'}">${otherReady ? '✅ 준비완료' : '⏳ 준비 중'}</p>
           ` : `

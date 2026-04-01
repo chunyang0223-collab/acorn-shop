@@ -31,7 +31,7 @@ async function _loadFriends() {
   try {
     const uid = myProfile.id;
     const { data, error } = await sb.from('friends')
-      .select('id, requester_id, receiver_id, accepted_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji,acorns), receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji,acorns)')
+      .select('id, requester_id, receiver_id, accepted_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji,profile_icon,acorns), receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji,profile_icon,acorns)')
       .eq('status', 'accepted')
       .or('requester_id.eq.' + uid + ',receiver_id.eq.' + uid)
       .order('accepted_at', { ascending: false });
@@ -52,7 +52,7 @@ async function _loadFriendRequests() {
     const uid = myProfile.id;
     // 받은 요청
     const { data: received, error: err1 } = await sb.from('friends')
-      .select('id, requester_id, created_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji)')
+      .select('id, requester_id, created_at, requester:users!friends_requester_id_fkey(id,display_name,avatar_emoji,profile_icon)')
       .eq('receiver_id', uid).eq('status', 'pending')
       .order('created_at', { ascending: false });
     if (err1) console.warn('_loadFriendRequests received error:', err1);
@@ -60,7 +60,7 @@ async function _loadFriendRequests() {
 
     // 보낸 요청
     const { data: sent, error: err2 } = await sb.from('friends')
-      .select('id, receiver_id, created_at, receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji)')
+      .select('id, receiver_id, created_at, receiver:users!friends_receiver_id_fkey(id,display_name,avatar_emoji,profile_icon)')
       .eq('requester_id', uid).eq('status', 'pending')
       .order('created_at', { ascending: false });
     if (err2) console.warn('_loadFriendRequests sent error:', err2);
@@ -99,7 +99,7 @@ function _renderFriendTab() {
         ${_friendRequests.map(r => `
           <div class="fr-req-row">
             <div class="flex items-center gap-2 min-w-0">
-              <span class="text-xl">${r.requester?.avatar_emoji || '🐿️'}</span>
+              ${_avatarHtml(r.requester, '1.8rem')}
               <div class="min-w-0">
                 <p class="text-sm font-black truncate fr-text">${_escHtml(r.requester?.display_name || '???')}</p>
                 <p class="text-xs" style="color:#fbbf24">${fmtTs(r.created_at)}</p>
@@ -121,7 +121,7 @@ function _renderFriendTab() {
         ${_friendSentReqs.map(r => `
           <div class="fr-req-row">
             <div class="flex items-center gap-2 min-w-0">
-              <span class="text-xl">${r.receiver?.avatar_emoji || '🐿️'}</span>
+              ${_avatarHtml(r.receiver, '1.8rem')}
               <p class="text-sm font-black truncate fr-text">${_escHtml(r.receiver?.display_name || '???')}</p>
             </div>
             <button class="fr-cancel-btn" onclick="cancelFriendReq('${r.id}')">취소</button>
@@ -140,7 +140,7 @@ function _renderFriendTab() {
             ${_friendList.map(f => `
               <div class="fr-friend-row" onclick="openProfile('${f.id}')">
                 <div class="flex items-center gap-3 min-w-0">
-                  <span class="text-2xl">${f.avatar_emoji || '🐿️'}</span>
+                  ${_avatarHtml(f, '2rem')}
                   <div class="min-w-0">
                     <p class="text-sm font-black truncate fr-text">${_escHtml(f.display_name || '???')}</p>
                   </div>
@@ -170,7 +170,7 @@ async function searchFriend() {
   resultEl.innerHTML = '<p class="text-xs" style="color:#fbbf24">검색 중...</p>';
 
   const { data } = await sb.from('users')
-    .select('id, display_name, avatar_emoji')
+    .select('id, display_name, avatar_emoji, profile_icon')
     .ilike('display_name', `%${query}%`)
     .neq('id', myProfile.id)
     .limit(10);
@@ -202,7 +202,7 @@ async function searchFriend() {
     return `
       <div class="fr-search-row">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="text-xl">${u.avatar_emoji || '🐿️'}</span>
+          ${_avatarHtml(u, '1.8rem')}
           <p class="text-sm font-black truncate fr-text">${_escHtml(u.display_name || '???')}</p>
         </div>
         ${actionBtn}

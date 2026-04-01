@@ -22,6 +22,8 @@ async function initAppUI() {
     document.getElementById('headerUserLabel').textContent = myProfile.display_name;
     document.getElementById('headerRight').style.display = 'flex';
     document.getElementById('logoutBtn')?.classList.remove('hidden');
+    // 프로필 아이콘 헤더에 반영
+    if (typeof _updateHeaderAvatar === 'function') _updateHeaderAvatar();
     document.getElementById('userMode').classList.remove('hidden');
     document.getElementById('adminMode').classList.add('hidden');
     updateAcornDisplay();

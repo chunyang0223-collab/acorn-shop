@@ -154,7 +154,10 @@ function moveTxPage(dir) {
 async function renderMypage() {
   document.getElementById('mypageHeader').innerHTML = `
     <div class="flex items-center gap-4">
-      <div class="text-5xl" style="cursor:pointer" onclick="openMyProfile()" title="내 프로필 보기">${myProfile.avatar_emoji || '🐿️'}</div>
+      <div style="cursor:pointer;position:relative" onclick="openProfileIconPicker()" title="프로필 아이콘 변경">
+        ${_avatarHtml(myProfile, '3.5rem')}
+        <span style="position:absolute;bottom:-2px;right:-2px;font-size:14px;background:var(--surface);border-radius:50%;padding:1px 3px;box-shadow:0 1px 4px rgba(0,0,0,0.2)">✏️</span>
+      </div>
       <div class="flex-1 min-w-0">
         <h2 class="text-xl font-black text-gray-800 cursor-pointer hover:text-amber-600 transition-colors" onclick="openMyProfile()" title="내 프로필 보기">${myProfile.display_name}</h2>
         <p class="text-xs text-gray-400 font-semibold">${session?.user?.email || ''}</p>
@@ -625,4 +628,45 @@ function sendBrowserNotif(title, body, icon = '🌰') {
   } catch(e) {}
 }
 
+// ══════════════════════════════════════════════
+//  프로필 아이콘 선택
+// ══════════════════════════════════════════════
+function openProfileIconPicker() {
+  let grid = '';
+  for (let i = 1; i <= PROFILE_ICON_COUNT; i++) {
+    const fn = String(i).padStart(2, '0') + '.png';
+    const selected = myProfile.profile_icon === fn;
+    grid += '<div class="pi-item' + (selected ? ' pi-selected' : '') + '" onclick="selectProfileIcon(\'' + fn + '\')">' +
+      '<img src="images/user_profile_icon/' + fn + '" alt="' + fn + '" loading="lazy">' +
+    '</div>';
+  }
+
+  showModal(`
+    <div class="pi-picker">
+      <h3 class="text-base font-black text-center mb-4" style="color:var(--text-primary)">프로필 아이콘 선택</h3>
+      <div class="pi-grid">${grid}</div>
+      <div class="text-center mt-4">
+        <button class="btn px-6 py-2 text-xs font-bold" style="background:var(--surface);color:var(--text-secondary);border:1px solid var(--border)" onclick="selectProfileIcon(null)">기본 이모지로 되돌리기</button>
+      </div>
+    </div>`);
+}
+
+async function selectProfileIcon(filename) {
+  const { error } = await sb.from('users').update({ profile_icon: filename }).eq('id', myProfile.id);
+  if (error) { toast('❌', '저장 실패: ' + (error.message || '')); return; }
+
+  myProfile.profile_icon = filename;
+  closeModal();
+  toast('✅', filename ? '프로필 아이콘이 변경되었어요!' : '기본 이모지로 되돌렸어요!');
+
+  // 헤더 + 마이페이지 즉시 반영
+  _updateHeaderAvatar();
+  renderMypage();
+}
+
+// 헤더 아바타 갱신
+function _updateHeaderAvatar() {
+  const el = document.getElementById('headerAvatarIcon');
+  if (el) el.innerHTML = _avatarHtml(myProfile, '3.2rem');
+}
 
