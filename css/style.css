@@ -5992,6 +5992,20 @@ input[type="checkbox"]:active,
 }
 .br-dmg-row.br-dmg-top .br-dmg-pct { color: #fbbf24 !important; }
 
+/* ── 전투 종료 결과 카드 ── */
+.br-party-grid.br-end-mode {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 140px;
+}
+.br-end-card {
+  text-align: center; padding: 16px 24px;
+  animation: br-end-in 0.5s ease;
+}
+@keyframes br-end-in {
+  from { opacity: 0; transform: scale(0.9) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* ── 전투 애니메이션 (강화) ── */
 
 /* 일반 공격 */
