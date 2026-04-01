@@ -39,6 +39,7 @@ var _brState = null;   // 현재 레이드 상태
 var _brSub = null;     // Realtime 구독
 var _brReplayIdx = 0;  // 재생 인덱스
 var _brReplayTimer = null;
+var _brWeeklyDone = false; // 주간 횟수 중복 차감 방지 플래그
 
 // ── 설정 로드 ──
 async function _brLoadConfig() {
@@ -294,6 +295,7 @@ function _brOnStateChange(raid) {
       _brRenderLobby(container, raid);
       break;
     case 'battling':
+      if (typeof _btlSound === 'function') _btlSound('battleStart');
       _brRenderBattle(container, raid);
       break;
     case 'finished':
@@ -393,6 +395,16 @@ async function _brRenderLobby(container, raid) {
       </div>`;
   }
 
+  // 내가 준비완료인데 상대가 아직인 경우
+  if (myReady && !otherReady && raid.status === 'selecting') {
+    html += `
+      <div class="clay-card p-6 text-center">
+        <div class="text-4xl mb-3" style="animation:pulse 1.5s ease-in-out infinite">⏳</div>
+        <p class="text-sm font-black text-green-500 mb-1">준비완료!</p>
+        <p class="text-xs text-gray-400 font-bold">상대방이 준비할 때까지 기다리는 중...</p>
+      </div>`;
+  }
+
   // 둘 다 Ready인 경우
   if (raid.host_ready && raid.guest_ready) {
     html += `
@@ -421,6 +433,7 @@ async function _brToggleSquirrel(sqId) {
       return;
     }
     ids.push(sqId);
+    if (typeof playSound === 'function') playSound('click');
   }
 
   await sb.from('boss_raids').update({ [field]: ids }).eq('id', _brState.id);
@@ -436,6 +449,13 @@ async function _brReady() {
 
   await sb.from('boss_raids').update({ [field]: true }).eq('id', _brState.id);
   _brState[field] = true;
+
+  // 준비완료 사운드 + 토스트
+  if (typeof playSound === 'function') playSound('approve');
+  toast('✅', '준비완료! 상대를 기다리는 중...');
+
+  // UI 즉시 갱신
+  _brRenderLobby(document.getElementById('utab-bossraid'), _brState);
 
   // 양쪽 다 Ready인지 확인
   const { data: latest } = await sb.from('boss_raids').select('host_ready, guest_ready').eq('id', _brState.id).single();
@@ -686,6 +706,9 @@ function _brRenderBattle(container, raid) {
 function _brStartReplay(log, partyInit) {
   if (_brReplayTimer) clearInterval(_brReplayTimer);
 
+  // 배경음 재생
+  if (typeof _sndPlayBGM === 'function') _sndPlayBGM('boss');
+
   const party = partyInit.map(p => ({...p}));
   let idx = 0;
 
@@ -696,10 +719,11 @@ function _brStartReplay(log, partyInit) {
     if (idx >= log.length) {
       clearInterval(_brReplayTimer);
       _brReplayTimer = null;
+      if (typeof _sndStopBGM === 'function') _sndStopBGM();
       // 전투 끝 → 결과 표시
       setTimeout(() => {
         if (_brState) _brRenderResult(document.getElementById('utab-bossraid'), _brState);
-      }, 1500);
+      }, 1200);
       return;
     }
 
@@ -711,6 +735,17 @@ function _brStartReplay(log, partyInit) {
     // 로그 표시
     if (entry.text) {
       _brAddLog(entry.text, entry.cls || '');
+    }
+
+    // ── 효과음 ──
+    if (entry.type === 'attack') {
+      if (typeof _btlSound === 'function') _btlSound(entry.bigHit ? 'bigHit' : 'attack');
+    } else if (entry.type === 'skill') {
+      if (typeof _btlSound === 'function') _btlSound('skill');
+    } else if (entry.type === 'boss_attack') {
+      if (typeof _btlSound === 'function') _btlSound('hit');
+    } else if (entry.type === 'result') {
+      if (typeof _btlSound === 'function') _btlSound(entry.result === 'victory' ? 'victory' : 'defeat');
     }
 
     // 보스 HP 업데이트
@@ -725,7 +760,7 @@ function _brStartReplay(log, partyInit) {
       const bossEl = document.getElementById('brBossEmoji');
       if (bossEl) {
         bossEl.classList.add('br-shaking');
-        setTimeout(() => bossEl.classList.remove('br-shaking'), 350);
+        setTimeout(() => bossEl.classList.remove('br-shaking'), 300);
       }
     }
 
@@ -736,7 +771,7 @@ function _brStartReplay(log, partyInit) {
         const card = document.getElementById('brPc' + sqIdx);
         if (card) {
           card.classList.add('br-attacking');
-          setTimeout(() => card.classList.remove('br-attacking'), 400);
+          setTimeout(() => card.classList.remove('br-attacking'), 300);
         }
       }
       // SP 업데이트
@@ -753,7 +788,7 @@ function _brStartReplay(log, partyInit) {
         const card = document.getElementById('brPc' + tIdx);
         if (card) {
           card.classList.add('br-hit');
-          setTimeout(() => card.classList.remove('br-hit'), 350);
+          setTimeout(() => card.classList.remove('br-hit'), 300);
         }
         // HP 바 업데이트
         const hpBar = document.getElementById('brPcHp' + tIdx);
@@ -764,11 +799,12 @@ function _brStartReplay(log, partyInit) {
         // 사망 처리
         if (!entry.targetAlive) {
           if (card) card.classList.add('br-dead');
+          if (typeof _btlSound === 'function') _btlSound('defeat');
         }
       }
     }
 
-  }, 800); // 0.8초 간격으로 재생
+  }, 470); // 1.7배속 (800 / 1.7 ≈ 470ms)
 }
 
 function _brAddLog(text, cls) {
@@ -786,10 +822,14 @@ function _brAddLog(text, cls) {
 // ══════════════════════════════════════════════
 async function _brRenderResult(container, raid) {
   if (_brReplayTimer) { clearInterval(_brReplayTimer); _brReplayTimer = null; }
+  if (typeof _sndStopBGM === 'function') _sndStopBGM();
 
   const isHost = raid.host_id === myProfile.id;
   const myRewarded = isHost ? raid.host_rewarded : raid.guest_rewarded;
   const isVictory = raid.result === 'victory';
+
+  // 결과 사운드
+  if (typeof _btlSound === 'function') _btlSound(isVictory ? 'victory' : 'defeat');
 
   if (myRewarded) {
     // 이미 보상 수령 → 완료 화면
@@ -804,7 +844,7 @@ async function _brRenderResult(container, raid) {
   }
 
   if (!isVictory) {
-    // 패배 → 보상 없이 종료
+    // 패배 → 보상 없이 종료 (중복 차감 방지)
     container.innerHTML = `
       <div class="clay-card p-6 text-center">
         <div class="text-5xl mb-3">💀</div>
@@ -812,12 +852,15 @@ async function _brRenderResult(container, raid) {
         <p class="text-sm text-gray-400 font-semibold mb-4">보스에게 패배했어요. 다음에 다시 도전하세요!</p>
         <button class="btn btn-primary px-8 py-3" onclick="_brFinish()">돌아가기</button>
       </div>`;
-    // 패배도 횟수 차감
-    await _brIncrementWeekly();
-    await sb.from('boss_raids').update({
-      [isHost ? 'host_rewarded' : 'guest_rewarded']: true,
-      status: 'finished'
-    }).eq('id', raid.id);
+    // 패배도 횟수 차감 (중복 방지 플래그)
+    if (!_brWeeklyDone) {
+      _brWeeklyDone = true;
+      await _brIncrementWeekly();
+      await sb.from('boss_raids').update({
+        [isHost ? 'host_rewarded' : 'guest_rewarded']: true,
+        status: 'finished'
+      }).eq('id', raid.id);
+    }
     return;
   }
 
@@ -879,7 +922,8 @@ async function _brSelectCard(idx) {
 
   const chosen = cards[idx];
 
-  // 카드 뒤집기 애니메이션
+  // 카드 뒤집기 사운드 + 애니메이션
+  if (typeof _btlSound === 'function') _btlSound('cardFlip');
   for (let i = 0; i < 3; i++) {
     const el = document.getElementById('brCard' + i);
     if (!el) continue;
@@ -933,8 +977,11 @@ async function _brClaimReward(idx) {
     });
   }
 
-  // 주간 횟수 증가
-  await _brIncrementWeekly();
+  // 주간 횟수 증가 (중복 방지)
+  if (!_brWeeklyDone) {
+    _brWeeklyDone = true;
+    await _brIncrementWeekly();
+  }
 
   // 보상 수령 완료 표시
   await sb.from('boss_raids').update({
@@ -951,6 +998,7 @@ async function _brClaimReward(idx) {
   // 도토리 표시 갱신
   updateAcornDisplay();
 
+  if (typeof _btlSound === 'function') _btlSound('reward');
   toast('🎉', `보상 수령 완료! 🌰 ${chosen.acorns}개${chosen.item ? ' + ' + chosen.item.icon + chosen.item.name : ''}`);
   _brFinish();
 }
@@ -958,23 +1006,36 @@ async function _brClaimReward(idx) {
 async function _brFinish() {
   _brUnsubscribe();
   _brState = null;
+  _brWeeklyDone = false;
   window._brCards = null;
   window._brChosenCard = null;
+  if (typeof _sndStopBGM === 'function') _sndStopBGM();
   renderBossRaid();
 }
 
 // ══════════════════════════════════════════════
 //  관리자: 보스레이드 설정
 // ══════════════════════════════════════════════
+// ── 관리자 보스 목록 임시 저장 ──
+var _brAdmBosses = [];
+
+function _brAdmInputStyle() {
+  return 'background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)';
+}
+
 async function brAdminOpenSettings() {
   await _brLoadConfig();
   const c = _brConfig;
+  _brAdmBosses = JSON.parse(JSON.stringify(c.bosses || []));
+
+  const is = _brAdmInputStyle();
 
   showModal(`
-    <div style="max-width:400px;margin:0 auto">
+    <div style="max-width:480px;margin:0 auto;max-height:80vh;overflow-y:auto">
       <h2 class="text-lg font-black text-gray-800 mb-4">🐉 보스레이드 설정</h2>
 
-      <div class="space-y-3">
+      <!-- ─── 기본 설정 ─── -->
+      <div class="space-y-3 mb-5">
         <div class="flex items-center justify-between">
           <span class="text-sm font-bold">활성화</span>
           <button id="brAdm_enabled" class="text-sm font-bold px-3 py-1 rounded-lg" style="background:${c.enabled ? 'rgba(34,197,94,0.15);color:#22c55e' : 'rgba(239,68,68,0.15);color:#ef4444'}" onclick="this.dataset.val=this.dataset.val==='true'?'false':'true';this.textContent=this.dataset.val==='true'?'ON':'OFF';this.style.background=this.dataset.val==='true'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)';this.style.color=this.dataset.val==='true'?'#22c55e':'#ef4444'" data-val="${c.enabled}">${c.enabled ? 'ON' : 'OFF'}</button>
@@ -982,42 +1043,123 @@ async function brAdminOpenSettings() {
 
         <div>
           <label class="text-xs font-bold text-gray-500">주간 제한 횟수</label>
-          <input type="number" id="brAdm_weeklyLimit" value="${c.weekly_limit}" min="1" max="50" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)">
+          <input type="number" id="brAdm_weeklyLimit" value="${c.weekly_limit}" min="1" max="50" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="${is}">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-xs font-bold text-gray-500">SP 최소</label>
-            <input type="number" id="brAdm_spMin" value="${c.sp_min}" min="1" max="20" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)">
+            <input type="number" id="brAdm_spMin" value="${c.sp_min}" min="1" max="20" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="${is}">
           </div>
           <div>
             <label class="text-xs font-bold text-gray-500">SP 최대</label>
-            <input type="number" id="brAdm_spMax" value="${c.sp_max}" min="1" max="30" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)">
+            <input type="number" id="brAdm_spMax" value="${c.sp_max}" min="1" max="30" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="${is}">
           </div>
         </div>
 
         <div>
           <label class="text-xs font-bold text-gray-500">보스 스탯 배율</label>
-          <input type="number" id="brAdm_bossMult" value="${c.boss_stat_mult}" min="1" max="10" step="0.1" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)">
-        </div>
-
-        <div>
-          <label class="text-xs font-bold text-gray-500">보상 등급 가중치 (C / B / A)</label>
-          <div class="grid grid-cols-3 gap-2 mt-1">
-            <input type="number" id="brAdm_wC" value="${c.reward_weights.C}" min="0" class="px-3 py-2 rounded-lg text-sm font-bold text-center" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)">
-            <input type="number" id="brAdm_wB" value="${c.reward_weights.B}" min="0" class="px-3 py-2 rounded-lg text-sm font-bold text-center" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)">
-            <input type="number" id="brAdm_wA" value="${c.reward_weights.A}" min="0" class="px-3 py-2 rounded-lg text-sm font-bold text-center" style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)">
-          </div>
+          <input type="number" id="brAdm_bossMult" value="${c.boss_stat_mult}" min="1" max="10" step="0.1" class="w-full mt-1 px-3 py-2 rounded-lg text-sm font-bold" style="${is}">
         </div>
       </div>
 
-      <button class="btn btn-primary w-full mt-5 py-3" onclick="brAdminSaveSettings()">💾 저장</button>
+      <!-- ─── 보스 목록 ─── -->
+      <div class="mb-5">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-black text-gray-700">🐲 보스 목록</p>
+          <button class="text-xs font-bold px-2 py-1 rounded-lg" style="background:rgba(59,130,246,0.1);color:#3b82f6" onclick="_brAdmAddBoss()">+ 추가</button>
+        </div>
+        <div id="brAdmBossList" class="space-y-2">
+          ${_brAdmBosses.map((b, i) => _brAdmBossRow(b, i)).join('')}
+        </div>
+      </div>
+
+      <!-- ─── 보상 등급 가중치 ─── -->
+      <div class="mb-5">
+        <p class="text-sm font-black text-gray-700 mb-2">🎁 보상 등급 가중치 (C / B / A)</p>
+        <div class="grid grid-cols-3 gap-2">
+          <input type="number" id="brAdm_wC" value="${c.reward_weights.C}" min="0" class="px-3 py-2 rounded-lg text-sm font-bold text-center" style="${is}">
+          <input type="number" id="brAdm_wB" value="${c.reward_weights.B}" min="0" class="px-3 py-2 rounded-lg text-sm font-bold text-center" style="${is}">
+          <input type="number" id="brAdm_wA" value="${c.reward_weights.A}" min="0" class="px-3 py-2 rounded-lg text-sm font-bold text-center" style="${is}">
+        </div>
+      </div>
+
+      <!-- ─── 등급별 보상 테이블 ─── -->
+      ${['C', 'B', 'A'].map(g => {
+        const rw = c['reward_' + g];
+        return `
+        <div class="mb-4" style="padding:12px;border-radius:12px;background:rgba(0,0,0,0.03)">
+          <p class="text-xs font-black text-gray-600 mb-2">${g}등급 보상</p>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+              <label class="text-xs text-gray-400">도토리 최소</label>
+              <input type="number" id="brAdm_r${g}_acMin" value="${rw.acorns[0]}" min="0" class="w-full mt-1 px-2 py-1 rounded-lg text-xs font-bold" style="${is}">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">도토리 최대</label>
+              <input type="number" id="brAdm_r${g}_acMax" value="${rw.acorns[1]}" min="0" class="w-full mt-1 px-2 py-1 rounded-lg text-xs font-bold" style="${is}">
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="text-xs text-gray-400">아이템 확률 (0~1)</label>
+            <input type="number" id="brAdm_r${g}_itemCh" value="${rw.itemChance}" min="0" max="1" step="0.05" class="w-full mt-1 px-2 py-1 rounded-lg text-xs font-bold" style="${is}">
+          </div>
+          <div>
+            <label class="text-xs text-gray-400">아이템 목록 (쉼표 구분, 예: 🍄 버섯, 🌿 풀잎)</label>
+            <input type="text" id="brAdm_r${g}_items" value="${(rw.items || []).join(', ')}" class="w-full mt-1 px-2 py-1 rounded-lg text-xs font-bold" style="${is}">
+          </div>
+        </div>`;
+      }).join('')}
+
+      <button class="btn btn-primary w-full mt-3 py-3" onclick="brAdminSaveSettings()">💾 저장</button>
     </div>
   `);
 }
 
+function _brAdmBossRow(b, i) {
+  const is = _brAdmInputStyle();
+  return `
+    <div class="flex items-center gap-2" style="padding:8px;border-radius:8px;background:rgba(0,0,0,0.03)">
+      <input type="text" id="brAdmB_emoji_${i}" value="${b.emoji}" class="text-center text-lg" style="width:36px;${is};padding:4px;border-radius:8px">
+      <input type="text" id="brAdmB_name_${i}" value="${b.name}" placeholder="이름" class="flex-1 px-2 py-1 rounded-lg text-xs font-bold" style="${is}">
+      <input type="number" id="brAdmB_lvMin_${i}" value="${b.lvMin}" min="1" max="99" class="text-xs font-bold text-center" style="width:44px;${is};padding:4px;border-radius:8px" title="최소 레벨">
+      <span class="text-xs text-gray-400">~</span>
+      <input type="number" id="brAdmB_lvMax_${i}" value="${b.lvMax}" min="1" max="99" class="text-xs font-bold text-center" style="width:44px;${is};padding:4px;border-radius:8px" title="최대 레벨">
+      <button class="text-xs" style="color:#ef4444" onclick="_brAdmRemoveBoss(${i})">✕</button>
+    </div>`;
+}
+
+function _brAdmAddBoss() {
+  _brAdmBosses.push({ name: '새 보스', emoji: '👾', lvMin: 10, lvMax: 15 });
+  const list = document.getElementById('brAdmBossList');
+  if (list) list.innerHTML = _brAdmBosses.map((b, i) => _brAdmBossRow(b, i)).join('');
+}
+
+function _brAdmRemoveBoss(idx) {
+  // 먼저 현재 입력값 반영
+  _brAdmSyncBosses();
+  _brAdmBosses.splice(idx, 1);
+  const list = document.getElementById('brAdmBossList');
+  if (list) list.innerHTML = _brAdmBosses.map((b, i) => _brAdmBossRow(b, i)).join('');
+}
+
+function _brAdmSyncBosses() {
+  _brAdmBosses = _brAdmBosses.map((b, i) => {
+    const el = (id) => document.getElementById(id);
+    return {
+      emoji: el('brAdmB_emoji_' + i)?.value || b.emoji,
+      name: el('brAdmB_name_' + i)?.value || b.name,
+      lvMin: +(el('brAdmB_lvMin_' + i)?.value) || b.lvMin,
+      lvMax: +(el('brAdmB_lvMax_' + i)?.value) || b.lvMax
+    };
+  });
+}
+
 async function brAdminSaveSettings() {
   const el = (id) => document.getElementById(id);
+
+  // 보스 목록 동기화
+  _brAdmSyncBosses();
 
   const settings = {
     ..._brConfig,
@@ -1026,12 +1168,23 @@ async function brAdminSaveSettings() {
     sp_min: +el('brAdm_spMin').value,
     sp_max: +el('brAdm_spMax').value,
     boss_stat_mult: +el('brAdm_bossMult').value,
+    bosses: _brAdmBosses,
     reward_weights: {
       C: +el('brAdm_wC').value,
       B: +el('brAdm_wB').value,
       A: +el('brAdm_wA').value
     }
   };
+
+  // 등급별 보상 설정
+  ['C', 'B', 'A'].forEach(g => {
+    const itemsRaw = el('brAdm_r' + g + '_items')?.value || '';
+    settings['reward_' + g] = {
+      acorns: [+(el('brAdm_r' + g + '_acMin')?.value) || 0, +(el('brAdm_r' + g + '_acMax')?.value) || 0],
+      itemChance: +(el('brAdm_r' + g + '_itemCh')?.value) || 0,
+      items: itemsRaw.split(',').map(s => s.trim()).filter(Boolean)
+    };
+  });
 
   const { error } = await sb.from('app_settings')
     .upsert({ key: 'boss_raid_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict: 'key' });
