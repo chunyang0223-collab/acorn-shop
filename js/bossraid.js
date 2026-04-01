@@ -979,7 +979,7 @@ function _brStartReplay(log, partyInit) {
             <div class="br-end-card">
               <div style="font-size:3rem;margin-bottom:4px">${isVictory ? '🎉' : '💀'}</div>
               <p style="font-size:22px;font-weight:900;color:${isVictory ? '#4ade80' : '#f87171'};margin-bottom:2px">${isVictory ? '보스 격파!' : '패배...'}</p>
-              <p style="font-size:11px;color:#94a3b8;margin-bottom:14px">전투 로그를 확인한 뒤 버튼을 눌러주세요</p>
+              <div style="height:10px"></div>
               <button class="btn btn-primary px-8 py-3 text-sm font-black" onclick="_brGoToResult()" style="animation:br-badge-pop .4s ease">${isVictory ? '보상 받기' : '결과 확인'}</button>
             </div>
           `;
@@ -1355,6 +1355,9 @@ async function _brRenderResult(container, raid) {
       </div>`;
   }
 
+  // 카드 등장 사운드
+  if (typeof _btlSound === 'function') _btlSound('reward');
+
   window._brCards = cards;
   window._brIsVictory = isVictory;
 }
@@ -1425,6 +1428,7 @@ async function _brSelectCard(idx) {
         // 선택 카드: front 삽입 + chosen 스타일
         el.innerHTML = _brBuildVictoryFront(cards[i], true);
         el.className = 'btl-reward-card btl-card-disabled btl-card-chosen';
+        setTimeout(function() { if (typeof _btlSound === 'function') _btlSound('reward'); }, 300);
       } else {
         // 미선택 카드: 딜레이 후 front 삽입 + unchosen
         el.classList.add('btl-card-disabled');
@@ -1452,6 +1456,7 @@ async function _brSelectCard(idx) {
         el.classList.add('br-card-chosen');
         if (back) back.style.display = 'none';
         if (front) { front.style.backfaceVisibility = 'visible'; front.style.transform = 'none'; }
+        setTimeout(function() { if (typeof _btlSound === 'function') _btlSound('reward'); }, 300);
       } else {
         el.classList.add('br-card-unchosen');
         setTimeout(() => {
