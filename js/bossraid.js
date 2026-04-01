@@ -379,12 +379,17 @@ async function _brPoll(raidId) {
   const { data } = await sb.from('boss_raids').select('*').eq('id', raidId).maybeSingle();
   if (!data) return;
 
-  // 상태가 바뀌었을 때만 처리
-  const prevStatus = _brState?.status;
-  const prevLog = _brState?.battle_log?.length || 0;
+  // 변경 감지 (status, battle_log, guest_id, ready 상태)
+  const prev = _brState;
+  const changed = !prev
+    || data.status !== prev.status
+    || (data.battle_log?.length || 0) !== (prev.battle_log?.length || 0)
+    || data.guest_id !== prev.guest_id
+    || data.host_ready !== prev.host_ready
+    || data.guest_ready !== prev.guest_ready;
   _brState = data;
 
-  if (data.status !== prevStatus || (data.battle_log?.length || 0) !== prevLog) {
+  if (changed) {
     _brOnStateChange(data);
   }
 
@@ -516,15 +521,19 @@ async function _brRenderLobby(container, raid) {
         <p class="text-sm font-black text-gray-700 mb-3">🐿️ 다람쥐 2마리를 선택하세요</p>
         <div class="grid grid-cols-3 gap-2" id="brSquirrelGrid">
           ${(mySquirrels || []).map(sq => {
-            const selected = mySelectedIds.includes(sq.id);
-            const grade = sq.status !== 'baby' ? _sqCalcGrade(sq) : 'normal';
-            const gs = _expGradeStyle(grade);
-            return `
-              <div class="br-sq-pick ${selected ? 'br-sq-selected' : ''}" onclick="_brToggleSquirrel('${sq.id}')" style="${gs.border};box-shadow:${gs.shadow}">
-                <img src="images/squirrels/${sq.sprite || 'sq_acorn'}.png" class="br-sq-img" onerror="this.outerHTML='<div class=\\'text-2xl\\'>🐿️</div>'">
-                <p class="text-xs font-black mt-1">${_escHtml(sq.name)}</p>
-                <p class="text-xs text-gray-400">HP ${sq.stats?.hp || 0} ATK ${sq.stats?.atk || 0}</p>
-              </div>`;
+            try {
+              const selected = mySelectedIds.includes(sq.id);
+              const grade = (typeof _sqCalcGrade === 'function' && sq.status !== 'baby') ? _sqCalcGrade(sq) : 'normal';
+              const gs = (typeof _sqGradeStyle === 'function') ? _sqGradeStyle(grade) : { border:'border:3px solid #788796', shadow:'0 0 4px rgba(120,135,150,.3)', color:'#9ca3af' };
+              return '<div class="br-sq-pick ' + (selected ? 'br-sq-selected' : '') + '" onclick="_brToggleSquirrel(\'' + sq.id + '\')" style="' + gs.border + ';box-shadow:' + gs.shadow + '">' +
+                '<img src="images/squirrels/' + (sq.sprite || 'sq_acorn') + '.png" class="br-sq-img" onerror="this.outerHTML=\'<div class=\\\'text-2xl\\\'>🐿️</div>\'">' +
+                '<p class="text-xs font-black mt-1" style="color:' + gs.color + '">' + _escHtml(sq.name) + '</p>' +
+                '<p class="text-xs text-gray-400">HP ' + (sq.stats?.hp || 0) + ' ATK ' + (sq.stats?.atk || 0) + '</p>' +
+              '</div>';
+            } catch(e) {
+              console.error('br-sq-pick render error:', e);
+              return '';
+            }
           }).join('')}
         </div>
         ${mySelectedIds.length === 2 ? `
