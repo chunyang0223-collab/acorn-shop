@@ -42,6 +42,37 @@ var _brConfig = {
   defeat_items: [],
 };
 
+// ── 봇 프리셋 (관리자 테스트용) ──
+var _brBotPresets = [
+  {
+    label: '1단계',
+    desc: '일반~레어',
+    emoji: '🤖',
+    squirrels: [
+      { name: '봇다람A', sprite: 'sq_acorn', stats: { hp: 55, atk: 9, def: 4 } },
+      { name: '봇다람B', sprite: 'sq_acorn', stats: { hp: 65, atk: 11, def: 5 } },
+    ]
+  },
+  {
+    label: '2단계',
+    desc: '레어~유일',
+    emoji: '🤖',
+    squirrels: [
+      { name: '봇다람A', sprite: 'sq_acorn', stats: { hp: 85, atk: 14, def: 8 } },
+      { name: '봇다람B', sprite: 'sq_acorn', stats: { hp: 95, atk: 16, def: 10 } },
+    ]
+  },
+  {
+    label: '3단계',
+    desc: '희귀~레전드',
+    emoji: '🤖',
+    squirrels: [
+      { name: '봇다람A', sprite: 'sq_acorn', stats: { hp: 105, atk: 18, def: 12 } },
+      { name: '봇다람B', sprite: 'sq_acorn', stats: { hp: 115, atk: 19, def: 13 } },
+    ]
+  }
+];
+
 // ── 상태 ──
 var _brState = null;   // 현재 레이드 상태
 var _brSub = null;     // Realtime 구독
@@ -160,6 +191,18 @@ async function renderBossRaid() {
       <button class="btn btn-primary px-8 py-3 text-base" onclick="_brCreateRoom()" ${remaining <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
         🐉 방 만들기
       </button>
+      ${myProfile?.is_admin ? `
+        <div style="margin-top:12px;padding-top:12px;border-top:1px dashed rgba(128,128,128,0.2)">
+          <p style="font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:8px">🤖 관리자 테스트 (봇과 함께)</p>
+          <div style="display:flex;gap:6px;justify-content:center">
+            ${_brBotPresets.map((bp, i) => `
+              <button onclick="_brCreateBotRoom(${i})" style="padding:6px 12px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6" ${remaining <= 0 ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
+                ${bp.emoji} ${bp.label}<br><span style="font-size:9px;color:#9ca3af">${bp.desc}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
     </div>
 
     ${openRooms && openRooms.length > 0 ? `
@@ -242,6 +285,56 @@ async function _brJoinRoom(raidId) {
   _brSubscribe(data.id);
   _brRenderLobby(document.getElementById('utab-bossraid'), data);
   toast('✅', '참가했어요!');
+}
+
+// ── 봇과 함께 방 생성 (관리자 전용) ──
+var _brBotSquirrels = null; // 현재 봇 다람쥐 정보 (전투 시뮬에서 사용)
+
+async function _brCreateBotRoom(presetIdx) {
+  if (!myProfile?.is_admin) return;
+  const weeklyCount = await _brGetWeeklyCount();
+  if (weeklyCount >= _brConfig.weekly_limit) {
+    toast('❌', '이번 주 레이드 횟수를 모두 사용했어요');
+    return;
+  }
+
+  const preset = _brBotPresets[presetIdx];
+  if (!preset) return;
+
+  toast('⏳', '봇과 함께 방을 만드는 중...');
+
+  // 봇 다람쥐 가짜 ID 생성
+  const botSq1Id = 'bot-sq-' + Date.now() + '-1';
+  const botSq2Id = 'bot-sq-' + Date.now() + '-2';
+
+  // 방 생성: guest=자기자신(RLS용), 봇 다람쥐 ID를 guest측에 세팅
+  const { data, error } = await sb.from('boss_raids').insert({
+    host_id: myProfile.id,
+    guest_id: myProfile.id,         // 자기 자신을 guest로 (RLS 통과용)
+    guest_squirrel_ids: [botSq1Id, botSq2Id],
+    guest_ready: true,              // 봇은 즉시 ready
+    status: 'selecting'
+  }).select().single();
+
+  if (error) { toast('❌', '방 생성 실패: ' + (error.message || '')); return; }
+
+  // 봇 다람쥐 정보를 메모리에 저장 (전투 시뮬레이션에서 사용)
+  _brBotSquirrels = {};
+  preset.squirrels.forEach((sq, i) => {
+    const id = i === 0 ? botSq1Id : botSq2Id;
+    _brBotSquirrels[id] = {
+      id: id,
+      name: sq.name,
+      sprite: sq.sprite,
+      stats: { ...sq.stats },
+      status: 'explorer'
+    };
+  });
+
+  _brState = data;
+  _brSubscribe(data.id);
+  _brRenderLobby(document.getElementById('utab-bossraid'), data);
+  toast('🤖', preset.label + ' 봇이 참가했어요! 다람쥐를 선택하세요.');
 }
 
 // ══════════════════════════════════════════════
@@ -328,12 +421,17 @@ async function _brRenderLobby(container, raid) {
   const isHost = raid.host_id === myProfile.id;
   const isGuest = raid.guest_id === myProfile.id;
 
-  // 상대방 정보 로드
-  const otherId = isHost ? raid.guest_id : raid.host_id;
+  // 상대방 정보 로드 (봇 모드 대응)
+  const isBotMode = !!_brBotSquirrels;
   let otherUser = null;
-  if (otherId) {
-    const { data } = await sb.from('users').select('display_name, avatar_emoji').eq('id', otherId).single();
-    otherUser = data;
+  if (isBotMode) {
+    otherUser = { display_name: '🤖 테스트 봇', avatar_emoji: '🤖' };
+  } else {
+    const otherId = isHost ? raid.guest_id : raid.host_id;
+    if (otherId) {
+      const { data } = await sb.from('users').select('display_name, avatar_emoji').eq('id', otherId).single();
+      otherUser = data;
+    }
   }
 
   if (seq !== _brLobbySeq) return; // 더 새로운 호출이 있으면 이전 것 폐기
@@ -505,6 +603,7 @@ async function _brLeaveRoom() {
 
   _brUnsubscribe();
   _brState = null;
+  _brBotSquirrels = null;
   renderBossRaid();
 }
 
@@ -519,11 +618,28 @@ async function _brSimulateBattle(raid) {
   const bossLv = _brRand(bossTemplate.lvMin, bossTemplate.lvMax);
   const bossStats = _brCalcStats(bossLv, true);
 
-  // 다람쥐 4마리 로드
-  const allSqIds = [...(raid.host_squirrel_ids || []), ...(raid.guest_squirrel_ids || [])];
-  const { data: squirrels } = await sb.from('squirrels').select('*').in('id', allSqIds);
-  if (!squirrels || squirrels.length < 4) {
-    toast('❌', '다람쥐 정보를 불러올 수 없어요');
+  // 다람쥐 4마리 로드 (봇 모드 대응)
+  const hostSqIds = raid.host_squirrel_ids || [];
+  const guestSqIds = raid.guest_squirrel_ids || [];
+  const isBotMode = !!_brBotSquirrels;
+
+  // 실제 다람쥐 (호스트측)
+  const { data: realSquirrels } = await sb.from('squirrels').select('*').in('id', hostSqIds);
+
+  // 봇 다람쥐 합치기
+  let squirrels = [...(realSquirrels || [])];
+  if (isBotMode && _brBotSquirrels) {
+    guestSqIds.forEach(id => {
+      if (_brBotSquirrels[id]) squirrels.push(_brBotSquirrels[id]);
+    });
+  } else if (!isBotMode) {
+    // 일반 모드: guest 다람쥐도 DB에서 로드
+    const { data: guestSqs } = await sb.from('squirrels').select('*').in('id', guestSqIds);
+    if (guestSqs) squirrels = squirrels.concat(guestSqs);
+  }
+
+  if (squirrels.length < 4) {
+    toast('❌', '다람쥐 정보를 불러올 수 없어요 (' + squirrels.length + '/4)');
     return;
   }
 
@@ -535,7 +651,7 @@ async function _brSimulateBattle(raid) {
       id: sq.id,
       name: sq.name,
       sprite: sq.sprite || 'sq_acorn',
-      owner: raid.host_squirrel_ids.includes(sq.id) ? 'host' : 'guest',
+      owner: hostSqIds.includes(sq.id) ? 'host' : 'guest',
       hp: stats.hp || 50,
       maxHp: stats.hp || 50,
       atk: stats.atk || 10,
@@ -1107,6 +1223,7 @@ async function _brFinish() {
   _brUnsubscribe();
   _brState = null;
   _brWeeklyDone = false;
+  _brBotSquirrels = null;
   window._brCards = null;
   window._brChosenCard = null;
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
