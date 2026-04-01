@@ -95,9 +95,11 @@
   <div class="mb-5" style="margin-top:-8px">
     <!-- 최상단: 볼륨(좌) + 도토리상점(가운데) + 로그아웃(우) -->
     <div class="header-top-bar">
-      <div class="vol-control" id="volControl" style="display:none">
-        <button class="vol-icon-btn" id="volIconBtn" onclick="toggleMute()" title="음소거 토글">🔊</button>
-        <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="50" oninput="setAppVolume(this.value)">
+      <div>
+        <div class="vol-control" id="volControl" style="display:none">
+          <button class="vol-icon-btn" id="volIconBtn" onclick="toggleMute()" title="음소거 토글">🔊</button>
+          <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="50" oninput="setAppVolume(this.value)">
+        </div>
       </div>
       <h1 class="header-app-title">도토리 상점</h1>
       <button class="btn-logout-sm hidden" id="logoutBtn" onclick="doLogout()">로그아웃</button>
