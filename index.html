@@ -135,6 +135,7 @@
       <button class="tab-btn" onclick="uTab('minigame',this)" style="flex-shrink:0">🎮 미니게임</button>
       <button class="tab-btn" onclick="uTab('ranking',this)" style="flex-shrink:0">🏆 랭킹</button>
       <button class="tab-btn" onclick="uTab('recycle',this)" style="flex-shrink:0">♻️ 재활용</button>
+      <button class="tab-btn" onclick="uTab('bossraid',this)" style="flex-shrink:0">🐉 레이드</button>
       <button class="tab-btn" onclick="uTab('friend',this)" style="flex-shrink:0;position:relative">🤝 친구<span class="notif-dot hidden" id="friendReqDot" style="position:absolute;top:2px;right:2px"></span></button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0">👤 마이</button>
     </div></div>
@@ -1182,6 +1183,8 @@
       </div>
     </div>
 
+    <div id="utab-bossraid" class="hidden"></div>
+
     <div id="utab-mypage" class="hidden">
       <div class="clay-card p-6 mb-4" id="mypageHeader"></div>
 
@@ -1305,7 +1308,14 @@
         <div class="adm-maint-chip" onclick="toggleMaintenance('recycle')"><span class="maint-dot" id="maint-dot-recycle"></span> ♻️ 재활용</div>
         <div class="adm-maint-chip" onclick="toggleMaintenance('minigame')"><span class="maint-dot" id="maint-dot-minigame"></span> 🎮 미니게임</div>
         <div class="adm-maint-chip" onclick="toggleMaintenance('squirrel')"><span class="maint-dot" id="maint-dot-squirrel"></span> 🐿️ 다람쥐</div>
+        <div class="adm-maint-chip" onclick="toggleMaintenance('bossraid')"><span class="maint-dot" id="maint-dot-bossraid"></span> 🐉 레이드</div>
         <div class="adm-maint-chip" onclick="toggleMaintenance('mypage')"><span class="maint-dot" id="maint-dot-mypage"></span> 👤 마이</div>
+      </div>
+
+      <!-- 보스레이드 설정 -->
+      <p class="adm-section-label">🐉 보스레이드</p>
+      <div class="clay-card p-4">
+        <button class="btn btn-primary w-full py-2 text-sm" onclick="brAdminOpenSettings()">⚙️ 보스레이드 설정 열기</button>
       </div>
       <p class="adm-section-label" style="margin-top:8px">🐿️ 다람쥐 서브탭 점검</p>
       <div class="adm-maint-row" id="maintRowSqSub">
@@ -2030,6 +2040,7 @@
 <script src="js/minigame_roulette.js"></script>
 <script src="js/squirrel.js"></script>
 <script src="js/expedition.js"></script>
+<script src="js/bossraid.js"></script>
 <script src="js/farm_core.js"></script>
 <script src="js/farm_shop.js"></script>
 <script src="js/farm_farmer.js"></script>
