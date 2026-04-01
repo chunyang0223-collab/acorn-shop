@@ -648,15 +648,30 @@ async function _brSimulateBattle(raid) {
     return;
   }
 
+  // 오너 닉네임 로드
+  let hostName = myProfile.display_name || '호스트';
+  let guestName = '게스트';
+  if (isBotMode) {
+    guestName = '🤖 봇';
+  } else {
+    const gId = raid.guest_id;
+    if (gId) {
+      const { data: gu } = await sb.from('users').select('display_name').eq('id', gId).limit(1);
+      if (gu && gu.length > 0) guestName = gu[0].display_name || '게스트';
+    }
+  }
+
   // 파티 구성 (stats가 없을 경우 기본값)
   const ultiMax = _brConfig.ultimate_uses || 1;
   const party = squirrels.map(sq => {
     const stats = sq.stats || { hp: 50, atk: 10, def: 5 };
+    const isHostSq = hostSqIds.includes(sq.id);
     return {
       id: sq.id,
       name: sq.name,
       sprite: sq.sprite || 'sq_acorn',
-      owner: hostSqIds.includes(sq.id) ? 'host' : 'guest',
+      owner: isHostSq ? 'host' : 'guest',
+      ownerName: isHostSq ? hostName : guestName,
       hp: stats.hp || 50,
       maxHp: stats.hp || 50,
       atk: stats.atk || 10,
@@ -823,6 +838,7 @@ function _brRenderBattle(container, raid) {
 
   const boss = initEntry.boss;
   const party = initEntry.party;
+  const ultiMax = initEntry.ultiMax || 1;
 
   container.innerHTML = `
     <div class="br-battle-wrap">
@@ -830,11 +846,11 @@ function _brRenderBattle(container, raid) {
       <div class="br-boss-area">
         <div class="br-boss-emoji" id="brBossEmoji">${boss.emoji}</div>
         <div class="br-boss-info">
-          <p class="text-sm font-black">${boss.name} <span class="text-xs text-gray-400">Lv.${boss.lv}</span></p>
+          <p class="text-sm font-black" style="color:#f8fafc">${boss.name} <span class="text-xs" style="color:#94a3b8">Lv.${boss.lv}</span></p>
           <div class="br-hp-track">
             <div class="br-hp-bar br-hp-boss" id="brBossHpBar" style="width:100%"></div>
           </div>
-          <p class="text-xs text-gray-400" id="brBossHpText">${boss.hp} / ${boss.maxHp}</p>
+          <p class="text-xs" style="color:#94a3b8" id="brBossHpText">${boss.hp} / ${boss.maxHp}</p>
         </div>
       </div>
 
@@ -842,10 +858,20 @@ function _brRenderBattle(container, raid) {
       <div class="br-party-grid">
         ${party.map((sq, i) => `
           <div class="br-pc-card" id="brPc${i}">
-            <img src="images/squirrels/${sq.sprite}.png" class="br-pc-img" onerror="this.outerHTML='<div class=\\'text-xl\\'>🐿️</div>'">
-            <p class="text-xs font-black">${sq.name}</p>
-            <div class="br-hp-track br-hp-sm">
+            <div class="br-pc-owner" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">${_escHtml(sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'))}</div>
+            <div class="br-pc-sprite-wrap">
+              <img src="images/squirrels/${sq.sprite}.png" class="br-pc-img" onerror="this.outerHTML='<div class=\\'text-2xl\\'>🐿️</div>'">
+              <div class="br-action-badge" id="brBadge${i}"></div>
+              <div class="br-dmg-popup" id="brDmgPopup${i}"></div>
+            </div>
+            <p class="text-xs font-black" style="color:#e2e8f0;margin:2px 0 0">${sq.name}</p>
+            <div class="br-hp-track br-hp-sm" style="margin:3px 0 2px">
               <div class="br-hp-bar br-hp-ally" id="brPcHp${i}" style="width:100%"></div>
+            </div>
+            <div class="br-pc-hp-text" id="brPcHpText${i}">${sq.hp}/${sq.maxHp}</div>
+            <div class="br-pc-counters">
+              <span class="br-counter-sp" id="brPcSp${i}" title="SP (팀 공용)">✨${initEntry.sp}</span>
+              <span class="br-counter-ulti" id="brPcUlti${i}" title="필살기 잔여">💥${sq.ultiLeft || ultiMax}</span>
             </div>
           </div>
         `).join('')}
@@ -854,9 +880,9 @@ function _brRenderBattle(container, raid) {
       <!-- 로그 -->
       <div class="br-log-panel" id="brLogPanel"></div>
 
-      <!-- SP -->
-      <div class="text-center mt-2">
-        <span class="text-xs font-bold text-amber-500" id="brSpText">✨ SP: ${initEntry.sp}</span>
+      <!-- SP 요약 (하단) -->
+      <div class="text-center" style="margin-top:8px">
+        <span class="text-xs font-bold" style="color:#fbbf24" id="brSpText">✨ SP: ${initEntry.sp}</span>
       </div>
     </div>`;
 
@@ -874,7 +900,7 @@ function _brStartReplay(log, partyInit) {
   const party = partyInit.map(p => ({...p}));
   let idx = 0;
 
-  // init, msg 엔트리는 빠르게 스킵
+  // init 엔트리는 스킵
   const skipTypes = ['init'];
 
   _brReplayTimer = setInterval(() => {
@@ -882,7 +908,6 @@ function _brStartReplay(log, partyInit) {
       clearInterval(_brReplayTimer);
       _brReplayTimer = null;
       if (typeof _sndStopBGM === 'function') _sndStopBGM();
-      // 전투 끝 → 결과 표시
       setTimeout(() => {
         if (_brState) _brRenderResult(document.getElementById('utab-bossraid'), _brState);
       }, 1200);
@@ -909,62 +934,112 @@ function _brStartReplay(log, partyInit) {
       if (typeof _btlSound === 'function') setTimeout(() => _btlSound('bigHit'), 150);
     } else if (entry.type === 'boss_attack') {
       if (typeof _btlSound === 'function') _btlSound('hit');
-    } else if (entry.type === 'result') {
-      if (typeof _btlSound === 'function') _btlSound(entry.result === 'victory' ? 'victory' : 'defeat');
     }
 
-    // 보스 HP 업데이트
+    // ── 보스 HP 업데이트 + 데미지 팝업 on boss ──
     if (entry.type === 'boss_hp') {
       const pct = Math.max(0, entry.hp / entry.maxHp * 100);
       const bar = document.getElementById('brBossHpBar');
       const txt = document.getElementById('brBossHpText');
-      if (bar) bar.style.width = pct + '%';
+      if (bar) {
+        bar.style.width = pct + '%';
+        // 저 HP일 때 바 색상 변경
+        if (pct <= 25) bar.style.background = 'linear-gradient(90deg, #dc2626, #ef4444)';
+        else if (pct <= 50) bar.style.background = 'linear-gradient(90deg, #ef4444, #f97316)';
+      }
       if (txt) txt.textContent = `${Math.max(0, entry.hp)} / ${entry.maxHp}`;
 
-      // 보스 흔들림
+      // 보스 흔들림 (더 강하게)
       const bossEl = document.getElementById('brBossEmoji');
       if (bossEl) {
-        bossEl.classList.add('br-shaking');
-        setTimeout(() => bossEl.classList.remove('br-shaking'), 300);
+        bossEl.classList.add('br-boss-hit');
+        setTimeout(() => bossEl.classList.remove('br-boss-hit'), 400);
       }
     }
 
-    // 공격/스킬/필살기 시 공격자 하이라이트
+    // ── 다람쥐 공격/스킬/필살기 → 액션 배지 + 데미지 팝업 + 애니메이션 ──
     if (entry.type === 'attack' || entry.type === 'skill' || entry.type === 'ultimate') {
       const sqIdx = partyInit.findIndex(p => p.id === entry.sqId);
       if (sqIdx >= 0) {
         const card = document.getElementById('brPc' + sqIdx);
         if (card) {
-          card.classList.add('br-attacking');
-          if (entry.type === 'ultimate') card.classList.add('br-ultimate-glow');
-          setTimeout(() => {
-            card.classList.remove('br-attacking');
-            card.classList.remove('br-ultimate-glow');
-          }, entry.type === 'ultimate' ? 500 : 300);
+          // 타입별 애니메이션 클래스
+          if (entry.type === 'ultimate') {
+            card.classList.add('br-attacking-ulti', 'br-ultimate-glow');
+            setTimeout(() => {
+              card.classList.remove('br-attacking-ulti', 'br-ultimate-glow');
+            }, 550);
+          } else if (entry.type === 'skill') {
+            card.classList.add('br-attacking-skill');
+            setTimeout(() => card.classList.remove('br-attacking-skill'), 400);
+          } else {
+            card.classList.add(entry.bigHit ? 'br-attacking-big' : 'br-attacking');
+            setTimeout(() => {
+              card.classList.remove('br-attacking', 'br-attacking-big');
+            }, 350);
+          }
         }
+
+        // 액션 배지 표시
+        const badge = document.getElementById('brBadge' + sqIdx);
+        if (badge) {
+          let badgeText = '⚔️';
+          let badgeCls = 'br-badge-atk';
+          if (entry.type === 'skill') { badgeText = '✨'; badgeCls = 'br-badge-skill'; }
+          else if (entry.type === 'ultimate') { badgeText = '💥'; badgeCls = 'br-badge-ulti'; }
+          else if (entry.bigHit) { badgeText = '💢'; badgeCls = 'br-badge-big'; }
+          badge.textContent = badgeText;
+          badge.className = 'br-action-badge ' + badgeCls + ' br-badge-show';
+          setTimeout(() => { badge.className = 'br-action-badge'; badge.textContent = ''; }, 450);
+        }
+
+        // 보스에 데미지 팝업
+        _brShowDmgPopup('brBossEmoji', entry.dmg, entry.type);
       }
-      // SP 업데이트
+
+      // SP 카운터 업데이트 (모든 카드)
       if (entry.type === 'skill' && entry.spLeft !== undefined) {
         const spEl = document.getElementById('brSpText');
-        if (spEl) spEl.textContent = `✨ SP: ${entry.spLeft}`;
+        if (spEl) spEl.textContent = '✨ SP: ' + entry.spLeft;
+        for (let si = 0; si < partyInit.length; si++) {
+          const spC = document.getElementById('brPcSp' + si);
+          if (spC) spC.textContent = '✨' + entry.spLeft;
+        }
+      }
+      // 필살기 카운터 업데이트
+      if (entry.type === 'ultimate' && entry.ultiLeft !== undefined) {
+        const uC = document.getElementById('brPcUlti' + sqIdx);
+        if (uC) {
+          uC.textContent = '💥' + entry.ultiLeft;
+          if (entry.ultiLeft <= 0) uC.style.opacity = '0.35';
+        }
       }
     }
 
-    // 보스 반격 시 타겟 피격
+    // ── 보스 반격 → 타겟 피격 + 데미지 팝업 ──
     if (entry.type === 'boss_attack') {
       const tIdx = partyInit.findIndex(p => p.id === entry.targetId);
       if (tIdx >= 0) {
         const card = document.getElementById('brPc' + tIdx);
         if (card) {
           card.classList.add('br-hit');
-          setTimeout(() => card.classList.remove('br-hit'), 300);
+          setTimeout(() => card.classList.remove('br-hit'), 400);
         }
-        // HP 바 업데이트
+
+        // 다람쥐에 데미지 팝업
+        _brShowDmgPopup('brPc' + tIdx, entry.dmg, 'hit');
+
+        // HP 바 + 텍스트 업데이트
         const hpBar = document.getElementById('brPcHp' + tIdx);
         if (hpBar) {
           const pct = Math.max(0, entry.targetHp / entry.targetMaxHp * 100);
           hpBar.style.width = pct + '%';
+          if (pct <= 30) hpBar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+          else if (pct <= 60) hpBar.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
         }
+        const hpText = document.getElementById('brPcHpText' + tIdx);
+        if (hpText) hpText.textContent = Math.max(0, entry.targetHp) + '/' + entry.targetMaxHp;
+
         // 사망 처리
         if (!entry.targetAlive) {
           if (card) card.classList.add('br-dead');
@@ -972,7 +1047,27 @@ function _brStartReplay(log, partyInit) {
       }
     }
 
-  }, 470); // 1.7배속 (800 / 1.7 ≈ 470ms)
+  }, 470);
+}
+
+// ── 데미지 팝업 헬퍼 ──
+function _brShowDmgPopup(parentId, dmg, type) {
+  const parent = document.getElementById(parentId);
+  if (!parent) return;
+  const popup = document.createElement('div');
+  let cls = 'br-dmg-float';
+  if (type === 'ultimate') cls += ' br-dmg-ulti';
+  else if (type === 'skill') cls += ' br-dmg-skill';
+  else if (type === 'hit') cls += ' br-dmg-hit';
+  else cls += ' br-dmg-atk';
+  popup.className = cls;
+  popup.textContent = (type === 'hit' ? '-' : '') + dmg;
+  // 좌우 랜덤 오프셋
+  const offsetX = Math.floor(Math.random() * 24) - 12;
+  popup.style.left = 'calc(50% + ' + offsetX + 'px)';
+  parent.style.position = 'relative';
+  parent.appendChild(popup);
+  setTimeout(() => popup.remove(), 900);
 }
 
 function _brAddLog(text, cls) {
