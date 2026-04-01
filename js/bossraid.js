@@ -438,11 +438,14 @@ async function _brRenderLobby(container, raid) {
 
   if (seq !== _brLobbySeq) return; // 더 새로운 호출이 있으면 이전 것 폐기
 
-  // 내 다람쥐 목록 로드 (탐험형만 출전 가능)
-  const { data: rawSquirrels } = await sb.from('squirrels')
-    .select('*')
-    .eq('user_id', myProfile.id)
-    .eq('status', 'explorer');
+  // 내 다람쥐 목록 로드 (관리자는 전체, 일반유저는 탐험형만)
+  let _brSqQuery = sb.from('squirrels').select('*').eq('user_id', myProfile.id);
+  if (!myProfile?.is_admin) {
+    _brSqQuery = _brSqQuery.eq('status', 'explorer');
+  } else {
+    _brSqQuery = _brSqQuery.in('status', ['explorer', 'pet', 'farmer']);
+  }
+  const { data: rawSquirrels } = await _brSqQuery;
 
   if (seq !== _brLobbySeq) return; // 더 새로운 호출이 있으면 이전 것 폐기
 
