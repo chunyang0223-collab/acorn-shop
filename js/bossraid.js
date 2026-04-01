@@ -168,6 +168,16 @@ async function renderBossRaid() {
   }
 
   if (activeRaid) {
+    // 멈춘 레이드 자동 정리 (10분 이상 경과)
+    const raidAge = Date.now() - new Date(activeRaid.created_at).getTime();
+    const STALE_MS = 10 * 60 * 1000; // 10분
+    if (raidAge > STALE_MS && ['waiting', 'selecting', 'ready', 'battling'].includes(activeRaid.status)) {
+      await sb.from('boss_raids').update({ status: 'cancelled' }).eq('id', activeRaid.id);
+      toast('⚠️', '오래된 레이드가 자동 정리되었어요');
+      renderBossRaid();
+      return;
+    }
+
     _brState = activeRaid;
     _brSubscribe(activeRaid.id);
     _brRenderLobby(container, activeRaid);
@@ -401,6 +411,8 @@ function _brOnStateChange(raid) {
       _brRenderLobby(container, raid);
       break;
     case 'battling':
+      // 이미 리플레이 중이면 재렌더 방지
+      if (_brReplayTimer) break;
       if (typeof _btlSound === 'function') _btlSound('battleStart');
       _brRenderBattle(container, raid);
       break;
@@ -843,6 +855,9 @@ function _brRenderBattle(container, raid) {
   const initEntry = log.find(e => e.type === 'init');
   if (!initEntry) return;
 
+  // 배틀 재렌더 시 결과 플래그 초기화 (폴링 재호출 대비)
+  _brResultRendered = false;
+
   // 보스별 보상 가중치 메타 추출
   const metaEntry = log.find(e => e.type === 'boss_meta');
   window._brBossRewardWeights = metaEntry ? metaEntry.reward_weights : null;
@@ -1128,12 +1143,44 @@ function _brUpdateDmgMeter() {
   // 딜 높은 순 정렬
   entries.sort((a, b) => b.dmg - a.dmg);
 
-  // DOM 순서도 딜 높은 순으로 재배치
   const meter = document.getElementById('brDmgMeter');
   if (meter) {
+    // FLIP 애니메이션: 1) 현재 위치 기록
+    const oldPos = {};
     for (const e of entries) {
       const row = document.getElementById('brDmgRow_' + e.id);
-      if (row) meter.appendChild(row); // 기존 자식을 끝으로 이동 = 순서 재배치
+      if (row) oldPos[e.id] = row.getBoundingClientRect().top;
+    }
+
+    // 2) DOM 재배치
+    for (const e of entries) {
+      const row = document.getElementById('brDmgRow_' + e.id);
+      if (row) meter.appendChild(row);
+    }
+
+    // 3) 새 위치와 비교 → 역방향 offset 적용 후 transition으로 원래 위치로
+    for (const e of entries) {
+      const row = document.getElementById('brDmgRow_' + e.id);
+      if (!row || oldPos[e.id] === undefined) continue;
+      const newTop = row.getBoundingClientRect().top;
+      const delta = oldPos[e.id] - newTop;
+      if (Math.abs(delta) > 1) {
+        row.style.transition = 'none';
+        row.style.transform = 'translateY(' + delta + 'px)';
+        // 강제 리플로우 후 transition 복원
+        row.offsetHeight;
+        row.style.transition = '';
+        row.style.transform = '';
+      }
+    }
+
+    // 1등 하이라이트
+    for (let i = 0; i < entries.length; i++) {
+      const row = document.getElementById('brDmgRow_' + entries[i].id);
+      if (row) {
+        if (i === 0 && entries[i].dmg > 0) row.classList.add('br-dmg-top');
+        else row.classList.remove('br-dmg-top');
+      }
     }
   }
 
