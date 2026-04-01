@@ -519,9 +519,10 @@ async function _brRenderLobby(container, raid) {
       </div>
     </div>`;
 
-  // 다람쥐 선택 (상대가 들어온 경우)
+  // 다람쥐 선택 (호스트는 대기 중에도 선택 가능)
   console.log('[BR-LOBBY] 조건체크: guest_id=' + (raid.guest_id||'null') + ' status=' + raid.status + ' myReady=' + myReady + ' isHost=' + isHost + ' sqCount=' + (mySquirrels||[]).length);
-  if (raid.guest_id && raid.status === 'selecting' && !myReady) {
+  if (['waiting', 'selecting'].includes(raid.status) && !myReady) {
+    console.log('[BR-LOBBY] ✅ 다람쥐선택 조건 통과! 그리드 렌더링 시작');
     html += `
       <div class="clay-card p-5 mb-4">
         <p class="text-sm font-black text-gray-700 mb-3">🐿️ 다람쥐 2마리를 선택하세요</p>
@@ -551,7 +552,7 @@ async function _brRenderLobby(container, raid) {
   }
 
   // 내가 준비완료인데 상대가 아직인 경우
-  if (myReady && !otherReady && raid.status === 'selecting') {
+  if (myReady && !otherReady && ['waiting', 'selecting'].includes(raid.status)) {
     html += `
       <div class="clay-card p-6 text-center">
         <div class="text-4xl mb-3" style="animation:pulse 1.5s ease-in-out infinite">⏳</div>
