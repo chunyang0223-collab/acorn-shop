@@ -6127,8 +6127,13 @@ input[type="checkbox"]:active,
   z-index: 2;
 }
 .br-card-unchosen {
-  opacity: 0.4; transform: scale(0.9);
+  opacity: 0.5; transform: scale(0.9);
   pointer-events: none;
+}
+.br-card-unchosen.br-card-reveal {
+  transform: rotateY(180deg) scale(0.85);
+  opacity: 0.45;
+  transition: transform .5s, opacity .3s;
 }
 .br-grade-a { border-color: #fbbf24 !important; background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.05)) !important; }
 .br-grade-b { border-color: #a78bfa !important; background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(139,92,246,0.05)) !important; }
