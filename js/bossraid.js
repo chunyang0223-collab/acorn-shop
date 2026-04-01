@@ -377,7 +377,7 @@ function _brUnsubscribe() {
 
 async function _brPoll(raidId) {
   const { data } = await sb.from('boss_raids').select('*').eq('id', raidId).maybeSingle();
-  if (!data) return;
+  if (!data) { console.log('[BR-POLL] no data returned'); return; }
 
   // 변경 감지 (status, battle_log, guest_id, ready 상태)
   const prev = _brState;
@@ -387,6 +387,9 @@ async function _brPoll(raidId) {
     || data.guest_id !== prev.guest_id
     || data.host_ready !== prev.host_ready
     || data.guest_ready !== prev.guest_ready;
+
+  console.log('[BR-POLL] status=' + data.status + ' guest_id=' + (data.guest_id||'null') + ' host_ready=' + data.host_ready + ' changed=' + changed + ' prev_status=' + (prev?.status||'null'));
+
   _brState = data;
 
   if (changed) {
@@ -401,6 +404,7 @@ async function _brPoll(raidId) {
 
 function _brOnStateChange(raid) {
   const container = document.getElementById('utab-bossraid');
+  console.log('[BR-STATE] status=' + raid.status + ' container=' + (container ? 'YES' : 'NULL'));
   if (!container) return;
 
   switch (raid.status) {
@@ -438,6 +442,7 @@ function _brOnStateChange(raid) {
 // ══════════════════════════════════════════════
 async function _brRenderLobby(container, raid) {
   const seq = ++_brLobbySeq; // race-condition 방지
+  console.log('[BR-LOBBY] 시작 seq=' + seq + ' raid.status=' + raid.status + ' raid.guest_id=' + (raid.guest_id||'null'));
 
   const isHost = raid.host_id === myProfile.id;
   const isGuest = raid.guest_id === myProfile.id;
@@ -455,7 +460,7 @@ async function _brRenderLobby(container, raid) {
     }
   }
 
-  if (seq !== _brLobbySeq) return; // 더 새로운 호출이 있으면 이전 것 폐기
+  if (seq !== _brLobbySeq) { console.log('[BR-LOBBY] seq 취소 (1차) seq=' + seq + ' current=' + _brLobbySeq); return; }
 
   // 내 다람쥐 목록 로드 (관리자는 전체, 일반유저는 탐험형만)
   let _brSqQuery = sb.from('squirrels').select('*').eq('user_id', myProfile.id);
@@ -466,7 +471,7 @@ async function _brRenderLobby(container, raid) {
   }
   const { data: rawSquirrels } = await _brSqQuery;
 
-  if (seq !== _brLobbySeq) return; // 더 새로운 호출이 있으면 이전 것 폐기
+  if (seq !== _brLobbySeq) { console.log('[BR-LOBBY] seq 취소 (2차) seq=' + seq + ' current=' + _brLobbySeq); return; }
 
   // 등급 높은 순 정렬
   const _brGradeRank = { legend: 5, unique: 4, epic: 3, rare: 2, normal: 1 };
@@ -515,6 +520,7 @@ async function _brRenderLobby(container, raid) {
     </div>`;
 
   // 다람쥐 선택 (상대가 들어온 경우)
+  console.log('[BR-LOBBY] 조건체크: guest_id=' + (raid.guest_id||'null') + ' status=' + raid.status + ' myReady=' + myReady + ' isHost=' + isHost + ' sqCount=' + (mySquirrels||[]).length);
   if (raid.guest_id && raid.status === 'selecting' && !myReady) {
     html += `
       <div class="clay-card p-5 mb-4">
