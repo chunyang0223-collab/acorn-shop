@@ -5818,3 +5818,184 @@ input[type="checkbox"]:active,
 /* 다크모드 공개설정 모달 텍스트 */
 [data-theme="dark"] .pf-privacy-modal h2 { color: var(--pf-privacy-h2-color); }
 [data-theme="dark"] .pf-privacy-row span { color: var(--pf-privacy-row-span-color); }
+
+/* ══════════════════════════════════════════════
+   🐉 보스레이드
+   ══════════════════════════════════════════════ */
+
+/* ── 방 목록 ── */
+.br-room-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 14px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-default);
+  cursor: pointer; transition: transform .15s, box-shadow .2s;
+}
+.br-room-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* ── 로비: 플레이어 그리드 ── */
+.br-players-grid {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+}
+.br-player-card {
+  flex: 1; text-align: center; padding: 16px 12px; border-radius: 16px;
+  background: rgba(0,0,0,0.03); border: 2px solid transparent;
+  transition: border-color .3s, background .3s;
+}
+.br-player-card.br-ready {
+  border-color: #22c55e;
+  background: rgba(34,197,94,0.06);
+}
+.br-vs-badge {
+  font-family: 'Jua', sans-serif; font-size: 1.5rem; font-weight: 900;
+  color: #ef4444; flex-shrink: 0;
+}
+
+/* ── 다람쥐 선택 ── */
+.br-sq-pick {
+  text-align: center; padding: 10px 6px; border-radius: 14px;
+  cursor: pointer; transition: transform .15s, opacity .2s;
+  background: var(--bg-card);
+}
+.br-sq-pick:hover { transform: scale(1.05); }
+.br-sq-pick.br-sq-selected {
+  outline: 3px solid #f59e0b; outline-offset: 2px;
+}
+.br-sq-img { width: 42px; height: 42px; object-fit: contain; margin: 0 auto; }
+
+/* ── 전투 화면 ── */
+.br-battle-wrap {
+  background: linear-gradient(180deg, #1a0a2e 0%, #0d1117 100%);
+  border-radius: 20px; padding: 20px 16px; overflow: hidden;
+  border: 1.5px solid rgba(139,92,246,0.2);
+}
+
+.br-boss-area {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px; margin-bottom: 16px;
+  background: rgba(239,68,68,0.08); border-radius: 16px;
+  border: 1.5px solid rgba(239,68,68,0.15);
+}
+.br-boss-emoji {
+  font-size: 3.5rem; line-height: 1;
+  animation: br-boss-float 3s ease-in-out infinite;
+}
+.br-boss-info { flex: 1; }
+
+@keyframes br-boss-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* HP 바 */
+.br-hp-track {
+  width: 100%; height: 10px; background: rgba(255,255,255,0.1);
+  border-radius: 5px; overflow: hidden; margin: 4px 0;
+}
+.br-hp-track.br-hp-sm { height: 6px; }
+.br-hp-bar {
+  height: 100%; border-radius: 5px; transition: width .4s ease;
+}
+.br-hp-boss { background: linear-gradient(90deg, #ef4444, #f97316); }
+.br-hp-ally { background: linear-gradient(90deg, #22c55e, #86efac); }
+
+/* 파티 그리드 */
+.br-party-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  margin-bottom: 12px;
+}
+.br-pc-card {
+  text-align: center; padding: 10px 6px; border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  transition: border-color .3s, transform .2s;
+  color: #e2e8f0;
+}
+.br-pc-img { width: 36px; height: 36px; object-fit: contain; margin: 0 auto 4px; }
+
+/* 전투 애니메이션 */
+.br-attacking {
+  animation: br-atk-bounce .38s ease;
+  border-color: #22c55e !important;
+}
+@keyframes br-atk-bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+}
+.br-hit {
+  animation: br-hit-shake .35s ease;
+  border-color: #ef4444 !important;
+}
+@keyframes br-hit-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.br-shaking {
+  animation: br-hit-shake .35s ease;
+}
+.br-dead {
+  filter: grayscale(1); opacity: 0.3;
+}
+
+/* 로그 패널 */
+.br-log-panel {
+  max-height: 80px; overflow-y: auto; padding: 8px 10px;
+  background: rgba(0,0,0,0.3); border-radius: 12px;
+  scrollbar-width: thin;
+}
+.br-log-row {
+  font-size: 0.7rem; font-weight: 700; padding: 2px 0;
+  font-family: 'Nunito', sans-serif;
+}
+.br-log-atk { color: #68c568; }
+.br-log-em { color: #de5e4e; }
+.br-log-skill { color: #debb28; }
+.br-log-heal { color: #48cc88; }
+.br-log-win { color: #ffd700; }
+.br-log-lose { color: #e06060; }
+.br-log-default { color: #b0bcc8; }
+
+/* ── 보상 카드 ── */
+.br-card-row {
+  display: flex; gap: 12px; justify-content: center;
+}
+.br-reward-card {
+  width: 90px; height: 120px; border-radius: 14px;
+  cursor: pointer; position: relative;
+  transform-style: preserve-3d; transition: transform .5s;
+}
+.br-reward-card:hover { transform: scale(1.05); }
+.br-card-back, .br-card-front {
+  position: absolute; inset: 0; border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  backface-visibility: hidden;
+}
+.br-card-back {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  font-size: 2rem; color: white;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.br-card-front {
+  background: var(--bg-card); border: 2px solid var(--border-default);
+  transform: rotateY(180deg); padding: 8px;
+}
+.br-card-chosen {
+  transform: rotateY(180deg) scale(1.1);
+  z-index: 2;
+}
+.br-card-unchosen {
+  opacity: 0.4; transform: scale(0.9);
+  pointer-events: none;
+}
+.br-grade-a { border-color: #fbbf24 !important; background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.05)) !important; }
+.br-grade-b { border-color: #a78bfa !important; background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(139,92,246,0.05)) !important; }
+.br-grade-c { border-color: #94a3b8 !important; }
+
+/* ── 다크모드 보스레이드 ── */
+[data-theme="dark"] .br-room-row { background: var(--bg-card); border-color: var(--border-default); }
+[data-theme="dark"] .br-player-card { background: rgba(255,255,255,0.03); }
+[data-theme="dark"] .br-sq-pick { background: var(--bg-card); }
