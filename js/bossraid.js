@@ -133,6 +133,8 @@ async function renderBossRaid() {
 
   try {
   await _brLoadConfig();
+  // 다람쥐 등급 계산에 필요한 설정 로드
+  if (typeof sqLoadSettings === 'function') await sqLoadSettings();
 
   if (!_brConfig.enabled) {
     container.innerHTML = `
@@ -178,10 +180,17 @@ async function renderBossRaid() {
       return;
     }
 
-    _brState = activeRaid;
-    _brSubscribe(activeRaid.id);
-    _brRenderLobby(container, activeRaid);
-    return;
+    // 이미 보상 수령한 레이드면 스킵 (재진입 방지)
+    const _isHost = activeRaid.host_id === myProfile.id;
+    const _myRewarded = _isHost ? activeRaid.host_rewarded : activeRaid.guest_rewarded;
+    if (_myRewarded) {
+      // 보상 수령 완료된 레이드 → 메인 화면으로 (재진입하지 않음)
+    } else {
+      _brState = activeRaid;
+      _brSubscribe(activeRaid.id);
+      _brOnStateChange(activeRaid);
+      return;
+    }
   }
 
   // 대기 중인 방 목록
@@ -377,7 +386,7 @@ function _brUnsubscribe() {
 
 async function _brPoll(raidId) {
   const { data } = await sb.from('boss_raids').select('*').eq('id', raidId).maybeSingle();
-  if (!data) { console.log('[BR-POLL] no data returned'); return; }
+  if (!data) return;
 
   // 변경 감지 (status, battle_log, guest_id, ready 상태)
   const prev = _brState;
@@ -387,8 +396,6 @@ async function _brPoll(raidId) {
     || data.guest_id !== prev.guest_id
     || data.host_ready !== prev.host_ready
     || data.guest_ready !== prev.guest_ready;
-
-  console.log('[BR-POLL] status=' + data.status + ' guest_id=' + (data.guest_id||'null') + ' host_ready=' + data.host_ready + ' changed=' + changed + ' prev_status=' + (prev?.status||'null'));
 
   _brState = data;
 
@@ -404,7 +411,6 @@ async function _brPoll(raidId) {
 
 function _brOnStateChange(raid) {
   const container = document.getElementById('utab-bossraid');
-  console.log('[BR-STATE] status=' + raid.status + ' container=' + (container ? 'YES' : 'NULL'));
   if (!container) return;
 
   switch (raid.status) {
@@ -442,8 +448,6 @@ function _brOnStateChange(raid) {
 // ══════════════════════════════════════════════
 async function _brRenderLobby(container, raid) {
   const seq = ++_brLobbySeq; // race-condition 방지
-  console.log('[BR-LOBBY] 시작 seq=' + seq + ' raid.status=' + raid.status + ' raid.guest_id=' + (raid.guest_id||'null'));
-
   const isHost = raid.host_id === myProfile.id;
   const isGuest = raid.guest_id === myProfile.id;
 
@@ -460,7 +464,7 @@ async function _brRenderLobby(container, raid) {
     }
   }
 
-  if (seq !== _brLobbySeq) { console.log('[BR-LOBBY] seq 취소 (1차) seq=' + seq + ' current=' + _brLobbySeq); return; }
+  if (seq !== _brLobbySeq) return;
 
   // 내 다람쥐 목록 로드 (관리자는 전체, 일반유저는 탐험형만)
   let _brSqQuery = sb.from('squirrels').select('*').eq('user_id', myProfile.id);
@@ -471,7 +475,7 @@ async function _brRenderLobby(container, raid) {
   }
   const { data: rawSquirrels } = await _brSqQuery;
 
-  if (seq !== _brLobbySeq) { console.log('[BR-LOBBY] seq 취소 (2차) seq=' + seq + ' current=' + _brLobbySeq); return; }
+  if (seq !== _brLobbySeq) return;
 
   // 등급 높은 순 정렬
   const _brGradeRank = { legend: 5, unique: 4, epic: 3, rare: 2, normal: 1 };
@@ -520,9 +524,7 @@ async function _brRenderLobby(container, raid) {
     </div>`;
 
   // 다람쥐 선택 (호스트는 대기 중에도 선택 가능)
-  console.log('[BR-LOBBY] 조건체크: guest_id=' + (raid.guest_id||'null') + ' status=' + raid.status + ' myReady=' + myReady + ' isHost=' + isHost + ' sqCount=' + (mySquirrels||[]).length);
   if (['waiting', 'selecting'].includes(raid.status) && !myReady) {
-    console.log('[BR-LOBBY] ✅ 다람쥐선택 조건 통과! 그리드 렌더링 시작');
     html += `
       <div class="clay-card p-5 mb-4">
         <p class="text-sm font-black text-gray-700 mb-3">🐿️ 다람쥐 2마리를 선택하세요</p>
@@ -1525,6 +1527,8 @@ async function _brClaimReward(idx) {
       p_amount: chosen.acorns,
       p_reason: wasVictory ? '보스레이드 보상' : '보스레이드 패배 위로 보상'
     });
+    // 메모리 잔고 즉시 반영
+    myProfile.acorns = (myProfile.acorns || 0) + chosen.acorns;
   }
 
   // 아이템 지급
