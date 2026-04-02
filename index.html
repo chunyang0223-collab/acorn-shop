@@ -108,8 +108,8 @@
     <div class="flex items-center justify-between mt-1">
       <!-- 좌측: 도토리 이모지(테마토글) + 닉네임 -->
       <div class="header-identity">
-        <div id="headerAcornEmoji" onclick="toggleTheme()" title="테마 전환"
-          style="font-size:3.2rem;line-height:1;cursor:pointer;transition:filter .3s,transform .2s;filter:drop-shadow(0 2px 8px rgba(180,100,0,0.25));user-select:none"
+        <div id="headerAvatarIcon" onclick="openMyProfile()" title="내 프로필 보기"
+          style="line-height:1;cursor:pointer;transition:transform .2s;user-select:none;flex-shrink:0"
           onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">🌰</div>
         <button class="header-nickname-btn" id="headerUserLabel" onclick="openMyProfile()" title="내 프로필 보기">Acorn Shop ✨</button>
       </div>
@@ -119,6 +119,7 @@
           <span class="header-stat-ticket" id="headerTickets">🎫 0</span>
           <span class="header-stat-acorn" id="headerAcorns">🌰 0</span>
         </div>
+        <button class="header-icon-btn" onclick="toggleTheme()" id="themeToggleBtn" title="테마 전환" style="font-size:16px">🌙</button>
         <button class="header-icon-btn" onclick="showNotifications()" id="notifBtn">
           <span class="header-icon-emoji">🔔</span>
           <span class="notif-dot hidden" id="notifDot"></span>
@@ -134,10 +135,10 @@
       <button class="tab-btn" onclick="uTab('gacha',this)" style="flex-shrink:0">🎲 뽑기</button>
       <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0">📋 퀘스트</button>
       <button class="tab-btn" onclick="uTab('squirrel',this)" style="flex-shrink:0">🐿️ 다람쥐</button>
+      <button class="tab-btn" onclick="uTab('bossraid',this)" style="flex-shrink:0">🐉 레이드</button>
       <button class="tab-btn" onclick="uTab('minigame',this)" style="flex-shrink:0">🎮 미니게임</button>
       <button class="tab-btn" onclick="uTab('ranking',this)" style="flex-shrink:0">🏆 랭킹</button>
       <button class="tab-btn" onclick="uTab('recycle',this)" style="flex-shrink:0">♻️ 재활용</button>
-      <button class="tab-btn" onclick="uTab('bossraid',this)" style="flex-shrink:0">🐉 레이드</button>
       <button class="tab-btn" onclick="uTab('friend',this)" style="flex-shrink:0;position:relative">🤝 친구<span class="notif-dot hidden" id="friendReqDot" style="position:absolute;top:2px;right:2px"></span></button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0">👤 마이</button>
     </div></div>
