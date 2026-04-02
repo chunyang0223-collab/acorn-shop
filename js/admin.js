@@ -1126,6 +1126,16 @@ async function confirmGiftAllAcorn() {
     });
     if (error) { toast('❌', '전체 지급 실패: ' + error.message); return; }
     if (data?.error) { toast('❌', data.error); return; }
+    // 전체 유저에게 알림 발송
+    const { data: allUsers } = await sb.from('users').select('id');
+    if (allUsers?.length) {
+      const notifs = allUsers.map(u => ({
+        user_id: u.id, type: 'reward',
+        title: '도토리 지급! 🌰',
+        body: `관리자가 전체 유저에게 ${amt}🌰를 지급했어요!` + (memo ? ` (${memo})` : '')
+      }));
+      await sb.from('notifications').insert(notifs);
+    }
     toast('🌰', `전체 ${data.count}명에게 ${amt}🌰 지급 완료!`);
     playSound('approve');
   } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
@@ -1178,6 +1188,16 @@ async function confirmGiftAllItem() {
     });
     if (error) { toast('❌', '전체 선물 실패: ' + error.message); return; }
     if (data?.error) { toast('❌', data.error); return; }
+    // 전체 유저에게 알림 발송
+    const { data: allUsers } = await sb.from('users').select('id');
+    if (allUsers?.length) {
+      const notifs = allUsers.map(u => ({
+        user_id: u.id, type: 'reward',
+        title: '선물 도착! 🎁',
+        body: `관리자가 전체 유저에게 ${data.product_name} ${qty}개를 선물했어요! 인벤토리를 확인하세요.`
+      }));
+      await sb.from('notifications').insert(notifs);
+    }
     toast('🎁', `전체 ${data.count}명에게 ${data.product_name} ${qty}개 선물 완료!`);
     playSound('approve');
   } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
