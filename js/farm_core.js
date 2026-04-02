@@ -26,7 +26,8 @@ async function farmLoadSettings() {
 async function farmLoadPreview() {
   const { data, error } = await sb.rpc('farm_preview_probabilities');
   if (error || !data) return;
-  const gradeMap = { rare: 'Rare', epic: 'Epic', uncommon: 'Unique', legendary: 'Legend' };
+  // DB등급 → HTML id 매핑: uncommon(120+)=레어, rare(200+)=희귀, epic(280+)=유일, legendary(350+)=레전드
+  const gradeMap = { uncommon: 'Rare', rare: 'Epic', epic: 'Unique', legendary: 'Legend' };
   for (const [grade, label] of Object.entries(gradeMap)) {
     const d = data[grade];
     if (!d) continue;
@@ -150,11 +151,12 @@ async function farmSaveSettings() {
     grade_legend_poor:     get('farmSet_gradeLegendPoor', 40),
     grade_legend_grow:     get('farmSet_gradeLegendGrow', 12),
     // 등급별 버프 (중첩 JSON — farm_harvest_plot이 실제로 읽는 구조)
+    // JS등급 → DB등급 매핑: rare(레어)→uncommon(120+), epic(희귀)→rare(200+), unique(유일)→epic(280+), legend(레전드)→legendary(350+)
     grade_bonus: {
       common:    { bumper: 0, poor: 0, catthief: 0 },
-      rare:      { bumper: get('farmSet_gradeRareBumper', 0),  poor: -get('farmSet_gradeRarePoor', 12),  catthief: 0 },
-      epic:      { bumper: get('farmSet_gradeEpicBumper', 10), poor: -get('farmSet_gradeEpicPoor', 20),  catthief: 0 },
-      uncommon:  { bumper: get('farmSet_gradeUniqueBumper', 20), poor: -get('farmSet_gradeUniquePoor', 28), catthief: 0 },
+      uncommon:  { bumper: get('farmSet_gradeRareBumper', 0),  poor: -get('farmSet_gradeRarePoor', 12),  catthief: 0 },
+      rare:      { bumper: get('farmSet_gradeEpicBumper', 10), poor: -get('farmSet_gradeEpicPoor', 20),  catthief: 0 },
+      epic:      { bumper: get('farmSet_gradeUniqueBumper', 20), poor: -get('farmSet_gradeUniquePoor', 28), catthief: 0 },
       legendary: { bumper: get('farmSet_gradeLegendBumper', 35), poor: -get('farmSet_gradeLegendPoor', 40), catthief: 0 },
     },
   });
