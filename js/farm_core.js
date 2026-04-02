@@ -22,15 +22,40 @@ async function farmLoadSettings() {
   _farmSettings = data?.value || {};
 }
 
+// ── 관리자: DB 실제 연산 결과 미리보기 ──
+async function farmLoadPreview() {
+  const { data, error } = await sb.rpc('farm_preview_probabilities');
+  if (error || !data) return;
+  const gradeMap = { rare: 'Rare', epic: 'Epic', uncommon: 'Unique', legendary: 'Legend' };
+  for (const [grade, label] of Object.entries(gradeMap)) {
+    const d = data[grade];
+    if (!d) continue;
+    const b = d.base;
+    const n = d.nourished;
+    const el = document.getElementById(`farmPreview_${label}`);
+    if (el) el.innerHTML =
+      `<span style="opacity:.7">등급만:</span> 풍작 ${b.bumper}% · 흉작 ${b.poor}% · 길냥이 ${b.catthief}% · 일반 ${b.normal}%` +
+      `<br><span style="opacity:.7">+영양제:</span> 풍작 ${n.bumper}% · 흉작 ${n.poor}% · 길냥이 ${n.catthief}% · 일반 ${n.normal}%`;
+  }
+  // 기본(common) — 등급 없음
+  const c = data.common;
+  if (c) {
+    const el = document.getElementById('farmPreview_Base');
+    if (el) el.innerHTML =
+      `<span style="opacity:.7">기본:</span> 풍작 ${c.base.bumper}% · 흉작 ${c.base.poor}% · 길냥이 ${c.base.catthief}% · 일반 ${c.base.normal}%` +
+      `<br><span style="opacity:.7">+영양제:</span> 풍작 ${c.nourished.bumper}% · 흉작 ${c.nourished.poor}% · 길냥이 ${c.nourished.catthief}% · 일반 ${c.nourished.normal}%`;
+  }
+}
+
 // ── 관리자: 농장 설정 UI 로드 ──
 async function farmAdminLoadSettingsUI() {
   await farmLoadSettings();
   const s = _farmSettings;
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-  set('farmSet_harvestNormal', s.harvest_normal_pct ?? 55);
+  set('farmSet_harvestNormal', s.harvest_normal_pct ?? 50);
   set('farmSet_harvestBumper', s.harvest_bumper_pct ?? 20);
-  set('farmSet_harvestPoor', s.harvest_poor_pct ?? 17);
-  set('farmSet_harvestCatthief', s.harvest_catthief_pct ?? 8);
+  set('farmSet_harvestPoor', s.harvest_poor_pct ?? 25);
+  set('farmSet_harvestCatthief', s.harvest_catthief_pct ?? 5);
   set('farmSet_normalHarvest', s.normal_harvest ?? 3);
   set('farmSet_priceVariance', s.price_variance_pct ?? 30);
   set('farmSet_bumperMin', s.bumper_min ?? 4);
@@ -71,6 +96,7 @@ async function farmAdminLoadSettingsUI() {
   set('farmSet_gradeLegendBumper', s.grade_legend_bumper ?? 35);
   set('farmSet_gradeLegendPoor', s.grade_legend_poor ?? 40);
   set('farmSet_gradeLegendGrow', s.grade_legend_grow ?? 12);
+  farmLoadPreview();
 }
 
 async function farmSaveSettings() {
@@ -79,10 +105,10 @@ async function farmSaveSettings() {
     return el ? (parseFloat(el.value) || fallback) : fallback;
   };
   const merged = Object.assign({}, _farmSettings, {
-    harvest_normal_pct:    get('farmSet_harvestNormal', 55),
+    harvest_normal_pct:    get('farmSet_harvestNormal', 50),
     harvest_bumper_pct:    get('farmSet_harvestBumper', 20),
-    harvest_poor_pct:      get('farmSet_harvestPoor', 17),
-    harvest_catthief_pct:  get('farmSet_harvestCatthief', 8),
+    harvest_poor_pct:      get('farmSet_harvestPoor', 25),
+    harvest_catthief_pct:  get('farmSet_harvestCatthief', 5),
     normal_harvest:        get('farmSet_normalHarvest', 3),
     price_variance_pct:    get('farmSet_priceVariance', 30),
     bumper_min:            get('farmSet_bumperMin', 4),
@@ -110,7 +136,7 @@ async function farmSaveSettings() {
     accelerator_pct:       get('farmSet_acceleratorPct', 50),
     nutrient_cost:         get('farmSet_nutrientCost', 5),
     nutrient_bumper_boost: get('farmSet_nutrientBumperBoost', 20),
-    // 등급별 버프
+    // 등급별 버프 (평탄 키 — UI용)
     grade_rare_bumper:     get('farmSet_gradeRareBumper', 0),
     grade_rare_poor:       get('farmSet_gradeRarePoor', 12),
     grade_rare_grow:       get('farmSet_gradeRareGrow', 0),
@@ -123,11 +149,24 @@ async function farmSaveSettings() {
     grade_legend_bumper:   get('farmSet_gradeLegendBumper', 35),
     grade_legend_poor:     get('farmSet_gradeLegendPoor', 40),
     grade_legend_grow:     get('farmSet_gradeLegendGrow', 12),
+    // 등급별 버프 (중첩 JSON — farm_harvest_plot이 실제로 읽는 구조)
+    grade_bonus: {
+      common:    { bumper: 0, poor: 0, catthief: 0 },
+      rare:      { bumper: get('farmSet_gradeRareBumper', 0),  poor: -get('farmSet_gradeRarePoor', 12),  catthief: 0 },
+      epic:      { bumper: get('farmSet_gradeEpicBumper', 10), poor: -get('farmSet_gradeEpicPoor', 20),  catthief: 0 },
+      uncommon:  { bumper: get('farmSet_gradeUniqueBumper', 20), poor: -get('farmSet_gradeUniquePoor', 28), catthief: 0 },
+      legendary: { bumper: get('farmSet_gradeLegendBumper', 35), poor: -get('farmSet_gradeLegendPoor', 40), catthief: 0 },
+    },
   });
   const { error } = await sb.from('app_settings')
     .upsert({ key: 'farm_settings', value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-  if (!error) { _farmSettings = merged; toast('✅', '농장 설정이 저장되었어요'); }
-  else toast('❌', '저장 실패: ' + error.message);
+  if (!error) {
+    _farmSettings = merged;
+    toast('✅', '농장 설정이 저장되었어요');
+    farmLoadPreview();
+  } else {
+    toast('❌', '저장 실패: ' + error.message);
+  }
 }
 
 // ── 농장 탭 진입 ──
