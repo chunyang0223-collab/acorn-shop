@@ -2959,6 +2959,14 @@ input[type="checkbox"]:active,
 .date-summary { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
 .ds-pill { font-family:'Jua',sans-serif; font-size:11px; padding:3px 10px; border-radius:10px; }
 
+/* ── 하루 요약 바 ── */
+.day-summary-bar { display:flex; gap:8px; margin-bottom:10px; }
+.day-summary-chip { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 12px; border-radius:14px; font-family:'Jua',sans-serif; font-size:12px; }
+.day-summary-chip.earned { background:rgba(52,211,153,0.1); border:1.5px solid rgba(52,211,153,0.25); color:#047857; }
+.day-summary-chip.spent { background:rgba(251,113,133,0.1); border:1.5px solid rgba(251,113,133,0.25); color:#be123c; }
+.day-summary-icon { font-size:14px; }
+.day-summary-val { font-weight:700; margin-left:2px; }
+
 /* ── 통합 이벤트 카드 ── */
 .ev-card { background:rgba(255,255,255,0.6); border:1.5px solid rgba(210,180,240,0.25); border-radius:16px; margin-bottom:7px; overflow:hidden; }
 .ev-row { display:flex; align-items:center; gap:10px; padding:11px 13px; cursor:pointer; user-select:none; }
@@ -5165,6 +5173,10 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .ic2-pending { color: var(--ic2-pending-text); }
 [data-theme="dark"] .inv-empty2 { color: var(--inv-empty2-text); }
 
+/* ── 하루 요약 바 다크모드 ── */
+[data-theme="dark"] .day-summary-chip.earned { background:rgba(52,211,153,0.12); border-color:rgba(52,211,153,0.2); color:#6ee7b7; }
+[data-theme="dark"] .day-summary-chip.spent { background:rgba(251,113,133,0.12); border-color:rgba(251,113,133,0.2); color:#fda4af; }
+
 /* ── 알림 내역 구분선 ── */
 [data-theme="dark"] .notif-scroll .row-item-bg {
   background: var(--notif-row-bg);
@@ -5630,7 +5642,24 @@ input[type="checkbox"]:active,
 .pf-privacy-btn { flex-shrink: 0; }
 .pf-avatar { font-size: 3rem; line-height: 1; }
 .pf-name { font-size: 1.1rem; font-weight: 900; color: var(--pf-name-text); }
+.pf-name-row { display: flex; align-items: center; gap: 6px; }
+.pf-edit-name-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 8px; transition: background 0.15s, transform 0.15s; line-height: 1; }
+.pf-edit-name-btn:hover { background: rgba(200,180,240,0.2); transform: scale(1.1); }
 .pf-joined { font-size: 0.7rem; color: var(--pf-joined-text); margin-top: 2px; }
+
+/* 닉네임 변경 에디터 */
+.pf-nick-editor { padding: 24px 20px; text-align: center; }
+.pf-nick-title { font-family: 'Jua', sans-serif; font-size: 18px; color: var(--pf-name-text); margin-bottom: 16px; }
+.pf-nick-input { width: 100%; padding: 12px 14px; border: 2px solid rgba(200,180,240,0.4); border-radius: 14px; font-family: 'Jua', sans-serif; font-size: 15px; color: var(--pf-name-text); background: var(--card-bg); outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.pf-nick-input:focus { border-color: #c084fc; }
+.pf-nick-hint { font-size: 11px; color: #a78bfa; margin-top: 8px; min-height: 16px; font-weight: 700; }
+.pf-nick-hint.error { color: #f43f5e; }
+.pf-nick-actions { display: flex; gap: 10px; margin-top: 18px; }
+.pf-nick-cancel { flex: 1; padding: 10px; border-radius: 14px; border: 1.5px solid rgba(200,180,240,0.3); background: transparent; font-family: 'Jua', sans-serif; font-size: 14px; color: #a78bfa; cursor: pointer; transition: background 0.15s; }
+.pf-nick-cancel:hover { background: rgba(200,180,240,0.1); }
+.pf-nick-save { flex: 1; padding: 10px; border-radius: 14px; border: none; background: linear-gradient(135deg, #c084fc, #a78bfa); font-family: 'Jua', sans-serif; font-size: 14px; color: #fff; cursor: pointer; transition: opacity 0.15s, transform 0.15s; }
+.pf-nick-save:hover { transform: translateY(-1px); }
+.pf-nick-save:disabled { opacity: 0.5; cursor: default; transform: none; }
 
 /* 통계 행 */
 .pf-stat-row {
@@ -5814,6 +5843,14 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .pf-sq-name { color: var(--pf-sq-name-color); }
 [data-theme="dark"] .pf-farm-card-val { color: var(--pf-farm-card-val-color); }
 [data-theme="dark"] .pf-empty-msg { color: var(--pf-empty-msg-color); }
+
+/* 다크모드 닉네임 변경 에디터 */
+[data-theme="dark"] .pf-nick-title { color: var(--pf-name-color); }
+[data-theme="dark"] .pf-nick-input { background: rgba(255,255,255,0.06); border-color: rgba(167,139,250,0.3); color: #e9d5ff; }
+[data-theme="dark"] .pf-nick-input:focus { border-color: #c084fc; }
+[data-theme="dark"] .pf-nick-cancel { border-color: rgba(167,139,250,0.25); color: #c4b5fd; }
+[data-theme="dark"] .pf-nick-cancel:hover { background: rgba(167,139,250,0.1); }
+[data-theme="dark"] .pf-edit-name-btn:hover { background: rgba(167,139,250,0.2); }
 
 /* 다크모드 공개설정 모달 텍스트 */
 [data-theme="dark"] .pf-privacy-modal h2 { color: var(--pf-privacy-h2-color); }
