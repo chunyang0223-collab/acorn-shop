@@ -55,7 +55,10 @@ async function openProfile(userId) {
       <div class="pf-header">
         <span class="pf-avatar">${_avatarHtml(user, '3.5rem')}</span>
         <div class="pf-header-info">
-          <p class="pf-name">${_escHtml(user.display_name || '???')}</p>
+          <div class="pf-name-row">
+            <p class="pf-name" id="pfNameLabel">${_escHtml(user.display_name || '???')}</p>
+            ${isMe ? '<button class="pf-edit-name-btn" onclick="openNicknameEditor()" title="닉네임 변경">✏️</button>' : ''}
+          </div>
           <p class="pf-joined">가입일: ${user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '???'}</p>
         </div>
         ${isMe ? '<button class="btn btn-primary px-4 py-2 text-xs pf-privacy-btn" onclick="openPrivacySettings()">🔒 공개 설정</button>' : ''}
@@ -340,4 +343,70 @@ async function savePrivacySettings() {
 // ── 내 프로필 보기 (마이페이지에서) ──
 function openMyProfile() {
   openProfile(myProfile.id);
+}
+
+// ── 닉네임 변경 ──
+function openNicknameEditor() {
+  const cur = myProfile.display_name || '';
+  showModal(`
+    <div class="pf-nick-editor">
+      <p class="pf-nick-title">닉네임 변경</p>
+      <input id="nickInput" class="pf-nick-input" type="text" maxlength="12"
+        value="${_escHtml(cur)}" placeholder="새 닉네임 입력" autocomplete="off" spellcheck="false">
+      <p class="pf-nick-hint" id="nickHint">2~12자, 특수문자 불가</p>
+      <div class="pf-nick-actions">
+        <button class="pf-nick-cancel" onclick="openMyProfile()">취소</button>
+        <button class="pf-nick-save" id="nickSaveBtn" onclick="saveNickname()">변경</button>
+      </div>
+    </div>`);
+  const inp = document.getElementById('nickInput');
+  if (inp) { inp.focus(); inp.select(); }
+}
+
+async function saveNickname() {
+  const inp = document.getElementById('nickInput');
+  const hint = document.getElementById('nickHint');
+  const btn = document.getElementById('nickSaveBtn');
+  if (!inp || !btn) return;
+
+  const name = inp.value.trim();
+  const cur = myProfile.display_name || '';
+
+  // 유효성 검사
+  if (name === cur) { hint.textContent = '현재 닉네임과 동일해요'; hint.className = 'pf-nick-hint error'; return; }
+  if (name.length < 2 || name.length > 12) { hint.textContent = '2~12자로 입력해주세요'; hint.className = 'pf-nick-hint error'; return; }
+  if (/[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣ _]/.test(name)) { hint.textContent = '한글, 영문, 숫자, 띄어쓰기만 가능해요'; hint.className = 'pf-nick-hint error'; return; }
+
+  // 중복 검사
+  btn.disabled = true;
+  btn.textContent = '확인 중...';
+  hint.textContent = '';
+  hint.className = 'pf-nick-hint';
+
+  const { data: existing } = await sb.from('users')
+    .select('id').ilike('display_name', name).neq('id', myProfile.id).limit(1);
+
+  if (existing && existing.length > 0) {
+    hint.textContent = '이미 사용 중인 닉네임이에요';
+    hint.className = 'pf-nick-hint error';
+    btn.disabled = false; btn.textContent = '변경';
+    return;
+  }
+
+  // 저장
+  btn.textContent = '저장 중...';
+  const { error } = await sb.from('users').update({ display_name: name }).eq('id', myProfile.id);
+  if (error) {
+    hint.textContent = '저장 실패: ' + (error.message || '');
+    hint.className = 'pf-nick-hint error';
+    btn.disabled = false; btn.textContent = '변경';
+    return;
+  }
+
+  // 성공 → 로컬 프로필 갱신 + UI 반영
+  myProfile.display_name = name;
+  document.getElementById('headerUserLabel').textContent = name;
+  closeModal();
+  toast('✅', '닉네임이 변경되었어요!');
+  if (typeof renderMypage === 'function') renderMypage();
 }

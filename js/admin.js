@@ -695,6 +695,23 @@ async function renderUserStatusCard(u, card) {
       <button class="date-arrow" onclick="changeStatusDate('${uid}',-1)" ${curIdx <= 0 ? 'disabled' : ''}>▶</button>
     </div>`;
 
+    // ── 하루 도토리 총 획득 / 총 사용 계산 ──
+    let dayEarned = 0, daySpent = 0;
+    events.forEach(ev => {
+      if (ev.type === 'tx') {
+        if (ev.tx.amount > 0) dayEarned += ev.tx.amount;
+        else daySpent += Math.abs(ev.tx.amount);
+      } else if (ev.type === 'gacha' && ev.session.acornGain > 0) {
+        dayEarned += ev.session.acornGain;
+      }
+    });
+    if (dayEarned > 0 || daySpent > 0) {
+      html += `<div class="day-summary-bar">
+        <div class="day-summary-chip earned"><span class="day-summary-icon">📥</span> 획득 <span class="day-summary-val">+${dayEarned}🌰</span></div>
+        <div class="day-summary-chip spent"><span class="day-summary-icon">📤</span> 사용 <span class="day-summary-val">-${daySpent}🌰</span></div>
+      </div>`;
+    }
+
     events.forEach((ev, ei) => {
       if (ev.type === 'gacha') {
         const s = ev.session;
