@@ -1088,6 +1088,101 @@ async function confirmGiftItem(userId, userName) {
   playSound('approve');
 }
 
+// ── 전체 유저 도토리 지급 모달 ──
+function showGiftAllAcornModal() {
+  showModal(`<div class="text-center">
+    <div style="font-size:2.5rem;margin-bottom:8px">🌰</div>
+    <h2 class="text-lg font-black text-gray-800 mb-1">전체 유저 도토리 지급</h2>
+    <p class="text-xs text-gray-400 mb-3">모든 유저에게 동일 금액이 지급됩니다</p>
+    <div class="space-y-3 text-left" style="max-width:280px;margin:0 auto">
+      <div>
+        <label class="text-xs font-bold text-gray-500 mb-1 block">수량</label>
+        <input class="field text-center" type="number" min="1" max="99999" id="giftAllAcornAmt" placeholder="도토리 수량">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500 mb-1 block">사유 (선택)</label>
+        <input class="field" type="text" id="giftAllAcornMemo" placeholder="예: 이벤트 보상">
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary flex-1 py-2" onclick="confirmGiftAllAcorn()">🌰 전체 지급</button>
+    </div>
+  </div>`);
+  setTimeout(() => document.getElementById('giftAllAcornAmt')?.focus(), 100);
+}
+
+async function confirmGiftAllAcorn() {
+  const amt = parseInt(document.getElementById('giftAllAcornAmt')?.value) || 0;
+  const memo = document.getElementById('giftAllAcornMemo')?.value?.trim() || '';
+  if (amt <= 0) { toast('⚠️', '수량을 입력해주세요'); return; }
+
+  const reason = '관리자 전체 지급' + (memo ? `: ${memo}` : '');
+  closeModal();
+
+  try {
+    const { data, error } = await sb.rpc('admin_gift_acorns_all', {
+      p_admin_id: myProfile.id, p_amount: amt, p_reason: reason
+    });
+    if (error) { toast('❌', '전체 지급 실패: ' + error.message); return; }
+    if (data?.error) { toast('❌', data.error); return; }
+    toast('🌰', `전체 ${data.count}명에게 ${amt}🌰 지급 완료!`);
+    playSound('approve');
+  } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
+}
+
+// ── 전체 유저 아이템 선물 모달 ──
+async function showGiftAllItemModal() {
+  const { data: products } = await sb.from('products')
+    .select('id,name,icon,reward_type').eq('active', true).order('name');
+  if (!products?.length) { toast('❌', '선물할 상품이 없어요'); return; }
+
+  const giftable = products.filter(p => p.reward_type !== 'AUTO_ACORN');
+  if (!giftable.length) { toast('❌', '선물 가능한 상품이 없어요'); return; }
+
+  const typeLabel = p => {
+    if (p.reward_type === 'GACHA_TICKET') return '🎫 뽑기 티켓';
+    if (p.reward_type === 'ACORN_TICKET') return '🌰 도토리티켓';
+    if (p.reward_type === 'COUPON')       return '🎟️ 쿠폰';
+    return '📬 아이템';
+  };
+
+  showModal(`<div>
+    <div class="text-center mb-4">
+      <div style="font-size:2rem">🎁</div>
+      <h2 class="text-lg font-black text-gray-800">전체 유저 아이템 선물</h2>
+      <p class="text-xs text-gray-400 mt-1">모든 유저의 인벤토리에 추가됩니다</p>
+    </div>
+    <select id="giftAllProductId" class="field w-full mb-3">
+      <option value="">상품 선택</option>
+      ${giftable.map(p => `<option value="${p.id}">${p.icon} ${p.name} (${typeLabel(p)})</option>`).join('')}
+    </select>
+    <input type="number" id="giftAllQty" class="field w-full mb-4" placeholder="수량 (기본 1)" min="1" max="99" value="1">
+    <div class="flex gap-2">
+      <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
+      <button class="btn btn-purple flex-1 py-2" onclick="confirmGiftAllItem()">🎁 전체 선물</button>
+    </div>
+  </div>`);
+}
+
+async function confirmGiftAllItem() {
+  const productId = document.getElementById('giftAllProductId')?.value;
+  const qty = parseInt(document.getElementById('giftAllQty')?.value) || 1;
+  if (!productId) { toast('❌', '상품을 선택해주세요'); return; }
+
+  closeModal();
+
+  try {
+    const { data, error } = await sb.rpc('admin_gift_item_all', {
+      p_admin_id: myProfile.id, p_product_id: productId, p_qty: qty
+    });
+    if (error) { toast('❌', '전체 선물 실패: ' + error.message); return; }
+    if (data?.error) { toast('❌', data.error); return; }
+    toast('🎁', `전체 ${data.count}명에게 ${data.product_name} ${qty}개 선물 완료!`);
+    playSound('approve');
+  } catch(e) { toast('❌', '오류: ' + (e.message || e)); }
+}
+
 // ──────────────────────────────────────────────
 
 //  ADMIN — DASHBOARD
