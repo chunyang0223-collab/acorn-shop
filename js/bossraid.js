@@ -92,11 +92,11 @@ async function _brLoadConfig() {
 
 // ── 주간 참여 횟수 확인 ──
 function _brGetWeekStart() {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1); // 월요일
-  const mon = new Date(now.setDate(diff));
-  return mon.toISOString().slice(0, 10);
+  const d = _kstNow();                   // KST 기준
+  const day = d.getUTCDay() || 7;        // 일요일(0) → 7
+  const monday = new Date(d);
+  monday.setUTCDate(d.getUTCDate() - (day - 1));
+  return monday.toISOString().slice(0, 10); // KST 월요일 자정 기준
 }
 
 async function _brGetWeeklyCount() {
