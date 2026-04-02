@@ -35,9 +35,6 @@ function fmtTs(iso) {
 // ── 테마 관리 ──
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  // 테마 토글 버튼 아이콘 업데이트
-  const themeBtn = document.getElementById('themeToggleBtn');
-  if (themeBtn) themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
   localStorage.setItem('acornTheme', theme);
 }
 function toggleTheme() {
