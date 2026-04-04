@@ -1531,18 +1531,22 @@ async function _brClaimReward(idx) {
     myProfile.acorns = (myProfile.acorns || 0) + chosen.acorns;
   }
 
-  // 아이템 지급
+  // 아이템 지급 (스택형 아이템 자동 처리)
   if (chosen.item) {
-    const { data: product } = await sb.from('products')
-      .select('id').eq('name', chosen.item.name).maybeSingle();
-
-    await sb.from('inventory').insert({
-      user_id: myProfile.id,
-      product_id: product?.id || null,
-      product_snapshot: { name: chosen.item.name, icon: chosen.item.icon, from: rewardSource },
-      from_gacha: false,
-      status: 'held'
-    });
+    if (typeof grantItem === 'function') {
+      await grantItem(myProfile.id, chosen.item.name, 1);
+    } else {
+      // fallback: 기존 방식
+      const { data: product } = await sb.from('products')
+        .select('id').eq('name', chosen.item.name).maybeSingle();
+      await sb.from('inventory').insert({
+        user_id: myProfile.id,
+        product_id: product?.id || null,
+        product_snapshot: { name: chosen.item.name, icon: chosen.item.icon, from: rewardSource },
+        from_gacha: false,
+        status: 'held'
+      });
+    }
   }
 
   // 주간 횟수 증가 (중복 방지)

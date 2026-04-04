@@ -1,6 +1,90 @@
 //  HELPERS
 // ──────────────────────────────────────────────
 
+// ── 스택형 아이템 지급 헬퍼 ──
+// stackable 아이템(예: 반짝이는 무언가)은 inventory에 1행만 유지하고 quantity 증가
+// 일반 아이템은 기존대로 1개=1행 insert
+async function grantItem(userId, itemName, qty) {
+  qty = qty || 1;
+  // products에서 조회
+  const { data: prod } = await sb.from('products')
+    .select('id,name,icon,item_type,reward_type,stackable,max_stack')
+    .eq('name', itemName).maybeSingle();
+  if (!prod) { console.warn('grantItem: 상품 없음 -', itemName); return null; }
+
+  if (prod.stackable) {
+    // 스택형: 기존 보유 확인
+    const { data: existing } = await sb.from('inventory')
+      .select('id,quantity')
+      .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
+      .maybeSingle();
+
+    if (existing) {
+      const newQty = Math.min((existing.quantity || 1) + qty, prod.max_stack || 99);
+      await sb.from('inventory').update({ quantity: newQty }).eq('id', existing.id);
+      return { id: existing.id, quantity: newQty, product: prod };
+    } else {
+      const clamped = Math.min(qty, prod.max_stack || 99);
+      const { data: ins } = await sb.from('inventory').insert({
+        user_id: userId,
+        product_id: prod.id,
+        product_snapshot: { name: prod.name, icon: prod.icon, reward_type: prod.reward_type },
+        from_gacha: false,
+        status: 'held',
+        quantity: clamped
+      }).select().single();
+      return { id: ins?.id, quantity: clamped, product: prod };
+    }
+  } else {
+    // 비스택형: 기존 방식
+    const rows = [];
+    for (let i = 0; i < qty; i++) {
+      rows.push({
+        user_id: userId,
+        product_id: prod.id,
+        product_snapshot: { name: prod.name, icon: prod.icon, reward_type: prod.reward_type },
+        from_gacha: false,
+        status: 'held',
+        quantity: 1
+      });
+    }
+    await sb.from('inventory').insert(rows);
+    return { quantity: qty, product: prod };
+  }
+}
+
+// 스택형 아이템 보유량 조회
+async function getItemQuantity(userId, itemName) {
+  const { data } = await sb.from('inventory')
+    .select('quantity, products!inner(name)')
+    .eq('user_id', userId).eq('status', 'held')
+    .eq('products.name', itemName)
+    .maybeSingle();
+  return data?.quantity || 0;
+}
+
+// 스택형 아이템 차감
+async function consumeItem(userId, itemName, qty) {
+  qty = qty || 1;
+  const { data: prod } = await sb.from('products')
+    .select('id').eq('name', itemName).maybeSingle();
+  if (!prod) return false;
+
+  const { data: existing } = await sb.from('inventory')
+    .select('id,quantity')
+    .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
+    .maybeSingle();
+  if (!existing || (existing.quantity || 0) < qty) return false;
+
+  const newQty = (existing.quantity || 0) - qty;
+  if (newQty <= 0) {
+    await sb.from('inventory').update({ status: 'used', quantity: 0 }).eq('id', existing.id);
+  } else {
+    await sb.from('inventory').update({ quantity: newQty }).eq('id', existing.id);
+  }
+  return true;
+}
+
 // ── 아바타 렌더링 헬퍼 ──
 // user 객체에 profile_icon이 있으면 이미지, 없으면 avatar_emoji 폴백
 // size: CSS 크기 (예: '3rem', '40px')

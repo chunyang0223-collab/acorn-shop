@@ -252,7 +252,21 @@ async function renderInventory() {
     const isGachaTicket  = p.reward_type === 'GACHA_TICKET';
     const isGiftTicket   = p.reward_type === 'GIFT_GACHA_TICKET';
     const isGiftAcorn    = p.reward_type === 'GIFT_ACORN';
+    const isExamMaterial = p.reward_type === 'EXAM_MATERIAL';
     const isInstant      = isGiftTicket || isGiftAcorn || isAcornTicket;
+
+    // 등급심사 전용 아이템: 버튼 없이 수량만 표시
+    if (isExamMaterial) {
+      const qty = item.quantity || 1;
+      return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl border-2 bg-indigo-50 border-indigo-200">
+        <div style="position:relative;display:inline-block">
+          <div class="text-3xl">${p.icon || '✨'}</div>
+          <span style="position:absolute;top:-4px;right:-10px;background:#6366f1;color:white;font-size:10px;font-weight:900;border-radius:99px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;padding:0 4px">${qty}</span>
+        </div>
+        <p class="text-xs font-black text-gray-700 text-center leading-tight">${p.name || '반짝이는 무언가'}</p>
+        <span class="text-xs font-black text-indigo-600 bg-indigo-100 rounded-full px-2 py-0.5">등급심사용</span>
+      </div>`;
+    }
     const isPending = pendingIds.has(item.id);
 
     let btnLabel = '사용하기';

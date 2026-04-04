@@ -1838,30 +1838,39 @@ async function _expFinish(status) {
         if (typeof item === 'object' && item.name) return item.name;
         return (item + '').replace(/^\S+\s*/, '').trim() || item;
       });
-      // 중복 제거 후 DB 조회
-      var uniqueNames = [];
-      itemNames.forEach(function(n) { if (uniqueNames.indexOf(n) < 0) uniqueNames.push(n); });
+      // 이름별 개수 집계 (스택형 아이템 대응)
+      var nameCount = {};
+      itemNames.forEach(function(n) { nameCount[n] = (nameCount[n] || 0) + 1; });
       try {
-        var prodRes = await sb.from('products').select('id,name,icon,item_type,reward_type').in('name', uniqueNames);
-        var prodMap = {};
-        (prodRes.data || []).forEach(function(p) {
-          if (!prodMap[p.name]) prodMap[p.name] = p;
-        });
-        var insertRows = [];
-        itemNames.forEach(function(name) {
-          var prod = prodMap[name];
-          if (prod) {
-            insertRows.push({
-              user_id: myProfile.id,
-              product_id: prod.id,
-              product_snapshot: prod,
-              from_gacha: false,
-              status: 'held'
-            });
+        // grantItem 헬퍼 사용 (스택형 자동 처리)
+        if (typeof grantItem === 'function') {
+          for (var gName in nameCount) {
+            await grantItem(myProfile.id, gName, nameCount[gName]);
           }
-        });
-        if (insertRows.length > 0) {
-          await sb.from('inventory').insert(insertRows);
+        } else {
+          // fallback: 기존 방식
+          var uniqueNames = Object.keys(nameCount);
+          var prodRes = await sb.from('products').select('id,name,icon,item_type,reward_type').in('name', uniqueNames);
+          var prodMap = {};
+          (prodRes.data || []).forEach(function(p) {
+            if (!prodMap[p.name]) prodMap[p.name] = p;
+          });
+          var insertRows = [];
+          itemNames.forEach(function(name) {
+            var prod = prodMap[name];
+            if (prod) {
+              insertRows.push({
+                user_id: myProfile.id,
+                product_id: prod.id,
+                product_snapshot: prod,
+                from_gacha: false,
+                status: 'held'
+              });
+            }
+          });
+          if (insertRows.length > 0) {
+            await sb.from('inventory').insert(insertRows);
+          }
         }
       } catch(e) {
         console.error('아이템 지급 오류:', e);
