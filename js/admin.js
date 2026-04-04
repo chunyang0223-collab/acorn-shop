@@ -1072,16 +1072,24 @@ async function confirmGiftItem(userId, userName) {
     return;
   }
 
-  // 일반 아이템: 수량만큼 인벤토리에 추가
-  const rows = Array.from({ length: qty }, () => ({
-    user_id: userId,
-    product_id: p.id,
-    product_snapshot: p,
-    from_gacha: false,
-    status: 'held'
-  }));
-  const { error } = await sb.from('inventory').insert(rows);
-  if (error) { toast('❌', '선물 실패: ' + error.message); return; }
+  // 일반 아이템: grantItem 헬퍼 사용 (스택형 자동 처리)
+  let error = null;
+  try {
+    if (typeof grantItem === 'function') {
+      await grantItem(userId, p.name, qty);
+    } else {
+      const rows = Array.from({ length: qty }, () => ({
+        user_id: userId,
+        product_id: p.id,
+        product_snapshot: p,
+        from_gacha: false,
+        status: 'held'
+      }));
+      const res = await sb.from('inventory').insert(rows);
+      error = res.error;
+    }
+  } catch(e) { error = e; }
+  if (error) { toast('❌', '선물 실패: ' + (error.message || error)); return; }
 
   await pushNotif(userId, 'request', '선물 도착! 🎁', `관리자가 ${p.icon} ${p.name}을(를) ${qty}개 선물했어요! 인벤토리를 확인하세요.`);
   toast('🎁', `${userName}님께 ${p.icon} ${p.name} ${qty}개 선물했어요!`);

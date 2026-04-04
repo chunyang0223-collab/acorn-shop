@@ -264,7 +264,6 @@ async function renderInventory() {
           <span style="position:absolute;top:-4px;right:-10px;background:#6366f1;color:white;font-size:10px;font-weight:900;border-radius:99px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;padding:0 4px">${qty}</span>
         </div>
         <p class="text-xs font-black text-gray-700 text-center leading-tight">${p.name || '반짝이는 무언가'}</p>
-        <span class="text-xs font-black text-indigo-600 bg-indigo-100 rounded-full px-2 py-0.5">등급심사용</span>
       </div>`;
     }
     const isPending = pendingIds.has(item.id);

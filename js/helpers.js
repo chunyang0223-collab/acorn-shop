@@ -12,7 +12,11 @@ async function grantItem(userId, itemName, qty) {
     .eq('name', itemName).maybeSingle();
   if (!prod) { console.warn('grantItem: 상품 없음 -', itemName); return null; }
 
-  if (prod.stackable) {
+  // stackable 판정: DB 컬럼 또는 reward_type 기반 (EXAM_MATERIAL은 항상 스택형)
+  const isStackable = prod.stackable === true || prod.reward_type === 'EXAM_MATERIAL';
+  const maxStack = prod.max_stack || (isStackable ? 99 : 1);
+
+  if (isStackable) {
     // 스택형: 기존 보유 확인
     const { data: existing } = await sb.from('inventory')
       .select('id,quantity')
@@ -20,11 +24,11 @@ async function grantItem(userId, itemName, qty) {
       .maybeSingle();
 
     if (existing) {
-      const newQty = Math.min((existing.quantity || 1) + qty, prod.max_stack || 99);
+      const newQty = Math.min((existing.quantity || 1) + qty, maxStack);
       await sb.from('inventory').update({ quantity: newQty }).eq('id', existing.id);
       return { id: existing.id, quantity: newQty, product: prod };
     } else {
-      const clamped = Math.min(qty, prod.max_stack || 99);
+      const clamped = Math.min(qty, maxStack);
       const { data: ins } = await sb.from('inventory').insert({
         user_id: userId,
         product_id: prod.id,
