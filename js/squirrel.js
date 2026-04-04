@@ -1899,10 +1899,9 @@ function _sqTypeText(elementId, text, speed, callback) {
   target.innerHTML = '';
   const totalLen = text.length;
   let i = 0;
-  // 대사 중 BGM 덕킹 (PC는 살짝, 모바일은 강하게)
-  const bgmOrig = _sqExamBGM ? _sqExamBGM.volume : 0;
-  const _isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (_sqExamBGM) _sqExamBGM.volume = _isMobile ? bgmOrig * 0.1 : bgmOrig;
+  // 모바일: 대사 중 BGM 일시정지 (오실레이터가 Audio보다 훨씬 작으므로)
+  const _isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (_isMob && _sqExamBGM && !_sqExamBGM.paused) { _sqExamBGM._wasPaused = false; _sqExamBGM.pause(); }
   const interval = setInterval(() => {
     if (i < totalLen) {
       const ch = text[i];
@@ -1915,8 +1914,8 @@ function _sqTypeText(elementId, text, speed, callback) {
       i++;
     } else {
       clearInterval(interval);
-      // BGM 볼륨 복원
-      if (_sqExamBGM) _sqExamBGM.volume = bgmOrig;
+      // 모바일: BGM 재개
+      if (_isMob && _sqExamBGM && _sqExamBGM._wasPaused === false) { _sqExamBGM.play().catch(function(){}); }
       if (callback) callback();
     }
   }, speed || 40);
