@@ -33,13 +33,13 @@ var _sqSettings  = {
   // 훈련 설정
   training_success_rate: 40,
   training_hp_pool: [1,2,2,3,3,3,4,4,4,5,5,5,6,6,7,7,8,8,9,10],
-  training_count_pool: [1,2,2,3,3,3,4,4,4,4,5,5,5,5,6,6,6,7,7,8,8,9,10],
+  training_count_pool: [0,0,0,1,1,2],
   // 등급심사 설정
   exam_cost: 10,
   exam_pass_rate: 40,
   exam_cooldown_hours: 48,
   exam_bonus_min: 1,
-  exam_bonus_max: 5,
+  exam_bonus_max: 1,
   exam_item_boost: 5,
   exam_item_max: 12
 };
@@ -624,7 +624,7 @@ function sqCardHTML(sq) {
       </div>`;
   }
 
-  // 훈련 UI
+  // 훈련 상태 요약 (버튼 없이 정보만)
   let trainingHTML = '';
   if (sq.status !== 'baby') {
     const tTotal = sq.training_total || 0;
@@ -635,121 +635,89 @@ function sqCardHTML(sq) {
     const hpMaxed = currentHp >= hpMax;
 
     if (tTotal > 0 && tRemain > 0 && !hpMaxed) {
-      // 훈련 가능
-      const canTrain = sq.status === 'explorer' || sq.status === 'pet';
       trainingHTML = `
-        <div style="margin-top:12px;background:#f0f9ff;border-radius:14px;padding:12px 16px;border:1.5px solid #bae6fd">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:11px;font-weight:800;color:#0369a1">🏋️ 체력 훈련</div>
-            <div style="font-size:11px;font-weight:800;color:#0ea5e9">남은 횟수 <span style="font-size:14px">${tRemain}</span>/${tTotal}</div>
-          </div>
-          <div style="height:6px;border-radius:99px;background:#e0f2fe;overflow:hidden;margin-bottom:10px">
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+          <div style="font-size:11px;font-weight:800;color:#0369a1">🏋️ 훈련</div>
+          <div style="flex:1;height:6px;border-radius:99px;background:#e0f2fe;overflow:hidden">
             <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#0284c7);width:${Math.round(tUsed / tTotal * 100)}%"></div>
           </div>
-          <button onclick="sqShowTrainingModal('${sq.id}')" ${canTrain ? '' : 'disabled'} style="width:100%;height:36px;border-radius:10px;border:none;background:${canTrain ? 'linear-gradient(135deg,#38bdf8,#0284c7)' : '#e2e8f0'};color:${canTrain ? 'white' : '#94a3b8'};font-size:13px;font-weight:900;cursor:${canTrain ? 'pointer' : 'default'};box-shadow:${canTrain ? '0 3px 10px rgba(2,132,199,0.3)' : 'none'};font-family:inherit">${canTrain ? '💪 훈련 시작!' : (sq.status === 'exploring' ? '⚔️ 탐험 중엔 훈련 불가' : '😴 회복 후 훈련 가능')}</button>
+          <div style="font-size:11px;font-weight:800;color:#0ea5e9">${tRemain}/${tTotal}</div>
         </div>`;
     } else if (tTotal > 0 && tRemain <= 0 && !hpMaxed) {
-      // 훈련 횟수 소진 → 등급심사 버튼
-      const examCheck = sqCanExam(sq);
-      const canExam = examCheck.ok && (sq.status === 'explorer' || sq.status === 'pet');
       trainingHTML = `
-        <div style="margin-top:12px;background:#faf5ff;border-radius:14px;padding:12px 16px;border:1.5px solid #e9d5ff">
-          <div style="font-size:11px;font-weight:800;color:#7c3aed;margin-bottom:8px">📋 등급심사</div>
-          <div style="font-size:10px;color:#8b5cf6;margin-bottom:10px">심사에 합격하면 추가 훈련 기회를 받을 수 있어요</div>
-          <button onclick="sqShowExamModal('${sq.id}')" ${canExam ? '' : 'disabled'} style="width:100%;height:36px;border-radius:10px;border:none;background:${canExam ? 'linear-gradient(135deg,#a78bfa,#7c3aed)' : '#e2e8f0'};color:${canExam ? 'white' : '#94a3b8'};font-size:13px;font-weight:900;cursor:${canExam ? 'pointer' : 'default'};box-shadow:${canExam ? '0 3px 10px rgba(124,58,237,0.3)' : 'none'};font-family:inherit">${canExam ? '📋 심사 신청하기' : examCheck.reason}</button>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:6px">
+          <div style="font-size:11px;font-weight:800;color:#7c3aed">📋 등급심사 가능</div>
         </div>`;
     } else if (hpMaxed) {
-      // HP 최대치 도달
       trainingHTML = `
-        <div style="margin-top:12px;background:#f0fdf4;border-radius:14px;padding:10px 16px;text-align:center;border:1.5px solid #bbf7d0">
-          <div style="font-size:11px;font-weight:800;color:#15803d">⭐ HP 최대치 달성!</div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:6px">
+          <div style="font-size:11px;font-weight:800;color:#15803d">⭐ HP 최대치 달성</div>
         </div>`;
     }
   }
 
-  // 회복 중 UI
+  // 회복 중 UI (타이머 정보만, 버튼은 액션 모달로 이동)
   let recoverHTML = '';
   if (sq.status === 'recovering' && sq.recovers_at) {
-    const maxCost = _sqSettings.recovery_instant_cost || 15;
-    const baseMinutes = _sqSettings.recovery_base_minutes || 60;
-    // 남은 시간 비율로 현재 비용 계산
-    const remaining = Math.max(0, new Date(sq.recovers_at) - Date.now());
-    const totalMs = baseMinutes * 60000;
-    const currentCost = Math.max(1, Math.ceil(maxCost * (remaining / totalMs)));
     recoverHTML = `
-      <div id="sqRecoverArea-${sq.id}" style="margin-top:12px;background:#fef3c7;border-radius:14px;padding:14px 16px;text-align:center">
-        <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:4px">😴 회복 중...</div>
-        <div id="sqRecoverTimer-${sq.id}" style="font-size:20px;font-weight:900;color:#b45309;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
-        <div style="font-size:10px;color:#d97706;margin-top:2px;margin-bottom:10px">회복이 끝나면 다시 탐험할 수 있어요</div>
-        <button id="sqRecoverBtn-${sq.id}" onclick="sqInstantRecover('${sq.id}')" style="width:100%;height:36px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(217,119,6,0.3);font-family:inherit">🌰 ${currentCost} 도토리로 즉시 회복</button>
+      <div id="sqRecoverArea-${sq.id}" style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:11px;font-weight:800;color:#92400e">😴 회복 중</div>
+        <div id="sqRecoverTimer-${sq.id}" style="font-size:13px;font-weight:900;color:#b45309;font-variant-numeric:tabular-nums;letter-spacing:1px">--:--:--</div>
       </div>`;
   }
 
-  // 수습 농부 UI (이 다람쥐가 현재 수습 중일 때)
+  // 수습 농부 상태 표시 (버튼은 액션 모달로 이동)
   let apprenticeHTML = '';
   const _isThisApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_squirrel_id === sq.id;
   if (_isThisApprentice && _farmData?.apprentice_until) {
     const until = new Date(_farmData.apprentice_until);
     const remaining = until - Date.now();
     if (remaining <= 0) {
-      // 수습 완료 → 결과 확인
       apprenticeHTML = `
-        <div onclick="farmRevealResult()" style="margin-top:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px 16px;text-align:center;border:2px solid rgba(251,191,36,.3);cursor:pointer">
-          <div style="font-size:28px;margin-bottom:4px">🎁</div>
-          <div style="font-size:14px;font-weight:900;color:#78350f;margin-bottom:4px">수습 완료!</div>
-          <div style="font-size:11px;color:#92400e">결과 확인하기 →</div>
+        <div onclick="farmRevealResult()" style="margin-top:10px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;padding:10px 14px;text-align:center;border:2px solid rgba(251,191,36,.3);cursor:pointer">
+          <div style="font-size:14px;font-weight:900;color:#78350f">🎁 수습 완료! <span style="font-size:11px;color:#92400e">결과 확인 →</span></div>
         </div>`;
     } else {
-      // 수습 진행 중 → 타이머
       apprenticeHTML = `
-        <div style="margin-top:12px;background:#f0fdf4;border-radius:14px;padding:14px 16px;text-align:center">
-          <div style="font-size:11px;font-weight:800;color:#15803d;margin-bottom:4px">🌾 농부 체험 알바 중 (수습 알바생)</div>
-          <div id="sqApprenticeTimer-${sq.id}" style="font-size:22px;font-weight:900;color:#16a34a;font-variant-numeric:tabular-nums;letter-spacing:2px">${_farmFmtTime(remaining)}</div>
-          <div style="font-size:10px;color:#86efac;margin-top:2px">훈련이 끝나면 결과를 확인할 수 있어요</div>
-          ${myProfile?.is_admin ? `<button onclick="farmSkipApprentice()" style="margin-top:8px;padding:4px 12px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit">⏩ 스킵 (관리자)</button>` : ''}
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+          <div style="font-size:11px;font-weight:800;color:#15803d">🌾 수습 알바 중</div>
+          <div id="sqApprenticeTimer-${sq.id}" style="font-size:13px;font-weight:900;color:#16a34a;font-variant-numeric:tabular-nums;letter-spacing:1px">${_farmFmtTime(remaining)}</div>
         </div>`;
     }
   }
 
-  let sellBtn = '';
+  // 농부 / 역할 뱃지
   const _isActiveFarmer = typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id;
-  if (sq.status === 'pet' || sq.status === 'explorer') {
-    const isFarmer = typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id);
-    const isApprentice = _isThisApprentice;
-    const hasApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice';
-
+  let roleTag = '';
+  if (sq.status !== 'baby') {
     if (_isActiveFarmer) {
-      // 장착된 농부 → 판매 불가 안내
-      sellBtn = `<div style="margin-top:12px;text-align:center;font-size:12px;font-weight:800;color:#9ca3af;background:#f3f4f6;border-radius:10px;padding:8px">🌾 농장에서 열심히 일하고 있어요!</div>`;
-    } else if (sq.status === 'pet' && !isFarmer && !isApprentice) {
-      // 애완형 + 농부 아님 + 수습 아님 → 버튼 2개 (펫샵에 팔기 / 농부로 전직)
-      const apprenticeDisabled = hasApprentice;
-      const apprenticeLabel = hasApprentice ? '다른 수습 중' : '🌾 농부로 전직';
-      sellBtn = `<div style="display:flex;gap:8px;margin-top:12px">
-        <button onclick="sqSellSquirrel('${sq.id}')" style="flex:1;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>
-        <button onclick="${apprenticeDisabled ? '' : `farmStartApprentice('${sq.id}')`}" style="flex:1;height:32px;border-radius:10px;border:none;background:${apprenticeDisabled ? '#f3f4f6' : '#ecfdf5'};color:${apprenticeDisabled ? '#9ca3af' : '#15803d'};font-size:12px;font-weight:900;cursor:${apprenticeDisabled ? 'default' : 'pointer'};font-family:inherit;${apprenticeDisabled ? 'opacity:0.7' : ''}">${apprenticeLabel}</button>
-      </div>`;
-    } else if (!isApprentice && !_isActiveFarmer) {
-      // 탐험형 or 이미 농부 or 수습 중 아닌 일반 → 팔기 버튼만
-      sellBtn = `<button onclick="sqSellSquirrel('${sq.id}')" style="margin-top:12px;width:100%;height:32px;border-radius:10px;border:none;background:#fee2e2;color:#dc2626;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">🏪 펫샵에 팔기</button>`;
+      roleTag = '<span style="font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;padding:2px 6px;border-radius:6px;margin-left:4px">🌾 농부</span>';
+    } else if (typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) {
+      roleTag = '<span style="font-size:10px;font-weight:800;color:#15803d;background:#ecfdf5;padding:2px 6px;border-radius:6px;margin-left:4px">농부</span>';
     }
-    // 수습 중인 다람쥐는 팔기 버튼 숨김
   }
 
+  // 성체 다람쥐: 이미지를 클릭하면 액션 모달
+  const clickableImg = (sq.status !== 'baby')
+    ? `<div onclick="sqShowActionModal('${sq.id}')" style="cursor:pointer;position:relative" title="탭하여 관리">${imgHTML}<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">⚡</div></div>`
+    : imgHTML;
+
   return `
-    <div id="sqCard-${sq.id}" style="background:white;border-radius:24px;padding:20px;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,0.07);border-left:5px solid ${borderColor};transition:border-left-color 0.5s">
+    <div id="sqCard-${sq.id}" style="background:white;border-radius:24px;padding:16px 20px;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);border-left:5px solid ${borderColor};transition:border-left-color 0.5s">
       <div style="display:flex;align-items:center;gap:14px">
-        ${imgHTML}
+        ${clickableImg}
         <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:4px;font-size:18px;font-weight:900;color:#1f2937">${sq.name}<span onclick="sqEditName('${sq.id}')" style="font-size:13px;cursor:pointer;padding:2px 6px;display:inline-flex;align-items:center" title="클릭하여 이름 변경">✏️</span>${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}</div>
-          <div style="font-size:12px;font-weight:700;margin-top:3px">${statusText[sq.status] || ''}</div>
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <span style="font-size:16px;font-weight:900;color:#1f2937">${sq.name}</span>
+            <span onclick="sqEditName('${sq.id}')" style="font-size:12px;cursor:pointer;padding:1px 4px;display:inline-flex;align-items:center" title="클릭하여 이름 변경">✏️</span>
+            ${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}
+            ${roleTag}
+          </div>
+          <div style="font-size:11px;font-weight:700;margin-top:2px">${statusText[sq.status] || ''}</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
-          ${(sq.status !== 'baby' && typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#dcfce7;color:#15803d;border:1.5px solid #86efac">🌾 농부</span>' : (sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#ecfdf5;color:#15803d">농부</span>' : ''}
-        </div>
+        <span style="font-size:12px;font-weight:900;padding:4px 10px;border-radius:99px;text-align:center;white-space:nowrap;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
       </div>
-      ${babyHTML}${statsHTML}${trainingHTML}${recoverHTML}${apprenticeHTML}${sellBtn}
+      ${statsHTML}${trainingHTML}${recoverHTML}${apprenticeHTML}${babyHTML}
     </div>`;
 }
 
@@ -777,6 +745,173 @@ function _sqShowTimerUI(id) {
       <div id="sqTimer-${id}" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
       <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
     </div>`;
+}
+
+// ================================================================
+//  액션 모달 (이미지 클릭 → 관리 메뉴)
+// ================================================================
+function sqShowActionModal(id) {
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq) return;
+
+  const grade = _sqCalcGrade(sq);
+  const gs = _sqGradeStyle(grade);
+  const spriteBase = sq.sprite || 'sq_acorn';
+  const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? spriteBase + '_defeat' : spriteBase;
+
+  // 상태 정보
+  const statusLabel = { explorer:'🟢 대기 중', exploring:'⚔️ 탐험 중', recovering:'😴 회복 중', pet:'🏡 편안하게 쉬는 중' };
+
+  // 조건 계산
+  const tTotal = sq.training_total || 0;
+  const tUsed  = sq.training_used  || 0;
+  const tRemain = tTotal - tUsed;
+  const hpMax = _sqSettings.stat_hp_max || 150;
+  const currentHp = sq.stats?.hp || 60;
+  const hpMaxed = currentHp >= hpMax;
+  const canAct = sq.status === 'explorer' || sq.status === 'pet';
+
+  const _isThisApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_squirrel_id === sq.id;
+  const _isActiveFarmer = typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id;
+  const isFarmer = typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id);
+  const hasApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice';
+
+  // ── 버튼 목록 조립 ──
+  let buttons = [];
+
+  // 1) 훈련 버튼
+  if (tTotal > 0 && tRemain > 0 && !hpMaxed) {
+    const canTrain = canAct;
+    const trainLabel = canTrain ? '💪 체력 훈련' : (sq.status === 'exploring' ? '⚔️ 탐험 중엔 훈련 불가' : '😴 회복 후 훈련 가능');
+    const trainSub = canTrain ? `남은 횟수 ${tRemain}/${tTotal} · 성공률 ${_sqSettings.training_success_rate || 40}%` : '';
+    buttons.push({
+      label: trainLabel, sub: trainSub,
+      action: canTrain ? `sqShowTrainingModal('${sq.id}')` : '',
+      bg: canTrain ? 'linear-gradient(135deg,#38bdf8,#0284c7)' : '#e2e8f0',
+      color: canTrain ? 'white' : '#94a3b8',
+      disabled: !canTrain
+    });
+  }
+
+  // 2) 등급심사 버튼
+  if (tTotal > 0 && tRemain <= 0 && !hpMaxed) {
+    const examCheck = sqCanExam(sq);
+    const canExam = examCheck.ok && canAct;
+    buttons.push({
+      label: canExam ? '📋 등급심사 신청' : examCheck.reason,
+      sub: canExam ? `비용 ${_sqSettings.exam_cost || 10} 도토리` : '',
+      action: canExam ? `sqShowExamModal('${sq.id}')` : '',
+      bg: canExam ? 'linear-gradient(135deg,#a78bfa,#7c3aed)' : '#e2e8f0',
+      color: canExam ? 'white' : '#94a3b8',
+      disabled: !canExam
+    });
+  }
+
+  // 3) 즉시 회복 버튼
+  if (sq.status === 'recovering' && sq.recovers_at) {
+    const maxCost = _sqSettings.recovery_instant_cost || 15;
+    const baseMinutes = _sqSettings.recovery_base_minutes || 60;
+    const remaining = Math.max(0, new Date(sq.recovers_at) - Date.now());
+    const totalMs = baseMinutes * 60000;
+    const currentCost = Math.max(1, Math.ceil(maxCost * (remaining / totalMs)));
+    buttons.push({
+      label: `🌰 ${currentCost} 도토리로 즉시 회복`,
+      sub: '', action: `sqInstantRecover('${sq.id}')`,
+      bg: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', disabled: false
+    });
+  }
+
+  // 4) 수습 농부 버튼 (관련 조건)
+  if (sq.status === 'pet' && !isFarmer && !_isThisApprentice && !_isActiveFarmer) {
+    const apprenticeDisabled = hasApprentice;
+    buttons.push({
+      label: apprenticeDisabled ? '🌾 다른 수습 중' : '🌾 농부로 전직',
+      sub: apprenticeDisabled ? '' : '수습 기간 후 농부가 돼요',
+      action: apprenticeDisabled ? '' : `farmStartApprentice('${sq.id}')`,
+      bg: apprenticeDisabled ? '#f3f4f6' : '#ecfdf5',
+      color: apprenticeDisabled ? '#9ca3af' : '#15803d',
+      disabled: apprenticeDisabled
+    });
+  }
+
+  // 5) 수습 완료 확인 버튼
+  if (_isThisApprentice && _farmData?.apprentice_until) {
+    const until = new Date(_farmData.apprentice_until);
+    if (until - Date.now() <= 0) {
+      buttons.push({
+        label: '🎁 수습 결과 확인하기', sub: '',
+        action: `farmRevealResult()`,
+        bg: 'linear-gradient(135deg,#fbbf24,#f59e0b)', color: 'white', disabled: false
+      });
+    }
+  }
+
+  // 6) 관리자 수습 스킵
+  if (_isThisApprentice && myProfile?.is_admin) {
+    buttons.push({
+      label: '⏩ 수습 스킵 (관리자)', sub: '',
+      action: `farmSkipApprentice()`,
+      bg: '#fef3c7', color: '#92400e', disabled: false
+    });
+  }
+
+  // 7) 팔기 버튼 (맨 마지막)
+  if ((sq.status === 'pet' || sq.status === 'explorer') && !_isActiveFarmer && !_isThisApprentice) {
+    buttons.push({
+      label: '🏪 펫샵에 팔기', sub: '',
+      action: `sqSellSquirrel('${sq.id}')`,
+      bg: '#fee2e2', color: '#dc2626', disabled: false
+    });
+  } else if (_isActiveFarmer) {
+    buttons.push({
+      label: '🌾 농장에서 일하는 중', sub: '판매 불가',
+      action: '', bg: '#f3f4f6', color: '#9ca3af', disabled: true
+    });
+  }
+
+  // ── 버튼 HTML 생성 ──
+  // 모달을 여는 액션(showTrainingModal, showExamModal)은 closeModal 불필요 (showModal이 교체함)
+  // 즉시 실행 액션(sell, recover, farmStart 등)은 closeModal 필요
+  const modalActions = ['sqShowTrainingModal', 'sqShowExamModal', 'farmRevealResult'];
+  const btnHTML = buttons.map(b => {
+    const needsClose = b.action && !modalActions.some(ma => b.action.includes(ma));
+    const onclick = b.action ? (needsClose ? b.action + ';closeModal()' : b.action) : '';
+    return `
+    <button onclick="${onclick}" ${b.disabled ? 'disabled' : ''} style="width:100%;height:${b.sub ? '50px' : '40px'};border-radius:12px;border:none;background:${b.bg};color:${b.color};font-size:13px;font-weight:900;cursor:${b.disabled ? 'default' : 'pointer'};font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;${b.disabled ? 'opacity:0.7;' : ''}">
+      <span>${b.label}</span>
+      ${b.sub ? `<span style="font-size:10px;font-weight:600;opacity:0.8">${b.sub}</span>` : ''}
+    </button>`;
+  }).join('');
+
+  showModal(`
+    <div style="text-align:center">
+      <div style="border-radius:18px;${gs.border};box-shadow:${gs.shadow};padding:2px;display:inline-block;background:${gs.bg};margin-bottom:10px">
+        <img src="images/squirrels/${spriteFile}.png" style="width:64px;height:64px;object-fit:contain;border-radius:14px;display:block" onerror="this.outerHTML='<div style=\\'font-size:48px;line-height:64px;text-align:center\\'>🦔</div>'">
+      </div>
+      <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:2px">${sq.name}</div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:4px">${statusLabel[sq.status] || ''}</div>
+      <div style="display:flex;justify-content:center;gap:4px;margin-bottom:14px">
+        <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 8px;border-radius:8px">${gs.label}</span>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:#9ca3af;font-weight:800">❤️ HP</div>
+          <div style="font-size:15px;font-weight:900;color:#ef4444">${sq.stats?.hp||60}<span style="font-size:9px;color:#d1d5db">/${hpMax}</span></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:#9ca3af;font-weight:800">⚔️ 공격</div>
+          <div style="font-size:15px;font-weight:900;color:#f97316">${sq.stats?.atk||10}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:#9ca3af;font-weight:800">🛡️ 방어</div>
+          <div style="font-size:15px;font-weight:900;color:#3b82f6">${sq.stats?.def||5}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${btnHTML || '<div style="font-size:12px;color:#9ca3af;padding:8px">현재 가능한 액션이 없어요</div>'}
+      </div>
+      <button onclick="closeModal()" style="margin-top:12px;width:100%;height:36px;border-radius:10px;border:none;background:#f1f5f9;color:#64748b;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+    </div>`);
 }
 
 // ================================================================
