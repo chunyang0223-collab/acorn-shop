@@ -1938,6 +1938,15 @@ function _sqShakeScreen() {
 async function sqExecuteExam(id) {
   const itemCount = window._sqExamItemCount || 0;
 
+  // ── 도토리 사전 체크 (시네마틱 시작 전) ──
+  const cost = _sqSettings.exam_cost || 10;
+  if (!myProfile?.is_admin) {
+    if ((myProfile?.acorns || 0) < cost) {
+      toast('⚠️', '도토리가 부족해요 (필요: ' + cost + '🌰)');
+      return;
+    }
+  }
+
   // ── BGM 시작 ──
   _sqExamPlayBGM();
 
@@ -2786,6 +2795,14 @@ async function sqAdminInit() {
   document.getElementById('sqSet_fuseUpRare').value        = _sqSettings.fuse_upgrade_rare ?? 12;
   document.getElementById('sqSet_fuseUpEpic').value        = _sqSettings.fuse_upgrade_epic ?? 8;
   document.getElementById('sqSet_fuseUpUnique').value      = _sqSettings.fuse_upgrade_unique ?? 5;
+  // 등급심사 설정 로드
+  document.getElementById('sqSet_examCost').value          = _sqSettings.exam_cost ?? 10;
+  document.getElementById('sqSet_examCooldown').value      = _sqSettings.exam_cooldown_hours ?? 48;
+  document.getElementById('sqSet_examPassRate').value      = _sqSettings.exam_pass_rate ?? 40;
+  document.getElementById('sqSet_examItemBoost').value     = _sqSettings.exam_item_boost ?? 5;
+  document.getElementById('sqSet_examItemMax').value       = _sqSettings.exam_item_max ?? 12;
+  document.getElementById('sqSet_examBonusMin').value      = _sqSettings.exam_bonus_min ?? 1;
+  document.getElementById('sqSet_examBonusMax').value      = _sqSettings.exam_bonus_max ?? 1;
   // 탐험 보상 설정 로드
   await expLoadSettings();
   await expAdminLoadUI();
@@ -2825,6 +2842,14 @@ async function sqSaveSettings() {
     fuse_upgrade_epic:     parseInt(document.getElementById('sqSet_fuseUpEpic').value)       ?? 8,
     fuse_upgrade_unique:   parseInt(document.getElementById('sqSet_fuseUpUnique').value)     ?? 5,
     fuse_upgrade_legend:   0,
+    // 등급심사 설정
+    exam_cost:             parseInt(document.getElementById('sqSet_examCost').value)         || 10,
+    exam_cooldown_hours:   parseInt(document.getElementById('sqSet_examCooldown').value)     || 48,
+    exam_pass_rate:        parseInt(document.getElementById('sqSet_examPassRate').value)     || 40,
+    exam_item_boost:       parseInt(document.getElementById('sqSet_examItemBoost').value)    || 5,
+    exam_item_max:         parseInt(document.getElementById('sqSet_examItemMax').value)      || 12,
+    exam_bonus_min:        parseInt(document.getElementById('sqSet_examBonusMin').value)     || 1,
+    exam_bonus_max:        parseInt(document.getElementById('sqSet_examBonusMax').value)     || 1,
   };
   const { error } = await sb.from('app_settings')
     .upsert({ key:'squirrel_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict:'key' });
@@ -2935,4 +2960,3 @@ async function sqAdminResetCooldownAny(id, name) {
   if (error) { toast('❌', '쿨타임 초기화 실패: ' + (error.message || '')); return; }
   toast('✅', `${name}의 재심사 쿨타임이 초기화되었습니다`);
   await sqAdminLoadList();
-}
