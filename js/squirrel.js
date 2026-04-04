@@ -2877,14 +2877,29 @@ async function sqAdminGrantSquirrel() {
 async function sqAdminLoadList() {
   const el = document.getElementById('sqAdminList');
   if (!el) return;
-  const { data } = await sb.from('squirrels').select('*').order('created_at', { ascending: false });
+  const { data } = await sb.from('squirrels').select('*, users!squirrels_user_id_fkey(display_name)').order('created_at', { ascending: false });
   if (!data?.length) { el.innerHTML = '<div class="text-xs text-gray-400 text-center py-4">다람쥐가 없어요</div>'; return; }
-  el.innerHTML = data.map(sq => `
+  el.innerHTML = data.map(sq => {
+    const ownerName = sq.users?.display_name || '?';
+    const hasCooldown = sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
+    const cooldownBtn = hasCooldown
+      ? `<button onclick="sqAdminResetCooldownAny('${sq.id}','${sq.name.replace(/'/g,"\\'")}');event.stopPropagation()" style="flex-shrink:0;padding:4px 10px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit">⏩ 쿨타임 해제</button>`
+      : '';
+    return `
     <div style="background:white;border-radius:12px;padding:10px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);display:flex;align-items:center;gap:10px">
       <div style="font-size:24px">${sq.status==='baby'?'🐿️':sq.status==='pet'?'🐱':'🦔'}</div>
-      <div style="flex:1">
+      <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:900;color:#1f2937">${sq.name} <span style="font-size:10px;color:#9ca3af">(${sq.status})</span></div>
-        <div style="font-size:10px;color:#9ca3af">${sq.status==='baby'?`게이지 ${sq.acorns_fed}/${sq.acorns_required}`:`HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`}</div>
+        <div style="font-size:10px;color:#9ca3af">${ownerName} · ${sq.status==='baby'?`게이지 ${sq.acorns_fed}/${sq.acorns_required}`:`HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`}${hasCooldown?' · <span style="color:#ef4444">⏳쿨타임</span>':''}</div>
       </div>
-    </div>`).join('');
+      ${cooldownBtn}
+    </div>`;
+  }).join('');
+}
+
+async function sqAdminResetCooldownAny(id, name) {
+  const { error } = await sb.from('squirrels').update({ exam_cooldown_until: null }).eq('id', id);
+  if (error) { toast('❌', '쿨타임 초기화 실패'); return; }
+  toast('✅', `${name}의 재심사 쿨타임이 초기화되었습니다`);
+  await sqAdminLoadList();
 }
