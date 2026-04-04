@@ -1806,23 +1806,8 @@ var _sqAnimalese = {
     var ctx = this.getCtx();
     if (!this._master || this._master.context !== ctx) {
       this._master = ctx.createGain();
-      var _mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (_mob) {
-        // 모바일: 컴프레서로 오실레이터 출력 증폭 (BGM 무관)
-        var comp = ctx.createDynamicsCompressor();
-        comp.threshold.value = -24;
-        comp.knee.value = 12;
-        comp.ratio.value = 4;
-        comp.attack.value = 0.003;
-        comp.release.value = 0.08;
-        var makeupGain = ctx.createGain();
-        makeupGain.gain.value = 1.8;
-        this._master.connect(comp);
-        comp.connect(makeupGain);
-        makeupGain.connect(ctx.destination);
-      } else {
-        this._master.connect(ctx.destination);
-      }
+      // PC/모바일 동일: 소스 볼륨 자체가 충분하므로 직결
+      this._master.connect(ctx.destination);
     }
     // 앱 볼륨 연동
     this._master.gain.value = 0.9 * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
