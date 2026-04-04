@@ -1696,8 +1696,9 @@ async function sqShowExamModal(id) {
   const ownedItems = await getItemQuantity(myProfile.id, '반짝이는 무언가');
   const usableItems = Math.min(ownedItems, maxItems);
 
-  // 아이템 0개 사용이 기본값
+  // 아이템 0개 사용이 기본값, 보유 수량도 저장
   window._sqExamItemCount = 0;
+  window._sqExamUsableItems = usableItems;
 
   showModal(`
     <div style="text-align:center">
@@ -1745,8 +1746,9 @@ function _sqExamItemAdj(delta) {
   const boostPer = _sqSettings.exam_item_boost || 5;
   const maxItems = _sqSettings.exam_item_max || 12;
   var count = (window._sqExamItemCount || 0) + delta;
-  // 보유 수량은 모달 생성 시점에 체크했으므로 여기서는 max만 제한
-  count = Math.max(0, Math.min(count, maxItems));
+  // 보유 수량과 max 둘 다 제한
+  const usable = window._sqExamUsableItems || 0;
+  count = Math.max(0, Math.min(count, maxItems, usable));
   window._sqExamItemCount = count;
   const el = document.getElementById('sqExamItemCount');
   if (el) el.textContent = count;
@@ -1807,8 +1809,9 @@ var _sqAnimalese = {
       this._master.gain.value = 0.9;
       this._master.connect(ctx.destination);
     }
-    // 앱 볼륨 연동
-    this._master.gain.value = 0.9 * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
+    // 앱 볼륨 연동 (모바일은 gain 부스트)
+    var _mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    this._master.gain.value = (_mob ? 1.6 : 0.9) * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
     return this._master;
   },
   VOWEL_PITCH: [0,-2,3,1,-3,-1,5,3,2,4,1,3,6,-4,-2,-1,0,-5,-1,1,2],
@@ -1861,11 +1864,11 @@ var _sqAnimalese = {
     vib.connect(vibG); vibG.connect(osc1.frequency); vibG.connect(osc3.frequency);
 
     var g1 = ctx.createGain(); var g2 = ctx.createGain(); var g3 = ctx.createGain();
-    g1.gain.setValueAtTime(0, t); g1.gain.linearRampToValueAtTime(0.45, t+dur*0.08);
-    g1.gain.setValueAtTime(0.45, t+dur*0.5); g1.gain.linearRampToValueAtTime(0, t+dur);
-    g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.15, t+dur*0.08);
+    g1.gain.setValueAtTime(0, t); g1.gain.linearRampToValueAtTime(0.25, t+dur*0.08);
+    g1.gain.setValueAtTime(0.25, t+dur*0.5); g1.gain.linearRampToValueAtTime(0, t+dur);
+    g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.08, t+dur*0.08);
     g2.gain.linearRampToValueAtTime(0, t+dur*0.8);
-    g3.gain.setValueAtTime(0, t); g3.gain.linearRampToValueAtTime(0.22, t+dur*0.1);
+    g3.gain.setValueAtTime(0, t); g3.gain.linearRampToValueAtTime(0.12, t+dur*0.1);
     g3.gain.linearRampToValueAtTime(0, t+dur);
 
     osc1.connect(g1); osc2.connect(g2); osc3.connect(g3);
@@ -1896,9 +1899,10 @@ function _sqTypeText(elementId, text, speed, callback) {
   target.innerHTML = '';
   const totalLen = text.length;
   let i = 0;
-  // 대사 중 BGM 덕킹 (볼륨 낮춤)
+  // 대사 중 BGM 덕킹 (PC는 살짝, 모바일은 강하게)
   const bgmOrig = _sqExamBGM ? _sqExamBGM.volume : 0;
-  if (_sqExamBGM) _sqExamBGM.volume = bgmOrig * 0.25;
+  const _isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (_sqExamBGM) _sqExamBGM.volume = bgmOrig * (_isMobile ? 0.15 : 0.55);
   const interval = setInterval(() => {
     if (i < totalLen) {
       const ch = text[i];
@@ -2027,7 +2031,6 @@ async function sqExecuteExam(id) {
         infoEl.innerHTML = `
           <div style="background:rgba(34,197,94,0.15);border-radius:12px;padding:10px 14px;border:1px solid rgba(34,197,94,0.3);text-align:center">
             <div style="font-size:14px;font-weight:900;color:#4ade80">🏋️ 추가 훈련 +${result.bonus}회</div>
-            <div style="font-size:10px;color:#a3a3a3;margin-top:2px">합격률 ${result.finalRate}% · 🌰${result.cost}${result.itemCount > 0 ? ' · ✨' + result.itemCount : ''}</div>
           </div>`;
       }
       if (bottomArea) { bottomArea.style.display = 'block'; _sqExamAnimateBtn(bottomArea); }
