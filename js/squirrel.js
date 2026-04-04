@@ -668,9 +668,15 @@ function sqCardHTML(sq) {
   }
 
   // 성체 다람쥐: 이미지를 클릭하면 액션 모달
-  // 훈련 가능한 다람쥐만 ⚡ 뱃지 표시
+  // 훈련 가능 → 💪 뱃지, 재심사 대기 중 → ⏳ 뱃지
   const _hasTraining = sq.status !== 'baby' && ((sq.training_total || 0) - (sq.training_used || 0)) > 0 && !((sq.stats?.hp || 60) >= (_sqSettings.stat_hp_max || 150));
-  const badgeHTML = _hasTraining ? `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">💪</div>` : '';
+  const _hasCooldown = sq.status !== 'baby' && sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
+  let badgeHTML = '';
+  if (_hasTraining) {
+    badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">💪</div>`;
+  } else if (_hasCooldown) {
+    badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-size:9px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">⏳</div>`;
+  }
   const clickableImg = (sq.status !== 'baby')
     ? `<div onclick="sqShowActionModal('${sq.id}')" style="cursor:pointer;position:relative" title="탭하여 관리">${imgHTML}${badgeHTML}</div>`
     : imgHTML;
@@ -770,8 +776,16 @@ function sqShowActionModal(id) {
   if (tRemain <= 0 && !hpMaxed) {
     const examCheck = sqCanExam(sq);
     const canExam = examCheck.ok && canAct;
+    // 심사 자체는 가능하지만 행동불가(탐험중/회복중)인 경우 별도 사유 표시
+    let examLabel = '📋 등급심사 신청';
+    if (!canExam) {
+      if (examCheck.reason) examLabel = examCheck.reason;
+      else if (sq.status === 'exploring') examLabel = '⚔️ 탐험 중엔 심사 불가';
+      else if (sq.status === 'recovering') examLabel = '😴 회복 중엔 심사 불가';
+      else examLabel = '현재 심사 불가';
+    }
     buttons.push({
-      label: canExam ? '📋 등급심사 신청' : examCheck.reason,
+      label: examLabel,
       sub: canExam ? `비용 ${_sqSettings.exam_cost || 10} 도토리` : '',
       action: canExam ? `sqShowExamModal('${sq.id}')` : '',
       bg: canExam ? 'linear-gradient(135deg,#a78bfa,#7c3aed)' : '#e2e8f0',
@@ -1817,10 +1831,10 @@ async function sqExecuteExam(id) {
       <!-- 이미지 영역 (position:relative 기준, 높이 고정) -->
       <div id="examImgWrap" style="position:relative;overflow:hidden">
         <img src="images/exam/exam_scene.png" id="examSceneImg" style="width:100%;display:block;opacity:0;transition:opacity 0.8s" onerror="this.style.display='none'">
-        <!-- 도장 (이미지 영역 정중앙) -->
-        <div id="examStampArea" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"></div>
-        <!-- 대화창 (이미지 영역 하단 고정, 이미지 기준 absolute) -->
-        <div style="position:absolute;bottom:3%;left:8%;right:8%;z-index:3">
+        <!-- 도장 (이미지 영역 상단~중앙, 대화창과 겹치지 않도록) -->
+        <div id="examStampArea" style="position:absolute;top:0;left:0;right:0;bottom:35%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"></div>
+        <!-- 대화창 (이미지 영역 하단 고정) -->
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:0 8% 2%;z-index:3">
           <div style="position:relative">
             <img src="images/exam/exam_dialogue.png" style="width:100%;display:block" id="examDialogueImg" onerror="this.parentElement.style.background='linear-gradient(0deg,rgba(26,16,8,0.95),rgba(26,16,8,0.7))';this.parentElement.style.borderRadius='14px';this.parentElement.style.padding='16px';this.style.display='none'">
             <div id="examDialogueText" style="position:absolute;top:0;bottom:0;left:5%;width:56%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;-webkit-text-fill-color:#5c3d1e"></div>
