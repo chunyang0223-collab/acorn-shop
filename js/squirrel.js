@@ -1843,7 +1843,7 @@ async function sqExecuteExam(id) {
         <!-- 도장 (이미지 정중앙) -->
         <div id="examStampArea" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"></div>
         <!-- 텍스트 (대사창 영역 위에 오버레이) -->
-        <div id="examDialogueText" style="position:absolute;bottom:4%;left:7%;right:30%;top:64%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;-webkit-text-fill-color:#5c3d1e;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;z-index:3"></div>
+        <div id="examDialogueText" style="position:absolute;bottom:4%;left:10%;right:10%;top:64%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;-webkit-text-fill-color:#5c3d1e;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;z-index:3"></div>
       </div>
       <!-- 2번 공간: 결과 + 확인 버튼 -->
       <div id="examBottomArea" style="background:#1a1008;padding:8px 16px 16px;display:none">
@@ -1852,21 +1852,32 @@ async function sqExecuteExam(id) {
       </div>
     </div>`, { noClose: true });
 
+  // 클릭 대기 헬퍼: 이미지 영역 클릭 시 resolve
+  function _waitClick() {
+    return new Promise(r => {
+      const wrap = document.getElementById('examImgWrap');
+      if (!wrap) { r(); return; }
+      wrap.style.cursor = 'pointer';
+      function handler() { wrap.removeEventListener('click', handler); wrap.style.cursor = ''; r(); }
+      wrap.addEventListener('click', handler);
+    });
+  }
+
   try {
     // 전경 페이드인
     await new Promise(r => setTimeout(r, 100));
     const sceneImg = document.getElementById('examSceneImg');
     if (sceneImg) sceneImg.style.opacity = '1';
-
-    // ── 심사관 대사 1 (인사) ──
     await new Promise(r => setTimeout(r, 800));
+
+    // ── 대사 1: 인사 (타이핑 완료 → 클릭 대기) ──
     const greetings = itemCount > 0
       ? '오호, 반짝이는 무언가를\n가져왔군... 어디 한번 살펴볼까?'
       : '흠... 어디 한번\n실력을 볼까?';
     await new Promise(r => _sqTypeText('examDialogueText', greetings, 40, r));
+    await _waitClick();
 
-    // ── 심사 실행 (백엔드) ──
-    await new Promise(r => setTimeout(r, 1200));
+    // ── 심사 실행 (백엔드, 클릭 직후 바로 실행) ──
     let result;
     try {
       result = await sqDoExam(id, itemCount);
@@ -1876,33 +1887,31 @@ async function sqExecuteExam(id) {
     }
     if (!result) { _sqExamStopBGM(); closeModal(); return; }
 
-    // ── 심사관 대사 2 (심사 중) ──
+    // ── 대사 2: 심사 중 (타이핑 완료 → 클릭 대기) ──
     await new Promise(r => _sqTypeText('examDialogueText', '음... 서류를 확인하고 있어...\n잠깐만...', 40, r));
-    await new Promise(r => setTimeout(r, 1000));
+    await _waitClick();
 
-    // ── 도장 애니메이션 + 결과 ──
+    // ── 도장 애니메이션 ──
     const stampArea = document.getElementById('examStampArea');
 
     if (result.passed) {
-      // 합격 도장
       if (stampArea) {
         stampArea.innerHTML = `
           <div id="examStamp" style="font-size:48px;font-weight:900;color:#16a34a;opacity:0;transform:scale(4) rotate(-15deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 4px 16px rgba(5,150,105,0.5));pointer-events:none">
             <div style="border:4px solid #22c55e;border-radius:12px;padding:6px 20px;background:rgba(34,197,94,0.15)">합격</div>
           </div>`;
       }
-      // 도장 사운드 (200ms 딜레이로 싱크 보정)
       await new Promise(r => setTimeout(r, 200));
       _sqExamPlayStamp();
       const stamp = document.getElementById('examStamp');
       if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(-5deg)'; }
 
-      // 합격 대사
+      // 합격 대사 (타이핑 완료 → 클릭 대기)
       await new Promise(r => setTimeout(r, 600));
       await new Promise(r => _sqTypeText('examDialogueText', '축하하네! 훌륭한 실력이야!\n추가 훈련 기회를 주지!', 35, r));
+      await _waitClick();
 
-      // 결과 정보 + 확인 버튼 표시
-      await new Promise(r => setTimeout(r, 400));
+      // 결과 표시
       const bottomArea = document.getElementById('examBottomArea');
       const infoEl = document.getElementById('examResultInfo');
       if (infoEl) {
@@ -1915,26 +1924,24 @@ async function sqExecuteExam(id) {
       if (bottomArea) bottomArea.style.display = 'block';
 
     } else {
-      // 불합격 도장 + 화면 흔들림
       if (stampArea) {
         stampArea.innerHTML = `
           <div id="examStamp" style="font-size:48px;font-weight:900;color:#ef4444;opacity:0;transform:scale(4) rotate(10deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 4px 16px rgba(220,38,38,0.5));pointer-events:none">
             <div style="border:4px solid #ef4444;border-radius:12px;padding:6px 20px;background:rgba(239,68,68,0.15)">불합격</div>
           </div>`;
       }
-      // 도장 사운드 (200ms 딜레이로 싱크 보정)
       await new Promise(r => setTimeout(r, 200));
       _sqExamPlayStamp();
       const stamp = document.getElementById('examStamp');
       if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(3deg)'; }
       _sqShakeScreen();
 
-      // 불합격 대사
+      // 불합격 대사 (타이핑 완료 → 클릭 대기)
       await new Promise(r => setTimeout(r, 600));
       await new Promise(r => _sqTypeText('examDialogueText', '아쉽군... 다음에 다시 도전하게.\n좀 더 준비해오라고.', 35, r));
+      await _waitClick();
 
-      // 결과 정보 + 확인 버튼 표시
-      await new Promise(r => setTimeout(r, 400));
+      // 결과 표시
       const bottomArea = document.getElementById('examBottomArea');
       const infoEl = document.getElementById('examResultInfo');
       if (infoEl) {
