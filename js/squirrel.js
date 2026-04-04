@@ -649,11 +649,14 @@ function sqCardHTML(sq) {
           <button onclick="sqShowTrainingModal('${sq.id}')" ${canTrain ? '' : 'disabled'} style="width:100%;height:36px;border-radius:10px;border:none;background:${canTrain ? 'linear-gradient(135deg,#38bdf8,#0284c7)' : '#e2e8f0'};color:${canTrain ? 'white' : '#94a3b8'};font-size:13px;font-weight:900;cursor:${canTrain ? 'pointer' : 'default'};box-shadow:${canTrain ? '0 3px 10px rgba(2,132,199,0.3)' : 'none'};font-family:inherit">${canTrain ? '💪 훈련 시작!' : (sq.status === 'exploring' ? '⚔️ 탐험 중엔 훈련 불가' : '😴 회복 후 훈련 가능')}</button>
         </div>`;
     } else if (tTotal > 0 && tRemain <= 0 && !hpMaxed) {
-      // 훈련 횟수 소진 → 등급심사 안내
+      // 훈련 횟수 소진 → 등급심사 버튼
+      const examCheck = sqCanExam(sq);
+      const canExam = examCheck.ok && (sq.status === 'explorer' || sq.status === 'pet');
       trainingHTML = `
-        <div style="margin-top:12px;background:#fefce8;border-radius:14px;padding:12px 16px;border:1.5px solid #fde68a;text-align:center">
-          <div style="font-size:11px;font-weight:800;color:#a16207;margin-bottom:4px">🏋️ 훈련 완료</div>
-          <div style="font-size:10px;color:#ca8a04">모든 훈련 횟수를 사용했어요. 등급심사로 추가 기회를 받을 수 있어요!</div>
+        <div style="margin-top:12px;background:#faf5ff;border-radius:14px;padding:12px 16px;border:1.5px solid #e9d5ff">
+          <div style="font-size:11px;font-weight:800;color:#7c3aed;margin-bottom:8px">📋 등급심사</div>
+          <div style="font-size:10px;color:#8b5cf6;margin-bottom:10px">심사에 합격하면 추가 훈련 기회를 받을 수 있어요</div>
+          <button onclick="sqShowExamModal('${sq.id}')" ${canExam ? '' : 'disabled'} style="width:100%;height:36px;border-radius:10px;border:none;background:${canExam ? 'linear-gradient(135deg,#a78bfa,#7c3aed)' : '#e2e8f0'};color:${canExam ? 'white' : '#94a3b8'};font-size:13px;font-weight:900;cursor:${canExam ? 'pointer' : 'default'};box-shadow:${canExam ? '0 3px 10px rgba(124,58,237,0.3)' : 'none'};font-family:inherit">${canExam ? '📋 심사 신청하기' : examCheck.reason}</button>
         </div>`;
     } else if (hpMaxed) {
       // HP 최대치 도달
@@ -1434,6 +1437,225 @@ async function sqExecuteTraining(id) {
           ${result.remain > 0 ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">다시 훈련</button>` : ''}
           <button onclick="closeModal()" style="flex:1;height:40px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
         </div>
+      </div>`;
+  }
+
+  showModal(resultHTML);
+
+  // 카드 갱신
+  const cardEl = document.getElementById('sqCard-' + id);
+  if (cardEl && sq) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = sqCardHTML(sq);
+    cardEl.replaceWith(tmp.firstElementChild);
+  }
+}
+
+// ================================================================
+//  등급심사 시스템
+// ================================================================
+
+// 심사 가능 여부 체크
+function sqCanExam(sq) {
+  if (!sq || sq.status === 'baby') return { ok: false, reason: '아기 다람쥐는 심사할 수 없어요' };
+  const total = sq.training_total || 0;
+  const used  = sq.training_used  || 0;
+  if (total <= 0) return { ok: false, reason: '훈련 횟수가 부여되지 않았어요' };
+  if (used < total) return { ok: false, reason: '아직 훈련 횟수가 남아있어요 (' + (total - used) + '회)' };
+  const hpMax = _sqSettings.stat_hp_max || 150;
+  if ((sq.stats?.hp || 60) >= hpMax) return { ok: false, reason: 'HP가 이미 최대치예요' };
+  // 쿨타임 체크
+  if (sq.exam_cooldown_until) {
+    const cooldownEnd = new Date(sq.exam_cooldown_until);
+    if (cooldownEnd > new Date()) {
+      const remain = cooldownEnd - Date.now();
+      const h = Math.floor(remain / 3600000);
+      const m = Math.floor((remain % 3600000) / 60000);
+      return { ok: false, reason: '재심사 대기 중 (' + h + '시간 ' + m + '분 남음)' };
+    }
+  }
+  return { ok: true };
+}
+
+// 심사 실행 (코어 로직)
+async function sqDoExam(id, itemCount) {
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq) return null;
+
+  const check = sqCanExam(sq);
+  if (!check.ok) { toast('⚠️', check.reason); return null; }
+
+  itemCount = itemCount || 0;
+  const maxItems = _sqSettings.exam_item_max || 12;
+  itemCount = Math.min(itemCount, maxItems);
+
+  // 도토리 차감
+  const cost = _sqSettings.exam_cost || 10;
+  if (!myProfile?.is_admin) {
+    if ((myProfile?.acorns || 0) < cost) { toast('⚠️', '도토리가 부족해요 (필요: ' + cost + '🌰)'); return null; }
+    const spendRes = await spendAcorns(cost, '등급심사 비용');
+    if (spendRes.error) { toast('❌', '도토리 차감 실패'); return null; }
+  }
+
+  // 아이템 차감
+  if (itemCount > 0) {
+    const consumed = await consumeItem(myProfile.id, '반짝이는 무언가', itemCount);
+    if (!consumed) {
+      // 아이템 부족 → 도토리 환불
+      if (!myProfile?.is_admin) {
+        await sb.rpc('adjust_acorns', { p_user_id: myProfile.id, p_amount: cost, p_reason: '등급심사 아이템 부족 환불' });
+        myProfile.acorns = (myProfile.acorns || 0) + cost;
+        if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+      }
+      toast('⚠️', '반짝이는 무언가가 부족해요');
+      return null;
+    }
+  }
+
+  // 합격 판정
+  const baseRate = _sqSettings.exam_pass_rate || 40;
+  const boost = (_sqSettings.exam_item_boost || 5) * itemCount;
+  const finalRate = Math.min(baseRate + boost, 100);
+  const roll = Math.random() * 100;
+  const passed = roll < finalRate;
+
+  if (passed) {
+    // 합격: 추가 훈련 횟수 부여
+    const bonusMin = _sqSettings.exam_bonus_min || 1;
+    const bonusMax = _sqSettings.exam_bonus_max || 5;
+    const bonus = bonusMin + Math.floor(Math.random() * (bonusMax - bonusMin + 1));
+    const newTotal = (sq.training_total || 0) + bonus;
+
+    await sb.from('squirrels').update({
+      training_total: newTotal,
+      exam_cooldown_until: null
+    }).eq('id', id);
+    _sqUpdate(id, { training_total: newTotal, exam_cooldown_until: null });
+
+    return { passed: true, bonus, newTotal, finalRate, itemCount, cost };
+  } else {
+    // 불합격: 쿨타임 적용
+    const cooldownHours = _sqSettings.exam_cooldown_hours || 48;
+    const cooldownUntil = new Date(Date.now() + cooldownHours * 3600000).toISOString();
+
+    await sb.from('squirrels').update({
+      exam_cooldown_until: cooldownUntil
+    }).eq('id', id);
+    _sqUpdate(id, { exam_cooldown_until: cooldownUntil });
+
+    return { passed: false, cooldownHours, finalRate, itemCount, cost };
+  }
+}
+
+// 심사 확인 모달 (아이템 사용 수량 선택 포함)
+async function sqShowExamModal(id) {
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq) return;
+
+  const check = sqCanExam(sq);
+  if (!check.ok) { toast('⚠️', check.reason); return; }
+
+  const cost = _sqSettings.exam_cost || 10;
+  const baseRate = _sqSettings.exam_pass_rate || 40;
+  const boostPer = _sqSettings.exam_item_boost || 5;
+  const maxItems = _sqSettings.exam_item_max || 12;
+  const grade = _sqCalcGrade(sq);
+  const gs = _sqGradeStyle(grade);
+
+  // 보유 아이템 수량 조회
+  const ownedItems = await getItemQuantity(myProfile.id, '반짝이는 무언가');
+  const usableItems = Math.min(ownedItems, maxItems);
+
+  // 아이템 0개 사용이 기본값
+  window._sqExamItemCount = 0;
+
+  showModal(`
+    <div style="text-align:center">
+      <div style="font-size:40px;margin-bottom:8px">📋</div>
+      <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:4px">등급심사 신청</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">${sq.name}의 추가 훈련 기회를 얻을 수 있어요</div>
+      <div style="background:#f0f9ff;border-radius:14px;padding:14px;margin-bottom:12px;text-align:left">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;color:#64748b">현재 등급</span>
+          <span style="font-size:12px;font-weight:900;color:${gs.color}">${gs.label}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;color:#64748b">심사 비용</span>
+          <span style="font-size:12px;font-weight:900;color:#d97706">🌰 ${cost} 도토리</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:#64748b">기본 합격률</span>
+          <span style="font-size:12px;font-weight:900;color:#059669">${baseRate}%</span>
+        </div>
+      </div>
+      ${usableItems > 0 ? `
+        <div style="background:#eef2ff;border-radius:14px;padding:14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:800;color:#4338ca;margin-bottom:8px">✨ 반짝이는 무언가 (보유: ${ownedItems}개)</div>
+          <div style="font-size:11px;color:#6366f1;margin-bottom:8px">1개당 합격률 +${boostPer}% (최대 ${maxItems}개)</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+            <button onclick="_sqExamItemAdj(-1)" style="width:32px;height:32px;border-radius:10px;border:2px solid #c7d2fe;background:#eef2ff;color:#4338ca;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">−</button>
+            <span id="sqExamItemCount" style="min-width:32px;text-align:center;font-size:20px;font-weight:900;color:#4338ca">0</span>
+            <button onclick="_sqExamItemAdj(1)" style="width:32px;height:32px;border-radius:10px;border:2px solid #c7d2fe;background:#eef2ff;color:#4338ca;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">＋</button>
+          </div>
+          <div style="margin-top:8px;font-size:13px;font-weight:900;color:#059669" id="sqExamFinalRate">합격률: ${baseRate}%</div>
+        </div>` : `
+        <div style="background:#f5f5f5;border-radius:14px;padding:10px;margin-bottom:12px">
+          <div style="font-size:11px;color:#9ca3af">✨ 반짝이는 무언가를 사용하면 합격률을 올릴 수 있어요</div>
+        </div>`}
+      <div style="display:flex;gap:8px">
+        <button onclick="sqExecuteExam('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #5b21b6'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3)'">📋 심사 받기!</button>
+        <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
+      </div>
+    </div>`);
+}
+
+// 아이템 수량 조절
+function _sqExamItemAdj(delta) {
+  const baseRate = _sqSettings.exam_pass_rate || 40;
+  const boostPer = _sqSettings.exam_item_boost || 5;
+  const maxItems = _sqSettings.exam_item_max || 12;
+  var count = (window._sqExamItemCount || 0) + delta;
+  // 보유 수량은 모달 생성 시점에 체크했으므로 여기서는 max만 제한
+  count = Math.max(0, Math.min(count, maxItems));
+  window._sqExamItemCount = count;
+  const el = document.getElementById('sqExamItemCount');
+  if (el) el.textContent = count;
+  const rateEl = document.getElementById('sqExamFinalRate');
+  if (rateEl) rateEl.textContent = '합격률: ' + Math.min(baseRate + boostPer * count, 100) + '%';
+}
+
+// 심사 실행 + 결과 표시
+async function sqExecuteExam(id) {
+  const itemCount = window._sqExamItemCount || 0;
+  const result = await sqDoExam(id, itemCount);
+  if (!result) return;
+
+  const sq = _sqSquirrels.find(s => s.id === id);
+  let resultHTML;
+
+  if (result.passed) {
+    resultHTML = `
+      <div style="text-align:center">
+        <div style="font-size:56px;margin-bottom:8px">🎉</div>
+        <div style="font-size:22px;font-weight:900;color:#059669;margin-bottom:4px">심사 합격!</div>
+        <div style="font-size:14px;color:#6b7280;margin-bottom:16px">추가 훈련 기회를 획득했어요!</div>
+        <div style="background:#f0fdf4;border-radius:14px;padding:16px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:800;color:#15803d;margin-bottom:4px">🏋️ 추가 훈련 +${result.bonus}회</div>
+          <div style="font-size:12px;color:#6b7280">합격률 ${result.finalRate}% · 비용 🌰${result.cost}${result.itemCount > 0 ? ' · ✨' + result.itemCount + '개 사용' : ''}</div>
+        </div>
+        <button onclick="closeModal()" style="width:100%;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#34d399,#059669);color:white;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">확인</button>
+      </div>`;
+  } else {
+    resultHTML = `
+      <div style="text-align:center">
+        <div style="font-size:56px;margin-bottom:8px">😢</div>
+        <div style="font-size:22px;font-weight:900;color:#dc2626;margin-bottom:4px">심사 불합격</div>
+        <div style="font-size:14px;color:#6b7280;margin-bottom:16px">${result.cooldownHours}시간 후에 다시 도전할 수 있어요</div>
+        <div style="background:#fef2f2;border-radius:14px;padding:16px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:800;color:#dc2626;margin-bottom:4px">⏳ ${result.cooldownHours}시간 재심사 대기</div>
+          <div style="font-size:12px;color:#6b7280">합격률 ${result.finalRate}% · 비용 🌰${result.cost}${result.itemCount > 0 ? ' · ✨' + result.itemCount + '개 사용' : ''}</div>
+        </div>
+        <button onclick="closeModal()" style="width:100%;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">확인</button>
       </div>`;
   }
 
