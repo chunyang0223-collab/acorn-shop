@@ -1843,7 +1843,7 @@ async function sqExecuteExam(id) {
         <!-- 도장 (이미지 정중앙) -->
         <div id="examStampArea" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"></div>
         <!-- 텍스트 (대사창 영역 위에 오버레이) -->
-        <div id="examDialogueText" style="position:absolute;bottom:4%;left:8%;width:55%;top:64%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;-webkit-text-fill-color:#5c3d1e;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;z-index:3"></div>
+        <div id="examDialogueText" style="position:absolute;bottom:4%;left:7%;right:30%;top:64%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;-webkit-text-fill-color:#5c3d1e;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;z-index:3"></div>
       </div>
       <!-- 2번 공간: 결과 + 확인 버튼 -->
       <div id="examBottomArea" style="background:#1a1008;padding:8px 16px 16px;display:none">
@@ -2756,4 +2756,3 @@ async function sqAdminLoadList() {
         <div style="font-size:10px;color:#9ca3af">${sq.status==='baby'?`게이지 ${sq.acorns_fed}/${sq.acorns_required}`:`HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`}</div>
       </div>
     </div>`).join('');
-}
