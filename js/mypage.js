@@ -258,7 +258,7 @@ async function renderInventory() {
     // 등급심사 전용 아이템: 버튼 없이 수량만 표시
     if (isExamMaterial) {
       const qty = item.quantity || 1;
-      return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl border-2 bg-indigo-50 border-indigo-200">
+      return `<div class="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl border-2 bg-indigo-50 border-indigo-200" style="min-height:100%">
         <div style="position:relative;display:inline-block">
           <div class="text-3xl">${p.icon || '✨'}</div>
           <span style="position:absolute;top:-4px;right:-10px;background:#6366f1;color:white;font-size:10px;font-weight:900;border-radius:99px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;padding:0 4px">${qty}</span>
@@ -289,7 +289,7 @@ async function renderInventory() {
 
     // GIFT_ACORN: 이름/버튼만 표시 (badge, sourceTag 없음)
     if (isGiftAcorn) {
-      return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl border-2 ${bgClass}">
+      return `<div class="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl border-2 ${bgClass}" style="min-height:100%">
         <div class="text-3xl" onclick="useInventoryItem('${item.id}')">🎁</div>
         <p class="text-xs font-black text-gray-700 text-center leading-tight">도토리 선물</p>
         ${btnHtml}
@@ -306,7 +306,7 @@ async function renderInventory() {
       ? `<span class="text-xs it-store">🎁 선물</span>`
       : `<span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 구매'}</span>`;
 
-    return `<div class="flex flex-col items-center gap-1 p-3 rounded-2xl border-2 ${bgClass}">
+    return `<div class="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl border-2 ${bgClass}" style="min-height:100%">
       <div class="text-3xl" ${isPending ? '' : `onclick="useInventoryItem('${item.id}')"`}>${p.icon || '🎁'}</div>
       <p class="text-xs font-black text-gray-700 text-center leading-tight">${p.name || '아이템'}</p>
       ${badge}

@@ -9,7 +9,7 @@ async function grantItem(userId, itemName, qty) {
   // products에서 조회
   const { data: prod } = await sb.from('products')
     .select('id,name,icon,item_type,reward_type,stackable,max_stack')
-    .eq('name', itemName).maybeSingle();
+    .eq('name', itemName).limit(1).single();
   if (!prod) { console.warn('grantItem: 상품 없음 -', itemName); return null; }
 
   // stackable 판정: DB 컬럼 또는 reward_type 기반 (EXAM_MATERIAL은 항상 스택형)
@@ -17,11 +17,14 @@ async function grantItem(userId, itemName, qty) {
   const maxStack = prod.max_stack || (isStackable ? 99 : 1);
 
   if (isStackable) {
-    // 스택형: 기존 보유 확인
-    const { data: existing } = await sb.from('inventory')
+    // 스택형: 기존 보유 확인 (여러 행이 있을 수 있으므로 limit(1) 사용)
+    const { data: rows } = await sb.from('inventory')
       .select('id,quantity')
       .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
-      .maybeSingle();
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    const existing = rows && rows.length > 0 ? rows[0] : null;
 
     if (existing) {
       const newQty = Math.min((existing.quantity || 1) + qty, maxStack);
@@ -59,25 +62,28 @@ async function grantItem(userId, itemName, qty) {
 
 // 스택형 아이템 보유량 조회
 async function getItemQuantity(userId, itemName) {
-  const { data } = await sb.from('inventory')
-    .select('quantity, products!inner(name)')
-    .eq('user_id', userId).eq('status', 'held')
-    .eq('products.name', itemName)
-    .maybeSingle();
-  return data?.quantity || 0;
+  const { data: prod } = await sb.from('products')
+    .select('id').eq('name', itemName).limit(1).single();
+  if (!prod) return 0;
+  const { data: rows } = await sb.from('inventory')
+    .select('quantity')
+    .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
+    .order('created_at', { ascending: true }).limit(1);
+  return (rows && rows.length > 0) ? (rows[0].quantity || 0) : 0;
 }
 
 // 스택형 아이템 차감
 async function consumeItem(userId, itemName, qty) {
   qty = qty || 1;
   const { data: prod } = await sb.from('products')
-    .select('id').eq('name', itemName).maybeSingle();
+    .select('id').eq('name', itemName).limit(1).single();
   if (!prod) return false;
 
-  const { data: existing } = await sb.from('inventory')
+  const { data: rows } = await sb.from('inventory')
     .select('id,quantity')
     .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
-    .maybeSingle();
+    .order('created_at', { ascending: true }).limit(1);
+  const existing = (rows && rows.length > 0) ? rows[0] : null;
   if (!existing || (existing.quantity || 0) < qty) return false;
 
   const newQty = (existing.quantity || 0) - qty;
