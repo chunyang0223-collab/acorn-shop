@@ -1223,9 +1223,18 @@ async function sqRevealGrowth(id) {
 
   const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
   const sprite = _sqRandomSprite();
+  // 훈련 횟수 부여 (가중치 랜덤)
+  const pool = _sqSettings.training_count_pool || [1,2,2,3,3,3,4,4,4,4,5,5,5,5,6,6,6,7,7,8,8,9,10];
+  const trainingTotal = pool[Math.floor(Math.random() * pool.length)];
   try {
-    await sb.from('squirrels').update({ status: growType, grows_at: null, sprite: sprite }).eq('id', id);
-    _sqUpdate(id, { status: growType, grows_at: null, sprite: sprite });
+    await sb.from('squirrels').update({
+      status: growType, grows_at: null, sprite: sprite,
+      training_total: trainingTotal, training_used: 0
+    }).eq('id', id);
+    _sqUpdate(id, {
+      status: growType, grows_at: null, sprite: sprite,
+      training_total: trainingTotal, training_used: 0
+    });
     // 성장 연출 (흔들림 → 페이드 → 새 카드)
     _sqGrowCard(id, sq.name, growType);
   } catch(e) {
