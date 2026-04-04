@@ -37,6 +37,42 @@
   0%,100% { transform: translateY(0px); }
   50%     { transform: translateY(-6px); }
 }
+/* 훈련 애니메이션 */
+@keyframes trainPump {
+  0%,100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-18px) scale(1.15); }
+  50% { transform: translateY(0) scale(0.95); }
+  75% { transform: translateY(-10px) scale(1.08); }
+}
+@keyframes trainImpact {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.6; }
+  100% { transform: scale(2); opacity: 0; }
+}
+@keyframes trainHpFill {
+  0% { width: var(--hp-from); }
+  100% { width: var(--hp-to); }
+}
+@keyframes trainFadeUp {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes trainShake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes trainStarBurst {
+  0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--sx), var(--sy)) scale(0); opacity: 0; }
+}
+@keyframes trainCountPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
+}
 </style>
 </head>
 <body>
