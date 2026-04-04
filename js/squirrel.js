@@ -626,13 +626,18 @@ function sqCardHTML(sq) {
 
   // 훈련 정보는 카드에 표시하지 않음 (액션 모달에서만 확인)
 
-  // 회복 중 UI (타이머 정보만, 버튼은 액션 모달로 이동)
+  // 회복 중 UI (타이머 + 즉시회복 버튼, 상태 텍스트에 "회복 중"이 이미 있으므로 여기선 타이머만)
   let recoverHTML = '';
   if (sq.status === 'recovering' && sq.recovers_at) {
+    const _recMaxCost = _sqSettings.recovery_instant_cost || 15;
+    const _recBaseMin = _sqSettings.recovery_base_minutes || 60;
+    const _recRemaining = Math.max(0, new Date(sq.recovers_at) - Date.now());
+    const _recTotalMs = _recBaseMin * 60000;
+    const _recCost = Math.max(1, Math.ceil(_recMaxCost * (_recRemaining / _recTotalMs)));
     recoverHTML = `
       <div id="sqRecoverArea-${sq.id}" style="margin-top:10px;display:flex;align-items:center;gap:8px">
-        <div style="font-size:11px;font-weight:800;color:#92400e">😴 회복 중</div>
         <div id="sqRecoverTimer-${sq.id}" style="font-size:13px;font-weight:900;color:#b45309;font-variant-numeric:tabular-nums;letter-spacing:1px">--:--:--</div>
+        <button onclick="sqInstantRecover('${sq.id}')" id="sqRecoverBtn-${sq.id}" style="margin-left:auto;height:30px;padding:0 12px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(245,158,11,0.3);white-space:nowrap">🌰 ${_recCost} 도토리로 회복</button>
       </div>`;
   }
 
@@ -984,7 +989,7 @@ function _sqStartRecoverTimer(id, sq) {
     const totalMs = baseMinutes * 60000;
     const currentCost = remaining > 0 ? Math.max(1, Math.ceil(maxCost * (remaining / totalMs))) : 0;
     const btn = document.getElementById('sqRecoverBtn-' + id);
-    if (btn && remaining > 0) btn.textContent = '🌰 ' + currentCost + ' 도토리로 즉시 회복';
+    if (btn && remaining > 0) btn.textContent = '🌰 ' + currentCost + ' 도토리로 회복';
 
     if (remaining <= 0) {
       _sqClearTimer(id);
