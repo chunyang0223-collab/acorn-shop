@@ -16,9 +16,9 @@ var _sqSettings  = {
   shop_price: 30, acorn_min: 20, acorn_max: 50,
   time_chance: 40, time_min_minutes: 10, time_max_minutes: 60,
   feed_multi_min: 0.5, feed_multi_max: 1.3,
-  stat_hp_min: 60, stat_hp_max: 120,
+  stat_hp_min: 60, stat_hp_max: 150,
   stat_atk_min: 8, stat_atk_max: 20,
-  stat_def_min: 4, stat_def_max: 14,
+  stat_def_min: 4, stat_def_max: 20,
   sell_price_base: 20, sell_price_max: 80,
   recovery_base_minutes: 60, recovery_instant_cost: 15,
   time_trigger_min: 40, time_trigger_max: 80,
@@ -29,7 +29,19 @@ var _sqSettings  = {
   fuse_upgrade_rare: 12,
   fuse_upgrade_epic: 8,
   fuse_upgrade_unique: 5,
-  fuse_upgrade_legend: 0
+  fuse_upgrade_legend: 0,
+  // 훈련 설정
+  training_success_rate: 40,
+  training_hp_pool: [1,2,2,3,3,3,4,4,4,5,5,5,6,6,7,7,8,8,9,10],
+  training_count_pool: [1,2,2,3,3,3,4,4,4,4,5,5,5,5,6,6,6,7,7,8,8,9,10],
+  // 등급심사 설정
+  exam_cost: 10,
+  exam_pass_rate: 40,
+  exam_cooldown_hours: 48,
+  exam_bonus_min: 1,
+  exam_bonus_max: 5,
+  exam_item_boost: 5,
+  exam_item_max: 12
 };
 var _sqAudioCtx = null;
 
@@ -40,11 +52,11 @@ function _sqRandomSprite() {
 }
 
 // ── 등급 시스템 ──
-// HP/120 + ATK/20 + DEF/14 평균 → 백분율
+// HP/150 + ATK/20 + DEF/20 평균 → 백분율
 function _sqCalcGrade(sq) {
-  var maxHp = _sqSettings.stat_hp_max || 120;
+  var maxHp = _sqSettings.stat_hp_max || 150;
   var maxAtk = _sqSettings.stat_atk_max || 20;
-  var maxDef = _sqSettings.stat_def_max || 14;
+  var maxDef = _sqSettings.stat_def_max || 20;
   var hp = sq.stats?.hp || 60;
   var atk = sq.stats?.atk || 8;
   var def = sq.stats?.def || 4;
@@ -1122,9 +1134,9 @@ async function sqDoBuySquirrel(price) {
   const trigMin = _sqSettings.time_trigger_min || 40;
   const trigMax = _sqSettings.time_trigger_max || 80;
   const timeTriggerPct = needsTime ? (trigMin + Math.floor(Math.random() * (trigMax - trigMin + 1))) : null;
-  const baseHp  = (_sqSettings.stat_hp_min||60)  + Math.floor(Math.random() * ((_sqSettings.stat_hp_max||120)  - (_sqSettings.stat_hp_min||60)  + 1));
+  const baseHp  = (_sqSettings.stat_hp_min||60)  + Math.floor(Math.random() * ((_sqSettings.stat_hp_max||150)  - (_sqSettings.stat_hp_min||60)  + 1));
   const baseAtk = (_sqSettings.stat_atk_min||8)  + Math.floor(Math.random() * ((_sqSettings.stat_atk_max||20)  - (_sqSettings.stat_atk_min||8)  + 1));
-  const baseDef = (_sqSettings.stat_def_min||4)  + Math.floor(Math.random() * ((_sqSettings.stat_def_max||14)  - (_sqSettings.stat_def_min||4)  + 1));
+  const baseDef = (_sqSettings.stat_def_min||4)  + Math.floor(Math.random() * ((_sqSettings.stat_def_max||20)  - (_sqSettings.stat_def_min||4)  + 1));
 
   // time_trigger_pct 컬럼 존재 여부 확인
   let hasTriggerCol = false;
@@ -1278,7 +1290,7 @@ function sqSellSquirrel(id) {
   const sellBase  = _sqSettings.sell_price_base || 20;
   const sellMax   = _sqSettings.sell_price_max  || 80;
   const statSum   = (sq.stats?.hp||100) + (sq.stats?.atk||10) * 3 + (sq.stats?.def||5) * 2;
-  const maxStat   = (_sqSettings.stat_hp_max||120) + (_sqSettings.stat_atk_max||20) * 3 + (_sqSettings.stat_def_max||14) * 2;
+  const maxStat   = (_sqSettings.stat_hp_max||150) + (_sqSettings.stat_atk_max||20) * 3 + (_sqSettings.stat_def_max||20) * 2;
   const price     = Math.round(sellBase + (statSum / maxStat) * (sellMax - sellBase));
   const desc      = sq.status === 'explorer' ? '탐험을 즐기는 활발한 녀석이군요!' : '온순하고 귀여운 애완 다람쥐네요!';
 
@@ -1736,9 +1748,9 @@ async function sqFuseConfirm() {
 }
 
 function _sqFuseGenerateStats(targetGrade) {
-  const hpMin = _sqSettings.stat_hp_min || 60, hpMax = _sqSettings.stat_hp_max || 120;
+  const hpMin = _sqSettings.stat_hp_min || 60, hpMax = _sqSettings.stat_hp_max || 150;
   const atkMin = _sqSettings.stat_atk_min || 8, atkMax = _sqSettings.stat_atk_max || 20;
-  const defMin = _sqSettings.stat_def_min || 4, defMax = _sqSettings.stat_def_max || 14;
+  const defMin = _sqSettings.stat_def_min || 4, defMax = _sqSettings.stat_def_max || 20;
 
   // 목표 등급에 맞는 스탯이 나올 때까지 재생성 (최대 500회)
   for (let i = 0; i < 500; i++) {
@@ -1867,11 +1879,11 @@ async function sqAdminInit() {
   document.getElementById('sqSet_multiMin').value    = _sqSettings.feed_multi_min    || 0.5;
   document.getElementById('sqSet_multiMax').value    = _sqSettings.feed_multi_max    || 1.3;
   document.getElementById('sqSet_hpMin').value       = _sqSettings.stat_hp_min       || 60;
-  document.getElementById('sqSet_hpMax').value       = _sqSettings.stat_hp_max       || 120;
+  document.getElementById('sqSet_hpMax').value       = _sqSettings.stat_hp_max       || 150;
   document.getElementById('sqSet_atkMin').value      = _sqSettings.stat_atk_min      || 8;
   document.getElementById('sqSet_atkMax').value      = _sqSettings.stat_atk_max      || 20;
   document.getElementById('sqSet_defMin').value      = _sqSettings.stat_def_min      || 4;
-  document.getElementById('sqSet_defMax').value      = _sqSettings.stat_def_max      || 14;
+  document.getElementById('sqSet_defMax').value      = _sqSettings.stat_def_max      || 20;
   document.getElementById('sqSet_sellBase').value    = _sqSettings.sell_price_base   || 20;
   document.getElementById('sqSet_sellMax').value     = _sqSettings.sell_price_max    || 80;
   document.getElementById('sqSet_recoveryMinutes').value = _sqSettings.recovery_base_minutes || 60;
@@ -1905,11 +1917,11 @@ async function sqSaveSettings() {
     feed_multi_min:   parseFloat(document.getElementById('sqSet_multiMin').value) || 0.5,
     feed_multi_max:   parseFloat(document.getElementById('sqSet_multiMax').value) || 1.3,
     stat_hp_min:      parseInt(document.getElementById('sqSet_hpMin').value)      || 60,
-    stat_hp_max:      parseInt(document.getElementById('sqSet_hpMax').value)      || 120,
+    stat_hp_max:      parseInt(document.getElementById('sqSet_hpMax').value)      || 150,
     stat_atk_min:     parseInt(document.getElementById('sqSet_atkMin').value)     || 8,
     stat_atk_max:     parseInt(document.getElementById('sqSet_atkMax').value)     || 20,
     stat_def_min:     parseInt(document.getElementById('sqSet_defMin').value)     || 4,
-    stat_def_max:     parseInt(document.getElementById('sqSet_defMax').value)     || 14,
+    stat_def_max:     parseInt(document.getElementById('sqSet_defMax').value)     || 20,
     sell_price_base:  parseInt(document.getElementById('sqSet_sellBase').value)   || 20,
     sell_price_max:   parseInt(document.getElementById('sqSet_sellMax').value)    || 80,
     recovery_base_minutes: parseInt(document.getElementById('sqSet_recoveryMinutes').value) || 60,

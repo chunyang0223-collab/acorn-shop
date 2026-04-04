@@ -432,9 +432,9 @@ async function sqContinueExpedition(expId) {
       expedition: data,
       party: squirrels.map(sq => {
         var hp = sq.stats?.hp || 80, atk = sq.stats?.atk || 12, def = sq.stats?.def || 6;
-        var maxHp = (_sqSettings && _sqSettings.stat_hp_max) || 120;
+        var maxHp = (_sqSettings && _sqSettings.stat_hp_max) || 150;
         var maxAtk = (_sqSettings && _sqSettings.stat_atk_max) || 20;
-        var maxDef = (_sqSettings && _sqSettings.stat_def_max) || 14;
+        var maxDef = (_sqSettings && _sqSettings.stat_def_max) || 20;
         var score = ((hp/maxHp) + (atk/maxAtk) + (def/maxDef)) / 3 * 100;
         var grade = score >= 90 ? 'legend' : score >= 80 ? 'unique' : score >= 70 ? 'epic' : score >= 60 ? 'rare' : 'normal';
         return {
