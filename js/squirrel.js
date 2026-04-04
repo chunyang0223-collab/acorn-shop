@@ -1931,7 +1931,7 @@ async function sqExecuteExam(id) {
 
       // 불합격 대사
       await new Promise(r => setTimeout(r, 600));
-      await new Promise(r => _sqTypeText('examDialogueText', '아쉽군...\n다음에 다시 도전하게.\n좀 더 준비해오라고.', 35, r));
+      await new Promise(r => _sqTypeText('examDialogueText', '아쉽군... 다음에 다시 도전하게.\n좀 더 준비해오라고.', 35, r));
 
       // 결과 정보 + 확인 버튼 표시
       await new Promise(r => setTimeout(r, 400));
