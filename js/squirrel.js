@@ -1842,10 +1842,10 @@ async function sqExecuteExam(id) {
         <img src="images/exam/exam_scene.png" id="examSceneImg" style="width:100%;display:block;opacity:0;transition:opacity 0.8s" onerror="this.style.display='none'">
         <!-- 도장 (배경이미지 정 가운데) -->
         <div id="examStampArea" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"></div>
-        <!-- 대화창 (배경이미지 하단에 붙임, 약간 안쪽 여백) -->
-        <div style="position:absolute;bottom:2%;left:3%;right:3%;z-index:3">
+        <!-- 대화창 (배경이미지 하단, 70% 너비, 안쪽 여백) -->
+        <div style="position:absolute;bottom:2%;left:15%;right:15%;z-index:3">
           <div style="position:relative">
-            <img src="images/exam/exam_dialogue.png" style="width:100%;display:block" id="examDialogueImg" onerror="this.parentElement.style.background='linear-gradient(0deg,rgba(26,16,8,0.95),rgba(26,16,8,0.7))';this.parentElement.style.borderRadius='14px';this.parentElement.style.padding='16px';this.style.display='none'">
+            <img src="images/exam/exam_dialogue.png" style="width:100%;display:block;max-height:80px;object-fit:contain" id="examDialogueImg" onerror="this.parentElement.style.background='linear-gradient(0deg,rgba(26,16,8,0.95),rgba(26,16,8,0.7))';this.parentElement.style.borderRadius='14px';this.parentElement.style.padding='16px';this.style.display='none'">
             <div id="examDialogueText" style="position:absolute;top:0;bottom:0;left:5%;width:56%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;-webkit-text-fill-color:#5c3d1e"></div>
           </div>
         </div>
