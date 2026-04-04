@@ -52,6 +52,8 @@ function _sqRandomSprite() {
 }
 
 // ── 등급 시스템 ──
+var _sqGradeOrder = ['normal','rare','epic','unique','legend'];
+var _sqGradeLabel = { normal:'일반', rare:'레어', epic:'희귀', unique:'유일', legend:'레전드' };
 // HP/150 + ATK/20 + DEF/20 평균 → 백분율
 function _sqCalcGrade(sq) {
   var maxHp = _sqSettings.stat_hp_max || 150;
@@ -622,6 +624,46 @@ function sqCardHTML(sq) {
       </div>`;
   }
 
+  // 훈련 UI
+  let trainingHTML = '';
+  if (sq.status !== 'baby') {
+    const tTotal = sq.training_total || 0;
+    const tUsed  = sq.training_used  || 0;
+    const tRemain = tTotal - tUsed;
+    const hpMax = _sqSettings.stat_hp_max || 150;
+    const currentHp = sq.stats?.hp || 60;
+    const hpMaxed = currentHp >= hpMax;
+
+    if (tTotal > 0 && tRemain > 0 && !hpMaxed) {
+      // 훈련 가능
+      const canTrain = sq.status === 'explorer' || sq.status === 'pet';
+      trainingHTML = `
+        <div style="margin-top:12px;background:#f0f9ff;border-radius:14px;padding:12px 16px;border:1.5px solid #bae6fd">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:800;color:#0369a1">🏋️ 체력 훈련</div>
+            <div style="font-size:11px;font-weight:800;color:#0ea5e9">남은 횟수 <span style="font-size:14px">${tRemain}</span>/${tTotal}</div>
+          </div>
+          <div style="height:6px;border-radius:99px;background:#e0f2fe;overflow:hidden;margin-bottom:10px">
+            <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#0284c7);width:${Math.round(tUsed / tTotal * 100)}%"></div>
+          </div>
+          <button onclick="sqShowTrainingModal('${sq.id}')" ${canTrain ? '' : 'disabled'} style="width:100%;height:36px;border-radius:10px;border:none;background:${canTrain ? 'linear-gradient(135deg,#38bdf8,#0284c7)' : '#e2e8f0'};color:${canTrain ? 'white' : '#94a3b8'};font-size:13px;font-weight:900;cursor:${canTrain ? 'pointer' : 'default'};box-shadow:${canTrain ? '0 3px 10px rgba(2,132,199,0.3)' : 'none'};font-family:inherit">${canTrain ? '💪 훈련 시작!' : (sq.status === 'exploring' ? '⚔️ 탐험 중엔 훈련 불가' : '😴 회복 후 훈련 가능')}</button>
+        </div>`;
+    } else if (tTotal > 0 && tRemain <= 0 && !hpMaxed) {
+      // 훈련 횟수 소진 → 등급심사 안내
+      trainingHTML = `
+        <div style="margin-top:12px;background:#fefce8;border-radius:14px;padding:12px 16px;border:1.5px solid #fde68a;text-align:center">
+          <div style="font-size:11px;font-weight:800;color:#a16207;margin-bottom:4px">🏋️ 훈련 완료</div>
+          <div style="font-size:10px;color:#ca8a04">모든 훈련 횟수를 사용했어요. 등급심사로 추가 기회를 받을 수 있어요!</div>
+        </div>`;
+    } else if (hpMaxed) {
+      // HP 최대치 도달
+      trainingHTML = `
+        <div style="margin-top:12px;background:#f0fdf4;border-radius:14px;padding:10px 16px;text-align:center;border:1.5px solid #bbf7d0">
+          <div style="font-size:11px;font-weight:800;color:#15803d">⭐ HP 최대치 달성!</div>
+        </div>`;
+    }
+  }
+
   // 회복 중 UI
   let recoverHTML = '';
   if (sq.status === 'recovering' && sq.recovers_at) {
@@ -704,7 +746,7 @@ function sqCardHTML(sq) {
           ${(sq.status !== 'baby' && typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#dcfce7;color:#15803d;border:1.5px solid #86efac">🌾 농부</span>' : (sq.status !== 'baby' && typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) ? '<span style="font-size:13px;font-weight:900;padding:6px 0;border-radius:99px;min-width:72px;text-align:center;background:#ecfdf5;color:#15803d">농부</span>' : ''}
         </div>
       </div>
-      ${babyHTML}${statsHTML}${recoverHTML}${apprenticeHTML}${sellBtn}
+      ${babyHTML}${statsHTML}${trainingHTML}${recoverHTML}${apprenticeHTML}${sellBtn}
     </div>`;
 }
 
@@ -1244,6 +1286,169 @@ async function sqRevealGrowth(id) {
 }
 
 // ================================================================
+//  훈련 시스템
+// ================================================================
+
+// 가중치 풀에서 랜덤 뽑기 (범용)
+function _sqPickFromPool(pool) {
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// 훈련 실행
+async function sqDoTraining(id) {
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq) return;
+  if (sq.status === 'baby') { toast('⚠️', '아기 다람쥐는 훈련할 수 없어요'); return; }
+
+  const total = sq.training_total || 0;
+  const used  = sq.training_used  || 0;
+  const remain = total - used;
+  if (remain <= 0) { toast('⚠️', '남은 훈련 횟수가 없어요'); return; }
+
+  const hpMax = _sqSettings.stat_hp_max || 150;
+  const currentHp = sq.stats?.hp || 60;
+  if (currentHp >= hpMax) { toast('⚠️', 'HP가 이미 최대치예요!'); return; }
+
+  const successRate = _sqSettings.training_success_rate || 40;
+  const roll = Math.random() * 100;
+  const success = roll < successRate;
+
+  const newUsed = used + 1;
+  let newHp = currentHp;
+  let hpGain = 0;
+  let newGrade = _sqCalcGrade(sq);
+  let gradeUp = false;
+
+  if (success) {
+    const hpPool = _sqSettings.training_hp_pool || [1,2,2,3,3,3,4,4,4,5,5,5,6,6,7,7,8,8,9,10];
+    hpGain = _sqPickFromPool(hpPool);
+    newHp = Math.min(currentHp + hpGain, hpMax);
+
+    // 등급 재계산
+    const oldGrade = newGrade;
+    const tempSq = { stats: { hp: newHp, atk: sq.stats?.atk || 8, def: sq.stats?.def || 4 } };
+    newGrade = _sqCalcGrade(tempSq);
+    gradeUp = _sqGradeOrder.indexOf(newGrade) > _sqGradeOrder.indexOf(oldGrade);
+  }
+
+  // DB 업데이트
+  const updatedStats = { ...sq.stats, hp: newHp };
+  try {
+    await sb.from('squirrels').update({
+      stats: updatedStats,
+      hp_current: newHp,
+      training_used: newUsed
+    }).eq('id', id);
+    _sqUpdate(id, { stats: updatedStats, hp_current: newHp, training_used: newUsed });
+  } catch(e) {
+    console.error(e);
+    toast('❌', '훈련 처리 중 오류');
+    return;
+  }
+
+  // 결과 반환 (UI에서 사용)
+  return { success, hpGain, newHp, hpMax, currentHp, newGrade, gradeUp, remain: remain - 1, total };
+}
+
+// 훈련 확인 모달
+function sqShowTrainingModal(id) {
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq) return;
+  const tRemain = (sq.training_total || 0) - (sq.training_used || 0);
+  const rate = _sqSettings.training_success_rate || 40;
+  const grade = _sqCalcGrade(sq);
+  const gs = _sqGradeStyle(grade);
+  showModal(`
+    <div style="text-align:center">
+      <div style="font-size:40px;margin-bottom:8px">🏋️</div>
+      <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:4px">체력 훈련</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">${sq.name}의 HP를 강화합니다</div>
+      <div style="background:#f0f9ff;border-radius:14px;padding:14px;margin-bottom:16px;text-align:left">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;color:#64748b">현재 HP</span>
+          <span style="font-size:12px;font-weight:900;color:#ef4444">${sq.stats?.hp || 60} / ${_sqSettings.stat_hp_max || 150}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;color:#64748b">현재 등급</span>
+          <span style="font-size:12px;font-weight:900;color:${gs.color}">${gs.label}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;color:#64748b">남은 훈련 횟수</span>
+          <span style="font-size:12px;font-weight:900;color:#0284c7">${tRemain}회</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:#64748b">성공 확률</span>
+          <span style="font-size:12px;font-weight:900;color:#059669">${rate}%</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="sqExecuteTraining('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #0369a1,0 6px 16px rgba(2,132,199,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #0369a1'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #0369a1,0 6px 16px rgba(2,132,199,.3)'">💪 훈련하기!</button>
+        <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
+      </div>
+    </div>`);
+}
+
+// 훈련 실행 + 결과 표시
+async function sqExecuteTraining(id) {
+  const result = await sqDoTraining(id);
+  if (!result) return;
+
+  const sq = _sqSquirrels.find(s => s.id === id);
+  const gs = _sqGradeStyle(result.newGrade);
+
+  let resultHTML;
+  if (result.success) {
+    resultHTML = `
+      <div style="text-align:center">
+        <div style="font-size:48px;margin-bottom:8px;animation:sqReadyBounce 0.6s ease-in-out">💪</div>
+        <div style="font-size:20px;font-weight:900;color:#059669;margin-bottom:4px">훈련 성공!</div>
+        <div style="font-size:14px;color:#6b7280;margin-bottom:16px">체력이 강화되었어요!</div>
+        <div style="background:#f0fdf4;border-radius:14px;padding:14px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:800;color:#15803d;margin-bottom:8px">❤️ HP +${result.hpGain}</div>
+          <div style="font-size:22px;font-weight:900;color:#ef4444">${result.currentHp} → ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
+        </div>
+        ${result.gradeUp ? `
+          <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px;margin-bottom:8px;border:2px solid rgba(251,191,36,.3)">
+            <div style="font-size:24px;margin-bottom:4px">🎉</div>
+            <div style="font-size:15px;font-weight:900;color:#78350f">등급 승급!</div>
+            <div style="font-size:13px;font-weight:800;color:${gs.color};margin-top:4px">${gs.label} 등급 달성!</div>
+          </div>` : ''}
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:16px">남은 훈련 횟수: ${result.remain}회</div>
+        <div style="display:flex;gap:8px">
+          ${result.remain > 0 && result.newHp < result.hpMax ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">계속 훈련</button>` : ''}
+          <button onclick="closeModal()" style="flex:1;height:40px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+        </div>
+      </div>`;
+  } else {
+    resultHTML = `
+      <div style="text-align:center">
+        <div style="font-size:48px;margin-bottom:8px">😓</div>
+        <div style="font-size:20px;font-weight:900;color:#dc2626;margin-bottom:4px">훈련 실패...</div>
+        <div style="font-size:14px;color:#6b7280;margin-bottom:16px">이번에는 성과가 없었어요</div>
+        <div style="background:#fef2f2;border-radius:14px;padding:14px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:800;color:#dc2626;margin-bottom:4px">HP 변동 없음</div>
+          <div style="font-size:16px;font-weight:900;color:#ef4444">❤️ ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:16px">남은 훈련 횟수: ${result.remain}회</div>
+        <div style="display:flex;gap:8px">
+          ${result.remain > 0 ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">다시 훈련</button>` : ''}
+          <button onclick="closeModal()" style="flex:1;height:40px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+        </div>
+      </div>`;
+  }
+
+  showModal(resultHTML);
+
+  // 카드 갱신
+  const cardEl = document.getElementById('sqCard-' + id);
+  if (cardEl && sq) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = sqCardHTML(sq);
+    cardEl.replaceWith(tmp.firstElementChild);
+  }
+}
+
+// ================================================================
 //  이름 변경
 // ================================================================
 function sqEditName(id) {
@@ -1475,8 +1680,7 @@ async function sqLaunchExpedition() {
 var _sqFuseSelected = [null, null]; // 선택된 다람쥐 ID 2개
 var _sqFuseSlotPicking = 0;         // 현재 선택 중인 슬롯 (1 or 2)
 
-const _sqGradeOrder = ['normal','rare','epic','unique','legend'];
-const _sqGradeLabel = { normal:'일반', rare:'레어', epic:'희귀', unique:'유일', legend:'레전드' };
+// _sqGradeOrder, _sqGradeLabel → 파일 상단 등급 시스템 영역으로 이동됨
 
 function sqFuseInit() {
   _sqFuseSelected = [null, null];
