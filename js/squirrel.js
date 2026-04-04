@@ -685,20 +685,19 @@ function sqCardHTML(sq) {
       <div id="sqRecoverArea-${sq.id}" style="margin-top:12px;position:relative">
         <button onclick="sqInstantRecover('${sq.id}')" id="sqRecoverBtn-${sq.id}"
           style="width:100%;height:44px;border-radius:14px;border:none;
-            background:linear-gradient(135deg,#fde68a,#fbbf24,#f59e0b);
-            color:#78350f;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;
-            box-shadow:0 3px 0 #d97706,0 6px 16px rgba(245,158,11,0.25);
+            background:linear-gradient(135deg,#a7f3d0,#6ee7b7,#34d399);
+            color:#065f46;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;
+            box-shadow:0 3px 0 #059669,0 6px 16px rgba(16,185,129,0.25);
             display:flex;align-items:center;justify-content:center;gap:8px;
             position:relative;overflow:hidden;
             transition:transform 0.1s,box-shadow 0.1s"
-          onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #d97706,0 2px 8px rgba(245,158,11,0.2)'"
-          onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #d97706,0 6px 16px rgba(245,158,11,0.25)'"
-          onmouseleave="this.style.transform='';this.style.boxShadow='0 3px 0 #d97706,0 6px 16px rgba(245,158,11,0.25)'">
-          <span style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);animation:sqRecoverShimmer 2.5s ease-in-out infinite;pointer-events:none"></span>
+          onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #059669,0 2px 8px rgba(16,185,129,0.2)'"
+          onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #059669,0 6px 16px rgba(16,185,129,0.25)'"
+          onmouseleave="this.style.transform='';this.style.boxShadow='0 3px 0 #059669,0 6px 16px rgba(16,185,129,0.25)'">
+          <span style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.35) 50%,transparent 100%);animation:sqRecoverShimmer 2.5s ease-in-out infinite;pointer-events:none"></span>
           <span style="position:relative;display:flex;align-items:center;gap:8px">
-            <span>😴</span>
             <span id="sqRecoverTimer-${sq.id}" style="font-variant-numeric:tabular-nums;letter-spacing:1px">--:--:--</span>
-            <span style="opacity:0.5">│</span>
+            <span style="opacity:0.4">│</span>
             <span id="sqRecoverCostText-${sq.id}">🌰 ${_recCost} 도토리로 회복</span>
           </span>
         </button>
