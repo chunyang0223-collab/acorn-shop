@@ -2763,3 +2763,4 @@ async function sqAdminLoadList() {
         <div style="font-size:10px;color:#9ca3af">${sq.status==='baby'?`게이지 ${sq.acorns_fed}/${sq.acorns_required}`:`HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`}</div>
       </div>
     </div>`).join('');
+}
