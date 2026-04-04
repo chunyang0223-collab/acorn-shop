@@ -1834,23 +1834,18 @@ async function sqExecuteExam(id) {
   // ── BGM 시작 ──
   _sqExamPlayBGM();
 
-  // ── 모달: 이미지 영역(고정)과 하단 버튼 영역(분리) ──
+  // ── 모달: 합친 이미지 1장 + 텍스트 오버레이 + 하단 결과 ──
   showModal(`
     <div id="examCinematic" style="border-radius:16px;margin:-20px;background:#1a1008;overflow:hidden">
-      <!-- 이미지 영역 (position:relative 기준) -->
+      <!-- 1번 공간: 이미지 + 오버레이 -->
       <div id="examImgWrap" style="position:relative;overflow:hidden">
-        <img src="images/exam/exam_scene.png" id="examSceneImg" style="width:100%;display:block;opacity:0;transition:opacity 0.8s" onerror="this.style.display='none'">
-        <!-- 도장 (배경이미지 정 가운데) -->
+        <img src="images/exam/exam_all.png" id="examSceneImg" style="width:100%;display:block;opacity:0;transition:opacity 0.8s">
+        <!-- 도장 (이미지 정중앙) -->
         <div id="examStampArea" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"></div>
-        <!-- 대화창 (배경이미지 하단, 70% 너비, 안쪽 여백) -->
-        <div style="position:absolute;bottom:2%;left:15%;right:15%;z-index:3">
-          <div style="position:relative">
-            <img src="images/exam/exam_dialogue.png" style="width:100%;display:block;max-height:80px;object-fit:contain" id="examDialogueImg" onerror="this.parentElement.style.background='linear-gradient(0deg,rgba(26,16,8,0.95),rgba(26,16,8,0.7))';this.parentElement.style.borderRadius='14px';this.parentElement.style.padding='16px';this.style.display='none'">
-            <div id="examDialogueText" style="position:absolute;top:0;bottom:0;left:5%;width:56%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;-webkit-text-fill-color:#5c3d1e"></div>
-          </div>
-        </div>
+        <!-- 텍스트 (대사창 영역 위에 오버레이) -->
+        <div id="examDialogueText" style="position:absolute;bottom:4%;left:8%;width:55%;top:64%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;-webkit-text-fill-color:#5c3d1e;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;z-index:3"></div>
       </div>
-      <!-- 하단 영역 (이미지 바깥, normal flow) -->
+      <!-- 2번 공간: 결과 + 확인 버튼 -->
       <div id="examBottomArea" style="background:#1a1008;padding:8px 16px 16px;display:none">
         <div id="examResultInfo" style="margin-bottom:8px"></div>
         <button onclick="_sqExamClose('${id}')" style="width:100%;height:40px;border-radius:12px;border:none;background:rgba(255,255,255,0.12);color:#e8d5b7;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;position:relative;z-index:10">확인</button>
