@@ -1788,12 +1788,17 @@ function _sqExamPlayStamp() {
 var _sqAnimalese = {
   voice: { base: 260, range: 50, speed: 0.058, syllable: 0.065, waveType: 'bright', vibrato: 5, vibratoDepth: 6 },
   speedMul: 1.2,
-  _ctx: null,
   _master: null,
   getCtx: function() {
-    if (!this._ctx) this._ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (this._ctx.state === 'suspended') this._ctx.resume();
-    return this._ctx;
+    // 앱 메인 AudioContext 공유 (모바일 볼륨 제한 해결)
+    if (typeof _audioCtx !== 'undefined' && _audioCtx) {
+      if (_audioCtx.state === 'suspended') _audioCtx.resume();
+      return _audioCtx;
+    }
+    // fallback
+    if (!this._fallbackCtx) this._fallbackCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this._fallbackCtx.state === 'suspended') this._fallbackCtx.resume();
+    return this._fallbackCtx;
   },
   getMaster: function() {
     var ctx = this.getCtx();
