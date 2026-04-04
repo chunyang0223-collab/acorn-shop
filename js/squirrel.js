@@ -1810,13 +1810,13 @@ var _sqAnimalese = {
       if (_mob) {
         // 모바일: 컴프레서로 오실레이터 출력 증폭 (BGM 무관)
         var comp = ctx.createDynamicsCompressor();
-        comp.threshold.value = -30;
-        comp.knee.value = 10;
-        comp.ratio.value = 8;
+        comp.threshold.value = -24;
+        comp.knee.value = 12;
+        comp.ratio.value = 4;
         comp.attack.value = 0.003;
-        comp.release.value = 0.05;
+        comp.release.value = 0.08;
         var makeupGain = ctx.createGain();
-        makeupGain.gain.value = 4.0;
+        makeupGain.gain.value = 1.8;
         this._master.connect(comp);
         comp.connect(makeupGain);
         makeupGain.connect(ctx.destination);
@@ -1878,11 +1878,11 @@ var _sqAnimalese = {
     vib.connect(vibG); vibG.connect(osc1.frequency); vibG.connect(osc3.frequency);
 
     var g1 = ctx.createGain(); var g2 = ctx.createGain(); var g3 = ctx.createGain();
-    g1.gain.setValueAtTime(0, t); g1.gain.linearRampToValueAtTime(0.25, t+dur*0.08);
-    g1.gain.setValueAtTime(0.25, t+dur*0.5); g1.gain.linearRampToValueAtTime(0, t+dur);
-    g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.08, t+dur*0.08);
+    g1.gain.setValueAtTime(0, t); g1.gain.linearRampToValueAtTime(0.45, t+dur*0.08);
+    g1.gain.setValueAtTime(0.45, t+dur*0.5); g1.gain.linearRampToValueAtTime(0, t+dur);
+    g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.15, t+dur*0.08);
     g2.gain.linearRampToValueAtTime(0, t+dur*0.8);
-    g3.gain.setValueAtTime(0, t); g3.gain.linearRampToValueAtTime(0.12, t+dur*0.1);
+    g3.gain.setValueAtTime(0, t); g3.gain.linearRampToValueAtTime(0.22, t+dur*0.1);
     g3.gain.linearRampToValueAtTime(0, t+dur);
 
     osc1.connect(g1); osc2.connect(g2); osc3.connect(g3);
