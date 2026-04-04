@@ -1522,56 +1522,120 @@ function sqShowTrainingModal(id) {
     </div>`);
 }
 
-// 훈련 실행 + 결과 표시
+// 훈련 중 별 파티클 생성
+function _trainStarBurst(container, count) {
+  const emojis = ['⭐','✨','💥','🔥','💪'];
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    const angle = (Math.PI * 2 * i) / count;
+    const dist = 40 + Math.random() * 50;
+    s.textContent = emojis[i % emojis.length];
+    s.style.cssText = `position:absolute;top:50%;left:50%;font-size:${14 + Math.random()*10}px;pointer-events:none;z-index:10;--sx:${Math.cos(angle)*dist}px;--sy:${Math.sin(angle)*dist}px;animation:trainStarBurst 0.6s ${i*0.04}s ease-out forwards`;
+    container.appendChild(s);
+  }
+}
+
+// 훈련 실행 + 시네마틱 연출
 async function sqExecuteTraining(id) {
+  // ── 1단계: 훈련 시작 사운드 + 준비 화면 ──
+  playSound('trainStart');
+
+  showModal(`
+    <div id="trainCinematic" style="text-align:center;min-height:200px;position:relative;overflow:hidden">
+      <div id="trainEmoji" style="font-size:56px;margin:20px 0 12px">🏋️</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:4px">훈련 중...</div>
+      <div id="trainDots" style="font-size:20px;color:var(--text-sub);letter-spacing:4px">●○○</div>
+      <div id="trainParticles" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>
+    </div>`, { noClose: true });
+
+  const emoji = document.getElementById('trainEmoji');
+  const dots = document.getElementById('trainDots');
+  const particles = document.getElementById('trainParticles');
+
+  // ── 2단계: 운동 애니메이션 (3회 펌프) ──
+  if (emoji) emoji.style.animation = 'trainPump 0.5s ease-in-out';
+  await new Promise(r => setTimeout(r, 500));
+  playSound('trainPunch');
+  if (dots) dots.textContent = '●●○';
+  if (emoji) { emoji.style.animation = ''; void emoji.offsetWidth; emoji.style.animation = 'trainPump 0.5s ease-in-out'; }
+  await new Promise(r => setTimeout(r, 500));
+  playSound('trainPunch');
+  if (dots) dots.textContent = '●●●';
+  if (emoji) { emoji.style.animation = ''; void emoji.offsetWidth; emoji.style.animation = 'trainPump 0.5s ease-in-out'; }
+  await new Promise(r => setTimeout(r, 500));
+
+  // ── 3단계: 결과 판정 ──
   const result = await sqDoTraining(id);
-  if (!result) return;
+  if (!result) { closeModal(); return; }
 
   const sq = _sqSquirrels.find(s => s.id === id);
   const gs = _sqGradeStyle(result.newGrade);
+  const hpPctFrom = Math.round((result.currentHp / result.hpMax) * 100);
+  const hpPctTo = Math.round((result.newHp / result.hpMax) * 100);
 
-  let resultHTML;
+  // 잠깐 멈추고 결과 전환
+  await new Promise(r => setTimeout(r, 300));
+
   if (result.success) {
-    resultHTML = `
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px;animation:sqReadyBounce 0.6s ease-in-out">💪</div>
-        <div style="font-size:20px;font-weight:900;color:#059669;margin-bottom:4px">훈련 성공!</div>
-        <div style="font-size:14px;color:#6b7280;margin-bottom:16px">체력이 강화되었어요!</div>
-        <div style="background:#f0fdf4;border-radius:14px;padding:14px;margin-bottom:8px">
-          <div style="font-size:13px;font-weight:800;color:#15803d;margin-bottom:8px">❤️ HP +${result.hpGain}</div>
-          <div style="font-size:22px;font-weight:900;color:#ef4444">${result.currentHp} → ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
-        </div>
-        ${result.gradeUp ? `
-          <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px;margin-bottom:8px;border:2px solid rgba(251,191,36,.3)">
-            <div style="font-size:24px;margin-bottom:4px">🎉</div>
-            <div style="font-size:15px;font-weight:900;color:#78350f">등급 승급!</div>
-            <div style="font-size:13px;font-weight:800;color:${gs.color};margin-top:4px">${gs.label} 등급 달성!</div>
-          </div>` : ''}
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:16px">남은 훈련 횟수: ${result.remain}회</div>
-        <div style="display:flex;gap:8px">
-          ${result.remain > 0 && result.newHp < result.hpMax ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">계속 훈련</button>` : ''}
-          <button onclick="closeModal()" style="flex:1;height:40px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
-        </div>
-      </div>`;
-  } else {
-    resultHTML = `
-      <div style="text-align:center">
-        <div style="font-size:48px;margin-bottom:8px">😓</div>
-        <div style="font-size:20px;font-weight:900;color:#dc2626;margin-bottom:4px">훈련 실패...</div>
-        <div style="font-size:14px;color:#6b7280;margin-bottom:16px">이번에는 성과가 없었어요</div>
-        <div style="background:#fef2f2;border-radius:14px;padding:14px;margin-bottom:8px">
-          <div style="font-size:13px;font-weight:800;color:#dc2626;margin-bottom:4px">HP 변동 없음</div>
-          <div style="font-size:16px;font-weight:900;color:#ef4444">❤️ ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
-        </div>
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:16px">남은 훈련 횟수: ${result.remain}회</div>
-        <div style="display:flex;gap:8px">
-          ${result.remain > 0 ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">다시 훈련</button>` : ''}
-          <button onclick="closeModal()" style="flex:1;height:40px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
-        </div>
-      </div>`;
-  }
+    playSound('trainSuccess');
+    if (particles) _trainStarBurst(particles, 10);
 
-  showModal(resultHTML);
+    showModal(`
+      <div style="text-align:center;position:relative;overflow:hidden">
+        <div style="position:relative;display:inline-block">
+          <div style="font-size:52px;animation:trainPump 0.6s ease-in-out">💪</div>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:#059669;margin:8px 0 2px;animation:trainFadeUp 0.4s ease-out">훈련 성공!</div>
+        <div style="font-size:13px;color:#6b7280;margin-bottom:16px;animation:trainFadeUp 0.4s 0.1s ease-out both">체력이 강화되었어요!</div>
+
+        <div style="background:#f0fdf4;border-radius:14px;padding:16px;margin-bottom:10px;animation:trainFadeUp 0.4s 0.2s ease-out both">
+          <div style="font-size:28px;font-weight:900;color:#15803d;margin-bottom:8px;animation:trainCountPop 0.5s 0.5s ease-out both">HP +${result.hpGain}</div>
+          <div style="font-size:18px;font-weight:900;color:#ef4444;margin-bottom:10px">${result.currentHp} → ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
+          <div style="background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden;position:relative">
+            <div style="--hp-from:${hpPctFrom}%;--hp-to:${hpPctTo}%;height:100%;border-radius:8px;background:linear-gradient(90deg,#22c55e,#16a34a);animation:trainHpFill 0.8s 0.4s ease-out both"></div>
+          </div>
+        </div>
+
+        ${result.gradeUp ? `
+          <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px;margin-bottom:10px;border:2px solid rgba(251,191,36,.3);animation:trainFadeUp 0.4s 0.6s ease-out both">
+            <div style="font-size:28px;margin-bottom:4px">🎉</div>
+            <div style="font-size:16px;font-weight:900;color:#78350f">등급 승급!</div>
+            <div style="font-size:14px;font-weight:800;color:${gs.color};margin-top:4px">${gs.label} 등급 달성!</div>
+          </div>` : ''}
+
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:14px">남은 훈련 횟수: ${result.remain}회</div>
+        <div style="display:flex;gap:8px">
+          ${result.remain > 0 && result.newHp < result.hpMax ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 #0369a1">계속 훈련</button>` : ''}
+          <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+        </div>
+      </div>`);
+
+    if (result.gradeUp) setTimeout(() => playSound('trainGradeUp'), 600);
+
+  } else {
+    playSound('trainFail');
+
+    showModal(`
+      <div style="text-align:center">
+        <div style="font-size:52px;animation:trainShake 0.5s ease-in-out">😓</div>
+        <div style="font-size:22px;font-weight:900;color:#dc2626;margin:8px 0 2px;animation:trainFadeUp 0.4s ease-out">훈련 실패...</div>
+        <div style="font-size:13px;color:#6b7280;margin-bottom:16px;animation:trainFadeUp 0.4s 0.1s ease-out both">이번에는 성과가 없었어요</div>
+
+        <div style="background:#fef2f2;border-radius:14px;padding:16px;margin-bottom:10px;animation:trainFadeUp 0.4s 0.2s ease-out both">
+          <div style="font-size:14px;font-weight:800;color:#dc2626;margin-bottom:6px">HP 변동 없음</div>
+          <div style="font-size:18px;font-weight:900;color:#ef4444;margin-bottom:10px">❤️ ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
+          <div style="background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden">
+            <div style="width:${hpPctTo}%;height:100%;border-radius:8px;background:linear-gradient(90deg,#ef4444,#dc2626)"></div>
+          </div>
+        </div>
+
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:14px">남은 훈련 횟수: ${result.remain}회</div>
+        <div style="display:flex;gap:8px">
+          ${result.remain > 0 ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 #0369a1">다시 훈련</button>` : ''}
+          <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+        </div>
+      </div>`);
+  }
 
   // 카드 갱신
   const cardEl = document.getElementById('sqCard-' + id);

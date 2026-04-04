@@ -95,6 +95,36 @@ function playSound(name) {
       _playTone(200, 'square', 0.12, 0.088);
       setTimeout(() => _playTone(180, 'square', 0.12, 0.066), 100);
       break;
+    case 'trainStart':
+      // 훈련 시작 — 힘차게 올라가는 톤
+      _playTone(330, 'triangle', 0.08, 0.13);
+      setTimeout(() => _playTone(440, 'triangle', 0.08, 0.13), 80);
+      setTimeout(() => _playTone(554, 'triangle', 0.10, 0.15), 160);
+      break;
+    case 'trainPunch':
+      // 훈련 중 펀치/타격 — 짧고 강한 타격감
+      _playTone(150, 'square', 0.06, 0.18);
+      _playTone(80, 'triangle', 0.08, 0.14);
+      break;
+    case 'trainSuccess':
+      // 훈련 성공 — 밝은 팡파레
+      _playChord([523, 659, 784], 'sine', 0.15, 0.12);
+      setTimeout(() => _playChord([659, 784, 1047], 'sine', 0.20, 0.14), 180);
+      setTimeout(() => _playTone(1319, 'sine', 0.30, 0.11), 380);
+      break;
+    case 'trainFail':
+      // 훈련 실패 — 힘 빠지는 하강음
+      _playTone(392, 'triangle', 0.12, 0.11);
+      setTimeout(() => _playTone(330, 'triangle', 0.12, 0.11), 120);
+      setTimeout(() => _playTone(262, 'triangle', 0.18, 0.09), 240);
+      break;
+    case 'trainGradeUp':
+      // 등급 승급 — 화려한 팡파레
+      _playChord([523, 659, 784], 'triangle', 0.12, 0.11);
+      setTimeout(() => _playChord([659, 784, 1047], 'sine', 0.15, 0.13), 200);
+      setTimeout(() => _playChord([784, 1047, 1319], 'sine', 0.18, 0.14), 400);
+      setTimeout(() => _playTone(1568, 'sine', 0.35, 0.12), 600);
+      break;
   }
 }
 
