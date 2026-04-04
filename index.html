@@ -2129,7 +2129,10 @@ function _initVolControl() {
   _updateVolIcon();
   var obs = new MutationObserver(function(){
     var hr = document.getElementById('headerRight');
-    if (hr && hr.style.display !== 'none') { wrap.style.display = ''; obs.disconnect(); }
+    var am = document.getElementById('adminMode');
+    var hrVisible = hr && hr.style.display !== 'none';
+    var adminVisible = am && !am.classList.contains('hidden');
+    if (hrVisible || adminVisible) { wrap.style.display = ''; obs.disconnect(); }
   });
   obs.observe(document.body, { subtree: true, attributes: true, childList: true });
 }
