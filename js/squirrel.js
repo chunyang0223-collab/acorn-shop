@@ -1861,11 +1861,11 @@ var _sqAnimalese = {
     vib.connect(vibG); vibG.connect(osc1.frequency); vibG.connect(osc3.frequency);
 
     var g1 = ctx.createGain(); var g2 = ctx.createGain(); var g3 = ctx.createGain();
-    g1.gain.setValueAtTime(0, t); g1.gain.linearRampToValueAtTime(0.25, t+dur*0.08);
-    g1.gain.setValueAtTime(0.25, t+dur*0.5); g1.gain.linearRampToValueAtTime(0, t+dur);
-    g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.08, t+dur*0.08);
+    g1.gain.setValueAtTime(0, t); g1.gain.linearRampToValueAtTime(0.45, t+dur*0.08);
+    g1.gain.setValueAtTime(0.45, t+dur*0.5); g1.gain.linearRampToValueAtTime(0, t+dur);
+    g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.15, t+dur*0.08);
     g2.gain.linearRampToValueAtTime(0, t+dur*0.8);
-    g3.gain.setValueAtTime(0, t); g3.gain.linearRampToValueAtTime(0.12, t+dur*0.1);
+    g3.gain.setValueAtTime(0, t); g3.gain.linearRampToValueAtTime(0.22, t+dur*0.1);
     g3.gain.linearRampToValueAtTime(0, t+dur);
 
     osc1.connect(g1); osc2.connect(g2); osc3.connect(g3);
@@ -1896,6 +1896,9 @@ function _sqTypeText(elementId, text, speed, callback) {
   target.innerHTML = '';
   const totalLen = text.length;
   let i = 0;
+  // 대사 중 BGM 덕킹 (볼륨 낮춤)
+  const bgmOrig = _sqExamBGM ? _sqExamBGM.volume : 0;
+  if (_sqExamBGM) _sqExamBGM.volume = bgmOrig * 0.25;
   const interval = setInterval(() => {
     if (i < totalLen) {
       const ch = text[i];
@@ -1908,6 +1911,8 @@ function _sqTypeText(elementId, text, speed, callback) {
       i++;
     } else {
       clearInterval(interval);
+      // BGM 볼륨 복원
+      if (_sqExamBGM) _sqExamBGM.volume = bgmOrig;
       if (callback) callback();
     }
   }, speed || 40);
