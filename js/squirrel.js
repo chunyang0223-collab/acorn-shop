@@ -2879,27 +2879,57 @@ async function sqAdminLoadList() {
   if (!el) return;
   const { data } = await sb.from('squirrels').select('*, users!squirrels_user_id_fkey(display_name)').order('created_at', { ascending: false });
   if (!data?.length) { el.innerHTML = '<div class="text-xs text-gray-400 text-center py-4">다람쥐가 없어요</div>'; return; }
-  el.innerHTML = data.map(sq => {
-    const ownerName = sq.users?.display_name || '?';
-    const hasCooldown = sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
-    const cooldownBtn = hasCooldown
-      ? `<button onclick="sqAdminResetCooldownAny('${sq.id}','${sq.name.replace(/'/g,"\\'")}');event.stopPropagation()" style="flex-shrink:0;padding:4px 10px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit">⏩ 쿨타임 해제</button>`
-      : '';
+
+  // 사용자별 그룹화
+  const groups = {};
+  data.forEach(sq => {
+    const uid = sq.user_id || '_unknown';
+    if (!groups[uid]) groups[uid] = { name: sq.users?.display_name || '?', squirrels: [] };
+    groups[uid].squirrels.push(sq);
+  });
+
+  el.innerHTML = Object.entries(groups).map(([uid, g]) => {
+    const cooldownCount = g.squirrels.filter(s => s.exam_cooldown_until && new Date(s.exam_cooldown_until) > new Date()).length;
+    const cooldownBadge = cooldownCount > 0 ? `<span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:900;padding:1px 6px;border-radius:6px;margin-left:6px">⏳${cooldownCount}</span>` : '';
+
+    const rows = g.squirrels.map(sq => {
+      const hasCooldown = sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
+      const cooldownBtn = hasCooldown
+        ? `<button onclick="sqAdminResetCooldownAny('${sq.id}','${sq.name.replace(/'/g,"\\'")}');event.stopPropagation()" style="flex-shrink:0;padding:4px 10px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit">⏩ 해제</button>`
+        : '';
+      const statusIcon = sq.status==='baby'?'🐿️':sq.status==='pet'?'🐱':sq.status==='recovering'?'😴':'🦔';
+      const statLine = sq.status==='baby'
+        ? `게이지 ${sq.acorns_fed}/${sq.acorns_required}`
+        : `HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`;
+      return `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.04)">
+          <div style="font-size:20px;flex-shrink:0">${statusIcon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:900;color:#1f2937">${sq.name} <span style="font-size:9px;font-weight:700;color:#9ca3af">${sq.status}</span></div>
+            <div style="font-size:10px;color:#9ca3af">${statLine}${hasCooldown?' · <span style="color:#ef4444">⏳쿨타임</span>':''}</div>
+          </div>
+          ${cooldownBtn}
+        </div>`;
+    }).join('');
+
     return `
-    <div style="background:white;border-radius:12px;padding:10px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);display:flex;align-items:center;gap:10px">
-      <div style="font-size:24px">${sq.status==='baby'?'🐿️':sq.status==='pet'?'🐱':'🦔'}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:900;color:#1f2937">${sq.name} <span style="font-size:10px;color:#9ca3af">(${sq.status})</span></div>
-        <div style="font-size:10px;color:#9ca3af">${ownerName} · ${sq.status==='baby'?`게이지 ${sq.acorns_fed}/${sq.acorns_required}`:`HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`}${hasCooldown?' · <span style="color:#ef4444">⏳쿨타임</span>':''}</div>
+    <div style="background:white;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);overflow:hidden">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.sq-adm-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,0,0,0.05)">
+        <span class="sq-adm-arrow" style="font-size:10px;color:#9ca3af;flex-shrink:0">▼</span>
+        <div style="flex:1;min-width:0">
+          <span style="font-size:13px;font-weight:900;color:#1f2937">${g.name}</span>
+          <span style="font-size:10px;color:#9ca3af;margin-left:6px">🐿️ ${g.squirrels.length}마리</span>
+          ${cooldownBadge}
+        </div>
       </div>
-      ${cooldownBtn}
+      <div>${rows}</div>
     </div>`;
   }).join('');
 }
 
 async function sqAdminResetCooldownAny(id, name) {
-  const { error } = await sb.from('squirrels').update({ exam_cooldown_until: null }).eq('id', id);
-  if (error) { toast('❌', '쿨타임 초기화 실패'); return; }
+  const { error } = await sb.rpc('admin_reset_exam_cooldown', { p_squirrel_id: id });
+  if (error) { toast('❌', '쿨타임 초기화 실패: ' + (error.message || '')); return; }
   toast('✅', `${name}의 재심사 쿨타임이 초기화되었습니다`);
   await sqAdminLoadList();
 }
