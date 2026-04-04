@@ -1568,7 +1568,6 @@ function sqCanExam(sq) {
   if (!sq || sq.status === 'baby') return { ok: false, reason: '아기 다람쥐는 심사할 수 없어요' };
   const total = sq.training_total || 0;
   const used  = sq.training_used  || 0;
-  if (total <= 0) return { ok: false, reason: '훈련 횟수가 부여되지 않았어요' };
   if (used < total) return { ok: false, reason: '아직 훈련 횟수가 남아있어요 (' + (total - used) + '회)' };
   const hpMax = _sqSettings.stat_hp_max || 150;
   if ((sq.stats?.hp || 60) >= hpMax) return { ok: false, reason: 'HP가 이미 최대치예요' };
