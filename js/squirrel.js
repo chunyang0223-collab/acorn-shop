@@ -2941,16 +2941,16 @@ async function sqAdminLoadList() {
     }).join('');
 
     return `
-    <div style="background:white;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);overflow:hidden">
-      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.sq-adm-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,0,0,0.05)">
-        <span class="sq-adm-arrow" style="font-size:10px;color:#9ca3af;flex-shrink:0">▼</span>
+    <div style="border-radius:14px;margin-bottom:10px;overflow:hidden;border:1px solid var(--border)">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.sq-adm-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;background:var(--surface-50);border-bottom:1px solid var(--border)">
+        <span class="sq-adm-arrow" style="font-size:10px;color:var(--text-sub);flex-shrink:0">▼</span>
         <div style="flex:1;min-width:0">
-          <span style="font-size:13px;font-weight:900;color:#1f2937">${g.name}</span>
-          <span style="font-size:10px;color:#9ca3af;margin-left:6px">🐿️ ${g.squirrels.length}마리</span>
+          <span style="font-size:13px;font-weight:900;color:var(--text)">${g.name}</span>
+          <span style="font-size:10px;color:var(--text-sub);margin-left:6px">🐿️ ${g.squirrels.length}마리</span>
           ${cooldownBadge}
         </div>
       </div>
-      <div>${rows}</div>
+      <div style="background:var(--surface-white)">${rows}</div>
     </div>`;
   }).join('');
 }
