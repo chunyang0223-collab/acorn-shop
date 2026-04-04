@@ -1806,12 +1806,26 @@ var _sqAnimalese = {
     var ctx = this.getCtx();
     if (!this._master || this._master.context !== ctx) {
       this._master = ctx.createGain();
-      this._master.gain.value = 0.9;
-      this._master.connect(ctx.destination);
+      var _mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (_mob) {
+        // 모바일: 컴프레서로 오실레이터 출력 증폭 (BGM 무관)
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -30;
+        comp.knee.value = 10;
+        comp.ratio.value = 8;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.05;
+        var makeupGain = ctx.createGain();
+        makeupGain.gain.value = 4.0;
+        this._master.connect(comp);
+        comp.connect(makeupGain);
+        makeupGain.connect(ctx.destination);
+      } else {
+        this._master.connect(ctx.destination);
+      }
     }
-    // 앱 볼륨 연동 (모바일은 gain 부스트)
-    var _mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    this._master.gain.value = (_mob ? 2.0 : 0.9) * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
+    // 앱 볼륨 연동
+    this._master.gain.value = 0.9 * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
     return this._master;
   },
   VOWEL_PITCH: [0,-2,3,1,-3,-1,5,3,2,4,1,3,6,-4,-2,-1,0,-5,-1,1,2],
@@ -1899,9 +1913,6 @@ function _sqTypeText(elementId, text, speed, callback) {
   target.innerHTML = '';
   const totalLen = text.length;
   let i = 0;
-  // 모바일: 대사 중 BGM 일시정지 (오실레이터가 Audio보다 훨씬 작으므로)
-  const _isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (_isMob && _sqExamBGM && !_sqExamBGM.paused) { _sqExamBGM._wasPaused = false; _sqExamBGM.pause(); }
   const interval = setInterval(() => {
     if (i < totalLen) {
       const ch = text[i];
@@ -1914,8 +1925,6 @@ function _sqTypeText(elementId, text, speed, callback) {
       i++;
     } else {
       clearInterval(interval);
-      // 모바일: BGM 재개
-      if (_isMob && _sqExamBGM && _sqExamBGM._wasPaused === false) { _sqExamBGM.play().catch(function(){}); }
       if (callback) callback();
     }
   }, speed || 40);
