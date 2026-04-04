@@ -1662,7 +1662,7 @@ async function sqDoExam(id, itemCount) {
     }).eq('id', id);
     _sqUpdate(id, { training_total: bonus, training_used: 0, exam_cooldown_until: null });
 
-    return { passed: true, bonus, newTotal, finalRate, itemCount, cost };
+    return { passed: true, bonus, finalRate, itemCount, cost };
   } else {
     // 불합격: 쿨타임 적용
     const cooldownHours = _sqSettings.exam_cooldown_hours || 48;
@@ -2025,8 +2025,8 @@ async function sqExecuteExam(id) {
     } else {
       if (stampArea) {
         stampArea.innerHTML = `
-          <div id="examStamp" style="font-size:48px;font-weight:900;color:#ef4444;opacity:0;transform:scale(4) rotate(10deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 4px 16px rgba(220,38,38,0.5));pointer-events:none">
-            <div style="border:4px solid #ef4444;border-radius:12px;padding:6px 20px;background:rgba(239,68,68,0.15)">불합격</div>
+          <div id="examStamp" style="font-size:48px;font-weight:900;color:#ff1a1a;opacity:0;transform:scale(4) rotate(10deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 6px 20px rgba(255,0,0,0.6));pointer-events:none">
+            <div style="border:4px solid #ff3333;border-radius:12px;padding:6px 20px;background:rgba(255,20,20,0.25)">불합격</div>
           </div>`;
       }
       await new Promise(r => setTimeout(r, 200));

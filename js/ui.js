@@ -18,6 +18,7 @@ async function initAppUI() {
     updateReqBadge();
     loadAdminPins();
     adminLoadCurrentNotice();
+    _loadGhLastCommit();
   } else {
     document.getElementById('headerUserLabel').textContent = myProfile.display_name;
     document.getElementById('headerRight').style.display = 'flex';
@@ -153,7 +154,7 @@ async function doSignup() {
 // ──────────────────────────────────────────────
 //  TABS
 // ──────────────────────────────────────────────
-const U_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','ranking','bossraid','friend','mypage'];
+const U_TABS = ['shop','gacha','quest','squirrel','bossraid','minigame','ranking','recycle','friend','mypage'];
 const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking'];
 
 // ── 관리자 메뉴 정의 (개별 탭) ──
@@ -489,4 +490,23 @@ function renderMaintenanceBtns() {
       btn.title = '정상 운영 중 (클릭하여 점검 전환)';
     }
   });
+}
+
+// ── GitHub 마지막 커밋 정보 (관리자 전용) ──
+async function _loadGhLastCommit() {
+  const el = document.getElementById('ghLastCommit');
+  if (!el) return;
+  try {
+    const res = await fetch('https://api.github.com/repos/chunyang0223-collab/acorn-shop/commits?per_page=1');
+    if (!res.ok) return;
+    const [commit] = await res.json();
+    if (!commit) return;
+    const files = commit.files;
+    const fileName = files?.length ? files[0].filename.split('/').pop() : '—';
+    const date = new Date(commit.commit.committer.date);
+    const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    el.textContent = `${fileName} · ${timeStr}`;
+    el.title = `마지막 업데이트: ${commit.commit.message}\n${fileName}\n${timeStr}\n클릭하면 새로고침`;
+    el.style.display = 'block';
+  } catch(e) { console.warn('[gh]', e); }
 }
