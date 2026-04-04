@@ -144,6 +144,53 @@ function _sqPlayGrowSound() {
 }
 
 // ================================================================
+//  회복 전용 사운드 (상승 치유음)
+// ================================================================
+function _sqPlayRecoverSound() {
+  try {
+    const ctx = _sqGetAudio();
+    // 부드러운 상승 치유음 (C5 → E5 → G5 → C6)
+    [[523,0],[659,0.12],[784,0.24],[1047,0.36]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.4);
+      osc.start(ctx.currentTime + delay); osc.stop(ctx.currentTime + delay + 0.4);
+    });
+    // 마지막에 반짝이는 벨 사운드
+    setTimeout(() => {
+      const osc2 = ctx.createOscillator(), g2 = ctx.createGain();
+      osc2.connect(g2); g2.connect(ctx.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1568, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(2093, ctx.currentTime + 0.15);
+      g2.gain.setValueAtTime(0.15, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc2.start(ctx.currentTime); osc2.stop(ctx.currentTime + 0.4);
+    }, 450);
+  } catch(e) {}
+}
+
+// ================================================================
+//  회복 전용 파티클 (초록 하트 + 반짝이)
+// ================================================================
+function _sqRecoverParticles(cardEl) {
+  const rect = cardEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height * 0.6;
+  const emojis = ['💚','✨','🌿','💫','🍀','🌟'];
+  _sqSpawnParticlesAt(cx, cy, true, 10);
+  // 추가 초록 파티클
+  for (let i = 0; i < 4; i++) {
+    setTimeout(() => {
+      _sqSpawnParticlesAt(cx + (Math.random()-0.5)*80, cy + (Math.random()-0.5)*30, true, 3);
+    }, i * 100);
+  }
+}
+
+// ================================================================
 //  파티클
 // ================================================================
 function _sqSpawnParticlesAt(cx, cy, isGood, count = 8) {
@@ -546,7 +593,7 @@ function sqCardHTML(sq) {
     baby: '',
     explorer: '<span style="color:#22c55e">🟢 대기 중</span>',
     exploring: '<span style="color:#3b82f6">⚔️ 탐험 중</span>',
-    recovering: '<span style="color:#f59e0b">😴 회복 중</span>',
+    recovering: '',
     pet: '<span style="color:#ec4899">🏡 편안하게 쉬는 중</span>'
   };
 
@@ -626,7 +673,7 @@ function sqCardHTML(sq) {
 
   // 훈련 정보는 카드에 표시하지 않음 (액션 모달에서만 확인)
 
-  // 회복 중 UI (타이머 + 즉시회복 버튼, 상태 텍스트에 "회복 중"이 이미 있으므로 여기선 타이머만)
+  // 회복 중 UI — 가로 풀와이드 버튼 (타이머 + 비용 통합)
   let recoverHTML = '';
   if (sq.status === 'recovering' && sq.recovers_at) {
     const _recMaxCost = _sqSettings.recovery_instant_cost || 15;
@@ -635,9 +682,26 @@ function sqCardHTML(sq) {
     const _recTotalMs = _recBaseMin * 60000;
     const _recCost = Math.max(1, Math.ceil(_recMaxCost * (_recRemaining / _recTotalMs)));
     recoverHTML = `
-      <div id="sqRecoverArea-${sq.id}" style="margin-top:10px;display:flex;align-items:center;gap:8px">
-        <div id="sqRecoverTimer-${sq.id}" style="font-size:13px;font-weight:900;color:#b45309;font-variant-numeric:tabular-nums;letter-spacing:1px">--:--:--</div>
-        <button onclick="sqInstantRecover('${sq.id}')" id="sqRecoverBtn-${sq.id}" style="margin-left:auto;height:30px;padding:0 12px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(245,158,11,0.3);white-space:nowrap">🌰 ${_recCost} 도토리로 회복</button>
+      <div id="sqRecoverArea-${sq.id}" style="margin-top:12px;position:relative">
+        <button onclick="sqInstantRecover('${sq.id}')" id="sqRecoverBtn-${sq.id}"
+          style="width:100%;height:44px;border-radius:14px;border:none;
+            background:linear-gradient(135deg,#fde68a,#fbbf24,#f59e0b);
+            color:#78350f;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;
+            box-shadow:0 3px 0 #d97706,0 6px 16px rgba(245,158,11,0.25);
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            position:relative;overflow:hidden;
+            transition:transform 0.1s,box-shadow 0.1s"
+          onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #d97706,0 2px 8px rgba(245,158,11,0.2)'"
+          onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #d97706,0 6px 16px rgba(245,158,11,0.25)'"
+          onmouseleave="this.style.transform='';this.style.boxShadow='0 3px 0 #d97706,0 6px 16px rgba(245,158,11,0.25)'">
+          <span style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);animation:sqRecoverShimmer 2.5s ease-in-out infinite;pointer-events:none"></span>
+          <span style="position:relative;display:flex;align-items:center;gap:8px">
+            <span>😴</span>
+            <span id="sqRecoverTimer-${sq.id}" style="font-variant-numeric:tabular-nums;letter-spacing:1px">--:--:--</span>
+            <span style="opacity:0.5">│</span>
+            <span id="sqRecoverCostText-${sq.id}">🌰 ${_recCost} 도토리로 회복</span>
+          </span>
+        </button>
       </div>`;
   }
 
@@ -988,8 +1052,8 @@ function _sqStartRecoverTimer(id, sq) {
     const baseMinutes = _sqSettings.recovery_base_minutes || 60;
     const totalMs = baseMinutes * 60000;
     const currentCost = remaining > 0 ? Math.max(1, Math.ceil(maxCost * (remaining / totalMs))) : 0;
-    const btn = document.getElementById('sqRecoverBtn-' + id);
-    if (btn && remaining > 0) btn.textContent = '🌰 ' + currentCost + ' 도토리로 회복';
+    const costEl = document.getElementById('sqRecoverCostText-' + id);
+    if (costEl && remaining > 0) costEl.textContent = '🌰 ' + currentCost + ' 도토리로 회복';
 
     if (remaining <= 0) {
       _sqClearTimer(id);
@@ -1040,9 +1104,24 @@ async function sqInstantRecover(id) {
   }
 
   if (!canAfford(cost)) {
+    // 버튼 흔들기 + 실패 사운드
+    const shakeBtn = document.getElementById('sqRecoverBtn-' + id);
+    if (shakeBtn) {
+      shakeBtn.style.animation = 'sqCardShake 0.4s ease';
+      setTimeout(() => { if (shakeBtn) shakeBtn.style.animation = ''; }, 500);
+    }
+    _sqPlayFeedSound(false);
     toast('🌰', '도토리가 부족해요 (' + cost + '개 필요)');
     _sqSetIdle(id);
     return;
+  }
+
+  // 버튼 비활성화 + 누르는 애니메이션
+  const recoverBtn = document.getElementById('sqRecoverBtn-' + id);
+  if (recoverBtn) {
+    recoverBtn.disabled = true;
+    recoverBtn.style.opacity = '0.7';
+    recoverBtn.style.pointerEvents = 'none';
   }
 
   try {
@@ -1053,18 +1132,39 @@ async function sqInstantRecover(id) {
     _sqUpdate(id, { status: 'explorer', recovers_at: null, hp_current: fullHp });
     _sqSetIdle(id);
 
-    // 카드 교체
-    const cardEl = document.getElementById('sqCard-' + id);
-    if (cardEl) {
-      const updatedSq = _sqSquirrels.find(s => s.id === id);
-      if (updatedSq) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = sqCardHTML(updatedSq);
-        cardEl.replaceWith(tmp.firstElementChild);
-      }
+    // 회복 성공 사운드 (상승 치유음)
+    _sqPlayRecoverSound();
+
+    // 버튼 → 초록 성공 애니메이션
+    if (recoverBtn) {
+      recoverBtn.style.transition = 'all 0.4s ease';
+      recoverBtn.style.background = 'linear-gradient(135deg,#86efac,#22c55e,#16a34a)';
+      recoverBtn.style.color = 'white';
+      recoverBtn.style.boxShadow = '0 3px 0 #15803d,0 6px 16px rgba(22,163,106,0.3)';
+      recoverBtn.style.opacity = '1';
+      recoverBtn.innerHTML = '<span style="position:relative;display:flex;align-items:center;gap:6px"><span>💚</span><span>회복 완료!</span></span>';
+      recoverBtn.style.animation = 'sqRecoverSuccess 0.5s ease';
     }
 
-    _sqPlayFeedSound(true);
+    // 파티클 이펙트
+    const cardEl = document.getElementById('sqCard-' + id);
+    if (cardEl) {
+      _sqRecoverParticles(cardEl);
+    }
+
+    // 카드 교체 (약간 딜레이)
+    setTimeout(() => {
+      const cardEl2 = document.getElementById('sqCard-' + id);
+      if (cardEl2) {
+        const updatedSq = _sqSquirrels.find(s => s.id === id);
+        if (updatedSq) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = sqCardHTML(updatedSq);
+          cardEl2.replaceWith(tmp.firstElementChild);
+        }
+      }
+    }, 800);
+
     toast('💚', `${sq.name}이(가) 즉시 회복했어요!`);
     if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
   } catch(e) {
