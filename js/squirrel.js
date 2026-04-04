@@ -1784,6 +1784,101 @@ function _sqExamPlayStamp() {
 }
 
 // 타이핑 애니메이션 헬퍼 (\n → <br> 지원)
+// ── Animalese 음성 엔진 (여우 목소리, 1.2배속) ──
+var _sqAnimalese = {
+  voice: { base: 260, range: 50, speed: 0.058, syllable: 0.065, waveType: 'bright', vibrato: 5, vibratoDepth: 6 },
+  speedMul: 1.2,
+  _ctx: null,
+  _master: null,
+  getCtx: function() {
+    if (!this._ctx) this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this._ctx.state === 'suspended') this._ctx.resume();
+    return this._ctx;
+  },
+  getMaster: function() {
+    var ctx = this.getCtx();
+    if (!this._master || this._master.context !== ctx) {
+      this._master = ctx.createGain();
+      this._master.gain.value = 0.55;
+      this._master.connect(ctx.destination);
+    }
+    // 앱 볼륨 연동
+    this._master.gain.value = 0.55 * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
+    return this._master;
+  },
+  VOWEL_PITCH: [0,-2,3,1,-3,-1,5,3,2,4,1,3,6,-4,-2,-1,0,-5,-1,1,2],
+  CHO_WEIGHT: [0,0,1,0,0,2,1,0,0,0,0,-1,0,0,1,1,1,1,1],
+  decompose: function(ch) {
+    var c = ch.charCodeAt(0);
+    if (c < 0xAC00 || c > 0xD7A3) return null;
+    var off = c - 0xAC00;
+    return { cho: Math.floor(off/(21*28)), jung: Math.floor((off%(21*28))/28), jong: off%28 };
+  },
+  playSyllable: function(ch, charIdx, totalLen) {
+    var ctx = this.getCtx();
+    var v = this.voice;
+    var sm = this.speedMul;
+    var master = this.getMaster();
+    if (/[\s.,!?…~\n]/.test(ch)) return;
+
+    var hangul = this.decompose(ch);
+    var pitchOffset, hasJong = false;
+    if (hangul) {
+      var vowelP = this.VOWEL_PITCH[hangul.jung] || 0;
+      var choW = this.CHO_WEIGHT[hangul.cho] || 0;
+      var contour = Math.sin((charIdx / totalLen) * Math.PI) * 3;
+      var jitter = (Math.random() - 0.5) * 4;
+      pitchOffset = vowelP + choW + contour + jitter;
+      hasJong = hangul.jong > 0;
+    } else {
+      pitchOffset = (Math.random() - 0.5) * 6;
+    }
+
+    var dur = (v.syllable / sm) * (hasJong ? 1.3 : 1.0);
+    var freq = v.base + pitchOffset * (v.range / 12);
+    var t = ctx.currentTime + 0.01;
+
+    var osc1 = ctx.createOscillator(); osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(freq, t);
+    osc1.frequency.linearRampToValueAtTime(freq * (1 + (Math.random()-0.5)*0.06), t + dur*0.5);
+    osc1.frequency.linearRampToValueAtTime(freq * 0.97, t + dur);
+
+    var osc2 = ctx.createOscillator(); osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq * 2, t);
+    osc2.frequency.linearRampToValueAtTime(freq * 2 * 0.96, t + dur);
+
+    var osc3 = ctx.createOscillator(); osc3.type = 'sine';
+    osc3.frequency.setValueAtTime(freq * 1.005, t);
+    osc3.frequency.linearRampToValueAtTime(freq * 0.995, t + dur);
+
+    var vib = ctx.createOscillator(); vib.type = 'sine'; vib.frequency.value = v.vibrato;
+    var vibG = ctx.createGain(); vibG.gain.value = v.vibratoDepth;
+    vib.connect(vibG); vibG.connect(osc1.frequency); vibG.connect(osc3.frequency);
+
+    var g1 = ctx.createGain(); var g2 = ctx.createGain(); var g3 = ctx.createGain();
+    g1.gain.setValueAtTime(0, t); g1.gain.linearRampToValueAtTime(0.25, t+dur*0.08);
+    g1.gain.setValueAtTime(0.25, t+dur*0.5); g1.gain.linearRampToValueAtTime(0, t+dur);
+    g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.08, t+dur*0.08);
+    g2.gain.linearRampToValueAtTime(0, t+dur*0.8);
+    g3.gain.setValueAtTime(0, t); g3.gain.linearRampToValueAtTime(0.12, t+dur*0.1);
+    g3.gain.linearRampToValueAtTime(0, t+dur);
+
+    osc1.connect(g1); osc2.connect(g2); osc3.connect(g3);
+    var merger = ctx.createGain(); merger.gain.value = 1.0;
+    g1.connect(merger); g2.connect(merger); g3.connect(merger);
+
+    var lpf = ctx.createBiquadFilter(); lpf.type = 'lowpass';
+    lpf.frequency.value = freq * 4; lpf.Q.value = 0.7;
+    merger.connect(lpf); lpf.connect(master);
+
+    var end = t + dur + 0.02;
+    osc1.start(t); osc1.stop(end);
+    osc2.start(t); osc2.stop(end);
+    osc3.start(t); osc3.stop(end);
+    vib.start(t); vib.stop(end);
+  }
+};
+
 function _sqTypeText(elementId, text, speed, callback) {
   const el = document.getElementById(elementId);
   if (!el) { if (callback) callback(); return; }
@@ -1794,13 +1889,16 @@ function _sqTypeText(elementId, text, speed, callback) {
     target = el.querySelector('.exam-txt-inner');
   }
   target.innerHTML = '';
+  const totalLen = text.length;
   let i = 0;
   const interval = setInterval(() => {
-    if (i < text.length) {
-      if (text[i] === '\n') {
+    if (i < totalLen) {
+      const ch = text[i];
+      if (ch === '\n') {
         target.innerHTML += '<br>';
       } else {
-        target.innerHTML += text[i];
+        target.innerHTML += ch;
+        _sqAnimalese.playSyllable(ch, i, totalLen);
       }
       i++;
     } else {
