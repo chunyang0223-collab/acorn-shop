@@ -171,7 +171,7 @@ function _blockScroll(e) {
   // 모달 내부 스크롤(.modal-box)은 허용, 오버레이 터치는 차단
   if (!e.target.closest('.modal-box')) e.preventDefault();
 }
-function showModal(html) {
+function showModal(html, opts) {
   const modal = document.getElementById('modal');
   const wasVisible = !modal.classList.contains('hidden');
   // 이미 열린 상태에서 내용만 교체할 때는 팝 애니메이션 억제
@@ -182,6 +182,8 @@ function showModal(html) {
   document.getElementById('modalContent').innerHTML = html;
   modal.classList.remove('hidden');
   modal.addEventListener('touchmove', _blockScroll, { passive: false });
+  // noClose 옵션: 배경 클릭으로 닫기 방지 (연출 중)
+  window._modalNoClose = !!(opts && opts.noClose);
   // 새로 열리는 경우 애니메이션 복원 (CSS 기본값 사용)
   if (!wasVisible) {
     const newBox = modal.querySelector('.modal-box');
@@ -192,6 +194,7 @@ function closeModal() {
   const modal = document.getElementById('modal');
   modal.classList.add('hidden');
   modal.removeEventListener('touchmove', _blockScroll);
+  window._modalNoClose = false;
   // 모달 내용 비우기 — 잔존 DOM이 상태 판별을 오염시키는 것 방지
   document.getElementById('modalContent').innerHTML = '';
 }
