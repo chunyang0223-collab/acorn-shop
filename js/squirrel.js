@@ -1809,8 +1809,10 @@ var _sqAnimalese = {
       // PC/모바일 동일: 소스 볼륨 자체가 충분하므로 직결
       this._master.connect(ctx.destination);
     }
-    // 앱 볼륨 연동
-    this._master.gain.value = 0.9 * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
+    // 앱 볼륨 연동 (PC/모바일 베이스 볼륨 분리)
+    var _mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    var baseVol = _mob ? 1.0 : 0.75;
+    this._master.gain.value = baseVol * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
     return this._master;
   },
   VOWEL_PITCH: [0,-2,3,1,-3,-1,5,3,2,4,1,3,6,-4,-2,-1,0,-5,-1,1,2],
