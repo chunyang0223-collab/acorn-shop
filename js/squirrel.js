@@ -684,21 +684,24 @@ function sqCardHTML(sq) {
     recoverHTML = `
       <div id="sqRecoverArea-${sq.id}" style="margin-top:12px;position:relative">
         <button onclick="sqInstantRecover('${sq.id}')" id="sqRecoverBtn-${sq.id}"
-          style="width:100%;height:44px;border-radius:14px;border:none;
-            background:linear-gradient(135deg,#a7f3d0,#6ee7b7,#34d399);
-            color:#065f46;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;
-            box-shadow:0 3px 0 #059669,0 6px 16px rgba(16,185,129,0.25);
-            display:flex;align-items:center;justify-content:center;gap:8px;
+          style="width:100%;height:48px;border-radius:99px;border:none;
+            background:linear-gradient(135deg,#818cf8,#a78bfa,#f0abfc,#c084fc,#818cf8);
+            background-size:300% 300%;
+            animation:sqAuroraFlow 5s ease infinite;
+            color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;
+            box-shadow:0 4px 0 #7c3aed,0 6px 20px rgba(124,58,237,0.3);
+            display:flex;align-items:center;justify-content:center;gap:10px;
             position:relative;overflow:hidden;
+            text-shadow:0 1px 3px rgba(0,0,0,0.15);
             transition:transform 0.1s,box-shadow 0.1s"
-          onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #059669,0 2px 8px rgba(16,185,129,0.2)'"
-          onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #059669,0 6px 16px rgba(16,185,129,0.25)'"
-          onmouseleave="this.style.transform='';this.style.boxShadow='0 3px 0 #059669,0 6px 16px rgba(16,185,129,0.25)'">
-          <span style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.35) 50%,transparent 100%);animation:sqRecoverShimmer 2.5s ease-in-out infinite;pointer-events:none"></span>
-          <span style="position:relative;display:flex;align-items:center;gap:8px">
-            <span id="sqRecoverTimer-${sq.id}" style="font-variant-numeric:tabular-nums;letter-spacing:1px">--:--:--</span>
-            <span style="opacity:0.4">│</span>
-            <span id="sqRecoverCostText-${sq.id}">🌰 ${_recCost} 도토리로 회복</span>
+          onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #7c3aed'"
+          onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #7c3aed,0 6px 20px rgba(124,58,237,0.3)'"
+          onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 0 #7c3aed,0 6px 20px rgba(124,58,237,0.3)'">
+          <span style="position:absolute;top:3px;left:15%;right:15%;height:10px;background:rgba(255,255,255,0.4);border-radius:99px;pointer-events:none;filter:blur(1px)"></span>
+          <span style="position:relative;display:flex;align-items:center;gap:10px">
+            <span id="sqRecoverTimer-${sq.id}" style="font-size:16px;font-variant-numeric:tabular-nums;letter-spacing:1.5px">--:--:--</span>
+            <span style="font-size:6px;opacity:0.35">●</span>
+            <span id="sqRecoverCostText-${sq.id}" style="font-size:12px;font-weight:800;opacity:0.9">🌰 ${_recCost} 도토리로 회복</span>
           </span>
         </button>
       </div>`;
@@ -1134,14 +1137,16 @@ async function sqInstantRecover(id) {
     // 회복 성공 사운드 (상승 치유음)
     _sqPlayRecoverSound();
 
-    // 버튼 → 초록 성공 애니메이션
+    // 버튼 → 성공 애니메이션
     if (recoverBtn) {
       recoverBtn.style.transition = 'all 0.4s ease';
-      recoverBtn.style.background = 'linear-gradient(135deg,#86efac,#22c55e,#16a34a)';
+      recoverBtn.style.background = 'linear-gradient(135deg,#86efac,#34d399,#10b981)';
+      recoverBtn.style.animation = 'none';
       recoverBtn.style.color = 'white';
-      recoverBtn.style.boxShadow = '0 3px 0 #15803d,0 6px 16px rgba(22,163,106,0.3)';
+      recoverBtn.style.boxShadow = '0 4px 0 #059669,0 6px 20px rgba(16,185,129,0.35)';
       recoverBtn.style.opacity = '1';
-      recoverBtn.innerHTML = '<span style="position:relative;display:flex;align-items:center;gap:6px"><span>💚</span><span>회복 완료!</span></span>';
+      recoverBtn.innerHTML = '<span style="position:absolute;top:3px;left:15%;right:15%;height:10px;background:rgba(255,255,255,0.4);border-radius:99px;pointer-events:none;filter:blur(1px)"></span><span style="position:relative;display:flex;align-items:center;gap:6px">💚 회복 완료!</span>';
+      void recoverBtn.offsetWidth;
       recoverBtn.style.animation = 'sqRecoverSuccess 0.5s ease';
     }
 
