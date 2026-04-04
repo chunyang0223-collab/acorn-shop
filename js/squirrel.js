@@ -624,37 +624,7 @@ function sqCardHTML(sq) {
       </div>`;
   }
 
-  // 훈련 상태 요약 (버튼 없이 정보만)
-  let trainingHTML = '';
-  if (sq.status !== 'baby') {
-    const tTotal = sq.training_total || 0;
-    const tUsed  = sq.training_used  || 0;
-    const tRemain = tTotal - tUsed;
-    const hpMax = _sqSettings.stat_hp_max || 150;
-    const currentHp = sq.stats?.hp || 60;
-    const hpMaxed = currentHp >= hpMax;
-
-    if (tTotal > 0 && tRemain > 0 && !hpMaxed) {
-      trainingHTML = `
-        <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
-          <div style="font-size:11px;font-weight:800;color:#0369a1">🏋️ 훈련</div>
-          <div style="flex:1;height:6px;border-radius:99px;background:#e0f2fe;overflow:hidden">
-            <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#0284c7);width:${Math.round(tUsed / tTotal * 100)}%"></div>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#0ea5e9">${tRemain}/${tTotal}</div>
-        </div>`;
-    } else if (tTotal > 0 && tRemain <= 0 && !hpMaxed) {
-      trainingHTML = `
-        <div style="margin-top:10px;display:flex;align-items:center;gap:6px">
-          <div style="font-size:11px;font-weight:800;color:#7c3aed">📋 등급심사 가능</div>
-        </div>`;
-    } else if (hpMaxed) {
-      trainingHTML = `
-        <div style="margin-top:10px;display:flex;align-items:center;gap:6px">
-          <div style="font-size:11px;font-weight:800;color:#15803d">⭐ HP 최대치 달성</div>
-        </div>`;
-    }
-  }
+  // 훈련 정보는 카드에 표시하지 않음 (액션 모달에서만 확인)
 
   // 회복 중 UI (타이머 정보만, 버튼은 액션 모달로 이동)
   let recoverHTML = '';
@@ -698,8 +668,11 @@ function sqCardHTML(sq) {
   }
 
   // 성체 다람쥐: 이미지를 클릭하면 액션 모달
+  // 훈련 가능한 다람쥐만 ⚡ 뱃지 표시
+  const _hasTraining = sq.status !== 'baby' && ((sq.training_total || 0) - (sq.training_used || 0)) > 0 && !((sq.stats?.hp || 60) >= (_sqSettings.stat_hp_max || 150));
+  const badgeHTML = _hasTraining ? `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">💪</div>` : '';
   const clickableImg = (sq.status !== 'baby')
-    ? `<div onclick="sqShowActionModal('${sq.id}')" style="cursor:pointer;position:relative" title="탭하여 관리">${imgHTML}<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">⚡</div></div>`
+    ? `<div onclick="sqShowActionModal('${sq.id}')" style="cursor:pointer;position:relative" title="탭하여 관리">${imgHTML}${badgeHTML}</div>`
     : imgHTML;
 
   return `
@@ -717,7 +690,7 @@ function sqCardHTML(sq) {
         </div>
         <span style="font-size:12px;font-weight:900;padding:4px 10px;border-radius:99px;text-align:center;white-space:nowrap;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
       </div>
-      ${statsHTML}${trainingHTML}${recoverHTML}${apprenticeHTML}${babyHTML}
+      ${statsHTML}${recoverHTML}${apprenticeHTML}${babyHTML}
     </div>`;
 }
 
