@@ -1778,7 +1778,7 @@ function _sqExamStopBGM() {
 }
 // 도장 효과음 (1회 재생)
 function _sqExamPlayStamp() {
-  var sfx = new Audio('sounds/exam/stamp.mp3');
+  var sfx = new Audio('sounds/exam/stamp.m4a');
   sfx.volume = (typeof _sndVolBGM !== 'undefined') ? Math.min(_sndVolBGM + 0.2, 1) : 0.7;
   sfx.play().catch(function(){});
 }
