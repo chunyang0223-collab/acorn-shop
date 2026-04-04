@@ -766,8 +766,8 @@ function sqShowActionModal(id) {
     });
   }
 
-  // 2) 등급심사 버튼
-  if (tTotal > 0 && tRemain <= 0 && !hpMaxed) {
+  // 2) 등급심사 버튼 (훈련 횟수를 다 썼거나 0회 배정이면 표시)
+  if (tRemain <= 0 && !hpMaxed) {
     const examCheck = sqCanExam(sq);
     const canExam = examCheck.ok && canAct;
     buttons.push({
