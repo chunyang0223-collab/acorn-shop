@@ -1799,11 +1799,11 @@ var _sqAnimalese = {
     var ctx = this.getCtx();
     if (!this._master || this._master.context !== ctx) {
       this._master = ctx.createGain();
-      this._master.gain.value = 0.55;
+      this._master.gain.value = 0.9;
       this._master.connect(ctx.destination);
     }
     // 앱 볼륨 연동
-    this._master.gain.value = 0.55 * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
+    this._master.gain.value = 0.9 * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
     return this._master;
   },
   VOWEL_PITCH: [0,-2,3,1,-3,-1,5,3,2,4,1,3,6,-4,-2,-1,0,-5,-1,1,2],
