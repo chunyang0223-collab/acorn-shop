@@ -794,6 +794,15 @@ function sqShowActionModal(id) {
     });
   }
 
+  // 2-1) 관리자 쿨타임 초기화 버튼
+  if (myProfile?.is_admin && sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date()) {
+    buttons.push({
+      label: '⏩ 재심사 쿨타임 초기화 (관리자)', sub: '',
+      action: `sqAdminResetCooldown('${sq.id}')`,
+      bg: '#fef3c7', color: '#92400e', disabled: false
+    });
+  }
+
   // 3) 즉시 회복 버튼
   if (sq.status === 'recovering' && sq.recovers_at) {
     const maxCost = _sqSettings.recovery_instant_cost || 15;
@@ -859,7 +868,7 @@ function sqShowActionModal(id) {
   // ── 버튼 HTML 생성 ──
   // 모달을 여는 액션(showTrainingModal, showExamModal)은 closeModal 불필요 (showModal이 교체함)
   // 즉시 실행 액션(sell, recover, farmStart 등)은 closeModal 필요
-  const modalActions = ['sqShowTrainingModal', 'sqShowExamModal', 'farmRevealResult', 'sqSellSquirrel', 'farmStartApprentice'];
+  const modalActions = ['sqShowTrainingModal', 'sqShowExamModal', 'farmRevealResult', 'sqSellSquirrel', 'farmStartApprentice', 'sqAdminResetCooldown'];
   const btnHTML = buttons.map(b => {
     const needsClose = b.action && !modalActions.some(ma => b.action.includes(ma));
     const onclick = b.action ? (needsClose ? b.action + ';closeModal()' : b.action) : '';
@@ -1834,7 +1843,7 @@ async function sqExecuteExam(id) {
         <!-- 도장 (배경이미지 정 가운데) -->
         <div id="examStampArea" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"></div>
         <!-- 대화창 (배경이미지 하단에 붙임, 약간 안쪽 여백) -->
-        <div style="position:absolute;bottom:3%;left:15%;right:15%;z-index:3">
+        <div style="position:absolute;bottom:2%;left:3%;right:3%;z-index:3">
           <div style="position:relative">
             <img src="images/exam/exam_dialogue.png" style="width:100%;display:block" id="examDialogueImg" onerror="this.parentElement.style.background='linear-gradient(0deg,rgba(26,16,8,0.95),rgba(26,16,8,0.7))';this.parentElement.style.borderRadius='14px';this.parentElement.style.padding='16px';this.style.display='none'">
             <div id="examDialogueText" style="position:absolute;top:0;bottom:0;left:5%;width:56%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5c3d1e !important;line-height:1.5;text-align:center;word-break:keep-all;overflow-wrap:break-word;-webkit-text-fill-color:#5c3d1e"></div>
@@ -1961,6 +1970,28 @@ function _sqExamClose(id) {
   if (cardEl && sq) {
     const tmp = document.createElement('div');
     tmp.innerHTML = sqCardHTML(sq);
+    cardEl.replaceWith(tmp.firstElementChild);
+  }
+}
+
+// ================================================================
+//  관리자: 재심사 쿨타임 초기화
+// ================================================================
+async function sqAdminResetCooldown(id) {
+  if (!myProfile?.is_admin) return;
+  const sq = _sqSquirrels.find(s => s.id === id);
+  if (!sq) return;
+  const { error } = await sb.from('squirrels').update({ exam_cooldown_until: null }).eq('id', id);
+  if (error) { showToast('쿨타임 초기화 실패'); return; }
+  _sqUpdate(id, { exam_cooldown_until: null });
+  showToast(`${sq.name}의 재심사 쿨타임이 초기화되었습니다`);
+  closeModal();
+  // 카드 갱신
+  const cardEl = document.getElementById('sqCard-' + id);
+  const updated = _sqSquirrels.find(s => s.id === id);
+  if (cardEl && updated) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = sqCardHTML(updated);
     cardEl.replaceWith(tmp.firstElementChild);
   }
 }
