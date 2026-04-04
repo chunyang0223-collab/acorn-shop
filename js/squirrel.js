@@ -1811,7 +1811,7 @@ var _sqAnimalese = {
     }
     // 앱 볼륨 연동 (모바일은 gain 부스트)
     var _mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    this._master.gain.value = (_mob ? 1.6 : 0.9) * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
+    this._master.gain.value = (_mob ? 2.0 : 0.9) * (typeof getAppVolume === 'function' ? getAppVolume() : 1);
     return this._master;
   },
   VOWEL_PITCH: [0,-2,3,1,-3,-1,5,3,2,4,1,3,6,-4,-2,-1,0,-5,-1,1,2],
@@ -1902,7 +1902,7 @@ function _sqTypeText(elementId, text, speed, callback) {
   // 대사 중 BGM 덕킹 (PC는 살짝, 모바일은 강하게)
   const bgmOrig = _sqExamBGM ? _sqExamBGM.volume : 0;
   const _isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (_sqExamBGM) _sqExamBGM.volume = bgmOrig * (_isMobile ? 0.15 : 0.55);
+  if (_sqExamBGM) _sqExamBGM.volume = _isMobile ? bgmOrig * 0.1 : bgmOrig;
   const interval = setInterval(() => {
     if (i < totalLen) {
       const ch = text[i];
