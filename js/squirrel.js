@@ -1627,17 +1627,17 @@ async function sqDoExam(id, itemCount) {
   const passed = roll < finalRate;
 
   if (passed) {
-    // 합격: 추가 훈련 횟수 부여
+    // 합격: 훈련 횟수 리셋 후 새로 부여 (누적 아님)
     const bonusMin = _sqSettings.exam_bonus_min || 1;
-    const bonusMax = _sqSettings.exam_bonus_max || 5;
+    const bonusMax = _sqSettings.exam_bonus_max || 1;
     const bonus = bonusMin + Math.floor(Math.random() * (bonusMax - bonusMin + 1));
-    const newTotal = (sq.training_total || 0) + bonus;
 
     await sb.from('squirrels').update({
-      training_total: newTotal,
+      training_total: bonus,
+      training_used: 0,
       exam_cooldown_until: null
     }).eq('id', id);
-    _sqUpdate(id, { training_total: newTotal, exam_cooldown_until: null });
+    _sqUpdate(id, { training_total: bonus, training_used: 0, exam_cooldown_until: null });
 
     return { passed: true, bonus, newTotal, finalRate, itemCount, cost };
   } else {
@@ -1735,6 +1735,31 @@ function _sqExamItemAdj(delta) {
 //  심사 연출 시스템
 // ================================================================
 
+// 심사 전용 BGM 재생/정지
+var _sqExamBGM = null;
+function _sqExamPlayBGM() {
+  _sqExamStopBGM();
+  // 기존 BGM 정지
+  if (typeof _sndStopBGM === 'function') _sndStopBGM();
+  _sqExamBGM = new Audio('sounds/exam/grade1.mp3');
+  _sqExamBGM.volume = (typeof _sndVolBGM !== 'undefined') ? _sndVolBGM : 0.5;
+  _sqExamBGM.loop = true;
+  _sqExamBGM.play().catch(function(){});
+}
+function _sqExamStopBGM() {
+  if (_sqExamBGM) {
+    _sqExamBGM.pause();
+    _sqExamBGM.currentTime = 0;
+    _sqExamBGM = null;
+  }
+}
+// 도장 효과음 (1회 재생)
+function _sqExamPlayStamp() {
+  var sfx = new Audio('sounds/exam/stamp.mp3');
+  sfx.volume = (typeof _sndVolBGM !== 'undefined') ? Math.min(_sndVolBGM + 0.2, 1) : 0.7;
+  sfx.play().catch(function(){});
+}
+
 // 타이핑 애니메이션 헬퍼
 function _sqTypeText(elementId, text, speed, callback) {
   const el = document.getElementById(elementId);
@@ -1754,38 +1779,48 @@ function _sqTypeText(elementId, text, speed, callback) {
 
 // 화면 흔들림 효과
 function _sqShakeScreen() {
-  const body = document.body;
-  body.style.transition = 'none';
-  const orig = body.style.transform || '';
+  const modal = document.getElementById('modal');
+  if (!modal) return;
   let count = 0;
   const shake = setInterval(() => {
-    const x = (Math.random() - 0.5) * 12;
-    const y = (Math.random() - 0.5) * 8;
-    body.style.transform = `translate(${x}px, ${y}px)`;
+    const x = (Math.random() - 0.5) * 14;
+    const y = (Math.random() - 0.5) * 10;
+    modal.style.transform = `translate(${x}px, ${y}px)`;
     count++;
-    if (count > 8) {
+    if (count > 10) {
       clearInterval(shake);
-      body.style.transform = orig;
+      modal.style.transform = '';
     }
-  }, 50);
+  }, 45);
 }
 
 // 심사 실행 + 연출 시퀀스
 async function sqExecuteExam(id) {
   const itemCount = window._sqExamItemCount || 0;
 
-  // ── Step 1: 심사처 전경 + 심사관 인사 ──
+  // ── BGM 시작 ──
+  _sqExamPlayBGM();
+
+  // ── 모달: 배경 이미지 위에 대화창+도장 오버레이 ──
   showModal(`
-    <div id="examCinematic" style="text-align:center;overflow:hidden">
-      <img src="images/exam/exam_scene.png" style="width:100%;border-radius:16px;margin-bottom:12px;opacity:0;transition:opacity 0.8s" id="examSceneImg" onerror="this.style.display='none'">
-      <div style="position:relative;margin:0 -8px">
-        <img src="images/exam/exam_dialogue.png" style="width:100%;display:block" id="examDialogueImg" onerror="this.parentElement.style.background='#fef3c7';this.parentElement.style.borderRadius='14px';this.parentElement.style.padding='16px';this.style.display='none'">
-        <div id="examDialogueText" style="position:absolute;top:50%;left:8%;transform:translateY(-50%);width:52%;font-size:13px;font-weight:800;color:#5c3d1e;line-height:1.6;text-align:left"></div>
-      </div>
-      <div id="examStampArea" style="margin-top:16px;min-height:80px;display:flex;align-items:center;justify-content:center"></div>
-      <div id="examResultInfo" style="display:none;margin-top:12px"></div>
-      <div id="examCloseBtn" style="display:none;margin-top:12px">
-        <button onclick="closeModal()" style="width:100%;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">확인</button>
+    <div id="examCinematic" style="position:relative;overflow:hidden;border-radius:16px;margin:-20px;min-height:360px;background:#1a1008">
+      <!-- 배경 전경 이미지 -->
+      <img src="images/exam/exam_scene.png" id="examSceneImg" style="width:100%;display:block;opacity:0;transition:opacity 0.8s" onerror="this.style.display='none'">
+      <!-- 오버레이: 대화창 + 도장 (배경 위에 겹침) -->
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none">
+        <!-- 도장 영역 (가운데) -->
+        <div id="examStampArea" style="flex:1;display:flex;align-items:center;justify-content:center"></div>
+        <!-- 결과 정보 -->
+        <div id="examResultInfo" style="display:none;padding:0 16px;pointer-events:auto"></div>
+        <!-- 대화창 (하단 고정) -->
+        <div style="position:relative;padding:0 8px 8px 8px;pointer-events:auto">
+          <img src="images/exam/exam_dialogue.png" style="width:100%;display:block" id="examDialogueImg" onerror="this.parentElement.style.background='linear-gradient(0deg,rgba(26,16,8,0.95),rgba(26,16,8,0.7))';this.parentElement.style.borderRadius='14px';this.parentElement.style.padding='16px';this.style.display='none'">
+          <div id="examDialogueText" style="position:absolute;top:50%;left:12%;transform:translateY(-50%);width:48%;font-size:12px;font-weight:800;color:#5c3d1e;line-height:1.5;text-align:center"></div>
+        </div>
+        <!-- 닫기 버튼 -->
+        <div id="examCloseBtn" style="display:none;padding:4px 16px 16px;pointer-events:auto">
+          <button onclick="_sqExamClose('${id}')" style="width:100%;height:40px;border-radius:12px;border:none;background:rgba(255,255,255,0.15);color:#e8d5b7;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;backdrop-filter:blur(4px)">확인</button>
+        </div>
       </div>
     </div>`, { noClose: true });
 
@@ -1794,83 +1829,78 @@ async function sqExecuteExam(id) {
   const sceneImg = document.getElementById('examSceneImg');
   if (sceneImg) sceneImg.style.opacity = '1';
 
-  // ── Step 2: 심사관 대사 1 (인사) ──
+  // ── 심사관 대사 1 (인사) ──
   await new Promise(r => setTimeout(r, 800));
   const greetings = itemCount > 0
     ? '오호, 반짝이는 무언가를 가져왔군... 어디 한번 살펴볼까?'
     : '흠... 어디 한번 실력을 볼까?';
   await new Promise(r => _sqTypeText('examDialogueText', greetings, 40, r));
 
-  // ── Step 3: 심사 실행 (백엔드) ──
+  // ── 심사 실행 (백엔드) ──
   await new Promise(r => setTimeout(r, 1200));
   const result = await sqDoExam(id, itemCount);
-  if (!result) { closeModal(); return; }
+  if (!result) { _sqExamStopBGM(); closeModal(); return; }
 
-  // ── Step 4: 심사관 대사 2 (심사 중) ──
+  // ── 심사관 대사 2 (심사 중) ──
   await new Promise(r => _sqTypeText('examDialogueText', '음... 서류를 확인하고 있어... 잠깐만...', 40, r));
   await new Promise(r => setTimeout(r, 1000));
 
-  // ── Step 5: 도장 애니메이션 + 결과 대사 ──
+  // ── 도장 애니메이션 + 결과 ──
   const stampArea = document.getElementById('examStampArea');
-  const sq = _sqSquirrels.find(s => s.id === id);
 
   if (result.passed) {
     // 합격 도장
     if (stampArea) {
       stampArea.innerHTML = `
-        <div id="examStamp" style="font-size:64px;font-weight:900;color:#059669;opacity:0;transform:scale(3) rotate(-15deg);transition:all 0.3s cubic-bezier(0.17,0.67,0.21,1.3);text-shadow:0 4px 12px rgba(5,150,105,0.3)">
-          <div style="border:4px solid #059669;border-radius:12px;padding:4px 16px;background:rgba(5,150,105,0.08)">합격</div>
+        <div id="examStamp" style="font-size:48px;font-weight:900;color:#16a34a;opacity:0;transform:scale(4) rotate(-15deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 4px 16px rgba(5,150,105,0.5))">
+          <div style="border:4px solid #22c55e;border-radius:12px;padding:6px 20px;background:rgba(34,197,94,0.15);backdrop-filter:blur(2px)">합격</div>
         </div>`;
     }
     await new Promise(r => setTimeout(r, 100));
+    _sqExamPlayStamp();
     const stamp = document.getElementById('examStamp');
-    if (stamp) {
-      stamp.style.opacity = '1';
-      stamp.style.transform = 'scale(1) rotate(-5deg)';
-    }
+    if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(-5deg)'; }
 
     // 합격 대사
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 600));
     await new Promise(r => _sqTypeText('examDialogueText', '축하하네! 훌륭한 실력이야! 추가 훈련 기회를 주지!', 35, r));
 
-    // 결과 정보 표시
+    // 결과 정보
     const infoEl = document.getElementById('examResultInfo');
     if (infoEl) {
       infoEl.style.display = 'block';
       infoEl.innerHTML = `
-        <div style="background:#f0fdf4;border-radius:14px;padding:14px;border:1.5px solid #bbf7d0">
-          <div style="font-size:15px;font-weight:900;color:#15803d;margin-bottom:4px">🏋️ 추가 훈련 +${result.bonus}회</div>
-          <div style="font-size:11px;color:#6b7280">합격률 ${result.finalRate}% · 비용 🌰${result.cost}${result.itemCount > 0 ? ' · ✨' + result.itemCount + '개 사용' : ''}</div>
+        <div style="background:rgba(34,197,94,0.15);border-radius:12px;padding:10px 14px;border:1px solid rgba(34,197,94,0.3);text-align:center;backdrop-filter:blur(4px)">
+          <div style="font-size:14px;font-weight:900;color:#4ade80">🏋️ 추가 훈련 +${result.bonus}회</div>
+          <div style="font-size:10px;color:#a3a3a3;margin-top:2px">합격률 ${result.finalRate}% · 🌰${result.cost}${result.itemCount > 0 ? ' · ✨' + result.itemCount : ''}</div>
         </div>`;
     }
   } else {
     // 불합격 도장 + 화면 흔들림
     if (stampArea) {
       stampArea.innerHTML = `
-        <div id="examStamp" style="font-size:64px;font-weight:900;color:#dc2626;opacity:0;transform:scale(3) rotate(10deg);transition:all 0.3s cubic-bezier(0.17,0.67,0.21,1.3);text-shadow:0 4px 12px rgba(220,38,38,0.3)">
-          <div style="border:4px solid #dc2626;border-radius:12px;padding:4px 16px;background:rgba(220,38,38,0.08)">불합격</div>
+        <div id="examStamp" style="font-size:48px;font-weight:900;color:#ef4444;opacity:0;transform:scale(4) rotate(10deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 4px 16px rgba(220,38,38,0.5))">
+          <div style="border:4px solid #ef4444;border-radius:12px;padding:6px 20px;background:rgba(239,68,68,0.15);backdrop-filter:blur(2px)">불합격</div>
         </div>`;
     }
     await new Promise(r => setTimeout(r, 100));
+    _sqExamPlayStamp();
     const stamp = document.getElementById('examStamp');
-    if (stamp) {
-      stamp.style.opacity = '1';
-      stamp.style.transform = 'scale(1) rotate(3deg)';
-    }
+    if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(3deg)'; }
     _sqShakeScreen();
 
     // 불합격 대사
     await new Promise(r => setTimeout(r, 600));
     await new Promise(r => _sqTypeText('examDialogueText', '아쉽군... 다음에 다시 도전하게. 좀 더 준비해오라고.', 35, r));
 
-    // 결과 정보 표시
+    // 결과 정보
     const infoEl = document.getElementById('examResultInfo');
     if (infoEl) {
       infoEl.style.display = 'block';
       infoEl.innerHTML = `
-        <div style="background:#fef2f2;border-radius:14px;padding:14px;border:1.5px solid #fecaca">
-          <div style="font-size:15px;font-weight:900;color:#dc2626;margin-bottom:4px">⏳ ${result.cooldownHours}시간 재심사 대기</div>
-          <div style="font-size:11px;color:#6b7280">합격률 ${result.finalRate}% · 비용 🌰${result.cost}${result.itemCount > 0 ? ' · ✨' + result.itemCount + '개 사용' : ''}</div>
+        <div style="background:rgba(239,68,68,0.12);border-radius:12px;padding:10px 14px;border:1px solid rgba(239,68,68,0.3);text-align:center;backdrop-filter:blur(4px)">
+          <div style="font-size:14px;font-weight:900;color:#fca5a5">⏳ ${result.cooldownHours}시간 재심사 대기</div>
+          <div style="font-size:10px;color:#a3a3a3;margin-top:2px">합격률 ${result.finalRate}% · 🌰${result.cost}${result.itemCount > 0 ? ' · ✨' + result.itemCount : ''}</div>
         </div>`;
     }
   }
@@ -1879,8 +1909,16 @@ async function sqExecuteExam(id) {
   await new Promise(r => setTimeout(r, 600));
   const closeBtn = document.getElementById('examCloseBtn');
   if (closeBtn) closeBtn.style.display = 'block';
+}
 
+// 심사 모달 닫기 (BGM 복원 + 카드 갱신)
+function _sqExamClose(id) {
+  _sqExamStopBGM();
+  // 기존 탭 BGM 복원
+  if (typeof _sndPlayBGM === 'function') _sndPlayBGM('my');
+  closeModal();
   // 카드 갱신
+  const sq = _sqSquirrels.find(s => s.id === id);
   const cardEl = document.getElementById('sqCard-' + id);
   if (cardEl && sq) {
     const tmp = document.createElement('div');
