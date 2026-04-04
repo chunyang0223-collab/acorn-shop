@@ -37,6 +37,20 @@
   0%,100% { transform: translateY(0px); }
   50%     { transform: translateY(-6px); }
 }
+/* 회복 버튼 shimmer 효과 */
+@keyframes sqRecoverShimmer {
+  0%   { left: -60%; opacity: 0; }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { left: 160%; opacity: 0; }
+}
+/* 회복 성공 애니메이션 */
+@keyframes sqRecoverSuccess {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.06); }
+  60%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
 /* 훈련 애니메이션 */
 @keyframes trainPump {
   0%,100% { transform: translateY(0) scale(1); }
