@@ -32,8 +32,10 @@ var _sqSettings  = {
   fuse_upgrade_legend: 0,
   // 훈련 설정
   training_success_rate: 40,
-  training_hp_pool: [1,2,2,3,3,3,4,4,4,5,5,5,6,6,7,7,8,8,9,10],
-  training_count_pool: [0,0,0,1,1,2],
+  training_hp_min: 1,
+  training_hp_max: 10,
+  training_count_min: 0,
+  training_count_max: 2,
   // 등급심사 설정
   exam_cost: 10,
   exam_pass_rate: 40,
@@ -529,17 +531,17 @@ async function sqRenderGrid() {
     const active = filter === val;
     const bg = active
       ? (_ftDark ? 'linear-gradient(180deg,#fde68a,#fbbf24)' : 'linear-gradient(180deg,#fef3c7,#fde68a)')
-      : (_ftDark ? 'linear-gradient(180deg,#334155,#1e293b)' : 'linear-gradient(180deg,#ffffff,#f1f5f9)');
+      : (_ftDark ? 'linear-gradient(180deg,#2a3a4e,#1e2d40)' : 'linear-gradient(180deg,#ffffff,#f1f5f9)');
     const border = active
       ? (_ftDark ? '#f59e0b' : '#fbbf24')
-      : (_ftDark ? '#475569' : '#e2e8f0');
+      : (_ftDark ? '#3d5068' : '#e2e8f0');
     const color = active
       ? (_ftDark ? '#78350f' : '#92400e')
-      : (_ftDark ? '#94a3b8' : '#6b7280');
+      : (_ftDark ? '#e2e8f0' : '#6b7280');
     const shadow = active
       ? (_ftDark ? '0 2px 0 #b45309,0 4px 10px rgba(245,158,11,0.2)' : '0 2px 0 #d97706,0 4px 10px rgba(251,191,36,0.15)')
-      : (_ftDark ? '0 2px 0 #0f172a,0 3px 6px rgba(0,0,0,0.2)' : '0 2px 0 #e2e8f0,0 3px 6px rgba(0,0,0,0.04)');
-    const gloss = active ? 'rgba(255,255,255,0.35)' : (_ftDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)');
+      : (_ftDark ? '0 2px 0 #0f172a,0 3px 6px rgba(0,0,0,0.25)' : '0 2px 0 #e2e8f0,0 3px 6px rgba(0,0,0,0.04)');
+    const gloss = active ? 'rgba(255,255,255,0.35)' : (_ftDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)');
     return `<button onclick="window._sqFilter='${val}';sqRenderGrid()"
       style="padding:5px 14px;border-radius:20px;
         border:1.5px solid ${border};
@@ -1545,8 +1547,8 @@ async function sqRevealGrowth(id) {
   const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
   const sprite = _sqRandomSprite();
   // 훈련 횟수 부여 (가중치 랜덤)
-  const pool = _sqSettings.training_count_pool || [1,2,2,3,3,3,4,4,4,4,5,5,5,5,6,6,6,7,7,8,8,9,10];
-  const trainingTotal = pool[Math.floor(Math.random() * pool.length)];
+  const countPool = _sqSettings.training_count_pool || _sqBuildWeightedPool(_sqSettings.training_count_min ?? 0, _sqSettings.training_count_max || 2);
+  const trainingTotal = _sqPickFromPool(countPool);
   try {
     await sb.from('squirrels').update({
       status: growType, grows_at: null, sprite: sprite,
@@ -1571,6 +1573,15 @@ async function sqRevealGrowth(id) {
 // 가중치 풀에서 랜덤 뽑기 (범용)
 function _sqPickFromPool(pool) {
   return pool[Math.floor(Math.random() * pool.length)];
+}
+// min~max 범위에서 낮은 값이 더 자주 나오는 가중치 풀 생성
+function _sqBuildWeightedPool(min, max) {
+  const pool = [];
+  for (let v = min; v <= max; v++) {
+    const weight = max - v + 1; // 낮을수록 가중치 높음
+    for (let w = 0; w < weight; w++) pool.push(v);
+  }
+  return pool.length ? pool : [min];
 }
 
 // 훈련 실행
@@ -1599,7 +1610,7 @@ async function sqDoTraining(id) {
   let gradeUp = false;
 
   if (success) {
-    const hpPool = _sqSettings.training_hp_pool || [1,2,2,3,3,3,4,4,4,5,5,5,6,6,7,7,8,8,9,10];
+    const hpPool = _sqSettings.training_hp_pool || _sqBuildWeightedPool(_sqSettings.training_hp_min || 1, _sqSettings.training_hp_max || 10);
     hpGain = _sqPickFromPool(hpPool);
     newHp = Math.min(currentHp + hpGain, hpMax);
 
@@ -3015,6 +3026,12 @@ async function sqAdminInit() {
   document.getElementById('sqSet_examItemMax').value       = _sqSettings.exam_item_max ?? 12;
   document.getElementById('sqSet_examBonusMin').value      = _sqSettings.exam_bonus_min ?? 1;
   document.getElementById('sqSet_examBonusMax').value      = _sqSettings.exam_bonus_max ?? 1;
+  // 체력훈련 설정 로드
+  document.getElementById('sqSet_trainRate').value       = _sqSettings.training_success_rate ?? 40;
+  document.getElementById('sqSet_trainHpMin').value      = _sqSettings.training_hp_min ?? 1;
+  document.getElementById('sqSet_trainHpMax').value      = _sqSettings.training_hp_max ?? 10;
+  document.getElementById('sqSet_trainCountMin').value   = _sqSettings.training_count_min ?? 0;
+  document.getElementById('sqSet_trainCountMax').value   = _sqSettings.training_count_max ?? 2;
   // 탐험 보상 설정 로드
   await expLoadSettings();
   await expAdminLoadUI();
@@ -3062,6 +3079,12 @@ async function sqSaveSettings() {
     exam_item_max:         parseInt(document.getElementById('sqSet_examItemMax').value)      || 12,
     exam_bonus_min:        parseInt(document.getElementById('sqSet_examBonusMin').value)     || 1,
     exam_bonus_max:        parseInt(document.getElementById('sqSet_examBonusMax').value)     || 1,
+    // 체력훈련 설정
+    training_success_rate: parseInt(document.getElementById('sqSet_trainRate').value)        || 40,
+    training_hp_min:       parseInt(document.getElementById('sqSet_trainHpMin').value)       || 1,
+    training_hp_max:       parseInt(document.getElementById('sqSet_trainHpMax').value)       || 10,
+    training_count_min:    parseInt(document.getElementById('sqSet_trainCountMin').value)    || 0,
+    training_count_max:    parseInt(document.getElementById('sqSet_trainCountMax').value)    || 2,
   };
   const { error } = await sb.from('app_settings')
     .upsert({ key:'squirrel_settings', value: settings, updated_at: new Date().toISOString() }, { onConflict:'key' });
