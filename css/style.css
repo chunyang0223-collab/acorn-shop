@@ -3077,6 +3077,26 @@ input[type="checkbox"]:active,
 /* ══════════════════════════════════════════════
    관리자 C안 — 핀 탭바 + 홈 그리드
    ══════════════════════════════════════════════ */
+/* ── 관리자 전체 메뉴 탭바 (wrap, multi-row) ── */
+.adm-tabbar-wrap { padding: 8px 8px 4px; }
+.adm-tabbar {
+  display: flex; flex-wrap: wrap; gap: 4px; padding: 5px;
+  background: rgba(255,255,255,0.5); border-radius: 16px;
+  border: 1.5px solid rgba(255,255,255,0.7);
+}
+.adm-tab-btn {
+  font-family: 'Jua', sans-serif; font-size: 11px; padding: 7px 10px;
+  border-radius: 10px; border: none; background: transparent; color: var(--text-muted);
+  cursor: pointer; text-align: center; transition: all 0.15s;
+  white-space: nowrap;
+}
+.adm-tab-btn:hover { background: rgba(255,255,255,0.6); }
+.adm-tab-btn.active {
+  background: linear-gradient(135deg, var(--pink-400), var(--purple-400)); color: var(--text-inverse);
+  box-shadow: 0 2px 8px rgba(192,132,252,0.25);
+}
+
+/* 하위호환: 기존 adm-pin 클래스 유지 */
 .adm-pin-bar-wrap { padding: 8px; }
 .adm-pin-bar {
   display: flex; gap: 3px; padding: 5px;
@@ -3169,6 +3189,9 @@ input[type="checkbox"]:active,
 .pin-edit-item.pinned .pin-edit-star { color: #c084fc; }
 
 /* 다크모드 */
+[data-theme="dark"] .adm-tabbar { background: var(--adm-pin-bar-bg); border: none; }
+[data-theme="dark"] .adm-tab-btn { color: var(--adm-pin-tab-color); }
+[data-theme="dark"] .adm-tab-btn:hover { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .adm-pin-bar { background: var(--adm-pin-bar-bg); border: none; }
 [data-theme="dark"] .adm-pin-tab { color: var(--adm-pin-tab-color); }
 /* adm-stats-mini, adm-grid-item, adm-maint-chip — 후반부 토큰화 규칙에서 처리됨 (중복 제거) */
