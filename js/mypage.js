@@ -359,7 +359,7 @@ function openInvDetail(inventoryId) {
     : item.from_gacha ? '🎲 뽑기' : '🛍️ 구매';
   const sourceCls = isGiftTicket || isGiftAcorn ? 'background:rgba(52,211,153,0.15);color:#065f46'
     : item.from_gacha ? 'background:rgba(139,92,246,0.15);color:#6d28d9' : 'background:rgba(245,158,11,0.15);color:#92400e';
-  badges += `<span class="inv-detail-badge" style="${sourceCls}">${sourceLabel}</span>`;
+  if (!isExamMaterial) badges += `<span class="inv-detail-badge" style="${sourceCls}">${sourceLabel}</span>`;
 
   // 타입별 뱃지
   if (isCoupon) badges += `<span class="inv-detail-badge" style="background:rgba(253,224,71,0.25);color:#854d0e">🎟️ ${p.discount_pct||0}% 할인</span>`;
@@ -375,7 +375,6 @@ function openInvDetail(inventoryId) {
     actionsHtml = `<button class="btn w-full py-2 text-sm" disabled style="background:#fef3c7;color:#92400e;border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`;
   } else if (isExamMaterial) {
     // 등급심사 재료: 사용 버튼 없음
-    actionsHtml = `<p class="text-xs text-center" style="color:var(--text-secondary)">등급 심사에 자동으로 사용됩니다</p>`;
   } else {
     // 사용하기 버튼
     let btnLabel = '사용하기';
@@ -397,7 +396,7 @@ function openInvDetail(inventoryId) {
   showModal(`<div class="text-center">
     <div style="font-size:3rem;line-height:1;margin-bottom:6px">${icon}</div>
     <h2 class="text-lg font-black" style="color:var(--text-primary);margin-bottom:2px">${name}</h2>
-    ${desc ? `<p class="text-xs" style="color:var(--text-secondary);margin-bottom:8px">${desc}</p>` : ''}
+    ${(desc && !isExamMaterial) ? `<p class="text-xs" style="color:var(--text-secondary);margin-bottom:8px">${desc}</p>` : ''}
     <div class="inv-detail-badges">${badges}</div>
     <div class="inv-detail-actions">
       ${actionsHtml}
