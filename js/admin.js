@@ -961,16 +961,15 @@ async function _executeDeleteUser(userId, userName) {
     // 3) 농장 데이터
     await sb.from('farm_farmers').delete().eq('user_id', userId);
     await sb.from('farm_data').delete().eq('user_id', userId);
-    // 4) 친구 관계 (양방향)
-    await sb.from('friends').delete().or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+    // 4) 친구 관계 (양방향 — 각각 삭제)
+    await sb.from('friends').delete().eq('user_id', userId);
+    await sb.from('friends').delete().eq('friend_id', userId);
     // 5) 가챠 관련
     await sb.from('gacha_logs').delete().eq('user_id', userId);
     await sb.from('gacha_tickets').delete().eq('user_id', userId);
     await sb.from('free_gacha_usage').delete().eq('user_id', userId);
-    // 6) 공지 읽음
-    await sb.from('notice_reads').delete().eq('user_id', userId);
-    // 7) 기존 테이블들
-    const tables = ['notifications','minigame_plays','quest_requests','inventory','transactions'];
+    // 6) 기존 테이블들
+    const tables = ['notifications','minigame_plays','inventory','transactions'];
     for (const t of tables) {
       const { error } = await sb.from(t).delete().eq('user_id', userId);
       if (error) console.warn(`[delete] ${t}:`, error.message);
