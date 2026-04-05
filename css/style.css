@@ -3090,6 +3090,7 @@ input[type="checkbox"]:active,
   cursor: pointer; text-align: center; transition: all 0.15s;
   white-space: nowrap;
 }
+.adm-tab-row-break { flex-basis: 100%; height: 0; }
 .adm-tab-btn:hover { background: rgba(255,255,255,0.6); }
 .adm-tab-btn.active {
   background: linear-gradient(135deg, var(--pink-400), var(--purple-400)); color: var(--text-inverse);
