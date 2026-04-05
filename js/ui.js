@@ -239,7 +239,6 @@ function aTab(tab, btn) {
   document.querySelectorAll('#adminTabBar .adm-tab-btn').forEach(b => b.classList.remove('active'));
 
   if (tab === 'home') {
-    _closeSqSubTab();
     document.getElementById('atab-home').classList.remove('hidden');
     document.querySelector('#adminTabBar .adm-tab-btn').classList.add('active'); // 홈 버튼
     renderDashboard();
@@ -259,14 +258,38 @@ function aTab(tab, btn) {
     if (match) match.classList.add('active');
   }
 
-  // 다람쥐 서브탭 직접 진입
+  // 탭별 초기화
   const sqSubMap = { sq_my:'my', sq_shop:'shop', sq_fuse:'fuse', sq_expedition:'expedition', sq_farm:'farm' };
   if (sqSubMap[tab]) {
-    _openSqSubTab(sqSubMap[tab]);
+    // 다람쥐 탭 초기화 (독립 atab-sq_* 사용)
+    if (!_sqAdminInited) {
+      _sqAdminInited = true;
+      if (typeof sqInit === 'function') sqInit();
+      if (typeof sqAdminInit === 'function') sqAdminInit();
+    }
+    const subTab = sqSubMap[tab];
+    if (subTab === 'my')         sqRenderGrid();
+    if (subTab === 'shop')       {} // 정적 HTML
+    if (subTab === 'fuse')       { if (typeof sqFuseInit === 'function') sqFuseInit(); }
+    if (subTab === 'expedition') {} // sqActiveExpeditionArea는 sqInit에서 로드
+    if (subTab === 'farm')       {
+      const maint = window._maintSettings || {};
+      const area = document.getElementById('sqFarmArea');
+      if (area) {
+        if (maint['sq_farm'] && !_isMaintBypassed()) {
+          area.innerHTML = `
+            <div class="clay-card p-8 text-center mt-4">
+              <div style="font-size:3rem;margin-bottom:12px">🔧</div>
+              <p class="text-lg font-black text-gray-700 mb-2">점검 중입니다</p>
+              <p class="text-sm text-gray-400">농장 기능을 준비하고 있어요!</p>
+            </div>`;
+        } else {
+          if (typeof sqFarmInit === 'function') sqFarmInit();
+        }
+      }
+    }
     return;
   }
-  // 다람쥐 서브탭이 아닌 다른 탭으로 이동 시, 열려있던 다람쥐 뷰 정리
-  _closeSqSubTab();
 
   if (tab === 'dashboard')  { loadMaintenanceSettings().then(renderMaintenanceBtns); }
   if (tab === 'items')      renderItemRegistry();
@@ -284,44 +307,8 @@ function aTab(tab, btn) {
   if (tab === 'bossraid') { if (typeof brAdminOpenSettings === 'function') brAdminOpenSettings(); }
 }
 
-// ── 관리자에서 다람쥐 서브탭 직접 진입 ──
-let _sqSubOpen = false;
-
-function _openSqSubTab(subTab) {
-  const wasOpen = _sqSubOpen;
-  _sqSubOpen = true;
-  const sqEl = document.getElementById('utab-squirrel');
-  if (!sqEl) return;
-
-  sqEl.classList.remove('hidden');
-  // 관리자 뒤로가기 바 숨기기 (탭바로 이동하니 불필요)
-  document.getElementById('sqAdminBackBar')?.classList.add('hidden');
-  // 서브탭 바(내 다람쥐/상점/합성 등) 숨기기 — 관리자 탭바에 이미 있으니
-  const sqTabBar = sqEl.querySelector('.clay-card.p-2.flex.gap-1.mb-4');
-  if (sqTabBar) sqTabBar.style.display = 'none';
-  // 관리자 설정 패널 표시
-  document.querySelectorAll('.sq-admin-panel').forEach(el => el.classList.remove('hidden'));
-  // 처음 열 때만 초기화
-  if (!wasOpen) {
-    if (typeof sqInit === 'function') sqInit();
-    if (typeof sqAdminInit === 'function') sqAdminInit();
-  }
-  if (typeof sqTab === 'function') sqTab(subTab);
-}
-
-function _closeSqSubTab() {
-  if (!_sqSubOpen) return;
-  _sqSubOpen = false;
-  const sqEl = document.getElementById('utab-squirrel');
-  if (sqEl) {
-    sqEl.classList.add('hidden');
-    // 서브탭 바 복원 (사용자 모드 전환 시 필요)
-    const sqTabBar = sqEl.querySelector('.clay-card.p-2.flex.gap-1.mb-4');
-    if (sqTabBar) sqTabBar.style.display = '';
-  }
-  document.querySelectorAll('.sq-admin-panel').forEach(el => el.classList.add('hidden'));
-  if (typeof _sqUnsubscribe === 'function') _sqUnsubscribe();
-}
+// ── 관리자 다람쥐 초기화 플래그 ──
+let _sqAdminInited = false;
 
 // ── 카테고리 서브탭 바 주입 ──
 function _injectCatSubtabs(tab, tabEl) {

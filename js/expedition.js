@@ -8,6 +8,125 @@
    - 완료/귀환 시 DB 업데이트 + 탭 복귀
    ================================================================ */
 
+// ================================================================
+//  탐험 진입 함수 (squirrel.js에서 이동)
+// ================================================================
+async function sqLoadActiveExpedition() {
+  try {
+    const { data } = await sb.from('expeditions')
+      .select('*').eq('user_id', myProfile.id).eq('status','active').limit(1);
+    const area = document.getElementById('sqActiveExpeditionArea');
+    const exp = data?.[0];
+    if (area && exp) {
+      area.innerHTML = `
+        <div class="clay-card p-4 mb-4" style="background:#eff6ff;border-left:4px solid #3b82f6">
+          <div class="flex items-center gap-3">
+            <div class="text-3xl">🗺️</div>
+            <div>
+              <div class="font-black text-gray-700">${exp.current_step} / ${exp.total_steps} 칸 진행</div>
+              <div class="text-xs text-gray-400">획득 보상: ${(exp.loot||[]).length}개</div>
+            </div>
+            <button class="btn btn-primary btn-sm ml-auto" onclick="sqContinueExpedition('${exp.id}')">계속하기 →</button>
+          </div>
+        </div>`;
+    } else if (area) {
+      area.innerHTML = '';
+    }
+  } catch(e) {}
+}
+
+async function sqStartExpeditionFlow() {
+  const explorers = _sqSquirrels.filter(s => s.type === 'explorer' && s.status === 'idle');
+  const recovering = _sqSquirrels.filter(s => s.status === 'recovering');
+
+  if (explorers.length === 0) {
+    const recoverMsg = recovering.length > 0
+      ? `<div class="text-xs text-amber-600 mt-2">😴 회복 중인 다람쥐 ${recovering.length}마리가 있어요</div>`
+      : '';
+    showModal(`<div class="text-center"><div style="font-size:40px">🗺️</div><div class="title-font text-lg text-gray-800 my-2">출발 가능한 다람쥐가 없어요</div><div class="text-sm text-gray-500 mb-2">탐험형 다람쥐를 키우거나 회복을 기다려주세요!</div>${recoverMsg}<button class="btn btn-primary w-full mt-4" onclick="closeModal()">확인</button></div>`);
+    return;
+  }
+
+  const { data: activeData } = await sb.from('expeditions')
+    .select('id').eq('user_id', myProfile.id).eq('status','active').limit(1);
+  if (activeData?.length) {
+    showModal(`<div class="text-center"><div style="font-size:40px">⚔️</div><div class="title-font text-lg text-gray-800 my-2">이미 탐험 중이에요</div><div class="text-sm text-gray-500 mb-4">진행 중인 탐험을 완료하거나 귀환 후 다시 출발하세요.</div><button class="btn btn-primary w-full" onclick="closeModal()">확인</button></div>`);
+    return;
+  }
+
+  window._sqExpSelected = [];
+  showModal(`
+    <div class="text-center mb-4">
+      <div style="font-size:40px">🗺️</div>
+      <div class="title-font text-lg text-gray-800">탐험 다람쥐 선택</div>
+      <div class="text-xs text-gray-400 mt-1">최대 3마리를 선택해서 탐험을 떠나요</div>
+    </div>
+    <div class="space-y-2 mb-4">
+      ${explorers.map(sq => {
+        const _g = _sqCalcGrade(sq);
+        const _gs = _sqGradeStyle(_g);
+        return `
+        <div id="expcard-${sq.id}" onclick="sqToggleExpSelect('${sq.id}')" style="background:var(--sq-card-bg);border-radius:16px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:2px solid transparent;cursor:pointer;transition:all .2s">
+          <div class="flex items-center gap-3">
+            <div style="border-radius:14px;${_gs.border};box-shadow:${_gs.shadow};padding:2px;flex-shrink:0;background:${_gs.bg}">
+              <img src="images/squirrels/${sq.sprite || 'sq_acorn'}.png" style="width:36px;height:36px;object-fit:contain;border-radius:10px;display:block">
+            </div>
+            <div class="flex-1">
+              <div class="font-black text-gray-700">${sq.name} <span style="font-size:9px;color:${_gs.color}">${_gs.label}</span></div>
+              <div class="text-xs text-gray-400">❤️${sq.hp_current} ⚔️${sq.stats?.atk||10} 🛡️${sq.stats?.def||5}</div>
+            </div>
+            <div id="expcheck-${sq.id}" class="text-xl">⬜</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-primary flex-1" onclick="sqLaunchExpedition()">⚔️ 출발!</button>
+      <button class="btn btn-gray flex-1" onclick="closeModal()">취소</button>
+    </div>`);
+}
+
+function sqToggleExpSelect(id) {
+  const idx = window._sqExpSelected.indexOf(id);
+  if (idx >= 0) {
+    window._sqExpSelected.splice(idx, 1);
+    document.getElementById('expcard-' + id).style.borderColor = 'transparent';
+    document.getElementById('expcheck-' + id).textContent = '⬜';
+  } else {
+    if (window._sqExpSelected.length >= 3) { toast('⚠️','최대 3마리까지 선택할 수 있어요'); return; }
+    window._sqExpSelected.push(id);
+    document.getElementById('expcard-' + id).style.borderColor = '#3b82f6';
+    document.getElementById('expcheck-' + id).textContent = '✅';
+  }
+}
+
+async function sqLaunchExpedition() {
+  const ids = window._sqExpSelected || [];
+  if (!ids.length) { toast('⚠️','다람쥐를 선택해주세요'); return; }
+  try {
+    const { data: inserted, error } = await sb.from('expeditions').insert({
+      user_id: myProfile.id, squirrel_ids: ids,
+      current_step: 0, total_steps: 5, status: 'active', loot: []
+    }).select('id').single();
+    if (error) throw error;
+    await sb.from('squirrels').update({ status: 'exploring' }).in('id', ids);
+    ids.forEach(id => _sqUpdate(id, { status: 'exploring' }));
+    closeModal();
+
+    sqRenderGrid();
+    // 바로 탐험 맵으로 진입
+    if (typeof aTab === 'function' && document.getElementById('adminMode')) {
+      aTab('sq_expedition');
+    } else {
+      sqTab('expedition');
+    }
+    sqContinueExpedition(inserted.id);
+  } catch(e) {
+    console.error(e);
+    toast('❌', '출발 실패');
+  }
+}
+
 // ── 등급 테두리 스타일 (squirrel.js와 동일) ──
 function _expGradeStyle(grade) {
   switch(grade) {
@@ -495,7 +614,7 @@ function _expGenerateTiles(total) {
 // ================================================================
 function _expRenderMap() {
   var s = _expState;
-  var container = document.getElementById('sqcontent-expedition');
+  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
   if (!container) return;
 
   var totalAcorns = 0;
@@ -649,7 +768,7 @@ function _expAdvance() {
 
 // ── 탐험 전용 토스트 (B형 하단 슬라이드) ──
 function _expToast(emoji, text) {
-  var container = document.getElementById('sqcontent-expedition');
+  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
   if (!container) { toast(emoji, text); return; }
 
   // 파티 그리드 위에 겹쳐서 표시
@@ -715,7 +834,7 @@ function _expShowOverlay(emoji, title, body, btn1Text, btn1Fn, btn2Text, btn2Fn)
 
 // ── 화면 흔들림 ──
 function _expShakeScreen() {
-  var el = document.getElementById('sqcontent-expedition');
+  var el = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
   if (!el) return;
   el.style.animation = 'expShake 0.4s ease-in-out';
   setTimeout(function() { el.style.animation = ''; }, 500);
@@ -801,7 +920,7 @@ function _expHandleTreasure(tile) {
 // ── 몬스터/보스 전투 ──
 function _expHandleBattle(tile) {
   var s = _expState;
-  var container = document.getElementById('sqcontent-expedition');
+  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
   if (!container) return;
 
   var isBoss = tile.type === 'boss';
@@ -1588,7 +1707,7 @@ function _expShowSummary(finishStatus) {
   // 전투 BGM 정지 (패배/승리 효과음은 전투 종료 시점에서 이미 재생됨)
   _sndStopBGM();
 
-  var container = document.getElementById('sqcontent-expedition');
+  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
   if (!container) { _expFinish(status); return; }
 
   // 전리품 집계
@@ -1891,7 +2010,7 @@ async function _expFinish(status) {
   _expState = null;
 
   // expedition 탭 HTML을 원래 상태로 복원 (도움말 포함)
-  var container = document.getElementById('sqcontent-expedition');
+  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
   if (container) {
     container.innerHTML =
       '<div class="clay-card p-5 text-center mb-4">' +
@@ -1914,7 +2033,11 @@ async function _expFinish(status) {
 
   await sqLoadSquirrels();
   await sqLoadActiveExpedition();
-  sqTab('my');
+  if (typeof aTab === 'function' && document.getElementById('adminMode')) {
+    aTab('sq_my');
+  } else {
+    sqTab('my');
+  }
 }
 
 // ── DB 진행 저장 ──
