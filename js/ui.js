@@ -494,21 +494,28 @@ function renderMaintenanceBtns() {
   });
 }
 
-// ── GitHub 마지막 커밋 정보 (관리자 전용) ──
+// ── 배포 시각 확인 (관리자 전용, 실제 서버 파일 Last-Modified) ──
 async function _loadGhLastCommit() {
-  const el = document.getElementById('ghLastCommit');
+  const el = document.getElementById('deployInfo');
   if (!el) return;
   try {
-    const res = await fetch('https://api.github.com/repos/chunyang0223-collab/acorn-shop/commits?per_page=1');
+    const res = await fetch(location.href, { method: 'HEAD', cache: 'no-cache' });
     if (!res.ok) return;
-    const [commit] = await res.json();
-    if (!commit) return;
-    const files = commit.files;
-    const fileName = files?.length ? files[0].filename.split('/').pop() : '—';
-    const date = new Date(commit.commit.committer.date);
-    const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-    el.textContent = `${fileName} · ${timeStr}`;
-    el.title = `마지막 업데이트: ${commit.commit.message}\n${fileName}\n${timeStr}\n클릭하면 새로고침`;
+    const lm = res.headers.get('Last-Modified');
+    if (!lm) return;
+    const date = new Date(lm);
+    const mon = date.getMonth() + 1;
+    const day = date.getDate();
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
+    let ago;
+    if (diffMin < 1) ago = '방금';
+    else if (diffMin < 60) ago = diffMin + '분 전';
+    else if (diffMin < 1440) ago = Math.floor(diffMin / 60) + '시간 전';
+    else ago = Math.floor(diffMin / 1440) + '일 전';
+    el.textContent = `Last : ${mon}월 ${day}일__${hh}:${mm} (${ago})`;
+    el.title = '마지막 배포 시각\n클릭하면 새로고침';
     el.style.display = 'block';
-  } catch(e) { console.warn('[gh]', e); }
+  } catch(e) { console.warn('[deploy]', e); }
 }
