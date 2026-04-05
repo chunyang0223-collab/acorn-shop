@@ -1457,20 +1457,25 @@
   <div id="adminMode" class="hidden">
     <!-- 관리자 전체 메뉴 탭바 (wrap, 스크롤 없이 전부 표시) -->
     <div class="adm-tabbar-wrap"><div id="adminTabBar" class="adm-tabbar">
+      <!-- 1행 -->
       <button class="adm-tab-btn active" data-tab="home" onclick="aTab('home',this)">🏠 홈</button>
       <button class="adm-tab-btn" data-tab="dashboard" onclick="aTab('dashboard',this)">📊 현황</button>
-      <button class="adm-tab-btn" data-tab="items" onclick="aTab('items',this)">📦 아이템</button>
       <button class="adm-tab-btn" data-tab="requests" onclick="aTab('requests',this)">📬 신청목록</button>
-      <button class="adm-tab-btn" data-tab="products" onclick="aTab('products',this)">🛍️ 상품</button>
-      <button class="adm-tab-btn" data-tab="gachaTest" onclick="aTab('gachaTest',this)">🎲 뽑기</button>
       <button class="adm-tab-btn" data-tab="quests" onclick="aTab('quests',this)">📋 퀘스트</button>
-      <button class="adm-tab-btn" data-tab="recycle" onclick="aTab('recycle',this)">♻️ 재활용</button>
       <button class="adm-tab-btn" data-tab="events" onclick="aTab('events',this)">🎉 이벤트</button>
+      <button class="adm-tab-btn" data-tab="recycle" onclick="aTab('recycle',this)">♻️ 재활용</button>
+      <span class="adm-tab-row-break"></span>
+      <!-- 2행 -->
+      <button class="adm-tab-btn" data-tab="products" onclick="aTab('products',this)">🛍️ 상품등록/수정</button>
+      <button class="adm-tab-btn" data-tab="gachaTest" onclick="aTab('gachaTest',this)">🎲 뽑기테스트</button>
+      <button class="adm-tab-btn" data-tab="squirrelSettings" onclick="aTab('squirrelSettings',this)">🐿️ 다람쥐</button>
       <button class="adm-tab-btn" data-tab="minigameSettings" onclick="aTab('minigameSettings',this)">🎮 미니게임</button>
       <button class="adm-tab-btn" data-tab="ranking" onclick="aTab('ranking',this)">🏆 랭킹</button>
-      <button class="adm-tab-btn" data-tab="txlog" onclick="aTab('txlog',this)">🗂️ 로그</button>
-      <button class="adm-tab-btn" data-tab="users" onclick="aTab('users',this)">👥 회원관리</button>
-      <button class="adm-tab-btn" data-tab="squirrelSettings" onclick="aTab('squirrelSettings',this)">🐿️ 다람쥐</button>
+      <span class="adm-tab-row-break"></span>
+      <!-- 3행 -->
+      <button class="adm-tab-btn" data-tab="items" onclick="aTab('items',this)">📦 아이템관리</button>
+      <button class="adm-tab-btn" data-tab="txlog" onclick="aTab('txlog',this)">🗂️ 사용자로그</button>
+      <button class="adm-tab-btn" data-tab="users" onclick="aTab('users',this)">👥 회원관리/지급</button>
     </div></div>
 
     <!-- 홈 (대시보드 = 통계 + 그리드 메뉴 + 점검 + 활동) -->
