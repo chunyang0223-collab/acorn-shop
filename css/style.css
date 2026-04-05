@@ -817,9 +817,9 @@
   --sq-filter-btn-active-bg: #3a3a20;
   --sq-filter-btn-active-border: #d4a060;
   --sq-filter-btn-active-text: #fbbf24;
-  --sq-filter-btn-inactive-bg: rgba(22,30,42,0.5);
-  --sq-filter-btn-inactive-border: #2a3a4a;
-  --sq-filter-btn-inactive-text: #94a3b8;
+  --sq-filter-btn-inactive-bg: #1e2d40;
+  --sq-filter-btn-inactive-border: #3d5068;
+  --sq-filter-btn-inactive-text: #e2e8f0;
 
   /* === Fusion 슬롯 색상 - 다크 모드 === */
   --fuse-slot-empty-border: 3px dashed #2a3a4a;
