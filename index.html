@@ -1455,12 +1455,22 @@
 
   <!-- ── 관리자 모드 ── -->
   <div id="adminMode" class="hidden">
-    <!-- 고정 탭바 (홈 + 핀 3개, 관리자 커스텀 가능) -->
-    <div class="adm-pin-bar-wrap"><div id="adminTabBar" class="adm-pin-bar">
-      <button class="adm-pin-tab active" onclick="aTab('home',this)">🏠 홈</button>
-      <button class="adm-pin-tab" id="pinTab1" onclick="aTabPin(0,this)">📬 신청</button>
-      <button class="adm-pin-tab" id="pinTab2" onclick="aTabPin(1,this)">👥 회원</button>
-      <button class="adm-pin-tab" id="pinTab3" onclick="aTabPin(2,this)">🗂️ 로그</button>
+    <!-- 관리자 전체 메뉴 탭바 (wrap, 스크롤 없이 전부 표시) -->
+    <div class="adm-tabbar-wrap"><div id="adminTabBar" class="adm-tabbar">
+      <button class="adm-tab-btn active" data-tab="home" onclick="aTab('home',this)">🏠 홈</button>
+      <button class="adm-tab-btn" data-tab="dashboard" onclick="aTab('dashboard',this)">📊 현황</button>
+      <button class="adm-tab-btn" data-tab="items" onclick="aTab('items',this)">📦 아이템</button>
+      <button class="adm-tab-btn" data-tab="requests" onclick="aTab('requests',this)">📬 신청목록</button>
+      <button class="adm-tab-btn" data-tab="products" onclick="aTab('products',this)">🛍️ 상품</button>
+      <button class="adm-tab-btn" data-tab="gachaTest" onclick="aTab('gachaTest',this)">🎲 뽑기</button>
+      <button class="adm-tab-btn" data-tab="quests" onclick="aTab('quests',this)">📋 퀘스트</button>
+      <button class="adm-tab-btn" data-tab="recycle" onclick="aTab('recycle',this)">♻️ 재활용</button>
+      <button class="adm-tab-btn" data-tab="events" onclick="aTab('events',this)">🎉 이벤트</button>
+      <button class="adm-tab-btn" data-tab="minigameSettings" onclick="aTab('minigameSettings',this)">🎮 미니게임</button>
+      <button class="adm-tab-btn" data-tab="ranking" onclick="aTab('ranking',this)">🏆 랭킹</button>
+      <button class="adm-tab-btn" data-tab="txlog" onclick="aTab('txlog',this)">🗂️ 로그</button>
+      <button class="adm-tab-btn" data-tab="users" onclick="aTab('users',this)">👥 회원관리</button>
+      <button class="adm-tab-btn" data-tab="squirrelSettings" onclick="aTab('squirrelSettings',this)">🐿️ 다람쥐</button>
     </div></div>
 
     <!-- 홈 (대시보드 = 통계 + 그리드 메뉴 + 점검 + 활동) -->
@@ -1471,17 +1481,6 @@
         <div class="adm-stat-m"><div class="adm-stat-m-num c2" id="ds-todayGacha">—</div><div class="adm-stat-m-label">뽑기</div></div>
         <div class="adm-stat-m"><div class="adm-stat-m-num c3" id="ds-todayGiven">—</div><div class="adm-stat-m-label">지급</div></div>
         <div class="adm-stat-m"><div class="adm-stat-m-num c4" id="ds-todayUsed">—</div><div class="adm-stat-m-label">사용</div></div>
-      </div>
-
-      <!-- 메뉴 그리드 (5개 카테고리) -->
-      <p class="adm-section-label">📁 전체 메뉴</p>
-      <div class="adm-grid adm-grid-cat" id="adminMenuGrid">
-        <div class="adm-grid-item" onclick="aTabGrid('dashboard')"><span class="adm-grid-icon">📊</span><span class="adm-grid-label">대시보드</span></div>
-        <div class="adm-grid-item" onclick="openAdminCat('shop')"><span class="adm-grid-icon">🛒</span><span class="adm-grid-label">상점 운영</span><span class="adm-grid-badge hidden" id="reqBadgeGrid"></span></div>
-        <div class="adm-grid-item" onclick="openAdminCat('users')"><span class="adm-grid-icon">👥</span><span class="adm-grid-label">유저 관리</span></div>
-        <div class="adm-grid-item" onclick="openAdminCat('content')"><span class="adm-grid-icon">🎮</span><span class="adm-grid-label">콘텐츠</span></div>
-        <div class="adm-grid-item" onclick="aTabGrid('squirrelSettings')"><span class="adm-grid-icon">🐿️</span><span class="adm-grid-label">다람쥐 마을</span></div>
-        <div class="adm-grid-item adm-edit-btn" onclick="showPinEditor()"><span class="adm-grid-icon">⚙️</span><span class="adm-grid-label">탭 편집</span></div>
       </div>
 
       <!-- 공지 관리 -->
