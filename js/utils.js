@@ -95,6 +95,16 @@ function playSound(name) {
       _playTone(200, 'square', 0.12, 0.088);
       setTimeout(() => _playTone(180, 'square', 0.12, 0.066), 100);
       break;
+    case 'trainDotSuccess':
+      // 동그라미 성공 — 맑은 상승 딩
+      _playTone(880, 'sine', 0.10, 0.12);
+      setTimeout(() => _playTone(1100, 'sine', 0.08, 0.10), 60);
+      break;
+    case 'trainDotFail':
+      // 동그라미 실패 — 짧은 하강 버저
+      _playTone(280, 'square', 0.06, 0.10);
+      setTimeout(() => _playTone(200, 'square', 0.06, 0.08), 80);
+      break;
     case 'trainStart':
       // 훈련 시작 — 힘차게 올라가는 톤
       _playTone(330, 'triangle', 0.08, 0.13);

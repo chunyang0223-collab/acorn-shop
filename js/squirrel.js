@@ -31,7 +31,7 @@ var _sqSettings  = {
   fuse_upgrade_unique: 5,
   fuse_upgrade_legend: 0,
   // 훈련 설정
-  training_success_rate: 40,
+  training_dot_rate: 30,
   training_hp_min: 1,
   training_hp_max: 10,
   training_count_min: 0,
@@ -872,7 +872,7 @@ function sqShowActionModal(id) {
   if (tTotal > 0 && tRemain > 0 && !hpMaxed) {
     const canTrain = canAct;
     const trainLabel = canTrain ? '💪 체력 훈련' : (sq.status === 'exploring' ? '⚔️ 탐험 중엔 훈련 불가' : '😴 회복 후 훈련 가능');
-    const trainSub = canTrain ? `남은 횟수 ${tRemain}/${tTotal} · 성공률 ${_sqSettings.training_success_rate || 40}%` : '';
+    const trainSub = canTrain ? `남은 횟수 ${tRemain}/${tTotal} · 동그라미 ${_sqSettings.training_dot_rate || 30}%` : '';
     buttons.push({
       label: trainLabel, sub: trainSub,
       action: canTrain ? `sqShowTrainingModal('${sq.id}')` : '',
@@ -1600,9 +1600,14 @@ async function sqDoTraining(id) {
   const currentHp = sq.stats?.hp || 60;
   if (currentHp >= hpMax) { toast('⚠️', 'HP가 이미 최대치예요!'); return; }
 
-  const successRate = _sqSettings.training_success_rate || 40;
-  const roll = Math.random() * 100;
-  const success = roll < successRate;
+  // 5회 개별 판정: 각 동그라미마다 성공/실패 → 3개 이상 성공 시 최종 성공
+  const dotRate = _sqSettings.training_dot_rate || 30;
+  const dotResults = [];
+  for (let i = 0; i < 5; i++) {
+    dotResults.push(Math.random() * 100 < dotRate);
+  }
+  const dotSuccessCount = dotResults.filter(Boolean).length;
+  const success = dotSuccessCount >= 3;
 
   const newUsed = used + 1;
   let newHp = currentHp;
@@ -1638,7 +1643,7 @@ async function sqDoTraining(id) {
   }
 
   // 결과 반환 (UI에서 사용)
-  return { success, hpGain, newHp, hpMax, currentHp, newGrade, gradeUp, remain: remain - 1, total };
+  return { success, dotResults, dotSuccessCount, hpGain, newHp, hpMax, currentHp, newGrade, gradeUp, remain: remain - 1, total };
 }
 
 // 훈련 확인 모달
@@ -1646,7 +1651,7 @@ function sqShowTrainingModal(id) {
   const sq = _sqSquirrels.find(s => s.id === id);
   if (!sq) return;
   const tRemain = (sq.training_total || 0) - (sq.training_used || 0);
-  const rate = _sqSettings.training_success_rate || 40;
+  const dotRate = _sqSettings.training_dot_rate || 30;
   const grade = _sqCalcGrade(sq);
   const gs = _sqGradeStyle(grade);
   showModal(`
@@ -1669,7 +1674,7 @@ function sqShowTrainingModal(id) {
         </div>
         <div style="display:flex;justify-content:space-between">
           <span style="font-size:12px;color:#64748b">성공 확률</span>
-          <span style="font-size:12px;font-weight:900;color:#059669">${rate}%</span>
+          <span style="font-size:12px;font-weight:900;color:#059669">동그라미당 ${dotRate}% (3/5 필요)</span>
         </div>
       </div>
       <div style="display:flex;gap:8px">
@@ -1692,38 +1697,73 @@ function _trainStarBurst(container, count) {
   }
 }
 
-// 훈련 실행 + 시네마틱 연출
+// 훈련 실행 + 시네마틱 연출 (5회 개별 판정 연출)
 async function sqExecuteTraining(id) {
-  // ── 1단계: 훈련 시작 사운드 + 준비 화면 ──
+  // ── 0단계: 결과 먼저 판정 (DB 반영 포함) ──
+  const result = await sqDoTraining(id);
+  if (!result) { closeModal(); return; }
+
+  // ── 1단계: 훈련 시작 사운드 + 준비 화면 (5개 빈 동그라미) ──
   playSound('trainStart');
 
+  const dotHtml = result.dotResults.map((_, i) =>
+    `<span id="trainDot${i}" style="display:inline-block;width:28px;height:28px;border-radius:50%;background:var(--surface-alt, #374151);margin:0 4px;transition:all 0.3s;opacity:0.4"></span>`
+  ).join('');
+
   showModal(`
-    <div id="trainCinematic" style="text-align:center;min-height:200px;position:relative;overflow:hidden">
+    <div id="trainCinematic" style="text-align:center;min-height:220px;position:relative;overflow:hidden">
       <div id="trainEmoji" style="font-size:56px;margin:20px 0 12px">🏋️</div>
-      <div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:4px">훈련 중...</div>
-      <div id="trainDots" style="font-size:20px;color:var(--text-sub);letter-spacing:4px">●○○</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:8px">훈련 중...</div>
+      <div id="trainDots" style="display:flex;justify-content:center;align-items:center;gap:2px;margin-bottom:8px">${dotHtml}</div>
+      <div id="trainScoreText" style="font-size:13px;color:var(--text-sub);min-height:20px"></div>
       <div id="trainParticles" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>
     </div>`, { noClose: true });
 
   const emoji = document.getElementById('trainEmoji');
-  const dots = document.getElementById('trainDots');
   const particles = document.getElementById('trainParticles');
+  const scoreText = document.getElementById('trainScoreText');
 
-  // ── 2단계: 운동 애니메이션 (3회 펌프) ──
-  if (emoji) emoji.style.animation = 'trainPump 0.5s ease-in-out';
-  await new Promise(r => setTimeout(r, 500));
-  playSound('trainPunch');
-  if (dots) dots.textContent = '●●○';
-  if (emoji) { emoji.style.animation = ''; void emoji.offsetWidth; emoji.style.animation = 'trainPump 0.5s ease-in-out'; }
-  await new Promise(r => setTimeout(r, 500));
-  playSound('trainPunch');
-  if (dots) dots.textContent = '●●●';
-  if (emoji) { emoji.style.animation = ''; void emoji.offsetWidth; emoji.style.animation = 'trainPump 0.5s ease-in-out'; }
-  await new Promise(r => setTimeout(r, 500));
+  // ── 2단계: 5개 동그라미 순차 판정 연출 ──
+  let runningSuccess = 0;
+  for (let i = 0; i < 5; i++) {
+    // 펌프 애니메이션
+    if (emoji) { emoji.style.animation = ''; void emoji.offsetWidth; emoji.style.animation = 'trainPump 0.5s ease-in-out'; }
+    playSound('trainPunch');
+    await new Promise(r => setTimeout(r, 600));
 
-  // ── 3단계: 결과 판정 ──
-  const result = await sqDoTraining(id);
-  if (!result) { closeModal(); return; }
+    // 동그라미 결과 표시
+    const dot = document.getElementById('trainDot' + i);
+    const isSuccess = result.dotResults[i];
+    if (dot) {
+      dot.style.opacity = '1';
+      dot.style.transform = 'scale(1.3)';
+      if (isSuccess) {
+        dot.style.background = '#22c55e';
+        dot.style.boxShadow = '0 0 12px rgba(34,197,94,0.5)';
+        playSound('trainDotSuccess');
+        runningSuccess++;
+      } else {
+        dot.style.background = '#ef4444';
+        dot.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)';
+        playSound('trainDotFail');
+      }
+      setTimeout(() => { if (dot) dot.style.transform = 'scale(1)'; }, 200);
+    }
+    // 현재 진행 카운트 표시
+    if (scoreText) scoreText.textContent = `${runningSuccess} / ${i + 1} 성공`;
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  // ── 3단계: 최종 결과 잠깐 보여주기 ──
+  if (scoreText) {
+    scoreText.style.fontSize = '15px';
+    scoreText.style.fontWeight = '900';
+    scoreText.style.color = result.success ? '#22c55e' : '#ef4444';
+    scoreText.textContent = result.success
+      ? `✅ ${result.dotSuccessCount}/5 성공! — 훈련 성공!`
+      : `❌ ${result.dotSuccessCount}/5 성공 — 훈련 실패...`;
+  }
+  await new Promise(r => setTimeout(r, 800));
 
   const sq = _sqSquirrels.find(s => s.id === id);
   const gs = _sqGradeStyle(result.newGrade);
@@ -3028,7 +3068,7 @@ async function sqAdminInit() {
   document.getElementById('sqSet_examBonusMin').value      = _sqSettings.exam_bonus_min ?? 1;
   document.getElementById('sqSet_examBonusMax').value      = _sqSettings.exam_bonus_max ?? 1;
   // 체력훈련 설정 로드
-  document.getElementById('sqSet_trainRate').value       = _sqSettings.training_success_rate ?? 40;
+  document.getElementById('sqSet_trainDotRate').value     = _sqSettings.training_dot_rate ?? 30;
   document.getElementById('sqSet_trainHpMin').value      = _sqSettings.training_hp_min ?? 1;
   document.getElementById('sqSet_trainHpMax').value      = _sqSettings.training_hp_max ?? 10;
   document.getElementById('sqSet_trainCountMin').value   = _sqSettings.training_count_min ?? 0;
@@ -3081,7 +3121,7 @@ async function sqSaveSettings() {
     exam_bonus_min:        parseInt(document.getElementById('sqSet_examBonusMin').value)     || 1,
     exam_bonus_max:        parseInt(document.getElementById('sqSet_examBonusMax').value)     || 1,
     // 체력훈련 설정
-    training_success_rate: parseInt(document.getElementById('sqSet_trainRate').value)        || 40,
+    training_dot_rate:     parseInt(document.getElementById('sqSet_trainDotRate').value)      || 30,
     training_hp_min:       parseInt(document.getElementById('sqSet_trainHpMin').value)       || 1,
     training_hp_max:       parseInt(document.getElementById('sqSet_trainHpMax').value)       || 10,
     training_count_min:    parseInt(document.getElementById('sqSet_trainCountMin').value)    || 0,
