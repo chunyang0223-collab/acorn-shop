@@ -2378,7 +2378,7 @@ input[type="checkbox"]:active,
 }
 
 /* ── 위치 고정 클래스들 ── */
-.toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 10100; min-width: 220px; max-width: calc(100vw - 48px); pointer-events: none; }
+.toast-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10100; min-width: 220px; max-width: calc(100vw - 48px); pointer-events: none; }
 .notif-scroll { max-height: 55dvh; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
 .text-ellipsis { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
