@@ -117,20 +117,14 @@ async function _upRenderList() {
     el.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">검색 결과 없음</p>';
   } else {
     el.innerHTML = filtered.map(function(it) {
-      var isAssigned = it.item_type === 'store' || it.item_type === 'gacha';
       var isChecked = _upChecked.has(it.id);
       var badgeHtml = '';
-      if (it.item_type === 'store') badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-500 font-bold">상점</span>';
-      else if (it.item_type === 'gacha') badgeHtml = '<span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-500 font-bold">뽑기</span>';
-      return '<div class="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all cursor-pointer'
-        + (isChecked ? ' border-violet-400 bg-violet-50' : ' border-gray-100 bg-white hover:border-violet-200')
-        + (isAssigned ? ' opacity-35 pointer-events-none' : '')
+      if (it.item_type === 'store') badgeHtml = '<span class="up-badge up-badge--store">상점</span>';
+      else if (it.item_type === 'gacha') badgeHtml = '<span class="up-badge up-badge--gacha">뽑기</span>';
+      return '<div class="up-item' + (isChecked ? ' up-item--checked' : '')
         + '" onclick="_upToggle(\'' + it.id + '\')">'
-        + '<div class="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-[10px] border'
-        + (isChecked ? ' border-violet-500 bg-violet-500 text-white' : ' border-gray-300 bg-white') + '\">'
-        + (isChecked ? '✓' : '') + '</div>'
         + '<span class="text-base flex-shrink-0">' + (it.icon || '📦') + '</span>'
-        + '<span class="text-xs font-black text-gray-700 flex-1 truncate">' + (it.name || '') + '</span>'
+        + '<span class="up-item-name">' + (it.name || '') + '</span>'
         + badgeHtml
         + '</div>';
     }).join('');
