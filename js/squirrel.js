@@ -1707,24 +1707,21 @@ async function sqExecuteTraining(id) {
   playSound('trainStart');
 
   const dotHtml = result.dotResults.map((_, i) =>
-    `<span id="trainDot${i}" style="display:inline-block;width:28px;height:28px;border-radius:50%;background:var(--surface-alt, #374151);margin:0 4px;transition:all 0.3s;opacity:0.4"></span>`
+    `<span id="trainDot${i}" style="display:inline-block;width:34px;height:34px;border-radius:50%;background:#555;margin:0 6px;transition:all 0.3s"></span>`
   ).join('');
 
   showModal(`
     <div id="trainCinematic" style="text-align:center;min-height:220px;position:relative;overflow:hidden">
       <div id="trainEmoji" style="font-size:56px;margin:20px 0 12px">🏋️</div>
-      <div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:8px">훈련 중...</div>
-      <div id="trainDots" style="display:flex;justify-content:center;align-items:center;gap:2px;margin-bottom:8px">${dotHtml}</div>
-      <div id="trainScoreText" style="font-size:13px;color:var(--text-sub);min-height:20px"></div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:16px">훈련 중...</div>
+      <div id="trainDots" style="display:flex;justify-content:center;align-items:center;gap:4px;margin:16px 0">${dotHtml}</div>
       <div id="trainParticles" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none"></div>
     </div>`, { noClose: true });
 
   const emoji = document.getElementById('trainEmoji');
   const particles = document.getElementById('trainParticles');
-  const scoreText = document.getElementById('trainScoreText');
 
   // ── 2단계: 5개 동그라미 순차 판정 연출 ──
-  let runningSuccess = 0;
   for (let i = 0; i < 5; i++) {
     // 펌프 애니메이션
     if (emoji) { emoji.style.animation = ''; void emoji.offsetWidth; emoji.style.animation = 'trainPump 0.5s ease-in-out'; }
@@ -1735,35 +1732,23 @@ async function sqExecuteTraining(id) {
     const dot = document.getElementById('trainDot' + i);
     const isSuccess = result.dotResults[i];
     if (dot) {
-      dot.style.opacity = '1';
       dot.style.transform = 'scale(1.3)';
       if (isSuccess) {
         dot.style.background = '#22c55e';
-        dot.style.boxShadow = '0 0 12px rgba(34,197,94,0.5)';
+        dot.style.boxShadow = '0 0 14px #22c55e';
         playSound('trainDotSuccess');
-        runningSuccess++;
       } else {
         dot.style.background = '#ef4444';
-        dot.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)';
+        dot.style.boxShadow = '0 0 14px #ef4444';
         playSound('trainDotFail');
       }
       setTimeout(() => { if (dot) dot.style.transform = 'scale(1)'; }, 200);
     }
-    // 현재 진행 카운트 표시
-    if (scoreText) scoreText.textContent = `${runningSuccess} / ${i + 1} 성공`;
     await new Promise(r => setTimeout(r, 500));
   }
 
-  // ── 3단계: 최종 결과 잠깐 보여주기 ──
-  if (scoreText) {
-    scoreText.style.fontSize = '15px';
-    scoreText.style.fontWeight = '900';
-    scoreText.style.color = result.success ? '#22c55e' : '#ef4444';
-    scoreText.textContent = result.success
-      ? `✅ ${result.dotSuccessCount}/5 성공! — 훈련 성공!`
-      : `❌ ${result.dotSuccessCount}/5 성공 — 훈련 실패...`;
-  }
-  await new Promise(r => setTimeout(r, 800));
+  // ── 3단계: 잠깐 대기 후 결과 화면 전환 ──
+  await new Promise(r => setTimeout(r, 600));
 
   const sq = _sqSquirrels.find(s => s.id === id);
   const gs = _sqGradeStyle(result.newGrade);
