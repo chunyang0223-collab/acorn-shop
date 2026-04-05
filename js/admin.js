@@ -166,23 +166,36 @@ function _upOpenConfig(type) {
 
   if (type === 'store') {
     container.innerHTML = selected.map(function(it) {
-      return '<div class="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-100">'
+      return '<div class="up-config-row">'
+        + '<div class="up-config-header">'
         + '<span class="text-base">' + (it.icon || '📦') + '</span>'
-        + '<span class="text-xs font-black text-gray-700 flex-1 truncate">' + it.name + '</span>'
-        + '<input class="field text-xs py-1 px-2" type="number" placeholder="가격🌰" min="0" style="width:70px" data-id="' + it.id + '" data-field="price">'
-        + '<div class="flex rounded overflow-hidden border border-gray-200">'
-        + '<button class="px-2 py-1 text-[10px] font-bold bg-blue-50 text-blue-600 _up-stock-btn" data-id="' + it.id + '" data-mode="unlimited" onclick="_upSetStock(this)">♾️</button>'
-        + '<button class="px-2 py-1 text-[10px] font-bold bg-white text-gray-400 _up-stock-btn" data-id="' + it.id + '" data-mode="limited" onclick="_upSetStock(this)">📦</button>'
+        + '<span class="up-config-name">' + it.name + '</span>'
         + '</div>'
-        + '<input class="field text-xs py-1 px-2 hidden" type="number" placeholder="수량" min="1" style="width:55px" data-id="' + it.id + '" data-field="stock">'
+        + '<div class="up-config-fields">'
+        + '<label class="up-config-label">가격 🌰</label>'
+        + '<input class="field text-xs py-1.5 px-2" type="number" placeholder="0" min="0" style="width:100%;max-width:160px" data-id="' + it.id + '" data-field="price">'
+        + '</div>'
+        + '<div class="up-config-fields">'
+        + '<label class="up-config-label">재고</label>'
+        + '<div class="up-stock-toggle">'
+        + '<button class="up-stock-btn up-stock-btn--active" data-id="' + it.id + '" data-mode="unlimited" onclick="_upSetStock(this)">무제한</button>'
+        + '<button class="up-stock-btn" data-id="' + it.id + '" data-mode="limited" onclick="_upSetStock(this)">수량 지정</button>'
+        + '</div>'
+        + '<input class="field text-xs py-1.5 px-2 hidden" type="number" placeholder="수량" min="1" style="width:100%;max-width:160px" data-id="' + it.id + '" data-field="stock">'
+        + '</div>'
         + '</div>';
     }).join('');
   } else {
     container.innerHTML = selected.map(function(it) {
-      return '<div class="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-100">'
+      return '<div class="up-config-row">'
+        + '<div class="up-config-header">'
         + '<span class="text-base">' + (it.icon || '📦') + '</span>'
-        + '<span class="text-xs font-black text-gray-700 flex-1 truncate">' + it.name + '</span>'
-        + '<input class="field text-xs py-1 px-2" type="number" placeholder="확률%" min="0" max="100" step="0.1" style="width:70px" data-id="' + it.id + '" data-field="probability">'
+        + '<span class="up-config-name">' + it.name + '</span>'
+        + '</div>'
+        + '<div class="up-config-fields">'
+        + '<label class="up-config-label">확률 %</label>'
+        + '<input class="field text-xs py-1.5 px-2" type="number" placeholder="0" min="0" max="100" step="0.1" style="width:100%;max-width:160px" data-id="' + it.id + '" data-field="probability">'
+        + '</div>'
         + '</div>';
     }).join('');
   }
@@ -199,16 +212,14 @@ function _upCloseConfig() {
 function _upSetStock(el) {
   var id = el.dataset.id;
   var mode = el.dataset.mode;
-  // 토글 버튼 스타일
   var parent = el.parentElement;
   parent.querySelectorAll('button').forEach(function(b) {
     if (b.dataset.mode === mode) {
-      b.style.background = '#eff6ff'; b.style.color = '#2563eb';
+      b.classList.add('up-stock-btn--active');
     } else {
-      b.style.background = 'white'; b.style.color = '#9ca3af';
+      b.classList.remove('up-stock-btn--active');
     }
   });
-  // 수량 input 표시/숨김
   var stockInput = document.querySelector('[data-id="' + id + '"][data-field="stock"]');
   if (stockInput) stockInput.classList.toggle('hidden', mode !== 'limited');
 }
