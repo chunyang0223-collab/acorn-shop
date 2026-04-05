@@ -222,9 +222,8 @@ function aTabPin(idx, btn) {
 }
 
 function aTabGrid(tab) {
-  // 그리드 메뉴에서 탭 전환
-  const fakeBtn = document.querySelector('.adm-pin-tab.active');
-  aTab(tab, fakeBtn);
+  // 그리드/뒤로가기에서 탭 전환
+  aTab(tab);
 }
 
 // 카테고리 열기 (첫 번째 서브탭으로 이동)
@@ -237,11 +236,11 @@ function openAdminCat(catId) {
 function aTab(tab, btn) {
   playSound('tab');
   A_TABS.forEach(t => { const el = document.getElementById('atab-'+t); if(el) el.classList.add('hidden'); });
-  document.querySelectorAll('#adminTabBar .adm-pin-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#adminTabBar .adm-tab-btn').forEach(b => b.classList.remove('active'));
 
   if (tab === 'home') {
     document.getElementById('atab-home').classList.remove('hidden');
-    document.querySelector('#adminTabBar .adm-pin-tab').classList.add('active'); // 홈 버튼
+    document.querySelector('#adminTabBar .adm-tab-btn').classList.add('active'); // 홈 버튼
     renderDashboard();
     loadMaintenanceSettings().then(renderMaintDots);
     return;
@@ -250,13 +249,14 @@ function aTab(tab, btn) {
   const tabEl = document.getElementById('atab-'+tab);
   if (tabEl) {
     tabEl.classList.remove('hidden');
-    _injectCatSubtabs(tab, tabEl); // 카테고리 서브탭 바 주입
   }
 
-  // 핀 탭 하이라이트
-  const pinIdx = _adminPins.indexOf(tab);
-  if (pinIdx >= 0) {
-    document.getElementById('pinTab' + (pinIdx + 1))?.classList.add('active');
+  // 탭바 하이라이트
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    const match = document.querySelector(`#adminTabBar .adm-tab-btn[data-tab="${tab}"]`);
+    if (match) match.classList.add('active');
   }
 
   if (tab === 'dashboard')  { renderDashboard(); loadMaintenanceSettings().then(renderMaintenanceBtns); }
