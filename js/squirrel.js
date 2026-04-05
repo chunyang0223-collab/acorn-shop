@@ -883,7 +883,7 @@ function sqShowActionModal(id) {
   }
 
   // 2) 등급심사 버튼
-  if (tRemain <= 0) {
+  if (tRemain <= 0 || hpMaxed) {
     if (hpMaxed) {
       buttons.push({
         label: '📋 등급심사 신청',
