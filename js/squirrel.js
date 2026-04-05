@@ -536,8 +536,8 @@ async function sqRenderGrid() {
       ? (_ftDark ? '#f59e0b' : '#fbbf24')
       : (_ftDark ? '#3d5068' : '#e2e8f0');
     const color = active
-      ? (_ftDark ? '#78350f' : '#92400e')
-      : (_ftDark ? '#e2e8f0' : '#6b7280');
+      ? (_ftDark ? '#451a03' : '#78350f')
+      : (_ftDark ? '#cbd5e1' : '#4b5563');
     const shadow = active
       ? (_ftDark ? '0 2px 0 #b45309,0 4px 10px rgba(245,158,11,0.2)' : '0 2px 0 #d97706,0 4px 10px rgba(251,191,36,0.15)')
       : (_ftDark ? '0 2px 0 #0f172a,0 3px 6px rgba(0,0,0,0.25)' : '0 2px 0 #e2e8f0,0 3px 6px rgba(0,0,0,0.04)');
