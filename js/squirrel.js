@@ -379,7 +379,7 @@ async function _sqPoll() {
 
       if (prev.type === 'baby' && updated.type !== 'baby') {
         _sqClearTimer(id);
-        _sqGrowCard(id, updated.name, updated.status);
+        _sqGrowCard(id, updated.name, updated.type);
       } else if (!prev.grows_at && updated.grows_at) {
         _sqSetBusy(id);
         const gauge = document.getElementById('sqGauge-' + id);
@@ -863,7 +863,7 @@ function sqShowActionModal(id) {
   const hpMax = _sqSettings.stat_hp_max || 150;
   const currentHp = sq.stats?.hp || 60;
   const hpMaxed = currentHp >= hpMax;
-  const canAct = sq.status === 'idle' && sq.type !== 'baby';
+  const canAct = sq.status === 'idle' && (sq.type === 'explorer' || sq.type === 'pet');
 
   const _isThisApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_squirrel_id === sq.id;
   const _isActiveFarmer = typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id;
