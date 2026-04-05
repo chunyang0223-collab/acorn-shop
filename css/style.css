@@ -6369,11 +6369,11 @@ input[type="checkbox"]:active,
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .up-item:hover {
-  border-color: rgba(139,92,246,0.35);
+  border-color: #b197fc;
 }
 .up-item--checked {
   border-color: #8b5cf6;
-  background: #ede9fe;
+  background: #ddd6fe;
   box-shadow: 0 0 0 2px #c4b5fd;
 }
 .up-item-name {
@@ -6392,33 +6392,33 @@ input[type="checkbox"]:active,
   border-radius: 4px;
 }
 .up-badge--store {
-  background: rgba(59,130,246,0.1);
-  color: #3b82f6;
+  background: #dbeafe;
+  color: #2563eb;
 }
 .up-badge--gacha {
-  background: rgba(168,85,247,0.1);
-  color: #a855f7;
+  background: #ede9fe;
+  color: #7c3aed;
 }
 
 /* 다크모드 */
 [data-theme="dark"] .up-item {
   background: var(--surface-white);
-  border-color: rgba(255,255,255,0.08);
+  border-color: #2a2a3d;
 }
 [data-theme="dark"] .up-item:hover {
-  border-color: rgba(167,139,250,0.4);
+  border-color: #7c6bc4;
 }
 [data-theme="dark"] .up-item--checked {
   border-color: #a78bfa;
-  background: #2e1065;
+  background: #3b1d8e;
   box-shadow: 0 0 0 2px #7c3aed;
 }
 [data-theme="dark"] .up-badge--store {
-  background: rgba(96,165,250,0.15);
+  background: #1e3a5f;
   color: #93bbfd;
 }
 [data-theme="dark"] .up-badge--gacha {
-  background: rgba(192,132,252,0.15);
+  background: #2d1b69;
   color: #c4b5fd;
 }
 
