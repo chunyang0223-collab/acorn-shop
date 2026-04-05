@@ -155,11 +155,11 @@ async function doSignup() {
 //  TABS
 // ──────────────────────────────────────────────
 const U_TABS = ['shop','gacha','quest','squirrel','bossraid','minigame','ranking','recycle','friend','mypage'];
-const A_TABS = ['home','dashboard','items','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking'];
+const A_TABS = ['home','dashboard','items','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking','bossraid','sq_my','sq_shop','sq_fuse','sq_expedition','sq_farm'];
 
 // ── 관리자 메뉴 정의 (개별 탭) ──
 const ADMIN_MENU_DEFS = {
-  dashboard:        { icon: '📊', label: '현황' },
+  dashboard:        { icon: '🔧', label: '점검' },
   items:            { icon: '📦', label: '아이템' },
   requests:         { icon: '📬', label: '신청목록' },
   products:         { icon: '🛍️', label: '상품' },
@@ -239,10 +239,10 @@ function aTab(tab, btn) {
   document.querySelectorAll('#adminTabBar .adm-tab-btn').forEach(b => b.classList.remove('active'));
 
   if (tab === 'home') {
+    _closeSqSubTab();
     document.getElementById('atab-home').classList.remove('hidden');
     document.querySelector('#adminTabBar .adm-tab-btn').classList.add('active'); // 홈 버튼
     renderDashboard();
-    loadMaintenanceSettings().then(renderMaintDots);
     return;
   }
 
@@ -259,7 +259,16 @@ function aTab(tab, btn) {
     if (match) match.classList.add('active');
   }
 
-  if (tab === 'dashboard')  { renderDashboard(); loadMaintenanceSettings().then(renderMaintenanceBtns); }
+  // 다람쥐 서브탭 직접 진입
+  const sqSubMap = { sq_my:'my', sq_shop:'shop', sq_fuse:'fuse', sq_expedition:'expedition', sq_farm:'farm' };
+  if (sqSubMap[tab]) {
+    _openSqSubTab(sqSubMap[tab]);
+    return;
+  }
+  // 다람쥐 서브탭이 아닌 다른 탭으로 이동 시, 열려있던 다람쥐 뷰 정리
+  _closeSqSubTab();
+
+  if (tab === 'dashboard')  { loadMaintenanceSettings().then(renderMaintenanceBtns); }
   if (tab === 'items')      renderItemRegistry();
   if (tab === 'gachaTest')  renderAdminGachaProbTable();
   if (tab === 'products')   renderProductAdmin();
@@ -272,6 +281,57 @@ function aTab(tab, btn) {
   if (tab === 'minigameSettings') renderMinigameAdmin();
   if (tab === 'squirrelSettings') sqAdminInit();
   if (tab === 'ranking') renderAdminRanking();
+  // bossraid: atab-bossraid 안의 버튼으로 설정 모달 열기
+}
+
+// ── 관리자에서 다람쥐 서브탭 직접 진입 ──
+let _sqSubOpen = false;
+function _openSqSubTab(subTab) {
+  const wasOpen = _sqSubOpen;
+  _sqSubOpen = true;
+  // userMode를 표시하되, 사용자 탭바와 다른 유저탭은 숨기기
+  const um = document.getElementById('userMode');
+  if (um) um.classList.remove('hidden');
+  document.getElementById('userTabBar')?.closest('.tab-bar-wrap')?.classList.add('hidden');
+  // 모든 사용자 탭 숨기고 다람쥐만 표시
+  U_TABS.forEach(t => {
+    const el = document.getElementById('utab-' + t);
+    if (el) el.classList.add('hidden');
+  });
+  const sqEl = document.getElementById('utab-squirrel');
+  if (sqEl) {
+    sqEl.classList.remove('hidden');
+    sqEl.style.display = '';
+  }
+  // 관리자 뒤로가기 바 숨기기 (탭바로 이동하니 불필요)
+  document.getElementById('sqAdminBackBar')?.classList.add('hidden');
+  // 서브탭 바(내 다람쥐/상점/합성 등)도 숨기기 — 탭바에 이미 있으니
+  const sqTabBar = sqEl?.querySelector('.clay-card.p-2.flex.gap-1.mb-4');
+  if (sqTabBar) sqTabBar.style.display = 'none';
+  // 관리자 설정 패널 표시
+  document.querySelectorAll('.sq-admin-panel').forEach(el => el.classList.remove('hidden'));
+  // 이미 다람쥐가 열려있으면 서브탭만 전환, 아니면 초기화도 수행
+  if (!wasOpen) {
+    if (typeof sqInit === 'function') sqInit();
+    if (typeof sqAdminInit === 'function') sqAdminInit();
+  }
+  if (typeof sqTab === 'function') sqTab(subTab);
+}
+function _closeSqSubTab() {
+  if (!_sqSubOpen) return;
+  _sqSubOpen = false;
+  // userMode 숨기고 사용자 탭바 복원
+  document.getElementById('userMode')?.classList.add('hidden');
+  document.getElementById('userTabBar')?.closest('.tab-bar-wrap')?.classList.remove('hidden');
+  const sqEl = document.getElementById('utab-squirrel');
+  if (sqEl) {
+    sqEl.classList.add('hidden');
+    // 서브탭 바 복원
+    const sqTabBar = sqEl.querySelector('.clay-card.p-2.flex.gap-1.mb-4');
+    if (sqTabBar) sqTabBar.style.display = '';
+  }
+  document.querySelectorAll('.sq-admin-panel').forEach(el => el.classList.add('hidden'));
+  if (typeof _sqUnsubscribe === 'function') _sqUnsubscribe();
 }
 
 // ── 카테고리 서브탭 바 주입 ──
@@ -443,7 +503,7 @@ function uTab(tab, btn) {
 }
 
 // ── 메뉴 점검 관리 ──
-const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','mypage','sq_farm'];
+const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','bossraid','mypage','sq_farm'];
 
 async function toggleMaintenance(tab) {
   // 현재 DB 값 읽기
