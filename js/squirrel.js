@@ -1940,7 +1940,7 @@ async function sqShowExamModal(id) {
           <div style="margin-top:8px;font-size:13px;font-weight:900;color:#059669" id="sqExamFinalRate">합격률: ${baseRate}%</div>
         </div>` : `
         <div style="background:#f5f5f5;border-radius:14px;padding:10px;margin-bottom:12px">
-          <div style="font-size:11px;color:#9ca3af">✨ 반짝이는 무언가를 사용하면 합격률을 올릴 수 있어요</div>
+          <div style="font-size:11px;color:#9ca3af">심사관에게 뇌물을 주면 합격률을 올릴 수 있다는데... ✨</div>
         </div>`}
       <div style="display:flex;gap:8px">
         <button onclick="sqExecuteExam('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #5b21b6'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3)'">📋 심사 받기!</button>
@@ -3155,10 +3155,10 @@ async function sqAdminLoadList() {
     return `
     <div style="border-radius:14px;margin-bottom:10px;overflow:hidden;border:1px solid var(--border)">
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.sq-adm-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;background:var(--surface-50);border-bottom:1px solid var(--border)">
-        <span class="sq-adm-arrow" style="font-size:10px;color:var(--text-sub);flex-shrink:0">▼</span>
+        <span class="sq-adm-arrow" style="font-size:10px;color:var(--text-muted);flex-shrink:0">▼</span>
         <div style="flex:1;min-width:0">
-          <span style="font-size:13px;font-weight:900;color:var(--text)">${g.name}</span>
-          <span style="font-size:10px;color:var(--text-sub);margin-left:6px">🐿️ ${g.squirrels.length}마리</span>
+          <span style="font-size:14px;font-weight:900;color:var(--text-primary)">${g.name}</span>
+          <span style="font-size:10px;color:var(--text-tertiary);margin-left:6px">🐿️ ${g.squirrels.length}마리</span>
           ${cooldownBadge}
         </div>
       </div>
@@ -3172,4 +3172,3 @@ async function sqAdminResetCooldownAny(id, name) {
   if (error) { toast('❌', '쿨타임 초기화 실패: ' + (error.message || '')); return; }
   toast('✅', `${name}의 재심사 쿨타임이 초기화되었습니다`);
   await sqAdminLoadList();
-}
