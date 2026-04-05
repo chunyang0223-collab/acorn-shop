@@ -401,6 +401,558 @@
     </div>
   </div>
 
+
+  <!-- ── 관리자 모드 ── -->
+  <div id="adminMode" class="hidden">
+    <!-- 관리자 전체 메뉴 탭바 (wrap, 스크롤 없이 전부 표시) -->
+    <div class="adm-tabbar-wrap"><div id="adminTabBar" class="adm-tabbar">
+      <!-- 1행 -->
+      <button class="adm-tab-btn active" data-tab="home" onclick="aTab('home',this)">🏠 홈</button>
+      <button class="adm-tab-btn" data-tab="dashboard" onclick="aTab('dashboard',this)">🔧 점검</button>
+      <button class="adm-tab-btn" data-tab="requests" onclick="aTab('requests',this)">📬 신청목록</button>
+      <button class="adm-tab-btn" data-tab="quests" onclick="aTab('quests',this)">📋 퀘스트</button>
+      <button class="adm-tab-btn" data-tab="events" onclick="aTab('events',this)">🎉 이벤트</button>
+      <button class="adm-tab-btn" data-tab="recycle" onclick="aTab('recycle',this)">♻️ 재활용</button>
+      <span class="adm-tab-row-break"></span>
+      <!-- 2행 -->
+      <button class="adm-tab-btn" data-tab="products" onclick="aTab('products',this)">🛍️ 상품등록/수정</button>
+      <button class="adm-tab-btn" data-tab="gachaTest" onclick="aTab('gachaTest',this)">🎲 뽑기테스트</button>
+      <button class="adm-tab-btn" data-tab="minigameSettings" onclick="aTab('minigameSettings',this)">🎮 미니게임</button>
+      <button class="adm-tab-btn" data-tab="ranking" onclick="aTab('ranking',this)">🏆 랭킹</button>
+      <span class="adm-tab-row-break"></span>
+      <!-- 3행: 다람쥐 -->
+      <span class="adm-tab-group-label">[다람쥐]</span>
+      <button class="adm-tab-btn" data-tab="sq_my" onclick="aTab('sq_my',this)">🏠 목록</button>
+      <button class="adm-tab-btn" data-tab="sq_shop" onclick="aTab('sq_shop',this)">🛒 상점</button>
+      <button class="adm-tab-btn" data-tab="sq_fuse" onclick="aTab('sq_fuse',this)">🧬 합성</button>
+      <button class="adm-tab-btn" data-tab="sq_expedition" onclick="aTab('sq_expedition',this)">⚔️ 탐험</button>
+      <button class="adm-tab-btn" data-tab="sq_farm" onclick="aTab('sq_farm',this)">🌾 농장</button>
+      <button class="adm-tab-btn" data-tab="bossraid" onclick="aTab('bossraid',this)">🐉 레이드</button>
+      <span class="adm-tab-row-break"></span>
+      <!-- 4행 -->
+      <button class="adm-tab-btn" data-tab="items" onclick="aTab('items',this)">📦 아이템관리</button>
+      <button class="adm-tab-btn" data-tab="txlog" onclick="aTab('txlog',this)">🗂️ 사용자로그</button>
+      <button class="adm-tab-btn" data-tab="users" onclick="aTab('users',this)">👥 회원관리/지급</button>
+    </div></div>
+
+    <!-- 홈 (대시보드 = 통계 + 그리드 메뉴 + 점검 + 활동) -->
+    <div id="atab-home">
+      <!-- 축소 통계 -->
+      <div class="adm-stats-mini">
+        <div class="adm-stat-m"><div class="adm-stat-m-num c1" id="ds-users">—</div><div class="adm-stat-m-label">회원</div></div>
+        <div class="adm-stat-m"><div class="adm-stat-m-num c2" id="ds-todayGacha">—</div><div class="adm-stat-m-label">뽑기</div></div>
+        <div class="adm-stat-m"><div class="adm-stat-m-num c3" id="ds-todayGiven">—</div><div class="adm-stat-m-label">지급</div></div>
+        <div class="adm-stat-m"><div class="adm-stat-m-num c4" id="ds-todayUsed">—</div><div class="adm-stat-m-label">사용</div></div>
+      </div>
+
+      <!-- 공지 관리 -->
+      <p class="adm-section-label">📢 공지사항</p>
+      <div class="clay-card p-4 mb-4">
+        <textarea id="adminNoticeText" class="field" rows="3" placeholder="사용자에게 보여줄 공지 내용을 입력하세요..." style="resize:vertical;font-size:13px"></textarea>
+        <div class="flex gap-2 mt-2">
+          <button class="btn btn-primary flex-1" onclick="adminSaveNotice()">📢 공지 등록</button>
+          <button class="btn flex-1" style="background:#fee2e2;color:#dc2626;font-weight:800" onclick="adminClearNotice()">🗑️ 공지 삭제</button>
+        </div>
+        <div class="text-xs text-gray-400 mt-2">등록하면 모든 사용자에게 접속 시 팝업으로 표시됩니다. 확인 버튼을 누르면 다시 뜨지 않아요.</div>
+        <div id="adminCurrentNotice"></div>
+      </div>
+
+      <!-- 최근 활동 -->
+      <p class="adm-section-label">📋 최근 활동</p>
+      <div class="clay-card p-4"><div id="ds-activityLog"></div></div>
+    </div>
+
+    <!-- 기존 대시보드 (현황 상세 — 그리드에서 "현황" 클릭 시) -->
+    <div id="atab-dashboard" class="hidden">
+      <!-- 메인 메뉴 점검 -->
+      <p class="adm-section-label">🔧 메뉴 점검</p>
+      <div class="clay-card p-4 mb-4">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🛍️ 상점</span><button id="maint-shop" onclick="toggleMaintenance('shop')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎲 뽑기</span><button id="maint-gacha" onclick="toggleMaintenance('gacha')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">📋 퀘스트</span><button id="maint-quest" onclick="toggleMaintenance('quest')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">♻️ 재활용</span><button id="maint-recycle" onclick="toggleMaintenance('recycle')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎮 미니게임</span><button id="maint-minigame" onclick="toggleMaintenance('minigame')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐉 레이드</span><button id="maint-bossraid" onclick="toggleMaintenance('bossraid')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">👤 마이</span><button id="maint-mypage" onclick="toggleMaintenance('mypage')" class="maint-btn"></button></div>
+        </div>
+      </div>
+      <!-- 다람쥐 점검 -->
+      <p class="adm-section-label">🐿️ 다람쥐 점검</p>
+      <div class="clay-card p-4 mb-2">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐿️ 다람쥐 전체</span><button id="maint-squirrel" onclick="toggleMaintenance('squirrel')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">🌾 농장</span><button id="maint-sq_farm" onclick="toggleMaintenance('sq_farm')" class="maint-btn"></button></div>
+        </div>
+      </div>
+      <div class="text-xs text-gray-400 font-bold mb-4" style="padding:0 4px">다람쥐 전체 점검과 별개로, 서브탭만 개별 점검할 수 있어요.</div>
+    </div>
+
+    <!-- 뽑기 테스트 -->
+    <div id="atab-gachaTest" class="hidden">
+      <!-- 관리자 무료 뽑기 (사용자 탭과 동일한 UX, 도토리 차감 없음) -->
+      <div class="clay-card p-6 text-center mb-4">
+        <div class="text-xs font-bold text-amber-700 bg-amber-50 rounded-2xl p-3 mb-4">👑 관리자 무료 뽑기 — 도토리 차감 없음</div>
+        <div class="text-6xl mb-3" id="adminGachaIcon">🎁</div>
+        <h2 class="text-xl font-black text-gray-800 mb-1">도토리 뽑기</h2>
+        <p class="text-sm text-gray-400 font-semibold mb-4">결과만 확인 · 인벤토리 저장 안 됨</p>
+        <div class="flex justify-center gap-3">
+          <button class="btn btn-primary px-8 py-3 text-base" onclick="doAdminGacha(1)">1회 뽑기</button>
+          <button class="btn btn-purple px-8 py-3 text-base" onclick="doAdminGacha(5)">5회 뽑기</button>
+        </div>
+      </div>
+      <div id="adminGachaSpinner" style="display:none;flex-direction:column;align-items:center;gap:12px;padding:24px 0">
+        <div class="text-6xl" id="adminGachaSpinIcon">🎁</div>
+        <p id="adminGachaSpinMsg" class="text-sm font-black text-amber-600">두근두근...</p>
+      </div>
+      <div id="adminGachaResult" class="hidden clay-card p-6 text-center mb-4">
+        <p class="text-sm font-bold text-gray-400 mb-4">🎉 결과!</p>
+        <div id="adminGachaResultItems" class="flex flex-wrap justify-center gap-4"></div>
+      </div>
+      <div class="clay-card p-4 mb-4">
+        <p class="text-sm font-black text-gray-700 mb-3">📊 뽑기 상품 & 확률</p>
+        <div id="adminGachaProbTable" class="space-y-1">
+          <p class="text-xs text-gray-400 text-center py-2">로딩 중...</p>
+        </div>
+      </div>
+
+      <!-- 확률 시뮬레이터 -->
+      <div class="clay-card p-5 mb-4">
+        <p class="text-sm font-black text-gray-700 mb-3">🧪 확률 시뮬레이터</p>
+        <p class="text-xs text-gray-400 mb-3">실제 뽑기 로직으로 대량 시뮬레이션 — 설계 확률과 실제 결과를 비교합니다.</p>
+        <div class="flex gap-2 mb-3">
+          <div class="flex-1">
+            <label class="text-xs font-bold text-gray-500 mb-1 block">뽑기 횟수</label>
+            <select class="field text-sm" id="simCount">
+              <option value="1">1회씩</option>
+              <option value="5" selected>5회씩</option>
+              <option value="10">10회씩</option>
+            </select>
+          </div>
+          <div class="flex-1">
+            <label class="text-xs font-bold text-gray-500 mb-1 block">반복 횟수</label>
+            <select class="field text-sm" id="simRounds">
+              <option value="100">100번</option>
+              <option value="500">500번</option>
+              <option value="1000" selected>1,000번</option>
+              <option value="5000">5,000번</option>
+              <option value="10000">10,000번</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-purple w-full py-3 font-black mb-4" onclick="runGachaSimulator()">▶ 시뮬레이션 실행</button>
+        <div id="simResult" class="hidden"></div>
+      </div>
+    </div>
+
+    <!-- 아이템 관리 -->
+    <div id="atab-items" class="hidden">
+      <div class="clay-card p-4 mb-4">
+        <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">📦 <span>아이템 등록</span></h3>
+        <div class="space-y-2">
+          <input class="field" type="text" id="ni-name" placeholder="아이템명">
+          <div class="grid grid-cols-2 gap-2">
+            <input class="field" type="text" id="ni-icon" placeholder="이모지 📦">
+            <input class="field" type="text" id="ni-rewardType" placeholder="보상 타입 (예: EXAM_MATERIAL)" value="MANUAL_ITEM">
+          </div>
+          <input class="field" type="text" id="ni-desc" placeholder="설명">
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 text-xs font-bold text-gray-600">
+              <input type="checkbox" id="ni-stackable"> 스택 가능
+            </label>
+            <input class="field" type="number" id="ni-maxStack" placeholder="최대 스택 (기본 1)" min="1" value="1">
+          </div>
+          <button class="btn btn-primary w-full py-2 text-sm" onclick="addRegistryItem()">➕ 아이템 등록</button>
+        </div>
+      </div>
+      <div class="clay-card p-4">
+        <p class="text-sm font-black text-gray-700 mb-3">📦 전체 아이템 목록</p>
+        <div id="registryItemList" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- 상품 -->
+    <div id="atab-products" class="hidden">
+
+      <!-- 통합 아이템 피커 -->
+      <div class="clay-card p-4 mb-4">
+        <h3 class="font-black text-gray-800 mb-1 flex items-center gap-1">📦 <span>아이템 배치</span></h3>
+        <p class="text-xs text-gray-400 mb-3">아이템을 선택한 뒤, 상점 또는 뽑기에 배치하세요</p>
+
+        <!-- 검색 -->
+        <div class="relative mb-2">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm pointer-events-none text-gray-400">🔍</span>
+          <input class="field w-full pl-8" type="text" id="up-search" placeholder="아이템 검색..." oninput="_upRenderList()">
+        </div>
+
+        <!-- 아이템 리스트 (체크박스 복수선택) -->
+        <div id="up-list" class="space-y-1 mb-2" style="max-height:220px;overflow-y:auto"></div>
+
+        <!-- 액션 바: N개 선택됨 + 목적지 버튼 -->
+        <div id="up-actionBar" class="hidden mt-2 p-3 rounded-xl" style="background:rgba(124,58,237,0.06);border:1.5px solid rgba(124,58,237,0.15)">
+          <p class="text-xs font-black mb-2" id="up-countLabel" style="color:#7c3aed"></p>
+          <div class="flex gap-2">
+            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2);color:#3b82f6" onclick="_upOpenConfig('store')">🛍️ 상점에 추가</button>
+            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2);color:#a855f7" onclick="_upOpenConfig('gacha')">🎲 뽑기에 추가</button>
+          </div>
+        </div>
+
+        <!-- 설정 패널 (목적지 선택 후 표시) -->
+        <div id="up-configPanel" class="hidden mt-2 rounded-xl overflow-hidden" style="border:1.5px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.04)">
+          <div class="flex items-center justify-between px-3 py-2" style="border-bottom:1px solid rgba(124,58,237,0.1)">
+            <span class="text-xs font-black" id="up-configLabel" style="color:#7c3aed"></span>
+            <span class="text-xs font-bold text-gray-400 cursor-pointer" onclick="_upCloseConfig()">← 돌아가기</span>
+          </div>
+          <div id="up-configItems" class="px-3 py-2 space-y-2"></div>
+          <div class="px-3 pb-3">
+            <button class="btn w-full py-2 text-sm font-black text-white rounded-lg" id="up-submitBtn" onclick="_upSubmit()"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 목록: 2열 (상점 / 뽑기) -->
+      <div class="grid grid-cols-2 gap-3" style="align-items:start">
+        <div class="clay-card p-4">
+          <p class="text-sm font-black text-gray-700 mb-3">🛍️ 상점 상품</p>
+          <div id="storeProductList" class="space-y-2"></div>
+        </div>
+        <div class="clay-card p-4">
+          <p class="text-sm font-black text-gray-700 mb-3">🎲 뽑기 상품</p>
+          <div id="gachaProductList" class="space-y-2"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 퀘스트 -->
+    <div id="atab-quests" class="hidden">
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-lg font-black text-gray-800 mb-4">➕ 퀘스트 등록</h2>
+        <div class="space-y-3">
+          <input class="field" type="text" id="nq-name" placeholder="퀘스트 이름">
+          <input class="field" type="text" id="nq-desc" placeholder="퀘스트 설명">
+          <div class="grid grid-cols-2 gap-3">
+            <input class="field" type="number" id="nq-reward" placeholder="보상 도토리">
+            <input class="field" type="text" id="nq-icon" placeholder="이모지">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold text-gray-500 mb-1 block">목표 횟수 (자동완료 전용)</label>
+              <select class="field" id="nq-countType" onchange="toggleQuestCount()">
+                <option value="once">1회 — 트리거되면 바로 완료</option>
+                <option value="multi">횟수 지정 — N회 누적 후 완료</option>
+              </select>
+            </div>
+            <div id="nq-countWrap" class="hidden">
+              <label class="text-xs font-bold text-gray-500 mb-1 block">목표 횟수</label>
+              <input class="field" type="number" id="nq-targetCount" placeholder="예: 3" min="2">
+            </div>
+          </div>
+          <div><label class="text-sm font-bold text-gray-600 mb-1 block">반복 유형</label>
+            <select class="field" id="nq-repeat">
+              <option value="once">1회성</option>
+              <option value="daily">일일 — 매일 초기화</option>
+              <option value="weekly">주간 — 매주 월요일</option>
+            </select>
+          </div>
+          <div><label class="text-sm font-bold text-gray-600 mb-1 block">완료 방식</label>
+            <select class="field" id="nq-completionType">
+              <option value="auto">⚡ 자동 완료</option>
+              <option value="approval">👤 관리자 승인</option>
+            </select>
+          </div>
+          <button class="btn btn-primary w-full py-3" onclick="addQuest()">📋 퀘스트 추가</button>
+        </div>
+      </div>
+      <div class="clay-card p-5 mb-4" id="questApprovalCard"><p class="text-sm font-black text-gray-700 mb-3" id="questApprovalTitle">✋ 완료 승인 요청</p><div id="questApprovalList" class="space-y-3"></div></div>
+      <div class="clay-card p-5 mb-4"><p class="text-sm font-black text-gray-700 mb-3">📋 퀘스트 목록</p><div id="questAdminList" class="space-y-3"></div></div>
+    </div>
+
+    <!-- 신청 -->
+    <div id="atab-requests" class="hidden">
+      <div class="clay-card p-5">
+        <h2 class="text-lg font-black text-gray-800 mb-4">📬 상품 신청 목록</h2>
+        <div class="flex gap-2 mb-4 flex-wrap">
+          <button class="tab-btn active text-xs px-3 py-2" onclick="filterReqs('all',this)">전체</button>
+          <button class="tab-btn text-xs px-3 py-2" onclick="filterReqs('pending',this)">대기중</button>
+          <button class="tab-btn text-xs px-3 py-2" onclick="filterReqs('approved',this)">승인</button>
+          <button class="tab-btn text-xs px-3 py-2" onclick="filterReqs('rejected',this)">거절</button>
+        </div>
+        <div id="requestAdminList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- TX 로그 -->
+    <div id="atab-txlog" class="hidden">
+      <!-- 사용자 선택 -->
+      <div class="clay-card p-4 mb-3" id="logUserSelectCard">
+        <p class="font-black text-gray-700 mb-3" style="font-family:'Jua',sans-serif">👤 사용자 선택</p>
+        <div class="tab-bar-wrap"><div id="logUserBtnList" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;flex-wrap:nowrap"></div></div>
+      </div>
+      <!-- 선택된 사용자 현황판 -->
+      <div id="userStatusList" class="space-y-3"></div>
+    </div>
+
+    <!-- 회원 목록 -->
+    <div id="atab-users" class="hidden">
+      <div class="clay-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-black text-gray-800">👥 전체 회원 <span id="userCountBadge" class="text-sm text-gray-400 font-bold"></span></h2>
+          <select id="userSortFilter" class="field text-sm" style="width:auto" onchange="renderUserAdmin()">
+            <option value="recent">최근 접속순</option>
+            <option value="acorns">도토리 많은순</option>
+            <option value="newest">가입 최신순</option>
+            <option value="name">이름 가나다순</option>
+          </select>
+        </div>
+        <div class="flex gap-2 mb-4">
+          <button class="btn btn-primary py-2 px-3 text-sm" onclick="showGiftAllAcornModal()">🌰 전체 도토리 지급</button>
+          <button class="btn btn-purple py-2 px-3 text-sm" onclick="showGiftAllItemModal()">🎁 전체 아이템 선물</button>
+        </div>
+        <div id="userAdminList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- 이벤트 할인 -->
+    <div id="atab-events" class="hidden">
+
+      <!-- 활성 이벤트 상단 배너 -->
+      <div id="activeEventsBanner" class="mb-4"></div>
+
+      <div class="clay-card p-5 mb-4">
+        <h2 class="text-lg font-black text-gray-800 mb-3">🎉 이벤트 할인 관리</h2>
+
+        <!-- 탭 전환 -->
+        <div class="flex gap-1 mb-4 p-1 rounded-2xl" style="background:rgba(240,235,255,0.5)">
+          <button id="evtTabOnce" class="tab-btn active flex-1 text-xs py-2" onclick="switchEvtTab('once',this)">⏱️ 기간 이벤트</button>
+          <button id="evtTabRepeat" class="tab-btn flex-1 text-xs py-2" onclick="switchEvtTab('repeat',this)">🔄 요일 반복</button>
+          <button id="evtTabSchedules" class="tab-btn flex-1 text-xs py-2" onclick="switchEvtTab('schedules',this)">📋 목록</button>
+        </div>
+
+        <!-- ── 기간 이벤트 패널 ── -->
+        <div id="evtPane-once">
+          <!-- 상점 -->
+          <div class="mb-4 p-4 rounded-2xl" style="background:rgba(254,215,170,0.3);border:1.5px solid rgba(251,146,60,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🛍️</span><p class="font-black text-gray-800 text-sm">상점 할인</p></div>
+              <div id="storeEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="storeDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 할인</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="storeEventPreset" onchange="applyEventPreset('store')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">지금부터 1시간</option>
+                  <option value="2h">지금부터 2시간</option>
+                  <option value="4h">지금부터 4시간</option>
+                  <option value="8h">지금부터 8시간</option>
+                  <option value="24h">지금부터 24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('store')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="storeEventStart">
+              <input class="field text-xs" type="datetime-local" id="storeEventEnd">
+              <p class="text-xs text-gray-400">※ 시작 비워두면 즉시 · 종료 비워두면 수동 종료</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('store')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('store')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+          <!-- 뽑기 -->
+          <div class="p-4 rounded-2xl" style="background:rgba(196,181,253,0.25);border:1.5px solid rgba(139,92,246,0.2)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🎲</span><p class="font-black text-gray-800 text-sm">뽑기 할인</p></div>
+              <div id="gachaEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="gachaDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 할인</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="gachaEventPreset" onchange="applyEventPreset('gacha')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">지금부터 1시간</option>
+                  <option value="2h">지금부터 2시간</option>
+                  <option value="4h">지금부터 4시간</option>
+                  <option value="8h">지금부터 8시간</option>
+                  <option value="24h">지금부터 24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('gacha')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="gachaEventStart">
+              <input class="field text-xs" type="datetime-local" id="gachaEventEnd">
+              <p class="text-xs text-gray-400">※ 시작 비워두면 즉시 · 종료 비워두면 수동 종료</p>
+              <div class="flex gap-2">
+                <button class="btn btn-purple flex-1 py-2 text-sm" onclick="activateEvent('gacha')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('gacha')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+          <!-- 회복속도 부스트 -->
+          <div class="mt-4 mb-4 p-4 rounded-2xl" style="background:rgba(167,243,208,0.25);border:1.5px solid rgba(16,185,129,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">💊</span><p class="font-black text-gray-800 text-sm">회복속도 부스트</p></div>
+              <div id="recoveryEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="recoveryDiscountPct" placeholder="부스트 %" min="1" max="90" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 빠르게</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="recoveryEventPreset" onchange="applyEventPreset('recovery')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('recovery')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="recoveryEventStart">
+              <input class="field text-xs" type="datetime-local" id="recoveryEventEnd">
+              <p class="text-xs text-gray-400">※ 탐험 복귀 시 회복시간이 설정한 %만큼 단축됩니다.</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('recovery')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('recovery')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 미니게임 참가비 할인 -->
+          <div class="mb-4 p-4 rounded-2xl" style="background:rgba(253,186,116,0.2);border:1.5px solid rgba(251,146,60,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🎮</span><p class="font-black text-gray-800 text-sm">미니게임 참가비 할인</p></div>
+              <div id="minigameEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="minigameDiscountPct" placeholder="할인 도토리" min="1" max="100" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">🌰 할인</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="minigameEventPreset" onchange="applyEventPreset('minigame')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('minigame')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="minigameEventStart">
+              <input class="field text-xs" type="datetime-local" id="minigameEventEnd">
+              <p class="text-xs text-gray-400">※ 참가비에서 설정한 도토리만큼 차감됩니다. (최소 참가비 0)</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('minigame')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('minigame')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 농장 성장속도 부스트 -->
+          <div class="p-4 rounded-2xl" style="background:rgba(187,247,208,0.25);border:1.5px solid rgba(74,222,128,0.25)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2"><span class="text-xl">🌾</span><p class="font-black text-gray-800 text-sm">농장 성장속도 부스트</p></div>
+              <div id="farm_growthEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-center">
+                <input class="field" type="number" id="farm_growthDiscountPct" placeholder="부스트 %" min="1" max="90" style="width:90px;flex-shrink:0">
+                <span class="text-sm font-bold text-gray-500">% 빠르게</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="field text-xs" id="farm_growthEventPreset" onchange="applyEventPreset('farm_growth')">
+                  <option value="">⚡ 빠른 기간 설정</option>
+                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
+                </select>
+                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('farm_growth')">날짜 초기화</button>
+              </div>
+              <input class="field text-xs" type="datetime-local" id="farm_growthEventStart">
+              <input class="field text-xs" type="datetime-local" id="farm_growthEventEnd">
+              <p class="text-xs text-gray-400">※ 씨앗 심기 시 성장시간이 설정한 %만큼 단축됩니다.</p>
+              <div class="flex gap-2">
+                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('farm_growth')">✅ 활성화</button>
+                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('farm_growth')">⏹ 비활성화</button>
+              </div>
+            </div>
+          </div>
+
+        <!-- ── 요일 반복 패널 ── -->
+        <div id="evtPane-repeat" class="hidden">
+          <div class="p-3 rounded-2xl mb-4" style="background:rgba(219,234,254,0.4);border:1.5px solid rgba(96,165,250,0.3)">
+            <p class="text-xs font-black text-blue-700 mb-1">💡 요일 반복이란?</p>
+            <p class="text-xs text-blue-600 font-semibold leading-relaxed">매주 선택한 요일의 특정 시간대에 자동으로 할인이 적용됩니다.<br>예) 매주 금·토요일 18:00~23:59 상점 20% 할인</p>
+          </div>
+          <div class="space-y-3">
+            <!-- 대상 + 할인율 -->
+            <div class="flex gap-2 items-center">
+              <select class="field flex-1" id="rpt-target">
+                <option value="store">🛍️ 상점 할인</option>
+                <option value="gacha">🎲 뽑기 할인</option>
+                <option value="recovery">💊 회복속도 부스트</option>
+                <option value="minigame">🎮 미니게임 참가비 할인</option>
+                <option value="farm_growth">🌾 농장 성장속도 부스트</option>
+              </select>
+              <input class="field" type="number" id="rpt-pct" placeholder="%" min="1" max="100" style="width:70px;flex-shrink:0">
+              <span class="text-sm font-bold text-gray-500 flex-shrink-0">%</span>
+            </div>
+            <!-- 요일 선택 -->
+            <div>
+              <p class="text-xs font-bold text-gray-500 mb-2">반복 요일</p>
+              <div class="flex gap-1.5 flex-wrap" id="rpt-days">
+                <label class="evt-day-btn"><input type="checkbox" value="0" onchange="toggleDayBtn(this)"><span>일</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="1" onchange="toggleDayBtn(this)"><span>월</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="2" onchange="toggleDayBtn(this)"><span>화</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="3" onchange="toggleDayBtn(this)"><span>수</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="4" onchange="toggleDayBtn(this)"><span>목</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="5" onchange="toggleDayBtn(this)"><span>금</span></label>
+                <label class="evt-day-btn"><input type="checkbox" value="6" onchange="toggleDayBtn(this)"><span>토</span></label>
+              </div>
+            </div>
+            <!-- 시간대 -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">시작 시각</p>
+                <input class="field text-xs" type="time" id="rpt-startTime" value="00:00">
+              </div>
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">종료 시각</p>
+                <input class="field text-xs" type="time" id="rpt-endTime" value="23:59">
+              </div>
+            </div>
+            <!-- 유효기간 (선택) -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">반복 시작일 <span class="font-normal text-gray-400">(비워두면 즉시)</span></p>
+                <input class="field text-xs" type="date" id="rpt-validFrom">
+              </div>
+              <div>
+                <p class="text-xs font-bold text-gray-500 mb-1">반복 종료일 <span class="font-normal text-gray-400">(비워두면 무기한)</span></p>
+                <input class="field text-xs" type="date" id="rpt-validUntil">
+              </div>
+            </div>
+            <button class="btn btn-primary w-full py-2.5 text-sm" onclick="addRepeatEvent()">🔄 요일 반복 이벤트 추가</button>
+          </div>
+        </div>
+
+        <!-- ── 등록된 요일반복 목록 ── -->
+        <div id="evtPane-schedules" class="hidden">
+          <div id="scheduleList" class="space-y-2">
+            <p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 이벤트 기록 -->
+      <div class="clay-card p-5">
+        <p class="text-sm font-black text-gray-700 mb-3">📜 최근 이벤트 기록</p>
+        <div id="eventHistoryList" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- 🐿️ 다람쥐 (공통, userMode/adminMode 양쪽에서 사용) -->
   <div id="utab-squirrel" class="hidden">
     <!-- 관리자 전용 뒤로가기 -->
@@ -1455,556 +2007,6 @@
     </div>
   </div>
 
-  <!-- ── 관리자 모드 ── -->
-  <div id="adminMode" class="hidden">
-    <!-- 관리자 전체 메뉴 탭바 (wrap, 스크롤 없이 전부 표시) -->
-    <div class="adm-tabbar-wrap"><div id="adminTabBar" class="adm-tabbar">
-      <!-- 1행 -->
-      <button class="adm-tab-btn active" data-tab="home" onclick="aTab('home',this)">🏠 홈</button>
-      <button class="adm-tab-btn" data-tab="dashboard" onclick="aTab('dashboard',this)">🔧 점검</button>
-      <button class="adm-tab-btn" data-tab="requests" onclick="aTab('requests',this)">📬 신청목록</button>
-      <button class="adm-tab-btn" data-tab="quests" onclick="aTab('quests',this)">📋 퀘스트</button>
-      <button class="adm-tab-btn" data-tab="events" onclick="aTab('events',this)">🎉 이벤트</button>
-      <button class="adm-tab-btn" data-tab="recycle" onclick="aTab('recycle',this)">♻️ 재활용</button>
-      <span class="adm-tab-row-break"></span>
-      <!-- 2행 -->
-      <button class="adm-tab-btn" data-tab="products" onclick="aTab('products',this)">🛍️ 상품등록/수정</button>
-      <button class="adm-tab-btn" data-tab="gachaTest" onclick="aTab('gachaTest',this)">🎲 뽑기테스트</button>
-      <button class="adm-tab-btn" data-tab="minigameSettings" onclick="aTab('minigameSettings',this)">🎮 미니게임</button>
-      <button class="adm-tab-btn" data-tab="ranking" onclick="aTab('ranking',this)">🏆 랭킹</button>
-      <span class="adm-tab-row-break"></span>
-      <!-- 3행: 다람쥐 -->
-      <span class="adm-tab-group-label">[다람쥐]</span>
-      <button class="adm-tab-btn" data-tab="sq_my" onclick="aTab('sq_my',this)">🏠 목록</button>
-      <button class="adm-tab-btn" data-tab="sq_shop" onclick="aTab('sq_shop',this)">🛒 상점</button>
-      <button class="adm-tab-btn" data-tab="sq_fuse" onclick="aTab('sq_fuse',this)">🧬 합성</button>
-      <button class="adm-tab-btn" data-tab="sq_expedition" onclick="aTab('sq_expedition',this)">⚔️ 탐험</button>
-      <button class="adm-tab-btn" data-tab="sq_farm" onclick="aTab('sq_farm',this)">🌾 농장</button>
-      <button class="adm-tab-btn" data-tab="bossraid" onclick="aTab('bossraid',this)">🐉 레이드</button>
-      <span class="adm-tab-row-break"></span>
-      <!-- 4행 -->
-      <button class="adm-tab-btn" data-tab="items" onclick="aTab('items',this)">📦 아이템관리</button>
-      <button class="adm-tab-btn" data-tab="txlog" onclick="aTab('txlog',this)">🗂️ 사용자로그</button>
-      <button class="adm-tab-btn" data-tab="users" onclick="aTab('users',this)">👥 회원관리/지급</button>
-    </div></div>
-
-    <!-- 홈 (대시보드 = 통계 + 그리드 메뉴 + 점검 + 활동) -->
-    <div id="atab-home">
-      <!-- 축소 통계 -->
-      <div class="adm-stats-mini">
-        <div class="adm-stat-m"><div class="adm-stat-m-num c1" id="ds-users">—</div><div class="adm-stat-m-label">회원</div></div>
-        <div class="adm-stat-m"><div class="adm-stat-m-num c2" id="ds-todayGacha">—</div><div class="adm-stat-m-label">뽑기</div></div>
-        <div class="adm-stat-m"><div class="adm-stat-m-num c3" id="ds-todayGiven">—</div><div class="adm-stat-m-label">지급</div></div>
-        <div class="adm-stat-m"><div class="adm-stat-m-num c4" id="ds-todayUsed">—</div><div class="adm-stat-m-label">사용</div></div>
-      </div>
-
-      <!-- 공지 관리 -->
-      <p class="adm-section-label">📢 공지사항</p>
-      <div class="clay-card p-4 mb-4">
-        <textarea id="adminNoticeText" class="field" rows="3" placeholder="사용자에게 보여줄 공지 내용을 입력하세요..." style="resize:vertical;font-size:13px"></textarea>
-        <div class="flex gap-2 mt-2">
-          <button class="btn btn-primary flex-1" onclick="adminSaveNotice()">📢 공지 등록</button>
-          <button class="btn flex-1" style="background:#fee2e2;color:#dc2626;font-weight:800" onclick="adminClearNotice()">🗑️ 공지 삭제</button>
-        </div>
-        <div class="text-xs text-gray-400 mt-2">등록하면 모든 사용자에게 접속 시 팝업으로 표시됩니다. 확인 버튼을 누르면 다시 뜨지 않아요.</div>
-        <div id="adminCurrentNotice"></div>
-      </div>
-
-      <!-- 최근 활동 -->
-      <p class="adm-section-label">📋 최근 활동</p>
-      <div class="clay-card p-4"><div id="ds-activityLog"></div></div>
-    </div>
-
-    <!-- 기존 대시보드 (현황 상세 — 그리드에서 "현황" 클릭 시) -->
-    <div id="atab-dashboard" class="hidden">
-      <!-- 메인 메뉴 점검 -->
-      <p class="adm-section-label">🔧 메뉴 점검</p>
-      <div class="clay-card p-4 mb-4">
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🛍️ 상점</span><button id="maint-shop" onclick="toggleMaintenance('shop')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎲 뽑기</span><button id="maint-gacha" onclick="toggleMaintenance('gacha')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">📋 퀘스트</span><button id="maint-quest" onclick="toggleMaintenance('quest')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">♻️ 재활용</span><button id="maint-recycle" onclick="toggleMaintenance('recycle')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎮 미니게임</span><button id="maint-minigame" onclick="toggleMaintenance('minigame')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐉 레이드</span><button id="maint-bossraid" onclick="toggleMaintenance('bossraid')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">👤 마이</span><button id="maint-mypage" onclick="toggleMaintenance('mypage')" class="maint-btn"></button></div>
-        </div>
-      </div>
-      <!-- 다람쥐 점검 -->
-      <p class="adm-section-label">🐿️ 다람쥐 점검</p>
-      <div class="clay-card p-4 mb-2">
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐿️ 다람쥐 전체</span><button id="maint-squirrel" onclick="toggleMaintenance('squirrel')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">🌾 농장</span><button id="maint-sq_farm" onclick="toggleMaintenance('sq_farm')" class="maint-btn"></button></div>
-        </div>
-      </div>
-      <div class="text-xs text-gray-400 font-bold mb-4" style="padding:0 4px">다람쥐 전체 점검과 별개로, 서브탭만 개별 점검할 수 있어요.</div>
-    </div>
-
-    <!-- 뽑기 테스트 -->
-    <div id="atab-gachaTest" class="hidden">
-      <!-- 관리자 무료 뽑기 (사용자 탭과 동일한 UX, 도토리 차감 없음) -->
-      <div class="clay-card p-6 text-center mb-4">
-        <div class="text-xs font-bold text-amber-700 bg-amber-50 rounded-2xl p-3 mb-4">👑 관리자 무료 뽑기 — 도토리 차감 없음</div>
-        <div class="text-6xl mb-3" id="adminGachaIcon">🎁</div>
-        <h2 class="text-xl font-black text-gray-800 mb-1">도토리 뽑기</h2>
-        <p class="text-sm text-gray-400 font-semibold mb-4">결과만 확인 · 인벤토리 저장 안 됨</p>
-        <div class="flex justify-center gap-3">
-          <button class="btn btn-primary px-8 py-3 text-base" onclick="doAdminGacha(1)">1회 뽑기</button>
-          <button class="btn btn-purple px-8 py-3 text-base" onclick="doAdminGacha(5)">5회 뽑기</button>
-        </div>
-      </div>
-      <div id="adminGachaSpinner" style="display:none;flex-direction:column;align-items:center;gap:12px;padding:24px 0">
-        <div class="text-6xl" id="adminGachaSpinIcon">🎁</div>
-        <p id="adminGachaSpinMsg" class="text-sm font-black text-amber-600">두근두근...</p>
-      </div>
-      <div id="adminGachaResult" class="hidden clay-card p-6 text-center mb-4">
-        <p class="text-sm font-bold text-gray-400 mb-4">🎉 결과!</p>
-        <div id="adminGachaResultItems" class="flex flex-wrap justify-center gap-4"></div>
-      </div>
-      <div class="clay-card p-4 mb-4">
-        <p class="text-sm font-black text-gray-700 mb-3">📊 뽑기 상품 & 확률</p>
-        <div id="adminGachaProbTable" class="space-y-1">
-          <p class="text-xs text-gray-400 text-center py-2">로딩 중...</p>
-        </div>
-      </div>
-
-      <!-- 확률 시뮬레이터 -->
-      <div class="clay-card p-5 mb-4">
-        <p class="text-sm font-black text-gray-700 mb-3">🧪 확률 시뮬레이터</p>
-        <p class="text-xs text-gray-400 mb-3">실제 뽑기 로직으로 대량 시뮬레이션 — 설계 확률과 실제 결과를 비교합니다.</p>
-        <div class="flex gap-2 mb-3">
-          <div class="flex-1">
-            <label class="text-xs font-bold text-gray-500 mb-1 block">뽑기 횟수</label>
-            <select class="field text-sm" id="simCount">
-              <option value="1">1회씩</option>
-              <option value="5" selected>5회씩</option>
-              <option value="10">10회씩</option>
-            </select>
-          </div>
-          <div class="flex-1">
-            <label class="text-xs font-bold text-gray-500 mb-1 block">반복 횟수</label>
-            <select class="field text-sm" id="simRounds">
-              <option value="100">100번</option>
-              <option value="500">500번</option>
-              <option value="1000" selected>1,000번</option>
-              <option value="5000">5,000번</option>
-              <option value="10000">10,000번</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-purple w-full py-3 font-black mb-4" onclick="runGachaSimulator()">▶ 시뮬레이션 실행</button>
-        <div id="simResult" class="hidden"></div>
-      </div>
-    </div>
-
-    <!-- 아이템 관리 -->
-    <div id="atab-items" class="hidden">
-      <div class="clay-card p-4 mb-4">
-        <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">📦 <span>아이템 등록</span></h3>
-        <div class="space-y-2">
-          <input class="field" type="text" id="ni-name" placeholder="아이템명">
-          <div class="grid grid-cols-2 gap-2">
-            <input class="field" type="text" id="ni-icon" placeholder="이모지 📦">
-            <input class="field" type="text" id="ni-rewardType" placeholder="보상 타입 (예: EXAM_MATERIAL)" value="MANUAL_ITEM">
-          </div>
-          <input class="field" type="text" id="ni-desc" placeholder="설명">
-          <div class="grid grid-cols-2 gap-2">
-            <label class="flex items-center gap-2 text-xs font-bold text-gray-600">
-              <input type="checkbox" id="ni-stackable"> 스택 가능
-            </label>
-            <input class="field" type="number" id="ni-maxStack" placeholder="최대 스택 (기본 1)" min="1" value="1">
-          </div>
-          <button class="btn btn-primary w-full py-2 text-sm" onclick="addRegistryItem()">➕ 아이템 등록</button>
-        </div>
-      </div>
-      <div class="clay-card p-4">
-        <p class="text-sm font-black text-gray-700 mb-3">📦 전체 아이템 목록</p>
-        <div id="registryItemList" class="space-y-2"></div>
-      </div>
-    </div>
-
-    <!-- 상품 -->
-    <div id="atab-products" class="hidden">
-
-      <!-- 통합 아이템 피커 -->
-      <div class="clay-card p-4 mb-4">
-        <h3 class="font-black text-gray-800 mb-1 flex items-center gap-1">📦 <span>아이템 배치</span></h3>
-        <p class="text-xs text-gray-400 mb-3">아이템을 선택한 뒤, 상점 또는 뽑기에 배치하세요</p>
-
-        <!-- 검색 -->
-        <div class="relative mb-2">
-          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm pointer-events-none text-gray-400">🔍</span>
-          <input class="field w-full pl-8" type="text" id="up-search" placeholder="아이템 검색..." oninput="_upRenderList()">
-        </div>
-
-        <!-- 아이템 리스트 (체크박스 복수선택) -->
-        <div id="up-list" class="space-y-1 mb-2" style="max-height:220px;overflow-y:auto"></div>
-
-        <!-- 액션 바: N개 선택됨 + 목적지 버튼 -->
-        <div id="up-actionBar" class="hidden mt-2 p-3 rounded-xl" style="background:rgba(124,58,237,0.06);border:1.5px solid rgba(124,58,237,0.15)">
-          <p class="text-xs font-black mb-2" id="up-countLabel" style="color:#7c3aed"></p>
-          <div class="flex gap-2">
-            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2);color:#3b82f6" onclick="_upOpenConfig('store')">🛍️ 상점에 추가</button>
-            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2);color:#a855f7" onclick="_upOpenConfig('gacha')">🎲 뽑기에 추가</button>
-          </div>
-        </div>
-
-        <!-- 설정 패널 (목적지 선택 후 표시) -->
-        <div id="up-configPanel" class="hidden mt-2 rounded-xl overflow-hidden" style="border:1.5px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.04)">
-          <div class="flex items-center justify-between px-3 py-2" style="border-bottom:1px solid rgba(124,58,237,0.1)">
-            <span class="text-xs font-black" id="up-configLabel" style="color:#7c3aed"></span>
-            <span class="text-xs font-bold text-gray-400 cursor-pointer" onclick="_upCloseConfig()">← 돌아가기</span>
-          </div>
-          <div id="up-configItems" class="px-3 py-2 space-y-2"></div>
-          <div class="px-3 pb-3">
-            <button class="btn w-full py-2 text-sm font-black text-white rounded-lg" id="up-submitBtn" onclick="_upSubmit()"></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 목록: 2열 (상점 / 뽑기) -->
-      <div class="grid grid-cols-2 gap-3" style="align-items:start">
-        <div class="clay-card p-4">
-          <p class="text-sm font-black text-gray-700 mb-3">🛍️ 상점 상품</p>
-          <div id="storeProductList" class="space-y-2"></div>
-        </div>
-        <div class="clay-card p-4">
-          <p class="text-sm font-black text-gray-700 mb-3">🎲 뽑기 상품</p>
-          <div id="gachaProductList" class="space-y-2"></div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- 퀘스트 -->
-    <div id="atab-quests" class="hidden">
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-4">➕ 퀘스트 등록</h2>
-        <div class="space-y-3">
-          <input class="field" type="text" id="nq-name" placeholder="퀘스트 이름">
-          <input class="field" type="text" id="nq-desc" placeholder="퀘스트 설명">
-          <div class="grid grid-cols-2 gap-3">
-            <input class="field" type="number" id="nq-reward" placeholder="보상 도토리">
-            <input class="field" type="text" id="nq-icon" placeholder="이모지">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">목표 횟수 (자동완료 전용)</label>
-              <select class="field" id="nq-countType" onchange="toggleQuestCount()">
-                <option value="once">1회 — 트리거되면 바로 완료</option>
-                <option value="multi">횟수 지정 — N회 누적 후 완료</option>
-              </select>
-            </div>
-            <div id="nq-countWrap" class="hidden">
-              <label class="text-xs font-bold text-gray-500 mb-1 block">목표 횟수</label>
-              <input class="field" type="number" id="nq-targetCount" placeholder="예: 3" min="2">
-            </div>
-          </div>
-          <div><label class="text-sm font-bold text-gray-600 mb-1 block">반복 유형</label>
-            <select class="field" id="nq-repeat">
-              <option value="once">1회성</option>
-              <option value="daily">일일 — 매일 초기화</option>
-              <option value="weekly">주간 — 매주 월요일</option>
-            </select>
-          </div>
-          <div><label class="text-sm font-bold text-gray-600 mb-1 block">완료 방식</label>
-            <select class="field" id="nq-completionType">
-              <option value="auto">⚡ 자동 완료</option>
-              <option value="approval">👤 관리자 승인</option>
-            </select>
-          </div>
-          <button class="btn btn-primary w-full py-3" onclick="addQuest()">📋 퀘스트 추가</button>
-        </div>
-      </div>
-      <div class="clay-card p-5 mb-4" id="questApprovalCard"><p class="text-sm font-black text-gray-700 mb-3" id="questApprovalTitle">✋ 완료 승인 요청</p><div id="questApprovalList" class="space-y-3"></div></div>
-      <div class="clay-card p-5 mb-4"><p class="text-sm font-black text-gray-700 mb-3">📋 퀘스트 목록</p><div id="questAdminList" class="space-y-3"></div></div>
-    </div>
-
-    <!-- 신청 -->
-    <div id="atab-requests" class="hidden">
-      <div class="clay-card p-5">
-        <h2 class="text-lg font-black text-gray-800 mb-4">📬 상품 신청 목록</h2>
-        <div class="flex gap-2 mb-4 flex-wrap">
-          <button class="tab-btn active text-xs px-3 py-2" onclick="filterReqs('all',this)">전체</button>
-          <button class="tab-btn text-xs px-3 py-2" onclick="filterReqs('pending',this)">대기중</button>
-          <button class="tab-btn text-xs px-3 py-2" onclick="filterReqs('approved',this)">승인</button>
-          <button class="tab-btn text-xs px-3 py-2" onclick="filterReqs('rejected',this)">거절</button>
-        </div>
-        <div id="requestAdminList" class="space-y-3"></div>
-      </div>
-    </div>
-
-    <!-- TX 로그 -->
-    <div id="atab-txlog" class="hidden">
-      <!-- 사용자 선택 -->
-      <div class="clay-card p-4 mb-3" id="logUserSelectCard">
-        <p class="font-black text-gray-700 mb-3" style="font-family:'Jua',sans-serif">👤 사용자 선택</p>
-        <div class="tab-bar-wrap"><div id="logUserBtnList" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;flex-wrap:nowrap"></div></div>
-      </div>
-      <!-- 선택된 사용자 현황판 -->
-      <div id="userStatusList" class="space-y-3"></div>
-    </div>
-
-    <!-- 회원 목록 -->
-    <div id="atab-users" class="hidden">
-      <div class="clay-card p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-black text-gray-800">👥 전체 회원 <span id="userCountBadge" class="text-sm text-gray-400 font-bold"></span></h2>
-          <select id="userSortFilter" class="field text-sm" style="width:auto" onchange="renderUserAdmin()">
-            <option value="recent">최근 접속순</option>
-            <option value="acorns">도토리 많은순</option>
-            <option value="newest">가입 최신순</option>
-            <option value="name">이름 가나다순</option>
-          </select>
-        </div>
-        <div class="flex gap-2 mb-4">
-          <button class="btn btn-primary py-2 px-3 text-sm" onclick="showGiftAllAcornModal()">🌰 전체 도토리 지급</button>
-          <button class="btn btn-purple py-2 px-3 text-sm" onclick="showGiftAllItemModal()">🎁 전체 아이템 선물</button>
-        </div>
-        <div id="userAdminList" class="space-y-3"></div>
-      </div>
-    </div>
-
-    <!-- 이벤트 할인 -->
-    <div id="atab-events" class="hidden">
-
-      <!-- 활성 이벤트 상단 배너 -->
-      <div id="activeEventsBanner" class="mb-4"></div>
-
-      <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-3">🎉 이벤트 할인 관리</h2>
-
-        <!-- 탭 전환 -->
-        <div class="flex gap-1 mb-4 p-1 rounded-2xl" style="background:rgba(240,235,255,0.5)">
-          <button id="evtTabOnce" class="tab-btn active flex-1 text-xs py-2" onclick="switchEvtTab('once',this)">⏱️ 기간 이벤트</button>
-          <button id="evtTabRepeat" class="tab-btn flex-1 text-xs py-2" onclick="switchEvtTab('repeat',this)">🔄 요일 반복</button>
-          <button id="evtTabSchedules" class="tab-btn flex-1 text-xs py-2" onclick="switchEvtTab('schedules',this)">📋 목록</button>
-        </div>
-
-        <!-- ── 기간 이벤트 패널 ── -->
-        <div id="evtPane-once">
-          <!-- 상점 -->
-          <div class="mb-4 p-4 rounded-2xl" style="background:rgba(254,215,170,0.3);border:1.5px solid rgba(251,146,60,0.25)">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2"><span class="text-xl">🛍️</span><p class="font-black text-gray-800 text-sm">상점 할인</p></div>
-              <div id="storeEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex gap-2 items-center">
-                <input class="field" type="number" id="storeDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:90px;flex-shrink:0">
-                <span class="text-sm font-bold text-gray-500">% 할인</span>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <select class="field text-xs" id="storeEventPreset" onchange="applyEventPreset('store')">
-                  <option value="">⚡ 빠른 기간 설정</option>
-                  <option value="1h">지금부터 1시간</option>
-                  <option value="2h">지금부터 2시간</option>
-                  <option value="4h">지금부터 4시간</option>
-                  <option value="8h">지금부터 8시간</option>
-                  <option value="24h">지금부터 24시간</option>
-                </select>
-                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('store')">날짜 초기화</button>
-              </div>
-              <input class="field text-xs" type="datetime-local" id="storeEventStart">
-              <input class="field text-xs" type="datetime-local" id="storeEventEnd">
-              <p class="text-xs text-gray-400">※ 시작 비워두면 즉시 · 종료 비워두면 수동 종료</p>
-              <div class="flex gap-2">
-                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('store')">✅ 활성화</button>
-                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('store')">⏹ 비활성화</button>
-              </div>
-            </div>
-          </div>
-          <!-- 뽑기 -->
-          <div class="p-4 rounded-2xl" style="background:rgba(196,181,253,0.25);border:1.5px solid rgba(139,92,246,0.2)">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2"><span class="text-xl">🎲</span><p class="font-black text-gray-800 text-sm">뽑기 할인</p></div>
-              <div id="gachaEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex gap-2 items-center">
-                <input class="field" type="number" id="gachaDiscountPct" placeholder="할인율 %" min="1" max="100" style="width:90px;flex-shrink:0">
-                <span class="text-sm font-bold text-gray-500">% 할인</span>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <select class="field text-xs" id="gachaEventPreset" onchange="applyEventPreset('gacha')">
-                  <option value="">⚡ 빠른 기간 설정</option>
-                  <option value="1h">지금부터 1시간</option>
-                  <option value="2h">지금부터 2시간</option>
-                  <option value="4h">지금부터 4시간</option>
-                  <option value="8h">지금부터 8시간</option>
-                  <option value="24h">지금부터 24시간</option>
-                </select>
-                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('gacha')">날짜 초기화</button>
-              </div>
-              <input class="field text-xs" type="datetime-local" id="gachaEventStart">
-              <input class="field text-xs" type="datetime-local" id="gachaEventEnd">
-              <p class="text-xs text-gray-400">※ 시작 비워두면 즉시 · 종료 비워두면 수동 종료</p>
-              <div class="flex gap-2">
-                <button class="btn btn-purple flex-1 py-2 text-sm" onclick="activateEvent('gacha')">✅ 활성화</button>
-                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('gacha')">⏹ 비활성화</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-          <!-- 회복속도 부스트 -->
-          <div class="mt-4 mb-4 p-4 rounded-2xl" style="background:rgba(167,243,208,0.25);border:1.5px solid rgba(16,185,129,0.25)">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2"><span class="text-xl">💊</span><p class="font-black text-gray-800 text-sm">회복속도 부스트</p></div>
-              <div id="recoveryEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex gap-2 items-center">
-                <input class="field" type="number" id="recoveryDiscountPct" placeholder="부스트 %" min="1" max="90" style="width:90px;flex-shrink:0">
-                <span class="text-sm font-bold text-gray-500">% 빠르게</span>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <select class="field text-xs" id="recoveryEventPreset" onchange="applyEventPreset('recovery')">
-                  <option value="">⚡ 빠른 기간 설정</option>
-                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
-                </select>
-                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('recovery')">날짜 초기화</button>
-              </div>
-              <input class="field text-xs" type="datetime-local" id="recoveryEventStart">
-              <input class="field text-xs" type="datetime-local" id="recoveryEventEnd">
-              <p class="text-xs text-gray-400">※ 탐험 복귀 시 회복시간이 설정한 %만큼 단축됩니다.</p>
-              <div class="flex gap-2">
-                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('recovery')">✅ 활성화</button>
-                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('recovery')">⏹ 비활성화</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 미니게임 참가비 할인 -->
-          <div class="mb-4 p-4 rounded-2xl" style="background:rgba(253,186,116,0.2);border:1.5px solid rgba(251,146,60,0.25)">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2"><span class="text-xl">🎮</span><p class="font-black text-gray-800 text-sm">미니게임 참가비 할인</p></div>
-              <div id="minigameEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex gap-2 items-center">
-                <input class="field" type="number" id="minigameDiscountPct" placeholder="할인 도토리" min="1" max="100" style="width:90px;flex-shrink:0">
-                <span class="text-sm font-bold text-gray-500">🌰 할인</span>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <select class="field text-xs" id="minigameEventPreset" onchange="applyEventPreset('minigame')">
-                  <option value="">⚡ 빠른 기간 설정</option>
-                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
-                </select>
-                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('minigame')">날짜 초기화</button>
-              </div>
-              <input class="field text-xs" type="datetime-local" id="minigameEventStart">
-              <input class="field text-xs" type="datetime-local" id="minigameEventEnd">
-              <p class="text-xs text-gray-400">※ 참가비에서 설정한 도토리만큼 차감됩니다. (최소 참가비 0)</p>
-              <div class="flex gap-2">
-                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('minigame')">✅ 활성화</button>
-                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('minigame')">⏹ 비활성화</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 농장 성장속도 부스트 -->
-          <div class="p-4 rounded-2xl" style="background:rgba(187,247,208,0.25);border:1.5px solid rgba(74,222,128,0.25)">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2"><span class="text-xl">🌾</span><p class="font-black text-gray-800 text-sm">농장 성장속도 부스트</p></div>
-              <div id="farm_growthEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex gap-2 items-center">
-                <input class="field" type="number" id="farm_growthDiscountPct" placeholder="부스트 %" min="1" max="90" style="width:90px;flex-shrink:0">
-                <span class="text-sm font-bold text-gray-500">% 빠르게</span>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <select class="field text-xs" id="farm_growthEventPreset" onchange="applyEventPreset('farm_growth')">
-                  <option value="">⚡ 빠른 기간 설정</option>
-                  <option value="1h">1시간</option><option value="2h">2시간</option><option value="4h">4시간</option><option value="8h">8시간</option><option value="24h">24시간</option>
-                </select>
-                <button class="btn btn-gray text-xs py-1" onclick="clearEventDates('farm_growth')">날짜 초기화</button>
-              </div>
-              <input class="field text-xs" type="datetime-local" id="farm_growthEventStart">
-              <input class="field text-xs" type="datetime-local" id="farm_growthEventEnd">
-              <p class="text-xs text-gray-400">※ 씨앗 심기 시 성장시간이 설정한 %만큼 단축됩니다.</p>
-              <div class="flex gap-2">
-                <button class="btn btn-green flex-1 py-2 text-sm" onclick="activateEvent('farm_growth')">✅ 활성화</button>
-                <button class="btn btn-gray flex-1 py-2 text-sm" onclick="deactivateEvent('farm_growth')">⏹ 비활성화</button>
-              </div>
-            </div>
-          </div>
-
-        <!-- ── 요일 반복 패널 ── -->
-        <div id="evtPane-repeat" class="hidden">
-          <div class="p-3 rounded-2xl mb-4" style="background:rgba(219,234,254,0.4);border:1.5px solid rgba(96,165,250,0.3)">
-            <p class="text-xs font-black text-blue-700 mb-1">💡 요일 반복이란?</p>
-            <p class="text-xs text-blue-600 font-semibold leading-relaxed">매주 선택한 요일의 특정 시간대에 자동으로 할인이 적용됩니다.<br>예) 매주 금·토요일 18:00~23:59 상점 20% 할인</p>
-          </div>
-          <div class="space-y-3">
-            <!-- 대상 + 할인율 -->
-            <div class="flex gap-2 items-center">
-              <select class="field flex-1" id="rpt-target">
-                <option value="store">🛍️ 상점 할인</option>
-                <option value="gacha">🎲 뽑기 할인</option>
-                <option value="recovery">💊 회복속도 부스트</option>
-                <option value="minigame">🎮 미니게임 참가비 할인</option>
-                <option value="farm_growth">🌾 농장 성장속도 부스트</option>
-              </select>
-              <input class="field" type="number" id="rpt-pct" placeholder="%" min="1" max="100" style="width:70px;flex-shrink:0">
-              <span class="text-sm font-bold text-gray-500 flex-shrink-0">%</span>
-            </div>
-            <!-- 요일 선택 -->
-            <div>
-              <p class="text-xs font-bold text-gray-500 mb-2">반복 요일</p>
-              <div class="flex gap-1.5 flex-wrap" id="rpt-days">
-                <label class="evt-day-btn"><input type="checkbox" value="0" onchange="toggleDayBtn(this)"><span>일</span></label>
-                <label class="evt-day-btn"><input type="checkbox" value="1" onchange="toggleDayBtn(this)"><span>월</span></label>
-                <label class="evt-day-btn"><input type="checkbox" value="2" onchange="toggleDayBtn(this)"><span>화</span></label>
-                <label class="evt-day-btn"><input type="checkbox" value="3" onchange="toggleDayBtn(this)"><span>수</span></label>
-                <label class="evt-day-btn"><input type="checkbox" value="4" onchange="toggleDayBtn(this)"><span>목</span></label>
-                <label class="evt-day-btn"><input type="checkbox" value="5" onchange="toggleDayBtn(this)"><span>금</span></label>
-                <label class="evt-day-btn"><input type="checkbox" value="6" onchange="toggleDayBtn(this)"><span>토</span></label>
-              </div>
-            </div>
-            <!-- 시간대 -->
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <p class="text-xs font-bold text-gray-500 mb-1">시작 시각</p>
-                <input class="field text-xs" type="time" id="rpt-startTime" value="00:00">
-              </div>
-              <div>
-                <p class="text-xs font-bold text-gray-500 mb-1">종료 시각</p>
-                <input class="field text-xs" type="time" id="rpt-endTime" value="23:59">
-              </div>
-            </div>
-            <!-- 유효기간 (선택) -->
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <p class="text-xs font-bold text-gray-500 mb-1">반복 시작일 <span class="font-normal text-gray-400">(비워두면 즉시)</span></p>
-                <input class="field text-xs" type="date" id="rpt-validFrom">
-              </div>
-              <div>
-                <p class="text-xs font-bold text-gray-500 mb-1">반복 종료일 <span class="font-normal text-gray-400">(비워두면 무기한)</span></p>
-                <input class="field text-xs" type="date" id="rpt-validUntil">
-              </div>
-            </div>
-            <button class="btn btn-primary w-full py-2.5 text-sm" onclick="addRepeatEvent()">🔄 요일 반복 이벤트 추가</button>
-          </div>
-        </div>
-
-        <!-- ── 등록된 요일반복 목록 ── -->
-        <div id="evtPane-schedules" class="hidden">
-          <div id="scheduleList" class="space-y-2">
-            <p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 이벤트 기록 -->
-      <div class="clay-card p-5">
-        <p class="text-sm font-black text-gray-700 mb-3">📜 최근 이벤트 기록</p>
-        <div id="eventHistoryList" class="space-y-2"></div>
-      </div>
-    </div>
-  </div>
 
     <!-- ♻️ 관리자 재활용센터 -->
     <div id="atab-recycle" class="hidden">
