@@ -1404,7 +1404,7 @@ async function sqFeedSquirrel(id) {
       // gauge 100%
       if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
       _sqStartTimer(id, { ...sq, grows_at: updates.grows_at });
-      toast('⏳', `${sq.name}이(가) 잠시 쉬어야 해요! 타이머가 끝나면 계속 먹일 수 있어요`);
+
       // busy는 _sqStartTimer 완료 시 풀림 (_sqSetIdle in timer)
 
     } else if (action.startsWith('grow:')) {
@@ -1514,7 +1514,7 @@ async function sqDoBuySquirrel(price) {
       tmp.innerHTML = sqCardHTML(inserted);
       grid.appendChild(tmp.firstElementChild);
     }
-    toast('🎉', '새 다람쥐를 분양받았어요!');
+
     // B형 소환 카드 연출
     _sqShowSummonEffect();
   } catch(e) {
@@ -2606,7 +2606,7 @@ async function sqLaunchExpedition() {
     await sb.from('squirrels').update({ status: 'exploring' }).in('id', ids);
     ids.forEach(id => _sqUpdate(id, { status: 'exploring' }));
     closeModal();
-    toast('🗺️', '탐험을 떠났어요!');
+
     sqRenderGrid();
     // 바로 탐험 맵으로 진입
     sqTab('expedition');
