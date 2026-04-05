@@ -37,12 +37,11 @@
   0%,100% { transform: translateY(0px); }
   50%     { transform: translateY(-6px); }
 }
-/* 회복 버튼 shimmer 효과 */
-@keyframes sqRecoverShimmer {
-  0%   { left: -60%; opacity: 0; }
-  30%  { opacity: 1; }
-  70%  { opacity: 1; }
-  100% { left: 160%; opacity: 0; }
+/* 회복 버튼 오로라 그라디언트 */
+@keyframes sqAuroraFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 /* 회복 성공 애니메이션 */
 @keyframes sqRecoverSuccess {
@@ -1322,9 +1321,13 @@
       <div class="clay-card p-5 mb-4">
         <div class="flex items-center justify-between mb-3">
           <p class="text-sm font-black text-gray-700">🎒 인벤토리</p>
-          <span class="text-xs text-gray-400 font-semibold">사용 | 판매는 ♻️ 재활용 탭에서</span>
+          <div class="inv-sort-wrap">
+            <button class="inv-sort-btn inv-sort-active" onclick="setInvSort('date')" id="invSortDate">획득순</button>
+            <button class="inv-sort-btn" onclick="setInvSort('name')" id="invSortName">이름순</button>
+          </div>
         </div>
-        <div id="myInventory" class="grid grid-cols-3 gap-2"></div>
+        <div id="myInventory" style="position:relative;overflow:hidden"></div>
+        <div id="invPageDots" class="inv-page-dots"></div>
       </div>
 
       <!-- 상품 신청 현황 -->
