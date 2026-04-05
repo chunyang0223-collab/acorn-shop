@@ -153,9 +153,10 @@
       <h1 class="header-app-title">도토리 상점</h1>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
         <button class="btn-logout-sm hidden" id="logoutBtn" onclick="doLogout()">로그아웃</button>
-        <div id="ghLastCommit" style="display:none;font-size:9px;font-weight:700;color:var(--text-muted,#9ca3af);line-height:1.2;text-align:right;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" title="클릭하면 새로고침" onclick="location.reload()"></div>
       </div>
     </div>
+    <!-- 배포 시각 (관리자 전용) -->
+    <div id="deployInfo" style="display:none;text-align:right;font-size:9px;font-weight:700;color:var(--text-muted,#9ca3af);line-height:1.2;margin-top:4px;cursor:pointer" title="클릭하면 새로고침" onclick="location.reload()"></div>
     <!-- 메인 헤더: 도토리 이모지 + 닉네임 | 스탯 + 알림 -->
     <div class="flex items-center justify-between mt-1">
       <!-- 좌측: 도토리 이모지(테마토글) + 닉네임 -->
