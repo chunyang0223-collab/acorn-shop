@@ -296,1059 +296,6 @@
       <div id="minigame-play" class="hidden"></div>
     </div>
 
-    <!-- 🐿️ 다람쥐 탭 -->
-    <div id="utab-squirrel" class="hidden">
-      <!-- 관리자 전용 뒤로가기 -->
-      <div id="sqAdminBackBar" class="hidden mb-3">
-        <button onclick="sqAdminBack()" class="btn btn-gray btn-sm">← 관리자 화면으로</button>
-      </div>
-      <!-- 서브탭 -->
-      <div class="clay-card p-2 flex gap-1 mb-4" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-        <button class="tab-btn active" onclick="sqTab('my')"         id="sqtab-my" style="flex:1 0 auto;min-width:0">🏠 내 다람쥐</button>
-        <button class="tab-btn"        onclick="sqTab('shop')"       id="sqtab-shop" style="flex:1 0 auto;min-width:0">🛒 상점</button>
-        <button class="tab-btn"        onclick="sqTab('fuse')"       id="sqtab-fuse" style="flex:1 0 auto;min-width:0">🧬 합성</button>
-        <button class="tab-btn"        onclick="sqTab('expedition')" id="sqtab-expedition" style="flex:1 0 auto;min-width:0">⚔️ 탐험</button>
-        <button class="tab-btn"        onclick="sqTab('farm')"       id="sqtab-farm" style="flex:1 0 auto;min-width:0">🌾 농장</button>
-      </div>
-      <!-- 내 다람쥐 -->
-      <div id="sqcontent-my">
-        <div class="clay-card p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="title-font text-base text-gray-700">🐿️ 보유 다람쥐</span>
-            <span class="text-xs text-gray-400 font-bold" id="squirrelCount">0 / 10</span>
-          </div>
-          <div id="squirrelGrid" class="flex flex-col">
-            <div class="flex justify-center py-8"><div class="spinner"></div></div>
-          </div>
-        </div>
-        <!-- 관리자 전용: 다람쥐 기본 설정 -->
-        <div class="sq-admin-panel hidden">
-          <div class="cfg-panel" style="padding:12px;margin-top:12px" id="sqSettingsForm">
-            <div class="fc-header"><h2>🐿️ 다람쥐 설정</h2></div>
-
-            <!-- 성장 조건 -->
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🌱</span></div>
-                  <div><div class="fc-title">성장 조건</div><div class="fc-subtitle">보유 수 · 도토리 · 시간 · 배율</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-row">
-                  <div style="flex:1">
-                    <span class="fc-row-label">📦 최대 보유 마릿수</span>
-                    <div class="fc-desc">사용자 1명당 보유 가능한 다람쥐 수</div>
-                  </div>
-                  <div class="fc-row-input"><input type="number" id="sqSet_maxSquirrels" value="10" min="1" max="99"></div>
-                </div>
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">성장 도토리</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">최소</div><input type="number" id="sqSet_acornMin" value="20" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최대</div><input type="number" id="sqSet_acornMax" value="50" min="1"></div>
-                </div>
-                <div class="fc-divider"></div>
-                <div class="fc-row">
-                  <span class="fc-row-label">⏳ 시간 필요 확률 (%)</span>
-                  <div class="fc-row-input"><input type="number" id="sqSet_timeChance" value="40" min="0" max="100"></div>
-                </div>
-                <div class="fc-sub-title">성장 대기 시간 (분)</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">최소</div><input type="number" id="sqSet_timeMin" value="10" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최대</div><input type="number" id="sqSet_timeMax" value="60" min="1"></div>
-                </div>
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">🎲 먹이기 배율</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">최소</div><input type="number" id="sqSet_multiMin" value="0.5" min="0.1" max="1.0" step="0.05"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최대</div><input type="number" id="sqSet_multiMax" value="1.3" min="1.0" max="5.0" step="0.05"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 스탯 범위 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">⚔️</span></div>
-                  <div><div class="fc-title">스탯 범위</div><div class="fc-subtitle">성장 시 랜덤 HP · 공격 · 방어</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">❤️ HP 최소</div><input type="number" id="sqSet_hpMin" value="60" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">❤️ HP 최대</div><input type="number" id="sqSet_hpMax" value="120" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">⚔️ 공격 최소</div><input type="number" id="sqSet_atkMin" value="8" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">⚔️ 공격 최대</div><input type="number" id="sqSet_atkMax" value="20" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">🛡️ 방어 최소</div><input type="number" id="sqSet_defMin" value="4" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">🛡️ 방어 최대</div><input type="number" id="sqSet_defMax" value="14" min="1"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 펫샵 매입가 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(16,185,129,0.1)"><span style="font-size:14px">🏪</span></div>
-                  <div><div class="fc-title">펫샵 매입가</div><div class="fc-subtitle">스탯 기반 자동 산정</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">최저 매입가 (🌰)</div><input type="number" id="sqSet_sellBase" value="20" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최고 매입가 (🌰)</div><input type="number" id="sqSet_sellMax" value="80" min="1"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 회복 설정 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(236,72,153,0.1)"><span style="font-size:14px">💚</span></div>
-                  <div><div class="fc-title">회복 설정</div><div class="fc-subtitle">회복 시간 · 즉시 회복 비용</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-row">
-                  <div style="flex:1">
-                    <span class="fc-row-label">기본 회복시간 (분)</span>
-                    <div class="fc-desc">HP 0→풀 기준 (비례 적용)</div>
-                  </div>
-                  <div class="fc-row-input"><input type="number" id="sqSet_recoveryMinutes" value="60" min="1"></div>
-                </div>
-                <div class="fc-row">
-                  <span class="fc-row-label">즉시회복 비용 (🌰)</span>
-                  <div class="fc-row-input"><input type="number" id="sqSet_recoveryCost" value="15" min="1"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 시간 발동 구간 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">⏰</span></div>
-                  <div><div class="fc-title">시간 발동 구간</div><div class="fc-subtitle">타이머 발동 성장 게이지 구간 (%)</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-desc">시간이 필요한 다람쥐의 타이머가 발동되는 성장 게이지 구간</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">최소 (%)</div><input type="number" id="sqSet_triggerMin" value="40" min="1" max="99"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최대 (%)</div><input type="number" id="sqSet_triggerMax" value="80" min="1" max="99"></div>
-                </div>
-              </div>
-            </div>
-
-            <button class="fc-save-btn" onclick="sqSaveSettings()">💾 다람쥐 설정 저장</button>
-          </div>
-
-          <!-- 다람쥐 지급 -->
-          <div class="cfg-panel" style="padding:12px;margin-top:8px">
-            <div class="fc-header"><h2>🎁 다람쥐 지급</h2></div>
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🎁</span></div>
-                  <div><div class="fc-title">지급 설정</div><div class="fc-subtitle">사용자 · 등급 · 타입 선택</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-sub-title">👤 사용자</div>
-                <select id="sqGrantUser" class="field" style="width:100%;margin-bottom:8px"><option value="">로딩 중...</option></select>
-                <div class="fc-grid g2">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">⭐ 등급</div>
-                    <select id="sqGrantGrade" class="field" style="width:100%;text-align:center;padding:5px 4px;font-size:13px;font-weight:700">
-                      <option value="normal">일반</option>
-                      <option value="rare">레어</option>
-                      <option value="epic">희귀</option>
-                      <option value="unique">유일</option>
-                      <option value="legend">레전드</option>
-                    </select>
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🐿️ 타입</div>
-                    <select id="sqGrantType" class="field" style="width:100%;text-align:center;padding:5px 4px;font-size:13px;font-weight:700">
-                      <option value="explorer">탐험형</option>
-                      <option value="pet">애완형</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="fc-desc" style="margin-top:6px">선택한 등급 범위 내에서 랜덤 스탯으로 생성됩니다.</div>
-                <button class="fc-save-btn" onclick="sqAdminGrantSquirrel()">🎁 다람쥐 지급하기</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 관리자 전용: 등급심사 설정 -->
-          <div class="cfg-panel" style="padding:12px;margin-top:8px">
-            <div class="fc-header"><h2>📋 등급심사 설정</h2></div>
-
-            <!-- 심사 비용 & 쿨다운 -->
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🌰</span></div>
-                  <div><div class="fc-title">비용 & 쿨다운</div><div class="fc-subtitle">심사 비용과 재심사 대기시간</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">심사 비용 (도토리)</div><input type="number" id="sqSet_examCost" value="10" min="0"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">실패 시 쿨다운 (시간)</div><input type="number" id="sqSet_examCooldown" value="48" min="0"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 합격률 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(5,150,105,0.1)"><span style="font-size:14px">🎯</span></div>
-                  <div><div class="fc-title">합격률</div><div class="fc-subtitle">기본 합격률과 아이템 부스트</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g3">
-                  <div class="fc-cell"><div class="fc-cell-label">기본 합격률 (%)</div><input type="number" id="sqSet_examPassRate" value="40" min="0" max="100"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">아이템당 부스트 (%)</div><input type="number" id="sqSet_examItemBoost" value="5" min="0" max="100"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최대 아이템 수</div><input type="number" id="sqSet_examItemMax" value="12" min="0"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 합격 보상 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">🎁</span></div>
-                  <div><div class="fc-title">합격 보상</div><div class="fc-subtitle">합격 시 추가 훈련 횟수</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">추가 훈련 최소</div><input type="number" id="sqSet_examBonusMin" value="1" min="0"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">추가 훈련 최대</div><input type="number" id="sqSet_examBonusMax" value="1" min="0"></div>
-                </div>
-              </div>
-            </div>
-
-            <button class="fc-save-btn" onclick="sqSaveSettings()">💾 심사 설정 저장</button>
-          </div>
-
-          <!-- 관리자 전용: 체력훈련 설정 -->
-          <div class="cfg-panel" style="padding:12px;margin-top:8px">
-            <div class="fc-header"><h2>🏋️ 체력훈련 설정</h2></div>
-
-            <!-- 훈련 성공률 -->
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(14,165,233,0.1)"><span style="font-size:14px">🎯</span></div>
-                  <div><div class="fc-title">성공률</div><div class="fc-subtitle">체력훈련 성공 확률</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g1">
-                  <div class="fc-cell"><div class="fc-cell-label">동그라미별 성공률 (%)</div><input type="number" id="sqSet_trainDotRate" value="30" min="0" max="100"></div>
-                </div>
-                <p style="font-size:10px;color:var(--text-muted);margin-top:6px;padding:0 4px">5개 동그라미 중 각각의 성공 확률입니다. 3개 이상 성공 시 훈련 성공!</p>
-              </div>
-            </div>
-
-            <!-- HP 증가량 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(22,163,74,0.1)"><span style="font-size:14px">💚</span></div>
-                  <div><div class="fc-title">HP 증가량</div><div class="fc-subtitle">성공 시 증가할 HP 범위 (가중치 랜덤)</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">최소 HP 증가</div><input type="number" id="sqSet_trainHpMin" value="1" min="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최대 HP 증가</div><input type="number" id="sqSet_trainHpMax" value="10" min="1"></div>
-                </div>
-                <p style="font-size:10px;color:var(--text-muted);margin-top:6px;padding:0 4px">낮은 값일수록 자주, 높은 값일수록 드물게 나옵니다 (가중치 풀 자동 생성)</p>
-              </div>
-            </div>
-
-            <!-- 훈련 횟수 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(168,85,247,0.1)"><span style="font-size:14px">🔢</span></div>
-                  <div><div class="fc-title">훈련 횟수</div><div class="fc-subtitle">등급심사 합격 시 부여되는 훈련 횟수 범위</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">최소 횟수</div><input type="number" id="sqSet_trainCountMin" value="0" min="0"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">최대 횟수</div><input type="number" id="sqSet_trainCountMax" value="2" min="0"></div>
-                </div>
-                <p style="font-size:10px;color:var(--text-muted);margin-top:6px;padding:0 4px">낮은 값일수록 자주, 높은 값일수록 드물게 나옵니다 (가중치 풀 자동 생성)</p>
-              </div>
-            </div>
-
-            <button class="fc-save-btn" onclick="sqSaveSettings()">💾 훈련 설정 저장</button>
-          </div>
-
-          <!-- 보유 다람쥐 현황 -->
-          <div class="cfg-panel" style="padding:12px;margin-top:8px">
-            <div class="fc-header"><h2>📋 보유 다람쥐 현황</h2></div>
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">📋</span></div>
-                  <div><div class="fc-title">현황 보기</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div id="sqAdminList" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 상점 -->
-      <div id="sqcontent-shop" class="hidden">
-        <div class="clay-card p-4">
-          <div class="title-font text-base text-gray-700 mb-3">🛒 다람쥐 분양</div>
-          <div class="clay-card p-5 text-center" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)">
-            <img src="images/baby-squirrel.png" style="width:110px;height:110px;object-fit:contain;animation:idle-bounce 2s ease-in-out infinite" class="mx-auto mb-2">
-            <div class="title-font text-lg text-amber-800 mb-1">아기 다람쥐 분양</div>
-            <div class="text-xs text-gray-500 mb-4">도토리를 먹여서 키워보세요!</div>
-            <div class="flex gap-2 justify-center">
-              <button class="btn btn-primary" onclick="sqBuySquirrel('shop')" style="width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:900;box-shadow:0 4px 0 #b45309,0 6px 20px rgba(245,158,11,.2)">🌰 30 도토리로 분양받기</button>
-            </div>
-          </div>
-        </div>
-        <div class="clay-card p-4 mt-4">
-          <div class="title-font text-sm text-gray-600 mb-3">💡 알아두면 좋아요</div>
-          <details class="sq-help-acc">
-            <summary>🐿️ 다람쥐는 어떻게 키우나요?</summary>
-            <div class="sq-help-body">분양받은 아기 다람쥐에게 도토리를 먹이면 성장 게이지가 올라가요. 게이지가 다 차면 <b>탐험형</b> 또는 <b>애완형</b> 중 하나로 성장합니다!</div>
-          </details>
-          <details class="sq-help-acc">
-            <summary>⚔️ 탐험형은 뭘 할 수 있나요?</summary>
-            <div class="sq-help-body">탐험형 다람쥐는 탐험에 보낼 수 있어요. 몬스터와 싸우고, 보물을 찾아 도토리와 아이템을 가져옵니다. 스탯이 높을수록 유리해요!</div>
-          </details>
-          <details class="sq-help-acc">
-            <summary>🏡 애완형은 어떤 다람쥐인가요?</summary>
-            <div class="sq-help-body">애완형 다람쥐는 탐험에는 나갈 수 없지만, 함께할 수 있어요. 필요 없다면 <b>펫샵에 팔아</b> 도토리를 돌려받을 수도 있습니다.</div>
-          </details>
-          <details class="sq-help-acc">
-            <summary>⭐ 등급은 어떻게 정해지나요?</summary>
-            <div class="sq-help-body">다람쥐의 HP, 공격, 방어 스탯에 따라 일반 → 레어 → 희귀 → 유일 → 레전드 등급이 결정돼요. 등급이 높을수록 테두리가 화려합니다!</div>
-          </details>
-          <details class="sq-help-acc">
-            <summary>✨ 뇌물이 필요해요!</summary>
-            <div class="sq-help-body">탐험에서 몬스터를 처치하거나 보스레이드에 참가해보세요!</div>
-          </details>
-        </div>
-        <!-- 관리자 전용: 상점 설정 -->
-        <div class="sq-admin-panel hidden">
-          <div class="cfg-panel" style="padding:12px;margin-top:12px">
-            <div class="fc-header"><h2>🛒 상점 설정</h2></div>
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🛒</span></div>
-                  <div><div class="fc-title">분양 가격</div><div class="fc-subtitle">다람쥐 구매 비용</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-row">
-                  <span class="fc-row-label">상점 구매 가격 (도토리)</span>
-                  <div class="fc-row-input"><input type="number" id="sqSet_shopPrice" value="30" min="1"></div>
-                </div>
-              </div>
-            </div>
-            <button class="fc-save-btn" onclick="sqSaveSettings()">💾 상점 설정 저장</button>
-          </div>
-        </div>
-      </div>
-      <!-- 합성 -->
-      <div id="sqcontent-fuse" class="hidden">
-        <div class="clay-card p-5 mb-4">
-          <div class="text-center mb-4">
-            <div style="font-size:48px" class="mb-2">🧬</div>
-            <div class="title-font text-lg text-gray-700 mb-1">다람쥐 합성</div>
-            <div class="text-sm text-gray-400">같은 등급 다람쥐 두 마리를 합성하여 새 다람쥐를 얻어요</div>
-            <div class="text-xs text-gray-400 mt-1">🌰 합성 비용: <strong id="sqFuseCostDisplay">10</strong> 도토리</div>
-          </div>
-          <div id="sqFuseSlots" style="display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:20px">
-            <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
-              <span style="font-size:32px;color:#d1d5db">＋</span>
-            </div>
-            <div style="font-size:28px;font-weight:900;color:#d1d5db">＋</div>
-            <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
-              <span style="font-size:32px;color:#d1d5db">＋</span>
-            </div>
-          </div>
-          <div id="sqFuseInfo" style="text-align:center;margin-bottom:16px"></div>
-          <button id="sqFuseBtn" onclick="sqFuseExecute()" class="btn btn-primary w-full" style="display:none">🧬 합성하기!</button>
-        </div>
-        <div id="sqFuseList" class="clay-card p-4">
-          <div class="title-font text-sm text-gray-600 mb-3">합성 가능한 다람쥐</div>
-          <div id="sqFuseGrid"></div>
-        </div>
-        <!-- 관리자 전용: 합성 설정 -->
-        <div class="sq-admin-panel hidden">
-          <div class="cfg-panel" style="padding:12px;margin-top:12px">
-            <div class="fc-header"><h2>🧬 합성 설정</h2></div>
-
-            <!-- 합성 비용 -->
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🌰</span></div>
-                  <div><div class="fc-title">합성 비용</div><div class="fc-subtitle">합성에 필요한 도토리</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-row">
-                  <span class="fc-row-label">합성 비용 (도토리)</span>
-                  <div class="fc-row-input"><input type="number" id="sqSet_fuseCost" value="10" min="0"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 등급 승급 확률 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">⬆️</span></div>
-                  <div><div class="fc-title">등급 승급 확률</div><div class="fc-subtitle">합성 시 상위 등급 확률 (%)</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-desc">합성 시 한 단계 높은 등급이 나올 확률입니다. 레전드는 최고 등급이므로 승급 없음.</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">일반 → 레어</div><input type="number" id="sqSet_fuseUpNormal" value="15" min="0" max="100"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">레어 → 희귀</div><input type="number" id="sqSet_fuseUpRare" value="12" min="0" max="100"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">희귀 → 유일</div><input type="number" id="sqSet_fuseUpEpic" value="8" min="0" max="100"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">유일 → 레전드</div><input type="number" id="sqSet_fuseUpUnique" value="5" min="0" max="100"></div>
-                </div>
-              </div>
-            </div>
-
-            <button class="fc-save-btn" onclick="sqSaveSettings()">💾 합성 설정 저장</button>
-          </div>
-        </div>
-
-      </div>
-      <!-- 탐험 -->
-      <div id="sqcontent-expedition" class="hidden">
-        <div class="clay-card p-5 text-center mb-4">
-          <div style="font-size:48px" class="mb-2">🗺️</div>
-          <div class="title-font text-lg text-gray-700 mb-1">탐험 준비</div>
-          <div class="text-sm text-gray-400 mb-4">탐험형 다람쥐를 보유해야 출발할 수 있어요</div>
-          <button class="btn btn-primary" onclick="sqStartExpeditionFlow()">탐험 출발 →</button>
-        </div>
-        <div id="sqActiveExpeditionArea"></div>
-        <div class="clay-card p-4 mt-4">
-          <div class="title-font text-sm text-gray-600 mb-3">💡 탐험 가이드</div>
-          <div class="sq-help-grid">
-            <div class="sq-help-card">
-              <div style="font-size:24px;margin-bottom:4px">✨</div>
-              <div class="sq-help-card-title">SP 전략</div>
-              <div class="sq-help-card-desc">스킬 포인트(SP)는 탐험마다 랜덤 횟수가 부여돼요. 보스전을 위해 아껴두세요!</div>
-            </div>
-            <div class="sq-help-card">
-              <div style="font-size:24px;margin-bottom:4px">💨</div>
-              <div class="sq-help-card-title">도망치기</div>
-              <div class="sq-help-card-desc">위험하면 도망! 단, 전리품의 50%만 가져가요</div>
-            </div>
-            <div class="sq-help-card">
-              <div style="font-size:24px;margin-bottom:4px">🌰</div>
-              <div class="sq-help-card-title">포션 사용</div>
-              <div class="sq-help-card-desc">전투 중 도토리 1개로 HP를 회복할 수 있어요</div>
-            </div>
-            <div class="sq-help-card">
-              <div style="font-size:24px;margin-bottom:4px">🎁</div>
-              <div class="sq-help-card-title">보상 획득</div>
-              <div class="sq-help-card-desc">전투 승리 시 카드 뽑기! 등급(C/B/A)에 따라 보상이 달라요</div>
-            </div>
-          </div>
-        </div>
-        <!-- 관리자 전용: 탐험 설정 -->
-        <div class="sq-admin-panel hidden">
-          <div class="cfg-panel" style="padding:12px;margin-top:12px">
-            <div class="fc-header"><h2>⚔️ 탐험 보상 설정</h2></div>
-
-            <!-- Section 1: 타일 이벤트 확률 -->
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🗺️</span></div>
-                  <div>
-                    <div class="fc-title">타일 이벤트 확률</div>
-                    <div class="fc-subtitle">빈칸/보물/몬스터 %</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-desc">빈칸 + 보물 + 몬스터 = 100 (보스는 마지막칸 고정)</div>
-                <div class="fc-grid g3">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🍃 빈칸</div>
-                    <input type="number" id="expSet_chanceEmpty" value="25" min="0" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">💰 보물</div>
-                    <input type="number" id="expSet_chanceTreasure" value="30" min="0" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">⚔️ 몬스터</div>
-                    <input type="number" id="expSet_chanceMonster" value="45" min="0" max="100">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 2: 스킬 포인트 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">✨</span></div>
-                  <div>
-                    <div class="fc-title">스킬 포인트</div>
-                    <div class="fc-subtitle">탐험당 SP 범위</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">최소 SP</div>
-                    <input type="number" id="expSet_spMin" value="1" min="0">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">최대 SP</div>
-                    <input type="number" id="expSet_spMax" value="5" min="1">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 3: 보물 상자 보상 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">💰</span></div>
-                  <div>
-                    <div class="fc-title">보물 상자 보상</div>
-                    <div class="fc-subtitle">도토리 보상 범위</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-grid g2">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">최소 도토리</div>
-                    <input type="number" id="expSet_treasureMin" value="3" min="0">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">최대 도토리</div>
-                    <input type="number" id="expSet_treasureMax" value="12" min="1">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 4: 레벨 기반 몬스터 스탯 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(16,185,129,0.1)"><span style="font-size:14px">📊</span></div>
-                  <div>
-                    <div class="fc-title">레벨 기반 몬스터 스탯</div>
-                    <div class="fc-subtitle">기본 스탯 · 레벨당 증가 · 보스 배율</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-desc">스탯 = 기본값 + (레벨 × 증가량). 보스는 배율 추가 적용</div>
-
-                <div class="fc-sub-title">기본 스탯</div>
-                <div class="fc-grid g3">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">기본 HP</div>
-                    <input type="number" id="expSet_lvBaseHp" value="30" min="0" step="1">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">기본 공격</div>
-                    <input type="number" id="expSet_lvBaseAtk" value="8" min="0" step="0.5">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">기본 방어</div>
-                    <input type="number" id="expSet_lvBaseDef" value="3" min="0" step="0.5">
-                  </div>
-                </div>
-
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">레벨당 증가량</div>
-                <div class="fc-grid g3">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">레벨당 HP↑</div>
-                    <input type="number" id="expSet_lvGrowHp" value="12" min="0" step="0.5">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">레벨당 공격↑</div>
-                    <input type="number" id="expSet_lvGrowAtk" value="2" min="0" step="0.5">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">레벨당 방어↑</div>
-                    <input type="number" id="expSet_lvGrowDef" value="1.5" min="0" step="0.5">
-                  </div>
-                </div>
-
-                <div class="fc-divider"></div>
-                <div class="fc-row">
-                  <span class="fc-row-label">👑 보스 스탯 배율 (×)</span>
-                  <div class="fc-row-input"><input type="number" id="expSet_bossStatMult" value="1.4" min="1" step="0.1"></div>
-                </div>
-                <div class="fc-desc">보스의 HP/공/방에 곱셈</div>
-              </div>
-            </div>
-
-            <!-- Section 5: 몬스터 관리 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(239,68,68,0.1)"><span style="font-size:14px">🐺</span></div>
-                  <div>
-                    <div class="fc-title">몬스터 관리</div>
-                    <div class="fc-subtitle">일반 몬스터 · 보스 관리</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-sub-title">일반 몬스터</div>
-                <div id="expSet_monsterList" class="mb-2">로딩 중...</div>
-                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-                  <div style="display:flex;gap:6px">
-                    <input type="text" id="expMonEmoji" class="field" placeholder="🐺" style="width:44px;text-align:center;flex-shrink:0">
-                    <input type="text" id="expMonName" class="field" placeholder="몬스터 이름" style="flex:1">
-                  </div>
-                  <div style="display:flex;gap:6px;align-items:center">
-                    <input type="number" id="expMonLvMin" class="field" placeholder="최소 Lv" style="flex:1" min="1">
-                    <input type="number" id="expMonLvMax" class="field" placeholder="최대 Lv" style="flex:1" min="1">
-                    <button class="btn btn-primary btn-sm" style="flex-shrink:0;padding:6px 14px" onclick="_expAddMonster(false)">추가</button>
-                  </div>
-                </div>
-
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">보스</div>
-                <div id="expSet_bossList" class="mb-2">로딩 중...</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <div style="display:flex;gap:6px">
-                    <input type="text" id="expBossEmoji" class="field" placeholder="👑" style="width:44px;text-align:center;flex-shrink:0">
-                    <input type="text" id="expBossName" class="field" placeholder="보스 이름" style="flex:1">
-                  </div>
-                  <div style="display:flex;gap:6px;align-items:center">
-                    <input type="number" id="expBossLvMin" class="field" placeholder="최소 Lv" style="flex:1" min="1">
-                    <input type="number" id="expBossLvMax" class="field" placeholder="최대 Lv" style="flex:1" min="1">
-                    <button class="btn btn-primary btn-sm" style="flex-shrink:0;padding:6px 14px" onclick="_expAddMonster(true)">추가</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 6: 보상 카드 확률 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(245,158,11,0.1)"><span style="font-size:14px">🃏</span></div>
-                  <div>
-                    <div class="fc-title">보상 카드 확률</div>
-                    <div class="fc-subtitle">일반 전투 · 보스전 등급 확률</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-sub-title">일반 전투</div>
-                <div class="fc-desc">A + B + C = 100</div>
-                <div class="fc-grid g3">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🥉 C등급</div>
-                    <input type="number" id="expSet_weightC" value="65" min="0" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🥈 B등급</div>
-                    <input type="number" id="expSet_weightB" value="28" min="0" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🥇 A등급</div>
-                    <input type="number" id="expSet_weightA" value="7" min="0" max="100">
-                  </div>
-                </div>
-
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">보스 처치</div>
-                <div class="fc-desc">보스 처치 시 적용되는 카드 확률 (A + B + C = 100)</div>
-                <div class="fc-grid g3">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🥉 C등급</div>
-                    <input type="number" id="expSet_bossWeightC" value="30" min="0" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🥈 B등급</div>
-                    <input type="number" id="expSet_bossWeightB" value="45" min="0" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🥇 A등급</div>
-                    <input type="number" id="expSet_bossWeightA" value="25" min="0" max="100">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 7: 등급별 보상 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">🎁</span></div>
-                  <div>
-                    <div class="fc-title">등급별 보상</div>
-                    <div class="fc-subtitle">C · B · A 등급 도토리 · 아이템</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <!-- C등급 -->
-                <div class="fc-sub-title">🥉 C등급 보상</div>
-                <div class="fc-grid g2" style="margin-bottom:4px">
-                  <div class="fc-cell"><div class="fc-cell-label">도토리 최소</div><input type="number" id="expSet_cAcornMin" value="5" min="0"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">도토리 최대</div><input type="number" id="expSet_cAcornMax" value="10" min="0"></div>
-                </div>
-                <div class="fc-row">
-                  <span class="fc-row-label">아이템 확률 (%)</span>
-                  <div class="fc-row-input"><input type="number" id="expSet_cItemChance" value="15" min="0" max="100"></div>
-                </div>
-                <div class="fc-desc">아이템 목록 (클릭하여 선택/해제)</div>
-                <div id="expSet_cItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
-
-                <div class="fc-divider"></div>
-
-                <!-- B등급 -->
-                <div class="fc-sub-title">🥈 B등급 보상</div>
-                <div class="fc-grid g2" style="margin-bottom:4px">
-                  <div class="fc-cell"><div class="fc-cell-label">도토리 최소</div><input type="number" id="expSet_bAcornMin" value="10" min="0"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">도토리 최대</div><input type="number" id="expSet_bAcornMax" value="20" min="0"></div>
-                </div>
-                <div class="fc-row">
-                  <span class="fc-row-label">아이템 확률 (%)</span>
-                  <div class="fc-row-input"><input type="number" id="expSet_bItemChance" value="45" min="0" max="100"></div>
-                </div>
-                <div class="fc-desc">아이템 목록 (클릭하여 선택/해제)</div>
-                <div id="expSet_bItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
-
-                <div class="fc-divider"></div>
-
-                <!-- A등급 -->
-                <div class="fc-sub-title">🥇 A등급 보상</div>
-                <div class="fc-grid g2" style="margin-bottom:4px">
-                  <div class="fc-cell"><div class="fc-cell-label">도토리 최소</div><input type="number" id="expSet_aAcornMin" value="20" min="0"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">도토리 최대</div><input type="number" id="expSet_aAcornMax" value="40" min="0"></div>
-                </div>
-                <div class="fc-row">
-                  <span class="fc-row-label">아이템 확률 (%)</span>
-                  <div class="fc-row-input"><input type="number" id="expSet_aItemChance" value="85" min="0" max="100"></div>
-                </div>
-                <div class="fc-desc">아이템 목록 (클릭하여 선택/해제)</div>
-                <div id="expSet_aItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
-              </div>
-            </div>
-
-            <!-- Section 8: 전투 밸런스 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(239,68,68,0.1)"><span style="font-size:14px">⚔️</span></div>
-                  <div>
-                    <div class="fc-title">전투 밸런스</div>
-                    <div class="fc-subtitle">배율 · 변동폭 · 방어력 · 회복</div>
-                  </div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-sub-title">데미지 배율</div>
-                <div class="fc-row">
-                  <span class="fc-row-label">스킬 배율 (×)</span>
-                  <div class="fc-row-input">
-                    <input type="number" id="expSet_skillMulti" value="1.65" min="0.1" step="0.05">
-                  </div>
-                </div>
-                <div class="fc-desc">데미지 = 공격력 × 배율</div>
-
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">랜덤 변동폭</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">스킬 변동 (±)</div>
-                    <input type="number" id="expSet_skillSwing" value="5" min="0">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">일반공격 변동 (±)</div>
-                    <input type="number" id="expSet_atkSwing" value="3" min="0">
-                  </div>
-                </div>
-                <div class="fc-row">
-                  <span class="fc-row-label">몬스터 공격 변동 (±)</span>
-                  <div class="fc-row-input">
-                    <input type="number" id="expSet_monSwing" value="3" min="0">
-                  </div>
-                </div>
-
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">방어력 효과</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">몬스터 방어 (%)</div>
-                    <input type="number" id="expSet_monDefEffect" value="38" min="0" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">다람쥐 방어 (%)</div>
-                    <input type="number" id="expSet_sqDefEffect" value="48" min="0" max="100">
-                  </div>
-                </div>
-                <div class="fc-desc">높을수록 방어력이 강함</div>
-
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">회복 & 도망</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">🧪 포션 회복 (%)</div>
-                    <input type="number" id="expSet_healPct" value="40" min="1" max="100">
-                  </div>
-                  <div class="fc-cell">
-                    <div class="fc-cell-label">💨 도망 실패 (%)</div>
-                    <input type="number" id="expSet_escapeFail" value="30" min="0" max="100">
-                  </div>
-                </div>
-                <div class="fc-desc">포션: 최대HP의 N% | 도망: 0이면 항상 성공</div>
-              </div>
-            </div>
-
-            <!-- Save Button -->
-            <button class="fc-save-btn" onclick="expSaveSettings()">💾 탐험 보상 설정 저장</button>
-          </div>
-        </div>
-      </div>
-      <!-- 농장 -->
-      <div id="sqcontent-farm" class="hidden">
-        <div id="sqFarmArea"></div>
-        <!-- 관리자 전용: 농장 설정 -->
-        <div class="sq-admin-panel hidden">
-          <div class="cfg-panel" style="padding:12px;margin-top:12px">
-            <div class="fc-header"><h2>🌾 농장 설정</h2></div>
-
-            <!-- 수확 -->
-            <div class="fc-section open">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🎲</span></div>
-                  <div><div class="fc-title">수확</div><div class="fc-subtitle">확률 · 수확량 범위</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-sub-title">수확 결과 확률 (%)</div>
-                <div class="fc-desc">일반 + 풍작 + 흉작 + 길냥이 도둑 = 100%</div>
-                <div class="fc-grid g4">
-                  <div class="fc-cell"><div class="fc-cell-label">일반 수확</div><input type="number" id="farmSet_harvestNormal" value="50"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">풍작</div><input type="number" id="farmSet_harvestBumper" value="20"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">흉작</div><input type="number" id="farmSet_harvestPoor" value="25"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">길냥이 도둑</div><input type="number" id="farmSet_harvestCatthief" value="5"></div>
-                </div>
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">수확량 범위</div>
-                <div class="fc-row">
-                  <span class="fc-row-label">일반 수확량</span>
-                  <div class="fc-row-input"><input type="number" id="farmSet_normalHarvest" value="3"></div>
-                </div>
-                <div class="fc-grid g4" style="margin-top:4px">
-                  <div class="fc-cell"><div class="fc-cell-label">풍작 최소</div><input type="number" id="farmSet_bumperMin" value="4"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">풍작 최대</div><input type="number" id="farmSet_bumperMax" value="5"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">흉작 최소</div><input type="number" id="farmSet_poorMin" value="1"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">흉작 최대</div><input type="number" id="farmSet_poorMax" value="2"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 시세 · 매입 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">💰</span></div>
-                  <div><div class="fc-title">시세 · 매입</div><div class="fc-subtitle">가격 변동 · 매입 배율 · 단계별 한도</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-row">
-                  <div style="flex:1">
-                    <span class="fc-row-label">시세 변동폭 (%)</span>
-                    <div class="fc-desc">시세 갱신 시 기본 가격 대비 ±N% 범위로 변동</div>
-                  </div>
-                  <div class="fc-row-input"><input type="number" id="farmSet_priceVariance" value="30"></div>
-                </div>
-                <div class="fc-divider"></div>
-                <div class="fc-row">
-                  <div style="flex:1">
-                    <span class="fc-row-label">매입 가격 배율 (%)</span>
-                    <div class="fc-desc">유저가 작물을 팔 때 시세 대비 매입가. 100 = 시세 그대로, 110 = 10% 더 쳐줌</div>
-                  </div>
-                  <div class="fc-row-input"><input type="number" id="farmSet_sellRatePct" value="110"></div>
-                </div>
-                <div class="fc-row">
-                  <div style="flex:1">
-                    <span class="fc-row-label">씨앗 되팔기 (%)</span>
-                    <div class="fc-desc">유저가 씨앗을 되팔 때 현재 시세의 N%로 매입</div>
-                  </div>
-                  <div class="fc-row-input"><input type="number" id="farmSet_seedResellPct" value="70"></div>
-                </div>
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">단계별 매입 한도 / 가격률</div>
-                <div class="fc-desc">같은 작물을 많이 팔수록 매입 가격이 내려감</div>
-                <div class="fc-tier-grid">
-                  <div></div><div class="tg-head">한도 (개)</div><div class="tg-head">가격률 (%)</div>
-                  <div class="tg-num">1</div><input type="number" id="farmSet_tier1Limit" value="10"><input type="number" id="farmSet_tier1Pct" value="100">
-                  <div class="tg-num">2</div><input type="number" id="farmSet_tier2Limit" value="10"><input type="number" id="farmSet_tier2Pct" value="80">
-                  <div class="tg-num">3</div><input type="number" id="farmSet_tier3Limit" value="10"><input type="number" id="farmSet_tier3Pct" value="60">
-                </div>
-              </div>
-            </div>
-
-            <!-- 확장 설정 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">🏗️</span></div>
-                  <div><div class="fc-title">확장 설정</div><div class="fc-subtitle">밭 · 인벤토리</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <table class="fc-expand-table">
-                  <tr><th></th><th>기본 칸수</th><th>확장 비용 (🌰)</th><th>최대 칸수</th></tr>
-                  <tr><td>🌾 밭</td><td><input type="number" id="farmSet_plotBaseCost" value="10"></td><td><input type="number" id="farmSet_plotIncrement" value="10"></td><td><input type="number" id="farmSet_maxPlots" value="9"></td></tr>
-                  <tr><td>📦 인벤</td><td><input type="number" id="farmSet_inventoryBase" value="3"></td><td><input type="number" id="farmSet_inventoryExpandCost" value="10"></td><td><input type="number" id="farmSet_inventoryMax" value="20"></td></tr>
-                </table>
-              </div>
-            </div>
-
-            <!-- 수습 농부 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">👨‍🌾</span></div>
-                  <div><div class="fc-title">수습 농부</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-row"><span class="fc-row-label">수습 시간 (시간)</span><div class="fc-row-input"><input type="number" id="farmSet_apprenticeHours" value="4"></div></div>
-                <div class="fc-row"><span class="fc-row-label">성공률 (%)</span><div class="fc-row-input"><input type="number" id="farmSet_apprenticeSuccess" value="40"></div></div>
-                <div class="fc-row"><span class="fc-row-label">실패 보상 (🌰÷100)</span><div class="fc-row-input"><input type="number" id="farmSet_apprenticeFailReward" value="5"></div></div>
-              </div>
-            </div>
-
-            <!-- 농부 등급별 버프 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(234,179,8,0.1)"><span style="font-size:14px">⭐</span></div>
-                  <div><div class="fc-title">농부 등급별 버프</div><div class="fc-subtitle">풍작↑ · 흉작↓ · 성장시간↓ (증감률 %)</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-desc">각 수치는 기본 확률 대비 증감률(%)입니다. 예: 풍작+35 → 기본 풍작 확률의 35% 증가</div>
-                <div class="fc-grade-table">
-                  <div class="fc-gt-header"><div></div><div>풍작 증가(%)</div><div>흉작 감소(%)</div><div>성장 감소(%)</div></div>
-                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#16a34a">🍀 레어</div><input type="number" id="farmSet_gradeRareBumper" value="0"><input type="number" id="farmSet_gradeRarePoor" value="12"><input type="number" id="farmSet_gradeRareGrow" value="0"></div>
-                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#2563eb">💎 희귀</div><input type="number" id="farmSet_gradeEpicBumper" value="10"><input type="number" id="farmSet_gradeEpicPoor" value="20"><input type="number" id="farmSet_gradeEpicGrow" value="5"></div>
-                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#ca8a04">⚡ 유일</div><input type="number" id="farmSet_gradeUniqueBumper" value="20"><input type="number" id="farmSet_gradeUniquePoor" value="28"><input type="number" id="farmSet_gradeUniqueGrow" value="8"></div>
-                  <div class="fc-gt-row"><div class="fc-gt-label" style="color:#dc2626">🔥 레전드</div><input type="number" id="farmSet_gradeLegendBumper" value="35"><input type="number" id="farmSet_gradeLegendPoor" value="40"><input type="number" id="farmSet_gradeLegendGrow" value="12"></div>
-                </div>
-                <div class="fc-divider"></div>
-                <div class="fc-sub-title">📊 DB 실제 연산 결과 (실시간 미리보기)</div>
-                <div class="fc-desc">아래 수치는 DB의 farm_harvest_plot 함수와 동일한 로직으로 계산된 실제 적용값입니다.</div>
-                <div class="fc-preview-box" style="font-size:12px;line-height:1.8;padding:8px 10px;border-radius:8px;background:var(--cfg-input-bg);border:1px solid var(--cfg-input-border);color:var(--cfg-row-label-color)">
-                  <div><strong>🌰 기본 (등급 없음)</strong></div>
-                  <div id="farmPreview_Base" style="padding-left:8px">저장 후 표시됩니다</div>
-                  <div style="margin-top:6px"><strong style="color:#16a34a">🍀 레어</strong></div>
-                  <div id="farmPreview_Rare" style="padding-left:8px">저장 후 표시됩니다</div>
-                  <div style="margin-top:6px"><strong style="color:#2563eb">💎 희귀</strong></div>
-                  <div id="farmPreview_Epic" style="padding-left:8px">저장 후 표시됩니다</div>
-                  <div style="margin-top:6px"><strong style="color:#ca8a04">⚡ 유일</strong></div>
-                  <div id="farmPreview_Unique" style="padding-left:8px">저장 후 표시됩니다</div>
-                  <div style="margin-top:6px"><strong style="color:#dc2626">🔥 레전드</strong></div>
-                  <div id="farmPreview_Legend" style="padding-left:8px">저장 후 표시됩니다</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 촉진제 / 영양제 -->
-            <div class="fc-section">
-              <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
-                <div class="fc-left">
-                  <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">⚗️</span></div>
-                  <div><div class="fc-title">촉진제 / 영양제</div><div class="fc-subtitle">상점에서 구매 후 작물에 사용</div></div>
-                </div>
-                <div class="fc-arrow">▶</div>
-              </div>
-              <div class="fc-sec-body">
-                <div class="fc-sub-title">⚡ 촉진제</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">가격 (🌰)</div><input type="number" id="farmSet_acceleratorCost" value="10"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">성장시간 감소 (%)</div><input type="number" id="farmSet_acceleratorPct" value="50"></div>
-                </div>
-                <div style="height:6px"></div>
-                <div class="fc-sub-title">🧪 영양제</div>
-                <div class="fc-grid g2">
-                  <div class="fc-cell"><div class="fc-cell-label">가격 (🌰)</div><input type="number" id="farmSet_nutrientCost" value="10"></div>
-                  <div class="fc-cell"><div class="fc-cell-label">풍작 확률 증가 (%p)</div><input type="number" id="farmSet_nutrientBumperBoost" value="20"></div>
-                </div>
-              </div>
-            </div>
-
-            <button class="fc-save-btn" onclick="farmSaveSettings()">💾 농장 설정 저장</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- 🏆 랭킹 탭 (사용자) -->
 
@@ -1451,6 +398,1060 @@
     <!-- 🤝 친구 탭 -->
     <div id="utab-friend" class="hidden">
       <div id="friendContent"></div>
+    </div>
+  </div>
+
+  <!-- 🐿️ 다람쥐 (공통, userMode/adminMode 양쪽에서 사용) -->
+  <div id="utab-squirrel" class="hidden">
+    <!-- 관리자 전용 뒤로가기 -->
+    <div id="sqAdminBackBar" class="hidden mb-3">
+      <button onclick="sqAdminBack()" class="btn btn-gray btn-sm">← 관리자 화면으로</button>
+    </div>
+    <!-- 서브탭 -->
+    <div class="clay-card p-2 flex gap-1 mb-4" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <button class="tab-btn active" onclick="sqTab('my')"         id="sqtab-my" style="flex:1 0 auto;min-width:0">🏠 내 다람쥐</button>
+      <button class="tab-btn"        onclick="sqTab('shop')"       id="sqtab-shop" style="flex:1 0 auto;min-width:0">🛒 상점</button>
+      <button class="tab-btn"        onclick="sqTab('fuse')"       id="sqtab-fuse" style="flex:1 0 auto;min-width:0">🧬 합성</button>
+      <button class="tab-btn"        onclick="sqTab('expedition')" id="sqtab-expedition" style="flex:1 0 auto;min-width:0">⚔️ 탐험</button>
+      <button class="tab-btn"        onclick="sqTab('farm')"       id="sqtab-farm" style="flex:1 0 auto;min-width:0">🌾 농장</button>
+    </div>
+    <!-- 내 다람쥐 -->
+    <div id="sqcontent-my">
+      <div class="clay-card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="title-font text-base text-gray-700">🐿️ 보유 다람쥐</span>
+          <span class="text-xs text-gray-400 font-bold" id="squirrelCount">0 / 10</span>
+        </div>
+        <div id="squirrelGrid" class="flex flex-col">
+          <div class="flex justify-center py-8"><div class="spinner"></div></div>
+        </div>
+      </div>
+      <!-- 관리자 전용: 다람쥐 기본 설정 -->
+      <div class="sq-admin-panel hidden">
+        <div class="cfg-panel" style="padding:12px;margin-top:12px" id="sqSettingsForm">
+          <div class="fc-header"><h2>🐿️ 다람쥐 설정</h2></div>
+
+          <!-- 성장 조건 -->
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🌱</span></div>
+                <div><div class="fc-title">성장 조건</div><div class="fc-subtitle">보유 수 · 도토리 · 시간 · 배율</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-row">
+                <div style="flex:1">
+                  <span class="fc-row-label">📦 최대 보유 마릿수</span>
+                  <div class="fc-desc">사용자 1명당 보유 가능한 다람쥐 수</div>
+                </div>
+                <div class="fc-row-input"><input type="number" id="sqSet_maxSquirrels" value="10" min="1" max="99"></div>
+              </div>
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">성장 도토리</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">최소</div><input type="number" id="sqSet_acornMin" value="20" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최대</div><input type="number" id="sqSet_acornMax" value="50" min="1"></div>
+              </div>
+              <div class="fc-divider"></div>
+              <div class="fc-row">
+                <span class="fc-row-label">⏳ 시간 필요 확률 (%)</span>
+                <div class="fc-row-input"><input type="number" id="sqSet_timeChance" value="40" min="0" max="100"></div>
+              </div>
+              <div class="fc-sub-title">성장 대기 시간 (분)</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">최소</div><input type="number" id="sqSet_timeMin" value="10" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최대</div><input type="number" id="sqSet_timeMax" value="60" min="1"></div>
+              </div>
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">🎲 먹이기 배율</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">최소</div><input type="number" id="sqSet_multiMin" value="0.5" min="0.1" max="1.0" step="0.05"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최대</div><input type="number" id="sqSet_multiMax" value="1.3" min="1.0" max="5.0" step="0.05"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 스탯 범위 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">⚔️</span></div>
+                <div><div class="fc-title">스탯 범위</div><div class="fc-subtitle">성장 시 랜덤 HP · 공격 · 방어</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">❤️ HP 최소</div><input type="number" id="sqSet_hpMin" value="60" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">❤️ HP 최대</div><input type="number" id="sqSet_hpMax" value="120" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">⚔️ 공격 최소</div><input type="number" id="sqSet_atkMin" value="8" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">⚔️ 공격 최대</div><input type="number" id="sqSet_atkMax" value="20" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">🛡️ 방어 최소</div><input type="number" id="sqSet_defMin" value="4" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">🛡️ 방어 최대</div><input type="number" id="sqSet_defMax" value="14" min="1"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 펫샵 매입가 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(16,185,129,0.1)"><span style="font-size:14px">🏪</span></div>
+                <div><div class="fc-title">펫샵 매입가</div><div class="fc-subtitle">스탯 기반 자동 산정</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">최저 매입가 (🌰)</div><input type="number" id="sqSet_sellBase" value="20" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최고 매입가 (🌰)</div><input type="number" id="sqSet_sellMax" value="80" min="1"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 회복 설정 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(236,72,153,0.1)"><span style="font-size:14px">💚</span></div>
+                <div><div class="fc-title">회복 설정</div><div class="fc-subtitle">회복 시간 · 즉시 회복 비용</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-row">
+                <div style="flex:1">
+                  <span class="fc-row-label">기본 회복시간 (분)</span>
+                  <div class="fc-desc">HP 0→풀 기준 (비례 적용)</div>
+                </div>
+                <div class="fc-row-input"><input type="number" id="sqSet_recoveryMinutes" value="60" min="1"></div>
+              </div>
+              <div class="fc-row">
+                <span class="fc-row-label">즉시회복 비용 (🌰)</span>
+                <div class="fc-row-input"><input type="number" id="sqSet_recoveryCost" value="15" min="1"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 시간 발동 구간 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">⏰</span></div>
+                <div><div class="fc-title">시간 발동 구간</div><div class="fc-subtitle">타이머 발동 성장 게이지 구간 (%)</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-desc">시간이 필요한 다람쥐의 타이머가 발동되는 성장 게이지 구간</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">최소 (%)</div><input type="number" id="sqSet_triggerMin" value="40" min="1" max="99"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최대 (%)</div><input type="number" id="sqSet_triggerMax" value="80" min="1" max="99"></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="fc-save-btn" onclick="sqSaveSettings()">💾 다람쥐 설정 저장</button>
+        </div>
+
+        <!-- 다람쥐 지급 -->
+        <div class="cfg-panel" style="padding:12px;margin-top:8px">
+          <div class="fc-header"><h2>🎁 다람쥐 지급</h2></div>
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🎁</span></div>
+                <div><div class="fc-title">지급 설정</div><div class="fc-subtitle">사용자 · 등급 · 타입 선택</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-sub-title">👤 사용자</div>
+              <select id="sqGrantUser" class="field" style="width:100%;margin-bottom:8px"><option value="">로딩 중...</option></select>
+              <div class="fc-grid g2">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">⭐ 등급</div>
+                  <select id="sqGrantGrade" class="field" style="width:100%;text-align:center;padding:5px 4px;font-size:13px;font-weight:700">
+                    <option value="normal">일반</option>
+                    <option value="rare">레어</option>
+                    <option value="epic">희귀</option>
+                    <option value="unique">유일</option>
+                    <option value="legend">레전드</option>
+                  </select>
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🐿️ 타입</div>
+                  <select id="sqGrantType" class="field" style="width:100%;text-align:center;padding:5px 4px;font-size:13px;font-weight:700">
+                    <option value="explorer">탐험형</option>
+                    <option value="pet">애완형</option>
+                  </select>
+                </div>
+              </div>
+              <div class="fc-desc" style="margin-top:6px">선택한 등급 범위 내에서 랜덤 스탯으로 생성됩니다.</div>
+              <button class="fc-save-btn" onclick="sqAdminGrantSquirrel()">🎁 다람쥐 지급하기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 관리자 전용: 등급심사 설정 -->
+        <div class="cfg-panel" style="padding:12px;margin-top:8px">
+          <div class="fc-header"><h2>📋 등급심사 설정</h2></div>
+
+          <!-- 심사 비용 & 쿨다운 -->
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🌰</span></div>
+                <div><div class="fc-title">비용 & 쿨다운</div><div class="fc-subtitle">심사 비용과 재심사 대기시간</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">심사 비용 (도토리)</div><input type="number" id="sqSet_examCost" value="10" min="0"></div>
+                <div class="fc-cell"><div class="fc-cell-label">실패 시 쿨다운 (시간)</div><input type="number" id="sqSet_examCooldown" value="48" min="0"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 합격률 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(5,150,105,0.1)"><span style="font-size:14px">🎯</span></div>
+                <div><div class="fc-title">합격률</div><div class="fc-subtitle">기본 합격률과 아이템 부스트</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g3">
+                <div class="fc-cell"><div class="fc-cell-label">기본 합격률 (%)</div><input type="number" id="sqSet_examPassRate" value="40" min="0" max="100"></div>
+                <div class="fc-cell"><div class="fc-cell-label">아이템당 부스트 (%)</div><input type="number" id="sqSet_examItemBoost" value="5" min="0" max="100"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최대 아이템 수</div><input type="number" id="sqSet_examItemMax" value="12" min="0"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 합격 보상 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">🎁</span></div>
+                <div><div class="fc-title">합격 보상</div><div class="fc-subtitle">합격 시 추가 훈련 횟수</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">추가 훈련 최소</div><input type="number" id="sqSet_examBonusMin" value="1" min="0"></div>
+                <div class="fc-cell"><div class="fc-cell-label">추가 훈련 최대</div><input type="number" id="sqSet_examBonusMax" value="1" min="0"></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="fc-save-btn" onclick="sqSaveSettings()">💾 심사 설정 저장</button>
+        </div>
+
+        <!-- 관리자 전용: 체력훈련 설정 -->
+        <div class="cfg-panel" style="padding:12px;margin-top:8px">
+          <div class="fc-header"><h2>🏋️ 체력훈련 설정</h2></div>
+
+          <!-- 훈련 성공률 -->
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(14,165,233,0.1)"><span style="font-size:14px">🎯</span></div>
+                <div><div class="fc-title">성공률</div><div class="fc-subtitle">체력훈련 성공 확률</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g1">
+                <div class="fc-cell"><div class="fc-cell-label">동그라미별 성공률 (%)</div><input type="number" id="sqSet_trainDotRate" value="30" min="0" max="100"></div>
+              </div>
+              <p style="font-size:10px;color:var(--text-muted);margin-top:6px;padding:0 4px">5개 동그라미 중 각각의 성공 확률입니다. 3개 이상 성공 시 훈련 성공!</p>
+            </div>
+          </div>
+
+          <!-- HP 증가량 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(22,163,74,0.1)"><span style="font-size:14px">💚</span></div>
+                <div><div class="fc-title">HP 증가량</div><div class="fc-subtitle">성공 시 증가할 HP 범위 (가중치 랜덤)</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">최소 HP 증가</div><input type="number" id="sqSet_trainHpMin" value="1" min="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최대 HP 증가</div><input type="number" id="sqSet_trainHpMax" value="10" min="1"></div>
+              </div>
+              <p style="font-size:10px;color:var(--text-muted);margin-top:6px;padding:0 4px">낮은 값일수록 자주, 높은 값일수록 드물게 나옵니다 (가중치 풀 자동 생성)</p>
+            </div>
+          </div>
+
+          <!-- 훈련 횟수 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(168,85,247,0.1)"><span style="font-size:14px">🔢</span></div>
+                <div><div class="fc-title">훈련 횟수</div><div class="fc-subtitle">등급심사 합격 시 부여되는 훈련 횟수 범위</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">최소 횟수</div><input type="number" id="sqSet_trainCountMin" value="0" min="0"></div>
+                <div class="fc-cell"><div class="fc-cell-label">최대 횟수</div><input type="number" id="sqSet_trainCountMax" value="2" min="0"></div>
+              </div>
+              <p style="font-size:10px;color:var(--text-muted);margin-top:6px;padding:0 4px">낮은 값일수록 자주, 높은 값일수록 드물게 나옵니다 (가중치 풀 자동 생성)</p>
+            </div>
+          </div>
+
+          <button class="fc-save-btn" onclick="sqSaveSettings()">💾 훈련 설정 저장</button>
+        </div>
+
+        <!-- 보유 다람쥐 현황 -->
+        <div class="cfg-panel" style="padding:12px;margin-top:8px">
+          <div class="fc-header"><h2>📋 보유 다람쥐 현황</h2></div>
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">📋</span></div>
+                <div><div class="fc-title">현황 보기</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div id="sqAdminList" class="text-sm text-gray-400 text-center py-4">로딩 중...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 상점 -->
+    <div id="sqcontent-shop" class="hidden">
+      <div class="clay-card p-4">
+        <div class="title-font text-base text-gray-700 mb-3">🛒 다람쥐 분양</div>
+        <div class="clay-card p-5 text-center" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)">
+          <img src="images/baby-squirrel.png" style="width:110px;height:110px;object-fit:contain;animation:idle-bounce 2s ease-in-out infinite" class="mx-auto mb-2">
+          <div class="title-font text-lg text-amber-800 mb-1">아기 다람쥐 분양</div>
+          <div class="text-xs text-gray-500 mb-4">도토리를 먹여서 키워보세요!</div>
+          <div class="flex gap-2 justify-center">
+            <button class="btn btn-primary" onclick="sqBuySquirrel('shop')" style="width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:900;box-shadow:0 4px 0 #b45309,0 6px 20px rgba(245,158,11,.2)">🌰 30 도토리로 분양받기</button>
+          </div>
+        </div>
+      </div>
+      <div class="clay-card p-4 mt-4">
+        <div class="title-font text-sm text-gray-600 mb-3">💡 알아두면 좋아요</div>
+        <details class="sq-help-acc">
+          <summary>🐿️ 다람쥐는 어떻게 키우나요?</summary>
+          <div class="sq-help-body">분양받은 아기 다람쥐에게 도토리를 먹이면 성장 게이지가 올라가요. 게이지가 다 차면 <b>탐험형</b> 또는 <b>애완형</b> 중 하나로 성장합니다!</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>⚔️ 탐험형은 뭘 할 수 있나요?</summary>
+          <div class="sq-help-body">탐험형 다람쥐는 탐험에 보낼 수 있어요. 몬스터와 싸우고, 보물을 찾아 도토리와 아이템을 가져옵니다. 스탯이 높을수록 유리해요!</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>🏡 애완형은 어떤 다람쥐인가요?</summary>
+          <div class="sq-help-body">애완형 다람쥐는 탐험에는 나갈 수 없지만, 함께할 수 있어요. 필요 없다면 <b>펫샵에 팔아</b> 도토리를 돌려받을 수도 있습니다.</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>⭐ 등급은 어떻게 정해지나요?</summary>
+          <div class="sq-help-body">다람쥐의 HP, 공격, 방어 스탯에 따라 일반 → 레어 → 희귀 → 유일 → 레전드 등급이 결정돼요. 등급이 높을수록 테두리가 화려합니다!</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>✨ 뇌물이 필요해요!</summary>
+          <div class="sq-help-body">탐험에서 몬스터를 처치하거나 보스레이드에 참가해보세요!</div>
+        </details>
+      </div>
+      <!-- 관리자 전용: 상점 설정 -->
+      <div class="sq-admin-panel hidden">
+        <div class="cfg-panel" style="padding:12px;margin-top:12px">
+          <div class="fc-header"><h2>🛒 상점 설정</h2></div>
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🛒</span></div>
+                <div><div class="fc-title">분양 가격</div><div class="fc-subtitle">다람쥐 구매 비용</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-row">
+                <span class="fc-row-label">상점 구매 가격 (도토리)</span>
+                <div class="fc-row-input"><input type="number" id="sqSet_shopPrice" value="30" min="1"></div>
+              </div>
+            </div>
+          </div>
+          <button class="fc-save-btn" onclick="sqSaveSettings()">💾 상점 설정 저장</button>
+        </div>
+      </div>
+    </div>
+    <!-- 합성 -->
+    <div id="sqcontent-fuse" class="hidden">
+      <div class="clay-card p-5 mb-4">
+        <div class="text-center mb-4">
+          <div style="font-size:48px" class="mb-2">🧬</div>
+          <div class="title-font text-lg text-gray-700 mb-1">다람쥐 합성</div>
+          <div class="text-sm text-gray-400">같은 등급 다람쥐 두 마리를 합성하여 새 다람쥐를 얻어요</div>
+          <div class="text-xs text-gray-400 mt-1">🌰 합성 비용: <strong id="sqFuseCostDisplay">10</strong> 도토리</div>
+        </div>
+        <div id="sqFuseSlots" style="display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:20px">
+          <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
+            <span style="font-size:32px;color:#d1d5db">＋</span>
+          </div>
+          <div style="font-size:28px;font-weight:900;color:#d1d5db">＋</div>
+          <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
+            <span style="font-size:32px;color:#d1d5db">＋</span>
+          </div>
+        </div>
+        <div id="sqFuseInfo" style="text-align:center;margin-bottom:16px"></div>
+        <button id="sqFuseBtn" onclick="sqFuseExecute()" class="btn btn-primary w-full" style="display:none">🧬 합성하기!</button>
+      </div>
+      <div id="sqFuseList" class="clay-card p-4">
+        <div class="title-font text-sm text-gray-600 mb-3">합성 가능한 다람쥐</div>
+        <div id="sqFuseGrid"></div>
+      </div>
+      <!-- 관리자 전용: 합성 설정 -->
+      <div class="sq-admin-panel hidden">
+        <div class="cfg-panel" style="padding:12px;margin-top:12px">
+          <div class="fc-header"><h2>🧬 합성 설정</h2></div>
+
+          <!-- 합성 비용 -->
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🌰</span></div>
+                <div><div class="fc-title">합성 비용</div><div class="fc-subtitle">합성에 필요한 도토리</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-row">
+                <span class="fc-row-label">합성 비용 (도토리)</span>
+                <div class="fc-row-input"><input type="number" id="sqSet_fuseCost" value="10" min="0"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 등급 승급 확률 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">⬆️</span></div>
+                <div><div class="fc-title">등급 승급 확률</div><div class="fc-subtitle">합성 시 상위 등급 확률 (%)</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-desc">합성 시 한 단계 높은 등급이 나올 확률입니다. 레전드는 최고 등급이므로 승급 없음.</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">일반 → 레어</div><input type="number" id="sqSet_fuseUpNormal" value="15" min="0" max="100"></div>
+                <div class="fc-cell"><div class="fc-cell-label">레어 → 희귀</div><input type="number" id="sqSet_fuseUpRare" value="12" min="0" max="100"></div>
+                <div class="fc-cell"><div class="fc-cell-label">희귀 → 유일</div><input type="number" id="sqSet_fuseUpEpic" value="8" min="0" max="100"></div>
+                <div class="fc-cell"><div class="fc-cell-label">유일 → 레전드</div><input type="number" id="sqSet_fuseUpUnique" value="5" min="0" max="100"></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="fc-save-btn" onclick="sqSaveSettings()">💾 합성 설정 저장</button>
+        </div>
+      </div>
+
+    </div>
+    <!-- 탐험 -->
+    <div id="sqcontent-expedition" class="hidden">
+      <div class="clay-card p-5 text-center mb-4">
+        <div style="font-size:48px" class="mb-2">🗺️</div>
+        <div class="title-font text-lg text-gray-700 mb-1">탐험 준비</div>
+        <div class="text-sm text-gray-400 mb-4">탐험형 다람쥐를 보유해야 출발할 수 있어요</div>
+        <button class="btn btn-primary" onclick="sqStartExpeditionFlow()">탐험 출발 →</button>
+      </div>
+      <div id="sqActiveExpeditionArea"></div>
+      <div class="clay-card p-4 mt-4">
+        <div class="title-font text-sm text-gray-600 mb-3">💡 탐험 가이드</div>
+        <div class="sq-help-grid">
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">✨</div>
+            <div class="sq-help-card-title">SP 전략</div>
+            <div class="sq-help-card-desc">스킬 포인트(SP)는 탐험마다 랜덤 횟수가 부여돼요. 보스전을 위해 아껴두세요!</div>
+          </div>
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">💨</div>
+            <div class="sq-help-card-title">도망치기</div>
+            <div class="sq-help-card-desc">위험하면 도망! 단, 전리품의 50%만 가져가요</div>
+          </div>
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">🌰</div>
+            <div class="sq-help-card-title">포션 사용</div>
+            <div class="sq-help-card-desc">전투 중 도토리 1개로 HP를 회복할 수 있어요</div>
+          </div>
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">🎁</div>
+            <div class="sq-help-card-title">보상 획득</div>
+            <div class="sq-help-card-desc">전투 승리 시 카드 뽑기! 등급(C/B/A)에 따라 보상이 달라요</div>
+          </div>
+        </div>
+      </div>
+      <!-- 관리자 전용: 탐험 설정 -->
+      <div class="sq-admin-panel hidden">
+        <div class="cfg-panel" style="padding:12px;margin-top:12px">
+          <div class="fc-header"><h2>⚔️ 탐험 보상 설정</h2></div>
+
+          <!-- Section 1: 타일 이벤트 확률 -->
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🗺️</span></div>
+                <div>
+                  <div class="fc-title">타일 이벤트 확률</div>
+                  <div class="fc-subtitle">빈칸/보물/몬스터 %</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-desc">빈칸 + 보물 + 몬스터 = 100 (보스는 마지막칸 고정)</div>
+              <div class="fc-grid g3">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🍃 빈칸</div>
+                  <input type="number" id="expSet_chanceEmpty" value="25" min="0" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">💰 보물</div>
+                  <input type="number" id="expSet_chanceTreasure" value="30" min="0" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">⚔️ 몬스터</div>
+                  <input type="number" id="expSet_chanceMonster" value="45" min="0" max="100">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: 스킬 포인트 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">✨</span></div>
+                <div>
+                  <div class="fc-title">스킬 포인트</div>
+                  <div class="fc-subtitle">탐험당 SP 범위</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">최소 SP</div>
+                  <input type="number" id="expSet_spMin" value="1" min="0">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">최대 SP</div>
+                  <input type="number" id="expSet_spMax" value="5" min="1">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: 보물 상자 보상 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">💰</span></div>
+                <div>
+                  <div class="fc-title">보물 상자 보상</div>
+                  <div class="fc-subtitle">도토리 보상 범위</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-grid g2">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">최소 도토리</div>
+                  <input type="number" id="expSet_treasureMin" value="3" min="0">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">최대 도토리</div>
+                  <input type="number" id="expSet_treasureMax" value="12" min="1">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: 레벨 기반 몬스터 스탯 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(16,185,129,0.1)"><span style="font-size:14px">📊</span></div>
+                <div>
+                  <div class="fc-title">레벨 기반 몬스터 스탯</div>
+                  <div class="fc-subtitle">기본 스탯 · 레벨당 증가 · 보스 배율</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-desc">스탯 = 기본값 + (레벨 × 증가량). 보스는 배율 추가 적용</div>
+
+              <div class="fc-sub-title">기본 스탯</div>
+              <div class="fc-grid g3">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">기본 HP</div>
+                  <input type="number" id="expSet_lvBaseHp" value="30" min="0" step="1">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">기본 공격</div>
+                  <input type="number" id="expSet_lvBaseAtk" value="8" min="0" step="0.5">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">기본 방어</div>
+                  <input type="number" id="expSet_lvBaseDef" value="3" min="0" step="0.5">
+                </div>
+              </div>
+
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">레벨당 증가량</div>
+              <div class="fc-grid g3">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">레벨당 HP↑</div>
+                  <input type="number" id="expSet_lvGrowHp" value="12" min="0" step="0.5">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">레벨당 공격↑</div>
+                  <input type="number" id="expSet_lvGrowAtk" value="2" min="0" step="0.5">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">레벨당 방어↑</div>
+                  <input type="number" id="expSet_lvGrowDef" value="1.5" min="0" step="0.5">
+                </div>
+              </div>
+
+              <div class="fc-divider"></div>
+              <div class="fc-row">
+                <span class="fc-row-label">👑 보스 스탯 배율 (×)</span>
+                <div class="fc-row-input"><input type="number" id="expSet_bossStatMult" value="1.4" min="1" step="0.1"></div>
+              </div>
+              <div class="fc-desc">보스의 HP/공/방에 곱셈</div>
+            </div>
+          </div>
+
+          <!-- Section 5: 몬스터 관리 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(239,68,68,0.1)"><span style="font-size:14px">🐺</span></div>
+                <div>
+                  <div class="fc-title">몬스터 관리</div>
+                  <div class="fc-subtitle">일반 몬스터 · 보스 관리</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-sub-title">일반 몬스터</div>
+              <div id="expSet_monsterList" class="mb-2">로딩 중...</div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+                <div style="display:flex;gap:6px">
+                  <input type="text" id="expMonEmoji" class="field" placeholder="🐺" style="width:44px;text-align:center;flex-shrink:0">
+                  <input type="text" id="expMonName" class="field" placeholder="몬스터 이름" style="flex:1">
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input type="number" id="expMonLvMin" class="field" placeholder="최소 Lv" style="flex:1" min="1">
+                  <input type="number" id="expMonLvMax" class="field" placeholder="최대 Lv" style="flex:1" min="1">
+                  <button class="btn btn-primary btn-sm" style="flex-shrink:0;padding:6px 14px" onclick="_expAddMonster(false)">추가</button>
+                </div>
+              </div>
+
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">보스</div>
+              <div id="expSet_bossList" class="mb-2">로딩 중...</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;gap:6px">
+                  <input type="text" id="expBossEmoji" class="field" placeholder="👑" style="width:44px;text-align:center;flex-shrink:0">
+                  <input type="text" id="expBossName" class="field" placeholder="보스 이름" style="flex:1">
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input type="number" id="expBossLvMin" class="field" placeholder="최소 Lv" style="flex:1" min="1">
+                  <input type="number" id="expBossLvMax" class="field" placeholder="최대 Lv" style="flex:1" min="1">
+                  <button class="btn btn-primary btn-sm" style="flex-shrink:0;padding:6px 14px" onclick="_expAddMonster(true)">추가</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 6: 보상 카드 확률 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(245,158,11,0.1)"><span style="font-size:14px">🃏</span></div>
+                <div>
+                  <div class="fc-title">보상 카드 확률</div>
+                  <div class="fc-subtitle">일반 전투 · 보스전 등급 확률</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-sub-title">일반 전투</div>
+              <div class="fc-desc">A + B + C = 100</div>
+              <div class="fc-grid g3">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🥉 C등급</div>
+                  <input type="number" id="expSet_weightC" value="65" min="0" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🥈 B등급</div>
+                  <input type="number" id="expSet_weightB" value="28" min="0" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🥇 A등급</div>
+                  <input type="number" id="expSet_weightA" value="7" min="0" max="100">
+                </div>
+              </div>
+
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">보스 처치</div>
+              <div class="fc-desc">보스 처치 시 적용되는 카드 확률 (A + B + C = 100)</div>
+              <div class="fc-grid g3">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🥉 C등급</div>
+                  <input type="number" id="expSet_bossWeightC" value="30" min="0" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🥈 B등급</div>
+                  <input type="number" id="expSet_bossWeightB" value="45" min="0" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🥇 A등급</div>
+                  <input type="number" id="expSet_bossWeightA" value="25" min="0" max="100">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 7: 등급별 보상 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">🎁</span></div>
+                <div>
+                  <div class="fc-title">등급별 보상</div>
+                  <div class="fc-subtitle">C · B · A 등급 도토리 · 아이템</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <!-- C등급 -->
+              <div class="fc-sub-title">🥉 C등급 보상</div>
+              <div class="fc-grid g2" style="margin-bottom:4px">
+                <div class="fc-cell"><div class="fc-cell-label">도토리 최소</div><input type="number" id="expSet_cAcornMin" value="5" min="0"></div>
+                <div class="fc-cell"><div class="fc-cell-label">도토리 최대</div><input type="number" id="expSet_cAcornMax" value="10" min="0"></div>
+              </div>
+              <div class="fc-row">
+                <span class="fc-row-label">아이템 확률 (%)</span>
+                <div class="fc-row-input"><input type="number" id="expSet_cItemChance" value="15" min="0" max="100"></div>
+              </div>
+              <div class="fc-desc">아이템 목록 (클릭하여 선택/해제)</div>
+              <div id="expSet_cItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
+
+              <div class="fc-divider"></div>
+
+              <!-- B등급 -->
+              <div class="fc-sub-title">🥈 B등급 보상</div>
+              <div class="fc-grid g2" style="margin-bottom:4px">
+                <div class="fc-cell"><div class="fc-cell-label">도토리 최소</div><input type="number" id="expSet_bAcornMin" value="10" min="0"></div>
+                <div class="fc-cell"><div class="fc-cell-label">도토리 최대</div><input type="number" id="expSet_bAcornMax" value="20" min="0"></div>
+              </div>
+              <div class="fc-row">
+                <span class="fc-row-label">아이템 확률 (%)</span>
+                <div class="fc-row-input"><input type="number" id="expSet_bItemChance" value="45" min="0" max="100"></div>
+              </div>
+              <div class="fc-desc">아이템 목록 (클릭하여 선택/해제)</div>
+              <div id="expSet_bItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
+
+              <div class="fc-divider"></div>
+
+              <!-- A등급 -->
+              <div class="fc-sub-title">🥇 A등급 보상</div>
+              <div class="fc-grid g2" style="margin-bottom:4px">
+                <div class="fc-cell"><div class="fc-cell-label">도토리 최소</div><input type="number" id="expSet_aAcornMin" value="20" min="0"></div>
+                <div class="fc-cell"><div class="fc-cell-label">도토리 최대</div><input type="number" id="expSet_aAcornMax" value="40" min="0"></div>
+              </div>
+              <div class="fc-row">
+                <span class="fc-row-label">아이템 확률 (%)</span>
+                <div class="fc-row-input"><input type="number" id="expSet_aItemChance" value="85" min="0" max="100"></div>
+              </div>
+              <div class="fc-desc">아이템 목록 (클릭하여 선택/해제)</div>
+              <div id="expSet_aItemsWrap" class="exp-item-select-wrap">로딩 중...</div>
+            </div>
+          </div>
+
+          <!-- Section 8: 전투 밸런스 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(239,68,68,0.1)"><span style="font-size:14px">⚔️</span></div>
+                <div>
+                  <div class="fc-title">전투 밸런스</div>
+                  <div class="fc-subtitle">배율 · 변동폭 · 방어력 · 회복</div>
+                </div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-sub-title">데미지 배율</div>
+              <div class="fc-row">
+                <span class="fc-row-label">스킬 배율 (×)</span>
+                <div class="fc-row-input">
+                  <input type="number" id="expSet_skillMulti" value="1.65" min="0.1" step="0.05">
+                </div>
+              </div>
+              <div class="fc-desc">데미지 = 공격력 × 배율</div>
+
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">랜덤 변동폭</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">스킬 변동 (±)</div>
+                  <input type="number" id="expSet_skillSwing" value="5" min="0">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">일반공격 변동 (±)</div>
+                  <input type="number" id="expSet_atkSwing" value="3" min="0">
+                </div>
+              </div>
+              <div class="fc-row">
+                <span class="fc-row-label">몬스터 공격 변동 (±)</span>
+                <div class="fc-row-input">
+                  <input type="number" id="expSet_monSwing" value="3" min="0">
+                </div>
+              </div>
+
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">방어력 효과</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">몬스터 방어 (%)</div>
+                  <input type="number" id="expSet_monDefEffect" value="38" min="0" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">다람쥐 방어 (%)</div>
+                  <input type="number" id="expSet_sqDefEffect" value="48" min="0" max="100">
+                </div>
+              </div>
+              <div class="fc-desc">높을수록 방어력이 강함</div>
+
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">회복 & 도망</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell">
+                  <div class="fc-cell-label">🧪 포션 회복 (%)</div>
+                  <input type="number" id="expSet_healPct" value="40" min="1" max="100">
+                </div>
+                <div class="fc-cell">
+                  <div class="fc-cell-label">💨 도망 실패 (%)</div>
+                  <input type="number" id="expSet_escapeFail" value="30" min="0" max="100">
+                </div>
+              </div>
+              <div class="fc-desc">포션: 최대HP의 N% | 도망: 0이면 항상 성공</div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <button class="fc-save-btn" onclick="expSaveSettings()">💾 탐험 보상 설정 저장</button>
+        </div>
+      </div>
+    </div>
+    <!-- 농장 -->
+    <div id="sqcontent-farm" class="hidden">
+      <div id="sqFarmArea"></div>
+      <!-- 관리자 전용: 농장 설정 -->
+      <div class="sq-admin-panel hidden">
+        <div class="cfg-panel" style="padding:12px;margin-top:12px">
+          <div class="fc-header"><h2>🌾 농장 설정</h2></div>
+
+          <!-- 수확 -->
+          <div class="fc-section open">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">🎲</span></div>
+                <div><div class="fc-title">수확</div><div class="fc-subtitle">확률 · 수확량 범위</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-sub-title">수확 결과 확률 (%)</div>
+              <div class="fc-desc">일반 + 풍작 + 흉작 + 길냥이 도둑 = 100%</div>
+              <div class="fc-grid g4">
+                <div class="fc-cell"><div class="fc-cell-label">일반 수확</div><input type="number" id="farmSet_harvestNormal" value="50"></div>
+                <div class="fc-cell"><div class="fc-cell-label">풍작</div><input type="number" id="farmSet_harvestBumper" value="20"></div>
+                <div class="fc-cell"><div class="fc-cell-label">흉작</div><input type="number" id="farmSet_harvestPoor" value="25"></div>
+                <div class="fc-cell"><div class="fc-cell-label">길냥이 도둑</div><input type="number" id="farmSet_harvestCatthief" value="5"></div>
+              </div>
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">수확량 범위</div>
+              <div class="fc-row">
+                <span class="fc-row-label">일반 수확량</span>
+                <div class="fc-row-input"><input type="number" id="farmSet_normalHarvest" value="3"></div>
+              </div>
+              <div class="fc-grid g4" style="margin-top:4px">
+                <div class="fc-cell"><div class="fc-cell-label">풍작 최소</div><input type="number" id="farmSet_bumperMin" value="4"></div>
+                <div class="fc-cell"><div class="fc-cell-label">풍작 최대</div><input type="number" id="farmSet_bumperMax" value="5"></div>
+                <div class="fc-cell"><div class="fc-cell-label">흉작 최소</div><input type="number" id="farmSet_poorMin" value="1"></div>
+                <div class="fc-cell"><div class="fc-cell-label">흉작 최대</div><input type="number" id="farmSet_poorMax" value="2"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 시세 · 매입 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(59,130,246,0.1)"><span style="font-size:14px">💰</span></div>
+                <div><div class="fc-title">시세 · 매입</div><div class="fc-subtitle">가격 변동 · 매입 배율 · 단계별 한도</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-row">
+                <div style="flex:1">
+                  <span class="fc-row-label">시세 변동폭 (%)</span>
+                  <div class="fc-desc">시세 갱신 시 기본 가격 대비 ±N% 범위로 변동</div>
+                </div>
+                <div class="fc-row-input"><input type="number" id="farmSet_priceVariance" value="30"></div>
+              </div>
+              <div class="fc-divider"></div>
+              <div class="fc-row">
+                <div style="flex:1">
+                  <span class="fc-row-label">매입 가격 배율 (%)</span>
+                  <div class="fc-desc">유저가 작물을 팔 때 시세 대비 매입가. 100 = 시세 그대로, 110 = 10% 더 쳐줌</div>
+                </div>
+                <div class="fc-row-input"><input type="number" id="farmSet_sellRatePct" value="110"></div>
+              </div>
+              <div class="fc-row">
+                <div style="flex:1">
+                  <span class="fc-row-label">씨앗 되팔기 (%)</span>
+                  <div class="fc-desc">유저가 씨앗을 되팔 때 현재 시세의 N%로 매입</div>
+                </div>
+                <div class="fc-row-input"><input type="number" id="farmSet_seedResellPct" value="70"></div>
+              </div>
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">단계별 매입 한도 / 가격률</div>
+              <div class="fc-desc">같은 작물을 많이 팔수록 매입 가격이 내려감</div>
+              <div class="fc-tier-grid">
+                <div></div><div class="tg-head">한도 (개)</div><div class="tg-head">가격률 (%)</div>
+                <div class="tg-num">1</div><input type="number" id="farmSet_tier1Limit" value="10"><input type="number" id="farmSet_tier1Pct" value="100">
+                <div class="tg-num">2</div><input type="number" id="farmSet_tier2Limit" value="10"><input type="number" id="farmSet_tier2Pct" value="80">
+                <div class="tg-num">3</div><input type="number" id="farmSet_tier3Limit" value="10"><input type="number" id="farmSet_tier3Pct" value="60">
+              </div>
+            </div>
+          </div>
+
+          <!-- 확장 설정 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">🏗️</span></div>
+                <div><div class="fc-title">확장 설정</div><div class="fc-subtitle">밭 · 인벤토리</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <table class="fc-expand-table">
+                <tr><th></th><th>기본 칸수</th><th>확장 비용 (🌰)</th><th>최대 칸수</th></tr>
+                <tr><td>🌾 밭</td><td><input type="number" id="farmSet_plotBaseCost" value="10"></td><td><input type="number" id="farmSet_plotIncrement" value="10"></td><td><input type="number" id="farmSet_maxPlots" value="9"></td></tr>
+                <tr><td>📦 인벤</td><td><input type="number" id="farmSet_inventoryBase" value="3"></td><td><input type="number" id="farmSet_inventoryExpandCost" value="10"></td><td><input type="number" id="farmSet_inventoryMax" value="20"></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 수습 농부 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(217,119,6,0.1)"><span style="font-size:14px">👨‍🌾</span></div>
+                <div><div class="fc-title">수습 농부</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-row"><span class="fc-row-label">수습 시간 (시간)</span><div class="fc-row-input"><input type="number" id="farmSet_apprenticeHours" value="4"></div></div>
+              <div class="fc-row"><span class="fc-row-label">성공률 (%)</span><div class="fc-row-input"><input type="number" id="farmSet_apprenticeSuccess" value="40"></div></div>
+              <div class="fc-row"><span class="fc-row-label">실패 보상 (🌰÷100)</span><div class="fc-row-input"><input type="number" id="farmSet_apprenticeFailReward" value="5"></div></div>
+            </div>
+          </div>
+
+          <!-- 농부 등급별 버프 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(234,179,8,0.1)"><span style="font-size:14px">⭐</span></div>
+                <div><div class="fc-title">농부 등급별 버프</div><div class="fc-subtitle">풍작↑ · 흉작↓ · 성장시간↓ (증감률 %)</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-desc">각 수치는 기본 확률 대비 증감률(%)입니다. 예: 풍작+35 → 기본 풍작 확률의 35% 증가</div>
+              <div class="fc-grade-table">
+                <div class="fc-gt-header"><div></div><div>풍작 증가(%)</div><div>흉작 감소(%)</div><div>성장 감소(%)</div></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#16a34a">🍀 레어</div><input type="number" id="farmSet_gradeRareBumper" value="0"><input type="number" id="farmSet_gradeRarePoor" value="12"><input type="number" id="farmSet_gradeRareGrow" value="0"></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#2563eb">💎 희귀</div><input type="number" id="farmSet_gradeEpicBumper" value="10"><input type="number" id="farmSet_gradeEpicPoor" value="20"><input type="number" id="farmSet_gradeEpicGrow" value="5"></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#ca8a04">⚡ 유일</div><input type="number" id="farmSet_gradeUniqueBumper" value="20"><input type="number" id="farmSet_gradeUniquePoor" value="28"><input type="number" id="farmSet_gradeUniqueGrow" value="8"></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#dc2626">🔥 레전드</div><input type="number" id="farmSet_gradeLegendBumper" value="35"><input type="number" id="farmSet_gradeLegendPoor" value="40"><input type="number" id="farmSet_gradeLegendGrow" value="12"></div>
+              </div>
+              <div class="fc-divider"></div>
+              <div class="fc-sub-title">📊 DB 실제 연산 결과 (실시간 미리보기)</div>
+              <div class="fc-desc">아래 수치는 DB의 farm_harvest_plot 함수와 동일한 로직으로 계산된 실제 적용값입니다.</div>
+              <div class="fc-preview-box" style="font-size:12px;line-height:1.8;padding:8px 10px;border-radius:8px;background:var(--cfg-input-bg);border:1px solid var(--cfg-input-border);color:var(--cfg-row-label-color)">
+                <div><strong>🌰 기본 (등급 없음)</strong></div>
+                <div id="farmPreview_Base" style="padding-left:8px">저장 후 표시됩니다</div>
+                <div style="margin-top:6px"><strong style="color:#16a34a">🍀 레어</strong></div>
+                <div id="farmPreview_Rare" style="padding-left:8px">저장 후 표시됩니다</div>
+                <div style="margin-top:6px"><strong style="color:#2563eb">💎 희귀</strong></div>
+                <div id="farmPreview_Epic" style="padding-left:8px">저장 후 표시됩니다</div>
+                <div style="margin-top:6px"><strong style="color:#ca8a04">⚡ 유일</strong></div>
+                <div id="farmPreview_Unique" style="padding-left:8px">저장 후 표시됩니다</div>
+                <div style="margin-top:6px"><strong style="color:#dc2626">🔥 레전드</strong></div>
+                <div id="farmPreview_Legend" style="padding-left:8px">저장 후 표시됩니다</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 촉진제 / 영양제 -->
+          <div class="fc-section">
+            <div class="fc-sec-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="fc-left">
+                <div class="fc-icon" style="background:rgba(139,92,246,0.1)"><span style="font-size:14px">⚗️</span></div>
+                <div><div class="fc-title">촉진제 / 영양제</div><div class="fc-subtitle">상점에서 구매 후 작물에 사용</div></div>
+              </div>
+              <div class="fc-arrow">▶</div>
+            </div>
+            <div class="fc-sec-body">
+              <div class="fc-sub-title">⚡ 촉진제</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">가격 (🌰)</div><input type="number" id="farmSet_acceleratorCost" value="10"></div>
+                <div class="fc-cell"><div class="fc-cell-label">성장시간 감소 (%)</div><input type="number" id="farmSet_acceleratorPct" value="50"></div>
+              </div>
+              <div style="height:6px"></div>
+              <div class="fc-sub-title">🧪 영양제</div>
+              <div class="fc-grid g2">
+                <div class="fc-cell"><div class="fc-cell-label">가격 (🌰)</div><input type="number" id="farmSet_nutrientCost" value="10"></div>
+                <div class="fc-cell"><div class="fc-cell-label">풍작 확률 증가 (%p)</div><input type="number" id="farmSet_nutrientBumperBoost" value="20"></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="fc-save-btn" onclick="farmSaveSettings()">💾 농장 설정 저장</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2070,12 +2071,7 @@
     </div>
 
     <!-- 🐉 보스레이드 설정 탭 -->
-    <div id="atab-bossraid" class="hidden">
-      <p class="adm-section-label">🐉 보스레이드 설정</p>
-      <div class="clay-card p-4">
-        <button class="btn btn-primary w-full py-2 text-sm" onclick="brAdminOpenSettings()">⚙️ 보스레이드 설정 열기</button>
-      </div>
-    </div>
+    <div id="atab-bossraid" class="hidden"></div>
 
     <!-- 🏆 관리자 랭킹 탭 -->
     <div id="atab-ranking" class="hidden">
