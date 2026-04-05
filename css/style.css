@@ -6354,3 +6354,70 @@ input[type="checkbox"]:active,
   box-shadow: 0 0 0 3px rgba(251,191,36,0.2), 0 4px 12px rgba(251,191,36,0.1);
   background: rgba(251,191,36,0.08);
 }
+
+/* ── 아이템 피커 행 ── */
+.up-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-default);
+  background: var(--surface-white);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.up-item:hover {
+  border-color: rgba(139,92,246,0.35);
+}
+.up-item--checked {
+  border-color: #8b5cf6;
+  background: rgba(139,92,246,0.08);
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.12);
+}
+.up-item-name {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.up-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.up-badge--store {
+  background: rgba(59,130,246,0.1);
+  color: #3b82f6;
+}
+.up-badge--gacha {
+  background: rgba(168,85,247,0.1);
+  color: #a855f7;
+}
+
+/* 다크모드 */
+[data-theme="dark"] .up-item {
+  background: var(--surface-white);
+  border-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .up-item:hover {
+  border-color: rgba(167,139,250,0.4);
+}
+[data-theme="dark"] .up-item--checked {
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.12);
+  box-shadow: 0 0 0 2px rgba(167,139,250,0.15);
+}
+[data-theme="dark"] .up-badge--store {
+  background: rgba(96,165,250,0.15);
+  color: #93bbfd;
+}
+[data-theme="dark"] .up-badge--gacha {
+  background: rgba(192,132,252,0.15);
+  color: #c4b5fd;
+}
