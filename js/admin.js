@@ -974,11 +974,16 @@ async function _executeDeleteUser(userId, userName) {
     await _del('inventory', 'user_id', userId);
     await _del('transactions', 'user_id', userId);
     await sb.from('app_settings').delete().eq('key', 'mg_bonus_' + userId);
-    // 유저 삭제
-    const { error } = await sb.from('users').delete().eq('id', userId);
+    // 유저 삭제 — select()로 실제 삭제된 행 확인 (RLS가 차단하면 0행)
+    const { data: deleted, error } = await sb.from('users').delete().eq('id', userId).select();
     if (error) {
       console.error('[탈퇴-유저삭제실패]', error.message);
       toast('❌', '회원 삭제 실패: ' + error.message);
+      return;
+    }
+    if (!deleted || deleted.length === 0) {
+      console.error('[탈퇴-유저삭제실패] RLS 정책이 DELETE를 차단함 (0행 삭제)');
+      toast('❌', '회원 삭제 실패: RLS 정책이 삭제를 차단하고 있습니다. Supabase 대시보드에서 users 테이블의 DELETE 정책을 확인하세요.');
       return;
     }
     toast('✅', `${userName} 탈퇴 처리 완료`);
