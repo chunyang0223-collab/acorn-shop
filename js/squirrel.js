@@ -524,9 +524,34 @@ async function sqRenderGrid() {
     return gb - ga; // 높은 등급 우선
   });
 
+  const _ftDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const filterBtn = (val, label) => {
     const active = filter === val;
-    return `<button onclick="window._sqFilter='${val}';sqRenderGrid()" style="padding:5px 14px;border-radius:20px;border:1.5px solid ${active ? '#f59e0b' : '#e5e7eb'};background:${active ? '#fef3c7' : 'white'};color:${active ? '#92400e' : '#6b7280'};font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s">${label}</button>`;
+    const bg = active
+      ? (_ftDark ? 'linear-gradient(180deg,#fde68a,#fbbf24)' : 'linear-gradient(180deg,#fef3c7,#fde68a)')
+      : (_ftDark ? 'linear-gradient(180deg,#334155,#1e293b)' : 'linear-gradient(180deg,#ffffff,#f1f5f9)');
+    const border = active
+      ? (_ftDark ? '#f59e0b' : '#fbbf24')
+      : (_ftDark ? '#475569' : '#e2e8f0');
+    const color = active
+      ? (_ftDark ? '#78350f' : '#92400e')
+      : (_ftDark ? '#94a3b8' : '#6b7280');
+    const shadow = active
+      ? (_ftDark ? '0 2px 0 #b45309,0 4px 10px rgba(245,158,11,0.2)' : '0 2px 0 #d97706,0 4px 10px rgba(251,191,36,0.15)')
+      : (_ftDark ? '0 2px 0 #0f172a,0 3px 6px rgba(0,0,0,0.2)' : '0 2px 0 #e2e8f0,0 3px 6px rgba(0,0,0,0.04)');
+    const gloss = active ? 'rgba(255,255,255,0.35)' : (_ftDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)');
+    return `<button onclick="window._sqFilter='${val}';sqRenderGrid()"
+      style="padding:5px 14px;border-radius:20px;
+        border:1.5px solid ${border};
+        background:${bg};
+        color:${color};font-size:12px;font-weight:800;
+        cursor:pointer;font-family:inherit;
+        box-shadow:${shadow};
+        position:relative;overflow:hidden;
+        transition:all .15s"
+      onmousedown="this.style.transform='translateY(1px)';this.style.boxShadow='none'"
+      onmouseup="this.style.transform='';this.style.boxShadow='${shadow}'"
+      onmouseleave="this.style.transform='';this.style.boxShadow='${shadow}'"><span style="position:absolute;top:1px;left:15%;right:15%;height:6px;background:${gloss};border-radius:99px;pointer-events:none;filter:blur(0.5px)"></span><span style="position:relative">${label}</span></button>`;
   };
 
   const filterHTML = `<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
@@ -673,7 +698,7 @@ function sqCardHTML(sq) {
 
   // 훈련 정보는 카드에 표시하지 않음 (액션 모달에서만 확인)
 
-  // 회복 중 UI — 가로 풀와이드 버튼 (타이머 + 비용 통합)
+  // 회복 중 UI — 가로 풀와이드 젤리 버튼 (타이머 + 비용 통합)
   let recoverHTML = '';
   if (sq.status === 'recovering' && sq.recovers_at) {
     const _recMaxCost = _sqSettings.recovery_instant_cost || 15;
@@ -681,23 +706,34 @@ function sqCardHTML(sq) {
     const _recRemaining = Math.max(0, new Date(sq.recovers_at) - Date.now());
     const _recTotalMs = _recBaseMin * 60000;
     const _recCost = Math.max(1, Math.ceil(_recMaxCost * (_recRemaining / _recTotalMs)));
+    const _isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const _rcBg = _isDark
+      ? 'linear-gradient(135deg,#818cf8,#a78bfa,#f0abfc,#c084fc,#818cf8)'
+      : 'linear-gradient(135deg,#c4b5fd,#d8b4fe,#f0abfc,#e9d5ff,#c4b5fd)';
+    const _rcColor = _isDark ? 'white' : '#581c87';
+    const _rcShadowBase = _isDark ? '#7c3aed' : '#a855f7';
+    const _rcShadowGlow = _isDark ? 'rgba(124,58,237,0.3)' : 'rgba(168,85,247,0.2)';
+    const _rcTextShadow = _isDark ? '0 1px 3px rgba(0,0,0,0.15)' : 'none';
+    const _rcGloss = _isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.55)';
+    const _rcShadowFull = `0 4px 0 ${_rcShadowBase},0 6px 20px ${_rcShadowGlow}`;
+    const _rcShadowDown = `0 1px 0 ${_rcShadowBase}`;
     recoverHTML = `
       <div id="sqRecoverArea-${sq.id}" style="margin-top:12px;position:relative">
         <button onclick="sqInstantRecover('${sq.id}')" id="sqRecoverBtn-${sq.id}"
           style="width:100%;height:48px;border-radius:99px;border:none;
-            background:linear-gradient(135deg,#818cf8,#a78bfa,#f0abfc,#c084fc,#818cf8);
+            background:${_rcBg};
             background-size:300% 300%;
             animation:sqAuroraFlow 5s ease infinite;
-            color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;
-            box-shadow:0 4px 0 #7c3aed,0 6px 20px rgba(124,58,237,0.3);
+            color:${_rcColor};font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;
+            box-shadow:${_rcShadowFull};
             display:flex;align-items:center;justify-content:center;gap:10px;
             position:relative;overflow:hidden;
-            text-shadow:0 1px 3px rgba(0,0,0,0.15);
+            text-shadow:${_rcTextShadow};
             transition:transform 0.1s,box-shadow 0.1s"
-          onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #7c3aed'"
-          onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #7c3aed,0 6px 20px rgba(124,58,237,0.3)'"
-          onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 0 #7c3aed,0 6px 20px rgba(124,58,237,0.3)'">
-          <span style="position:absolute;top:3px;left:15%;right:15%;height:10px;background:rgba(255,255,255,0.4);border-radius:99px;pointer-events:none;filter:blur(1px)"></span>
+          onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='${_rcShadowDown}'"
+          onmouseup="this.style.transform='';this.style.boxShadow='${_rcShadowFull}'"
+          onmouseleave="this.style.transform='';this.style.boxShadow='${_rcShadowFull}'">
+          <span style="position:absolute;top:3px;left:15%;right:15%;height:10px;background:${_rcGloss};border-radius:99px;pointer-events:none;filter:blur(1px)"></span>
           <span style="position:relative;display:flex;align-items:center;gap:10px">
             <span id="sqRecoverTimer-${sq.id}" style="font-size:16px;font-variant-numeric:tabular-nums;letter-spacing:1.5px">--:--:--</span>
             <span style="font-size:6px;opacity:0.35">●</span>

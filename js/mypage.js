@@ -216,17 +216,205 @@ async function renderMypage() {
   _renderTxPage();
 }
 
+// ── 인벤토리 상태 ──
+window._invPage = 0;
+window._invSort = 'date'; // 'date' | 'name'
+
+function setInvSort(mode) {
+  window._invSort = mode;
+  document.getElementById('invSortDate')?.classList.toggle('inv-sort-active', mode === 'date');
+  document.getElementById('invSortName')?.classList.toggle('inv-sort-active', mode === 'name');
+  window._invPage = 0;
+  _renderInvGrid();
+}
+
+function _sortInvItems(items) {
+  const sorted = [...items];
+  if (window._invSort === 'name') {
+    sorted.sort((a, b) => {
+      const na = (a.product_snapshot || a.products || {}).name || '';
+      const nb = (b.product_snapshot || b.products || {}).name || '';
+      return na.localeCompare(nb, 'ko');
+    });
+  }
+  // 'date'는 DB에서 이미 created_at DESC 정렬됨
+  return sorted;
+}
+
+function _renderInvGrid() {
+  const el = document.getElementById('myInventory');
+  const dotsEl = document.getElementById('invPageDots');
+  if (!el) return;
+
+  const items = _sortInvItems(window._invCache || []);
+  const pendingIds = window._invPendingIds || new Set();
+  const PAGE_SIZE = 6;
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  if (window._invPage >= totalPages) window._invPage = totalPages - 1;
+
+  // 빈 상태
+  if (!items.length) {
+    el.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text-secondary)">아이템이 없어요 🎒</p>';
+    if (dotsEl) dotsEl.innerHTML = '';
+    return;
+  }
+
+  // 페이지별 그리드 생성
+  let pagesHtml = '';
+  for (let pg = 0; pg < totalPages; pg++) {
+    const pageItems = items.slice(pg * PAGE_SIZE, (pg + 1) * PAGE_SIZE);
+    let slotsHtml = '';
+    for (const item of pageItems) {
+      const p = item.product_snapshot || item.products || {};
+      const isPending = pendingIds.has(item.id);
+      const qty = item.quantity || 1;
+      const showQty = qty > 1;
+      const pendingCls = isPending ? ' inv-slot-pending' : '';
+      const icon = p.reward_type === 'GIFT_ACORN' ? '🎁' : (p.icon || '🎁');
+      const name = p.reward_type === 'GIFT_ACORN' ? '도토리 선물' : (p.name || '아이템');
+
+      slotsHtml += `<div class="inv-slot${pendingCls}" onclick="openInvDetail('${item.id}')">
+        <div class="inv-slot-icon">${icon}</div>
+        <div class="inv-slot-name">${name}</div>
+        ${showQty ? `<div class="inv-slot-qty">${qty}</div>` : ''}
+      </div>`;
+    }
+    // 빈 슬롯으로 6칸 채우기
+    const emptyCount = PAGE_SIZE - pageItems.length;
+    for (let i = 0; i < emptyCount; i++) {
+      slotsHtml += `<div class="inv-slot inv-slot-empty"><div class="inv-slot-icon">📦</div></div>`;
+    }
+    pagesHtml += `<div class="inv-grid-page">${slotsHtml}</div>`;
+  }
+
+  el.innerHTML = `<div class="inv-slider" id="invSlider">${pagesHtml}</div>`;
+  _applyInvPage();
+
+  // 페이지 도트
+  if (dotsEl) {
+    if (totalPages <= 1) { dotsEl.innerHTML = ''; return; }
+    dotsEl.innerHTML = Array.from({ length: totalPages }, (_, i) =>
+      `<div class="inv-dot${i === window._invPage ? ' inv-dot-active' : ''}" onclick="goInvPage(${i})"></div>`
+    ).join('');
+  }
+}
+
+function _applyInvPage() {
+  const slider = document.getElementById('invSlider');
+  if (slider) slider.style.transform = `translateX(-${window._invPage * 100}%)`;
+}
+
+function goInvPage(pg) {
+  window._invPage = pg;
+  _applyInvPage();
+  const dotsEl = document.getElementById('invPageDots');
+  if (dotsEl) dotsEl.querySelectorAll('.inv-dot').forEach((d, i) => d.classList.toggle('inv-dot-active', i === pg));
+}
+
+// 터치 스와이프 지원
+(function() {
+  let startX = 0;
+  document.addEventListener('touchstart', e => {
+    const el = e.target.closest('#myInventory');
+    if (!el) return;
+    startX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const el = e.target.closest('#myInventory');
+    if (!el) return;
+    const diff = startX - e.changedTouches[0].clientX;
+    const items = window._invCache || [];
+    const totalPages = Math.max(1, Math.ceil(items.length / 6));
+    if (Math.abs(diff) > 40) {
+      if (diff > 0 && window._invPage < totalPages - 1) goInvPage(window._invPage + 1);
+      else if (diff < 0 && window._invPage > 0) goInvPage(window._invPage - 1);
+    }
+  }, { passive: true });
+})();
+
+// ── 인벤토리 상세 모달 ──
+function openInvDetail(inventoryId) {
+  const item = (window._invCache || []).find(i => i.id === inventoryId);
+  if (!item) return;
+  const p = item.product_snapshot || item.products || {};
+  const isPending = (window._invPendingIds || new Set()).has(item.id);
+
+  const isCoupon       = p.reward_type === 'COUPON';
+  const isAcornTicket  = p.reward_type === 'ACORN_TICKET';
+  const isGachaTicket  = p.reward_type === 'GACHA_TICKET';
+  const isGiftTicket   = p.reward_type === 'GIFT_GACHA_TICKET';
+  const isGiftAcorn    = p.reward_type === 'GIFT_ACORN';
+  const isExamMaterial = p.reward_type === 'EXAM_MATERIAL';
+  const qty = item.quantity || 1;
+
+  const icon = isGiftAcorn ? '🎁' : (p.icon || '🎁');
+  const name = isGiftAcorn ? '도토리 선물' : (p.name || '아이템');
+  const desc = p.description || '';
+
+  // 뱃지들 (모달 안에서만 표시)
+  let badges = '';
+
+  // 출처 태그
+  const sourceLabel = isGiftTicket || isGiftAcorn ? '🎁 선물'
+    : item.from_gacha ? '🎲 뽑기' : '🛍️ 구매';
+  const sourceCls = isGiftTicket || isGiftAcorn ? 'background:rgba(52,211,153,0.15);color:#065f46'
+    : item.from_gacha ? 'background:rgba(139,92,246,0.15);color:#6d28d9' : 'background:rgba(245,158,11,0.15);color:#92400e';
+  badges += `<span class="inv-detail-badge" style="${sourceCls}">${sourceLabel}</span>`;
+
+  // 타입별 뱃지
+  if (isCoupon) badges += `<span class="inv-detail-badge" style="background:rgba(253,224,71,0.25);color:#854d0e">🎟️ ${p.discount_pct||0}% 할인</span>`;
+  if (isAcornTicket) badges += `<span class="inv-detail-badge" style="background:rgba(52,211,153,0.15);color:#065f46">🌰 ${p.acorn_amt||0} 도토리</span>`;
+  if (isGachaTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:#6d28d9">🎫 뽑기권</span>`;
+  if (isGiftTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:#6d28d9">🎫 티켓 ${p.gift_qty||1}장</span>`;
+  if (isGiftAcorn) badges += `<span class="inv-detail-badge" style="background:rgba(52,211,153,0.15);color:#065f46">🌰 도토리 ${p.gift_qty||0}개</span>`;
+  if (qty > 1) badges += `<span class="inv-detail-badge" style="background:rgba(99,102,241,0.15);color:#4338ca">x${qty}</span>`;
+
+  // 액션 버튼
+  let actionsHtml = '';
+  if (isPending) {
+    actionsHtml = `<button class="btn w-full py-2 text-sm" disabled style="background:#fef3c7;color:#92400e;border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`;
+  } else if (isExamMaterial) {
+    // 등급심사 재료: 사용 버튼 없음
+    actionsHtml = `<p class="text-xs text-center" style="color:var(--text-secondary)">등급 심사에 자동으로 사용됩니다</p>`;
+  } else {
+    // 사용하기 버튼
+    let btnLabel = '사용하기';
+    let btnColor = 'btn-primary';
+    if (isCoupon)      { btnLabel = '🎟️ 쿠폰 사용'; }
+    if (isAcornTicket) { btnLabel = `🌰 +${p.acorn_amt||0} 받기`; btnColor = 'btn-green'; }
+    if (isGachaTicket) { btnLabel = '🎫 뽑기 1회'; btnColor = 'btn-purple'; }
+    if (isGiftTicket)  { btnLabel = `🎫 티켓 ${p.gift_qty||1}장 받기`; btnColor = 'btn-purple'; }
+    if (isGiftAcorn)   { btnLabel = `🌰 도토리 ${p.gift_qty||0} 받기`; btnColor = 'btn-green'; }
+    actionsHtml += `<button class="btn ${btnColor} w-full py-2 text-sm" onclick="closeModal();useInventoryItem('${item.id}')">${btnLabel}</button>`;
+
+    // 되팔기 버튼 (resell_price가 있는 경우)
+    const resellPrice = (item.products || {}).resell_price || (item.product_snapshot || {}).resell_price || 0;
+    if (resellPrice > 0) {
+      actionsHtml += `<button class="btn btn-gray w-full py-2 text-sm" onclick="closeModal();resellInventoryItem('${item.id}')">💰 되팔기 (+${resellPrice}🌰)</button>`;
+    }
+  }
+
+  showModal(`<div class="text-center">
+    <div style="font-size:3rem;line-height:1;margin-bottom:6px">${icon}</div>
+    <h2 class="text-lg font-black" style="color:var(--text-primary);margin-bottom:2px">${name}</h2>
+    ${desc ? `<p class="text-xs" style="color:var(--text-secondary);margin-bottom:8px">${desc}</p>` : ''}
+    <div class="inv-detail-badges">${badges}</div>
+    <div class="inv-detail-actions">
+      ${actionsHtml}
+      <button class="btn btn-gray w-full py-2 text-sm" onclick="closeModal()">닫기</button>
+    </div>
+  </div>`);
+}
+
 async function renderInventory() {
   const el = document.getElementById('myInventory');
   if (!el) return;
-  el.innerHTML = '<p class="text-xs text-gray-400 col-span-3 text-center py-2">로딩 중...</p>';
-  // 헤더 티켓 수 갱신
+  el.innerHTML = '<p class="text-xs text-center py-2" style="color:var(--text-secondary)">로딩 중...</p>';
   updateTicketDisplay().catch(()=>{});
 
-  // products JOIN으로 항상 최신 상품 정보 사용
   const [{ data: items }, { data: pendingReqs }] = await Promise.all([
     sb.from('inventory')
-      .select('*, products(id,name,icon,description,reward_type,discount_pct,acorn_amt)')
+      .select('*, products(id,name,icon,description,reward_type,discount_pct,acorn_amt,resell_price)')
       .eq('user_id', myProfile.id).eq('status', 'held')
       .order('created_at', { ascending: false }),
     sb.from('product_requests')
@@ -234,86 +422,13 @@ async function renderInventory() {
       .eq('user_id', myProfile.id).eq('status', 'pending')
   ]);
 
-  if (!items?.length) {
-    el.innerHTML = '<p class="text-xs text-gray-400 col-span-3 text-center py-4">아이템이 없어요 🎒</p>';
-    return;
-  }
-
-  // pending 상태인 inventory_id 집합 (DB + 로컬 캐시 합산)
   const pendingIds = new Set((pendingReqs||[]).map(r => r.inventory_id).filter(Boolean));
   if (window._pendingInvIds) window._pendingInvIds.forEach(id => pendingIds.add(id));
 
-  window._invCache = items;
-  el.innerHTML = items.map(item => {
-    // snapshot 우선 (선물 아이템은 product_id=null이라 JOIN 없음)
-    const p = item.product_snapshot || item.products || {};
-    const isCoupon       = p.reward_type === 'COUPON';
-    const isAcornTicket  = p.reward_type === 'ACORN_TICKET';
-    const isGachaTicket  = p.reward_type === 'GACHA_TICKET';
-    const isGiftTicket   = p.reward_type === 'GIFT_GACHA_TICKET';
-    const isGiftAcorn    = p.reward_type === 'GIFT_ACORN';
-    const isExamMaterial = p.reward_type === 'EXAM_MATERIAL';
-    const isInstant      = isGiftTicket || isGiftAcorn || isAcornTicket;
-
-    // 등급심사 전용 아이템: 버튼 없이 수량만 표시
-    if (isExamMaterial) {
-      const qty = item.quantity || 1;
-      return `<div class="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl border-2 bg-indigo-50 border-indigo-200" style="min-height:100%">
-        <div style="position:relative;display:inline-block">
-          <div class="text-3xl">${p.icon || '✨'}</div>
-          <span style="position:absolute;top:-4px;right:-10px;background:#6366f1;color:white;font-size:10px;font-weight:900;border-radius:99px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;padding:0 4px">${qty}</span>
-        </div>
-        <p class="text-xs font-black text-gray-700 text-center leading-tight">${p.name || '반짝이는 무언가'}</p>
-      </div>`;
-    }
-    const isPending = pendingIds.has(item.id);
-
-    let btnLabel = '사용하기';
-    if (isCoupon)      btnLabel = '🎟️ 쿠폰 사용';
-    if (isAcornTicket) btnLabel = `🌰 +${p.acorn_amt||0} 받기`;
-    if (isGachaTicket) btnLabel = '🎫 뽑기 1회';
-    if (isGiftTicket)  btnLabel = `🎫 티켓 ${p.gift_qty||1}장 받기`;
-    if (isGiftAcorn)   btnLabel = `🌰 도토리 ${p.gift_qty||0} 받기`;
-
-    const btnColor = isGiftTicket||isGachaTicket ? 'btn-purple'
-      : isGiftAcorn||isAcornTicket ? 'btn-green' : 'btn-primary';
-    const btnHtml = isPending
-      ? `<button class="btn w-full py-1 text-xs mt-1" disabled style="background:#fef3c7;color:#92400e;border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`
-      : `<button class="btn ${btnColor} w-full py-1 text-xs mt-1" onclick="useInventoryItem('${item.id}')">${btnLabel}</button>`;
-
-    const bgClass = isPending ? 'bg-gray-50 border-gray-200 opacity-70'
-      : isCoupon                    ? 'bg-yellow-50 border-yellow-200 cursor-pointer card-hover'
-      : isAcornTicket||isGiftAcorn  ? 'bg-green-50 border-green-200 cursor-pointer card-hover'
-      : isGachaTicket||isGiftTicket ? 'bg-purple-50 border-purple-200 cursor-pointer card-hover'
-      : 'bg-amber-50 border-amber-100 cursor-pointer card-hover';
-
-    // GIFT_ACORN: 이름/버튼만 표시 (badge, sourceTag 없음)
-    if (isGiftAcorn) {
-      return `<div class="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl border-2 ${bgClass}" style="min-height:100%">
-        <div class="text-3xl" onclick="useInventoryItem('${item.id}')">🎁</div>
-        <p class="text-xs font-black text-gray-700 text-center leading-tight">도토리 선물</p>
-        ${btnHtml}
-      </div>`;
-    }
-
-    const badge = isCoupon      ? `<span class="text-xs font-black text-yellow-700 bg-yellow-100 rounded-full px-2 py-0.5">🎟️ ${p.discount_pct||0}% 할인</span>`
-      : isAcornTicket            ? `<span class="text-xs font-black text-green-700 bg-green-100 rounded-full px-2 py-0.5">🌰 ${p.acorn_amt||0} 도토리</span>`
-      : isGachaTicket            ? `<span class="text-xs font-black text-purple-700 bg-purple-100 rounded-full px-2 py-0.5">🎫 뽑기권</span>`
-      : isGiftTicket             ? `<span class="text-xs font-black text-purple-700 bg-purple-100 rounded-full px-2 py-0.5">🎫 티켓 ${p.gift_qty||1}장</span>`
-      : '';
-
-    const sourceTag = isGiftTicket
-      ? `<span class="text-xs it-store">🎁 선물</span>`
-      : `<span class="text-xs ${item.from_gacha ? 'it-gacha' : 'it-store'}">${item.from_gacha ? '🎲 뽑기' : '🛍️ 구매'}</span>`;
-
-    return `<div class="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl border-2 ${bgClass}" style="min-height:100%">
-      <div class="text-3xl" ${isPending ? '' : `onclick="useInventoryItem('${item.id}')"`}>${p.icon || '🎁'}</div>
-      <p class="text-xs font-black text-gray-700 text-center leading-tight">${p.name || '아이템'}</p>
-      ${badge}
-      ${sourceTag}
-      ${btnHtml}
-    </div>`;
-  }).join('');
+  window._invCache = items || [];
+  window._invPendingIds = pendingIds;
+  window._invPage = 0;
+  _renderInvGrid();
 }
 
 async function useInventoryItem(inventoryId) {
