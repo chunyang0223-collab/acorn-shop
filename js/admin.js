@@ -952,7 +952,24 @@ async function _executeDeleteUser(userId, userName) {
   closeModal();
   toast('⏳', `${userName} 탈퇴 처리 중...`);
   try {
-    // 관련 데이터 순서대로 삭제 (FK 제약 고려)
+    // 관련 데이터 순서대로 삭제 (FK 제약 고려 — 자식 테이블 먼저)
+    // 1) 탐험 중인 다람쥐 원복 후 탐험 삭제
+    await sb.from('squirrels').update({ status: 'explorer' }).eq('user_id', userId).eq('status', 'exploring');
+    await sb.from('expeditions').delete().eq('user_id', userId);
+    // 2) 다람쥐 삭제
+    await sb.from('squirrels').delete().eq('user_id', userId);
+    // 3) 농장 데이터
+    await sb.from('farm_farmers').delete().eq('user_id', userId);
+    await sb.from('farm_data').delete().eq('user_id', userId);
+    // 4) 친구 관계 (양방향)
+    await sb.from('friends').delete().or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+    // 5) 가챠 관련
+    await sb.from('gacha_logs').delete().eq('user_id', userId);
+    await sb.from('gacha_tickets').delete().eq('user_id', userId);
+    await sb.from('free_gacha_usage').delete().eq('user_id', userId);
+    // 6) 공지 읽음
+    await sb.from('notice_reads').delete().eq('user_id', userId);
+    // 7) 기존 테이블들
     const tables = ['notifications','minigame_plays','quest_requests','inventory','transactions'];
     for (const t of tables) {
       const { error } = await sb.from(t).delete().eq('user_id', userId);

@@ -3172,3 +3172,4 @@ async function sqAdminResetCooldownAny(id, name) {
   if (error) { toast('❌', '쿨타임 초기화 실패: ' + (error.message || '')); return; }
   toast('✅', `${name}의 재심사 쿨타임이 초기화되었습니다`);
   await sqAdminLoadList();
+}
