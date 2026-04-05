@@ -640,6 +640,18 @@
   /* === Squirrel Feed Gauge === */
   --sq-gauge-good-bg: linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);
   --sq-gauge-bad-bg: linear-gradient(90deg,#fb923c,#f97316);
+
+  /* === 합성 슬롯 === */
+  --fuse-slot-bg: #f9fafb;
+  --fuse-slot-border: #d1d5db;
+  --fuse-slot-plus: #d1d5db;
+  --fuse-slot-active-bg: #fffbeb;
+  --fuse-slot-active-border: #f59e0b;
+  --fuse-slot-active-plus: #f59e0b;
+  --fuse-slot-name: #1f2937;
+
+  /* === 분양 카드 === */
+  --adopt-card-bg: linear-gradient(135deg,#fffbeb,#fef3c7);
 }
 
 /* ── 디자인 토큰 (Design Tokens - Dark Mode) ── */
@@ -1848,6 +1860,18 @@
   --exp-item-select-border: #2a3a4a;
   --exp-item-chip-bg: #1a2535;
   --exp-item-chip-border: #2a3a4a;
+
+  /* === 합성 슬롯 === */
+  --fuse-slot-bg: #1e2838;
+  --fuse-slot-border: #3a4a5a;
+  --fuse-slot-plus: #4a5a6a;
+  --fuse-slot-active-bg: #3a2a10;
+  --fuse-slot-active-border: #f59e0b;
+  --fuse-slot-active-plus: #f59e0b;
+  --fuse-slot-name: #fbbf24;
+
+  /* === 분양 카드 === */
+  --adopt-card-bg: linear-gradient(135deg,#3a2a10,#4a3510);
 }
 
 /* ── Tailwind 핵심 유틸리티 (CDN 대체) ── */
@@ -4505,10 +4529,7 @@ input[type="checkbox"]:active,
   background: #3a2a10 !important;
 }
 
-/* 예치금 뱃지 */
-[data-theme="dark"] [style*="background:linear-gradient(135deg,#fffbeb,#fef3c7)"] {
-  background: linear-gradient(135deg,#3a2a10,#4a3510) !important;
-}
+/* 분양 카드 — CSS 변수 기반 (attribute selector 제거됨) */
 [data-theme="dark"] [style*="border:3px solid #d97706"] {
   border-color: #6a4a10 !important;
 }
@@ -5362,19 +5383,7 @@ input[type="checkbox"]:active,
   color: #a889d4 !important;
   font-size: 10px !important;
 }
-/* 합성 슬롯 빈 상태 */
-[data-theme="dark"] [id^="sqFuseSlot"][style*="background:#f9fafb"] {
-  background: #1e2838 !important;
-  border-color: #3a4a5a !important;
-}
-[data-theme="dark"] [id^="sqFuseSlot"][style*="background:#fffbeb"] {
-  background: #3a2a10 !important;
-  border-color: #f59e0b !important;
-}
-/* 합성 슬롯 내 텍스트 */
-[data-theme="dark"] [id^="sqFuseSlot"] [style*="color:#1f2937"] {
-  color: #fbbf24 !important;
-}
+/* 합성 슬롯 — CSS 변수 기반 (attribute selector 제거됨) */
 
 /* ══════════════════════════════════════════════════════
    🌙 테두리 정리 — 불필요한 border 제거
@@ -6507,4 +6516,171 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .up-config-row {
   background: var(--surface-white);
   border-color: rgba(255,255,255,0.08);
+}
+
+/* ── 보스레이드 설정 (인라인) ── */
+.br-settings-wrap {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 16px 4px 4px;
+}
+.br-settings-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.br-section {
+  margin-bottom: 16px;
+}
+.br-section-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.br-sub-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.br-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.br-input {
+  width: 100%;
+  margin-top: 2px;
+  padding: 5px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default, rgba(0,0,0,0.1));
+  color: var(--text-primary);
+}
+.br-input-sm {
+  width: 100%;
+  margin-top: 2px;
+  padding: 4px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default, rgba(0,0,0,0.1));
+  color: var(--text-primary);
+}
+.br-card {
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default, rgba(0,0,0,0.06));
+  margin-bottom: 8px;
+}
+.br-card-danger {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.18);
+  margin-bottom: 8px;
+}
+.br-btn-save {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--primary, #8b5cf6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.br-toggle-on {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: rgba(34,197,94,0.15);
+  color: #22c55e;
+}
+.br-toggle-off {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+}
+.br-btn-add {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(59,130,246,0.1);
+  color: #3b82f6;
+  cursor: pointer;
+}
+.br-btn-danger {
+  flex: 1;
+  padding: 6px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.br-btn-danger-outline {
+  flex: 1;
+  padding: 6px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 다크모드 보스레이드 설정 */
+[data-theme="dark"] .br-input,
+[data-theme="dark"] .br-input-sm {
+  background: var(--bg-input);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .br-card {
+  background: var(--bg-elevated);
+  border-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .br-card-danger {
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.25);
+}
+[data-theme="dark"] .br-toggle-on {
+  background: rgba(34,197,94,0.2);
+  color: #4ade80;
+}
+[data-theme="dark"] .br-toggle-off {
+  background: rgba(239,68,68,0.2);
+  color: #f87171;
+}
+[data-theme="dark"] .br-btn-add {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
+}
+[data-theme="dark"] .br-btn-danger-outline {
+  background: rgba(239,68,68,0.2);
+  color: #f87171;
 }
