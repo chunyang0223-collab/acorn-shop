@@ -281,52 +281,41 @@ function aTab(tab, btn) {
   if (tab === 'minigameSettings') renderMinigameAdmin();
   if (tab === 'squirrelSettings') sqAdminInit();
   if (tab === 'ranking') renderAdminRanking();
-  // bossraid: atab-bossraid 안의 버튼으로 설정 모달 열기
+  if (tab === 'bossraid') { if (typeof brAdminOpenSettings === 'function') brAdminOpenSettings(); }
 }
 
 // ── 관리자에서 다람쥐 서브탭 직접 진입 ──
 let _sqSubOpen = false;
+
 function _openSqSubTab(subTab) {
   const wasOpen = _sqSubOpen;
   _sqSubOpen = true;
-  // userMode를 표시하되, 사용자 탭바와 다른 유저탭은 숨기기
-  const um = document.getElementById('userMode');
-  if (um) um.classList.remove('hidden');
-  document.getElementById('userTabBar')?.closest('.tab-bar-wrap')?.classList.add('hidden');
-  // 모든 사용자 탭 숨기고 다람쥐만 표시
-  U_TABS.forEach(t => {
-    const el = document.getElementById('utab-' + t);
-    if (el) el.classList.add('hidden');
-  });
   const sqEl = document.getElementById('utab-squirrel');
-  if (sqEl) {
-    sqEl.classList.remove('hidden');
-    sqEl.style.display = '';
-  }
+  if (!sqEl) return;
+
+  sqEl.classList.remove('hidden');
   // 관리자 뒤로가기 바 숨기기 (탭바로 이동하니 불필요)
   document.getElementById('sqAdminBackBar')?.classList.add('hidden');
-  // 서브탭 바(내 다람쥐/상점/합성 등)도 숨기기 — 탭바에 이미 있으니
-  const sqTabBar = sqEl?.querySelector('.clay-card.p-2.flex.gap-1.mb-4');
+  // 서브탭 바(내 다람쥐/상점/합성 등) 숨기기 — 관리자 탭바에 이미 있으니
+  const sqTabBar = sqEl.querySelector('.clay-card.p-2.flex.gap-1.mb-4');
   if (sqTabBar) sqTabBar.style.display = 'none';
   // 관리자 설정 패널 표시
   document.querySelectorAll('.sq-admin-panel').forEach(el => el.classList.remove('hidden'));
-  // 이미 다람쥐가 열려있으면 서브탭만 전환, 아니면 초기화도 수행
+  // 처음 열 때만 초기화
   if (!wasOpen) {
     if (typeof sqInit === 'function') sqInit();
     if (typeof sqAdminInit === 'function') sqAdminInit();
   }
   if (typeof sqTab === 'function') sqTab(subTab);
 }
+
 function _closeSqSubTab() {
   if (!_sqSubOpen) return;
   _sqSubOpen = false;
-  // userMode 숨기고 사용자 탭바 복원
-  document.getElementById('userMode')?.classList.add('hidden');
-  document.getElementById('userTabBar')?.closest('.tab-bar-wrap')?.classList.remove('hidden');
   const sqEl = document.getElementById('utab-squirrel');
   if (sqEl) {
     sqEl.classList.add('hidden');
-    // 서브탭 바 복원
+    // 서브탭 바 복원 (사용자 모드 전환 시 필요)
     const sqTabBar = sqEl.querySelector('.clay-card.p-2.flex.gap-1.mb-4');
     if (sqTabBar) sqTabBar.style.display = '';
   }
