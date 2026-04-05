@@ -661,9 +661,9 @@ function sqCardHTML(sq) {
     } else {
       // 일반 먹이주기 UI
       feedAreaHTML = `<div style="display:flex;align-items:center;gap:8px">
-        <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
+        <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
         <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
-        <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
+        <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
         <button onclick="sqFeedSquirrel('${sq.id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
       </div>`;
     }
@@ -671,7 +671,7 @@ function sqCardHTML(sq) {
     babyHTML = `
       <div style="margin-top:12px">
         <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지</div>
-        <div style="height:12px;border-radius:99px;background:#f3f4f6;overflow:hidden;margin-bottom:12px">
+        <div style="height:12px;border-radius:99px;background:var(--progress-track-bg);overflow:hidden;margin-bottom:12px">
           <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
         </div>
         <div id="sqFeedArea-${sq.id}">${feedAreaHTML}</div>
@@ -682,15 +682,15 @@ function sqCardHTML(sq) {
   if (sq.type !== 'baby') {
     statsHTML = `
       <div style="display:flex;gap:8px;margin-top:12px">
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:8px 4px;text-align:center">
+        <div style="flex:1;background:var(--surface-50);border-radius:12px;padding:8px 4px;text-align:center">
           <div style="font-size:10px;color:#9ca3af;font-weight:800">❤️ HP</div>
           <div style="font-size:16px;font-weight:900;color:#ef4444;margin-top:1px">${sq.hp_current}<span style="font-size:10px;color:#d1d5db">/${sq.stats?.hp||100}</span></div>
         </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:8px 4px;text-align:center">
+        <div style="flex:1;background:var(--surface-50);border-radius:12px;padding:8px 4px;text-align:center">
           <div style="font-size:10px;color:#9ca3af;font-weight:800">⚔️ 공격</div>
           <div style="font-size:16px;font-weight:900;color:#f97316;margin-top:1px">${sq.stats?.atk||10}</div>
         </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:8px 4px;text-align:center">
+        <div style="flex:1;background:var(--surface-50);border-radius:12px;padding:8px 4px;text-align:center">
           <div style="font-size:10px;color:#9ca3af;font-weight:800">🛡️ 방어</div>
           <div style="font-size:16px;font-weight:900;color:#3b82f6;margin-top:1px">${sq.stats?.def||5}</div>
         </div>
@@ -790,7 +790,7 @@ function sqCardHTML(sq) {
     : imgHTML;
 
   return `
-    <div id="sqCard-${sq.id}" style="background:white;border-radius:24px;padding:16px 20px;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);border-left:5px solid ${borderColor};transition:border-left-color 0.5s">
+    <div id="sqCard-${sq.id}" style="background:var(--sq-card-bg);border-radius:24px;padding:16px 20px;margin-bottom:12px;box-shadow:var(--sq-card-shadow);border-left:5px solid ${borderColor};transition:border-left-color 0.5s">
       <div style="display:flex;align-items:center;gap:14px">
         ${clickableImg}
         <div style="flex:1;min-width:0">
@@ -816,9 +816,9 @@ function _sqShowFeedButtons(id) {
   if (!area) return;
   area.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="sqAdjFeed('${id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
+      <button onclick="sqAdjFeed('${id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
       <span id="sqFeedCnt-${id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
-      <button onclick="sqAdjFeed('${id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
+      <button onclick="sqAdjFeed('${id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
       <button onclick="sqFeedSquirrel('${id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
     </div>`;
 }
@@ -1031,7 +1031,7 @@ function sqShowActionModal(id) {
       <div style="display:flex;flex-direction:column;gap:8px">
         ${btnHTML || '<div style="font-size:12px;color:#9ca3af;padding:8px">현재 가능한 액션이 없어요</div>'}
       </div>
-      <button onclick="closeModal()" style="margin-top:12px;width:100%;height:36px;border-radius:10px;border:none;background:#f1f5f9;color:#64748b;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+      <button onclick="closeModal()" style="margin-top:12px;width:100%;height:36px;border-radius:10px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
     </div>`);
 }
 
@@ -1673,25 +1673,25 @@ function sqShowTrainingModal(id) {
   showModal(`
     <div style="text-align:center">
       <div style="font-size:40px;margin-bottom:8px">🏋️</div>
-      <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:4px">체력 훈련</div>
-      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">${sq.name}의 HP를 강화합니다</div>
-      <div style="background:#f0f9ff;border-radius:14px;padding:14px;margin-bottom:16px;text-align:left">
+      <div style="font-size:18px;font-weight:900;color:var(--modal-title-text);margin-bottom:4px">체력 훈련</div>
+      <div style="font-size:13px;color:var(--modal-subtitle-text);margin-bottom:16px">${sq.name}의 HP를 강화합니다</div>
+      <div style="background:var(--modal-infobox-bg);border-radius:14px;padding:14px;margin-bottom:16px;text-align:left">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;color:#64748b">현재 HP</span>
+          <span style="font-size:12px;color:var(--modal-infobox-text)">현재 HP</span>
           <span style="font-size:12px;font-weight:900;color:#ef4444">${sq.stats?.hp || 60} / ${_sqSettings.stat_hp_max || 150}</span>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;color:#64748b">현재 등급</span>
+          <span style="font-size:12px;color:var(--modal-infobox-text)">현재 등급</span>
           <span style="font-size:12px;font-weight:900;color:${gs.color}">${gs.label}</span>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;color:#64748b">남은 훈련 횟수</span>
+          <span style="font-size:12px;color:var(--modal-infobox-text)">남은 훈련 횟수</span>
           <span style="font-size:12px;font-weight:900;color:#0284c7">${tRemain}회</span>
         </div>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="sqExecuteTraining('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #0369a1,0 6px 16px rgba(2,132,199,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #0369a1'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #0369a1,0 6px 16px rgba(2,132,199,.3)'">💪 훈련하기!</button>
-        <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
+        <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
       </div>
     </div>`);
 }
@@ -1800,7 +1800,7 @@ async function sqExecuteTraining(id) {
         <div style="font-size:11px;color:#94a3b8;margin-bottom:14px">남은 훈련 횟수: ${result.remain}회</div>
         <div style="display:flex;gap:8px">
           ${result.remain > 0 && result.newHp < result.hpMax ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 #0369a1">계속 훈련</button>` : ''}
-          <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+          <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
         </div>
       </div>`);
 
@@ -1826,7 +1826,7 @@ async function sqExecuteTraining(id) {
         <div style="font-size:11px;color:#94a3b8;margin-bottom:14px">남은 훈련 횟수: ${result.remain}회</div>
         <div style="display:flex;gap:8px">
           ${result.remain > 0 ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 #0369a1">다시 훈련</button>` : ''}
-          <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
+          <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
         </div>
       </div>`);
   }
@@ -1961,38 +1961,38 @@ async function sqShowExamModal(id) {
   showModal(`
     <div style="text-align:center">
       <div style="font-size:40px;margin-bottom:8px">📋</div>
-      <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:4px">등급심사 신청</div>
-      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">${sq.name}의 추가 훈련 기회를 얻을 수 있어요</div>
-      <div style="background:#f0f9ff;border-radius:14px;padding:14px;margin-bottom:12px;text-align:left">
+      <div style="font-size:18px;font-weight:900;color:var(--modal-title-text);margin-bottom:4px">등급심사 신청</div>
+      <div style="font-size:13px;color:var(--modal-subtitle-text);margin-bottom:16px">${sq.name}의 추가 훈련 기회를 얻을 수 있어요</div>
+      <div style="background:var(--modal-infobox-bg);border-radius:14px;padding:14px;margin-bottom:12px;text-align:left">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;color:#64748b">현재 등급</span>
+          <span style="font-size:12px;color:var(--modal-infobox-text)">현재 등급</span>
           <span style="font-size:12px;font-weight:900;color:${gs.color}">${gs.label}</span>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;color:#64748b">심사 비용</span>
+          <span style="font-size:12px;color:var(--modal-infobox-text)">심사 비용</span>
           <span style="font-size:12px;font-weight:900;color:#d97706">🌰 ${cost} 도토리</span>
         </div>
         <div style="display:flex;justify-content:space-between">
-          <span style="font-size:12px;color:#64748b">기본 합격률</span>
+          <span style="font-size:12px;color:var(--modal-infobox-text)">기본 합격률</span>
           <span style="font-size:12px;font-weight:900;color:#059669">${baseRate}%</span>
         </div>
       </div>
       ${usableItems > 0 ? `
-        <div style="background:#eef2ff;border-radius:14px;padding:14px;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:800;color:#4338ca;margin-bottom:8px">✨ 반짝이는 무언가 (보유: ${ownedItems}개)</div>
+        <div style="background:var(--modal-itembox-bg);border-radius:14px;padding:14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:800;color:var(--modal-itembox-text);margin-bottom:8px">✨ 반짝이는 무언가 (보유: ${ownedItems}개)</div>
           <div style="font-size:11px;color:#ef4444;margin-bottom:8px">심사관에게 건네면 좋은 일이 생길지도...?</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:10px">
-            <button onclick="_sqExamItemAdj(-1)" style="width:32px;height:32px;border-radius:10px;border:2px solid #c7d2fe;background:#eef2ff;color:#4338ca;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">−</button>
-            <span id="sqExamItemCount" style="min-width:32px;text-align:center;font-size:20px;font-weight:900;color:#4338ca">0</span>
-            <button onclick="_sqExamItemAdj(1)" style="width:32px;height:32px;border-radius:10px;border:2px solid #c7d2fe;background:#eef2ff;color:#4338ca;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">＋</button>
+            <button onclick="_sqExamItemAdj(-1)" style="width:32px;height:32px;border-radius:10px;border:2px solid var(--modal-itembox-border);background:var(--modal-itembox-bg);color:var(--modal-itembox-text);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">−</button>
+            <span id="sqExamItemCount" style="min-width:32px;text-align:center;font-size:20px;font-weight:900;color:var(--modal-itembox-text)">0</span>
+            <button onclick="_sqExamItemAdj(1)" style="width:32px;height:32px;border-radius:10px;border:2px solid var(--modal-itembox-border);background:var(--modal-itembox-bg);color:var(--modal-itembox-text);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">＋</button>
           </div>
         </div>` : `
-        <div style="background:#f5f5f5;border-radius:14px;padding:10px;margin-bottom:12px">
-          <div style="font-size:11px;color:#ef4444">심사관에게 뇌물을 주면 합격률을 올릴 수 있다는데... ✨</div>
+        <div style="background:var(--modal-hintbox-bg);border-radius:14px;padding:10px;margin-bottom:12px">
+          <div style="font-size:11px;color:var(--modal-hintbox-text)">심사관에게 뇌물을 주면 합격률을 올릴 수 있다는데... ✨</div>
         </div>`}
       <div style="display:flex;gap:8px">
         <button onclick="sqExecuteExam('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #5b21b6'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3)'">📋 심사 받기!</button>
-        <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
+        <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
       </div>
     </div>`);
 }
@@ -2560,7 +2560,7 @@ async function sqStartExpeditionFlow() {
         const _g = _sqCalcGrade(sq);
         const _gs = _sqGradeStyle(_g);
         return `
-        <div id="expcard-${sq.id}" onclick="sqToggleExpSelect('${sq.id}')" style="background:white;border-radius:16px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:2px solid transparent;cursor:pointer;transition:all .2s">
+        <div id="expcard-${sq.id}" onclick="sqToggleExpSelect('${sq.id}')" style="background:var(--sq-card-bg);border-radius:16px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:2px solid transparent;cursor:pointer;transition:all .2s">
           <div class="flex items-center gap-3">
             <div style="border-radius:14px;${_gs.border};box-shadow:${_gs.shadow};padding:2px;flex-shrink:0;background:${_gs.bg}">
               <img src="images/squirrels/${sq.sprite || 'sq_acorn'}.png" style="width:36px;height:36px;object-fit:contain;border-radius:10px;display:block">
@@ -2831,7 +2831,7 @@ async function sqFuseExecute() {
       <p style="font-size:13px;color:#b45309;font-weight:700;margin:12px 0">🌰 ${cost} 도토리 소모</p>
       <p style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:16px">⚠️ 재료 다람쥐 두 마리는 사라집니다!</p>
       <div style="display:flex;gap:8px">
-        <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280">취소</button>
+        <button onclick="closeModal()" class="btn flex-1" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text)">취소</button>
         <button onclick="closeModal();sqFuseConfirm()" class="btn btn-primary flex-1">합성하기!</button>
       </div>
     </div>

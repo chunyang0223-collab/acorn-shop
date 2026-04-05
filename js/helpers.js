@@ -365,7 +365,7 @@ async function checkAdminNotice() {
       <div style="text-align:center;padding:8px 0">
         <div style="font-size:36px;margin-bottom:8px">📢</div>
         <div style="font-size:16px;font-weight:900;color:#1f2937;margin-bottom:12px">공지사항</div>
-        <div style="font-size:13px;color:#4b5563;line-height:1.7;white-space:pre-wrap;text-align:left;background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">${notice.message.replace(/</g,'&lt;')}</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;text-align:left;background:var(--surface-50);border-radius:12px;padding:14px;margin-bottom:16px">${notice.message.replace(/</g,'&lt;')}</div>
         <div style="font-size:10px;color:#9ca3af;margin-bottom:12px">${notice.date || ''}</div>
         <button class="btn btn-primary w-full" onclick="markNoticeRead('${noticeId}')">확인</button>
       </div>

@@ -26,7 +26,7 @@ function farmShowPlantModal(slot) {
     const crop = _farmCrops.find(c => c.id === inv.crop_id);
     if (!crop) return;
     listHtml += `
-      <div onclick="farmDoPlant(${slot},'${inv.crop_id}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:white;border:1.5px solid #e5e7eb;cursor:pointer;transition:all .15s">
+      <div onclick="farmDoPlant(${slot},'${inv.crop_id}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--list-item-bg);border:1.5px solid var(--list-item-border);cursor:pointer;transition:all .15s">
         <div style="font-size:28px;flex-shrink:0">${crop.emoji}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:900;color:#1f2937">${crop.name} 씨앗 <span style="font-size:10px;color:#6b7280">×${inv.quantity}</span></div>
@@ -43,7 +43,7 @@ function farmShowPlantModal(slot) {
       <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
         ${listHtml}
       </div>
-      <button onclick="closeModal()" class="btn w-full" style="background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb;margin-top:10px">취소</button>
+      <button onclick="closeModal()" class="btn w-full" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid var(--btn-cancel-border);margin-top:10px">취소</button>
     </div>
   `);
 }

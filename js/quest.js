@@ -222,7 +222,7 @@ async function renderQuests(force = false) {
           </div>
           <p class="text-xs text-gray-400 font-semibold">${q.description}</p>
           ${target2 > 1 ? `<div class="mt-1.5">
-            <div style="background:#f3f4f6;border-radius:999px;height:6px;overflow:hidden">
+            <div style="background:var(--progress-track-bg);border-radius:999px;height:6px;overflow:hidden">
               <div style="background:${claimable?'#f59e0b':claimed?'#22c55e':'#f59e0b'};height:100%;width:${claimed||claimable?100:Math.min(100,Math.round((displayCount/target2)*100))}%;transition:width .3s;border-radius:999px"></div>
             </div>
             <p class="text-xs text-gray-400 mt-0.5 font-bold">${claimed||claimable?target2:displayCount} / ${target2}회</p>

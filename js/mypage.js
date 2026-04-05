@@ -93,7 +93,7 @@ function _renderQcrPage(qcrs) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE_QCR));
   const slice = qcrs.slice(window._qcrPage * PAGE_SIZE_QCR, (window._qcrPage + 1) * PAGE_SIZE_QCR);
   el.innerHTML = slice.length
-    ? slice.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:#f9fafb">
+    ? slice.map(r => `<div class="flex items-center justify-between p-3 rounded-xl" style="background:var(--surface-50)">
         <div class="min-w-0 mr-2">
           <p class="text-sm font-bold text-gray-800">${r.quests?.icon||'📋'} ${r.quests?.name||'퀘스트'}</p>
           <p class="text-xs text-gray-400">${fmtTs(r.created_at)} · 완료 요청</p>

@@ -649,7 +649,7 @@ async function renderRequestAdmin() {
     });
   }
   el.innerHTML = items.length
-    ? items.map(r => `<div class="p-4 rounded-2xl flex flex-col gap-2" style="${r.status==='pending'?'background:rgba(254,243,199,0.7);border:1.5px solid rgba(245,158,11,0.3)':'background:#f9fafb'}">
+    ? items.map(r => `<div class="p-4 rounded-2xl flex flex-col gap-2" style="${r.status==='pending'?'background:rgba(254,243,199,0.7);border:1.5px solid rgba(245,158,11,0.3)':'background:var(--surface-50)'}">
         <div class="flex items-start justify-between gap-2">
           <div>
             <p class="font-black text-gray-800 text-sm">${r.status==='pending'?'🔔 ':''}${r.product_snapshot?.icon||'🎁'} ${r.product_snapshot?.name||'상품'}</p>
@@ -1525,7 +1525,7 @@ async function editRegistryItem(id) {
     + '</div>'
     + '<div class="flex gap-2">'
     + '<button class="btn btn-primary flex-1 py-2 text-sm" onclick="saveRegistryItem(\'' + id + '\')">💾 저장</button>'
-    + '<button class="btn flex-1 py-2 text-sm" onclick="closeModal()" style="background:#f1f5f9;color:#64748b">취소</button>'
+    + '<button class="btn flex-1 py-2 text-sm" onclick="closeModal()" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text)">취소</button>'
     + '</div>'
     + '</div>'
   );

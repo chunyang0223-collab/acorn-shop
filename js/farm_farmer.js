@@ -19,7 +19,7 @@ async function farmStartApprentice(squirrelId) {
         ${_farmSettings.apprentice_hours || 4}시간 후 결과를 확인할 수 있어요.
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280;font-weight:800;font-size:13px;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">취소</button>
+        <button onclick="closeModal()" class="btn flex-1" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-weight:800;font-size:13px;padding:12px;border-radius:14px;border:1.5px solid var(--btn-cancel-border)">취소</button>
         <button onclick="closeModal();farmConfirmApprentice('${squirrelId}')" class="btn btn-primary flex-1">보내기!</button>
       </div>
     </div>
@@ -109,7 +109,7 @@ async function farmRevealResult() {
           <div style="font-size:18px;font-weight:900;color:${success ? '#16a34a' : '#9ca3af'};margin-bottom:8px">
             ${success ? '농부 전직 성공!' : '아쉽지만 실패...'}
           </div>
-          <div style="display:inline-block;border-radius:16px;border:3px solid ${success ? '#22c55e' : '#d1d5db'};padding:3px;background:${success ? '#f0fdf4' : '#f9fafb'};margin:8px 0">
+          <div style="display:inline-block;border-radius:16px;border:3px solid ${success ? '#22c55e' : '#d1d5db'};padding:3px;background:${success ? '#f0fdf4' : 'var(--surface-50)'};margin:8px 0">
             <img src="images/squirrels/${spriteFile}.png" style="width:64px;height:64px;object-fit:contain;border-radius:12px;display:block" onerror="this.outerHTML='<div style=\\'font-size:48px;line-height:64px\\'>🐱</div>'">
           </div>
           <div style="font-size:14px;font-weight:900;color:#1f2937;margin-bottom:4px">${sqName}</div>
@@ -155,7 +155,7 @@ function farmShowChangeFarmer() {
         ? `<button onclick="farmUnequipFarmer()" class="btn w-full mt-3" style="background:#fef2f2;color:#ef4444;font-weight:800;font-size:11px">농부 해제하기</button>`
         : `<div class="w-full mt-3 text-center" style="font-size:10px;color:#9ca3af;font-weight:700;padding:8px 0">🌱 작물이 자라는 중에는 해제할 수 없어요</div>`
       ) : ''}
-      <button onclick="closeModal()" class="btn w-full mt-2" style="background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">닫기</button>
+      <button onclick="closeModal()" class="btn w-full mt-2" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid var(--btn-cancel-border)">닫기</button>
     </div>
   `);
 }
@@ -173,7 +173,7 @@ function _farmRenderFarmerList() {
     const spriteFile = sq.sprite || 'sq_acorn';
     const isActive = _farmData?.active_farmer_id === sq.id;
     return `
-      <div onclick="${isActive ? '' : `farmEquipFarmer('${sq.id}')`}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:${isActive ? '#f0fdf4' : 'white'};border:2px solid ${isActive ? '#22c55e' : '#e5e7eb'};cursor:${isActive ? 'default' : 'pointer'}">
+      <div onclick="${isActive ? '' : `farmEquipFarmer('${sq.id}')`}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:${isActive ? '#f0fdf4' : 'var(--list-item-bg)'};border:2px solid ${isActive ? '#22c55e' : 'var(--list-item-border)'};cursor:${isActive ? 'default' : 'pointer'}">
         <div style="border-radius:8px;${gs.border};padding:2px;background:${gs.bg};flex-shrink:0">
           <img src="images/squirrels/${spriteFile}.png" style="width:30px;height:30px;object-fit:contain;border-radius:6px;display:block" onerror="this.outerHTML='<div style=\\'font-size:22px;line-height:30px;text-align:center\\'>🐱</div>'">
         </div>

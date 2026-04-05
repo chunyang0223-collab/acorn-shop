@@ -96,7 +96,7 @@ function farmShowDeposit() {
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div style="flex:1">
           <div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:700;font-family:'Pretendard',sans-serif">입금할 도토리</div>
-          <input id="farmDepositAmt" type="number" min="1" max="${myAcorns}" value="10" style="width:100%;padding:8px 10px;border:2px solid #d1d5db;border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:#f9fafb">
+          <input id="farmDepositAmt" type="number" min="1" max="${myAcorns}" value="10" style="width:100%;padding:8px 10px;border:2px solid var(--qty-btn-border);border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:var(--surface-50)">
         </div>
         <button onclick="farmDoDeposit()" class="farm-btn farm-btn-dark" style="align-self:flex-end;padding:8px 16px;font-size:12px">입금</button>
       </div>
@@ -104,7 +104,7 @@ function farmShowDeposit() {
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div style="flex:1">
           <div style="font-size:10px;color:#9ca3af;margin-bottom:4px;font-weight:700;font-family:'Pretendard',sans-serif">출금할 도토리 <span style="font-size:9px;color:#d1d5db">(정수 단위만)</span></div>
-          <input id="farmWithdrawAmt" type="number" min="1" max="${acorns}" value="${Math.min(acorns, 10)}" style="width:100%;padding:8px 10px;border:2px solid #d1d5db;border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:#f9fafb">
+          <input id="farmWithdrawAmt" type="number" min="1" max="${acorns}" value="${Math.min(acorns, 10)}" style="width:100%;padding:8px 10px;border:2px solid var(--qty-btn-border);border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:var(--surface-50)">
         </div>
         <button onclick="farmDoWithdraw()" class="farm-btn" style="align-self:flex-end;padding:8px 16px;font-size:12px">출금</button>
       </div>
@@ -322,7 +322,7 @@ function _farmRenderBuyTab() {
     const canBuy = depositTotal >= currentPrice;
 
     html += `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:${canBuy ? 'white' : '#f9fafb'};border:1.5px solid ${canBuy ? '#e5e7eb' : '#f3f4f6'};${canBuy ? '' : 'opacity:0.6'}">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:${canBuy ? 'var(--list-item-bg)' : 'var(--surface-50)'};border:1.5px solid ${canBuy ? 'var(--list-item-border)' : 'var(--progress-track-bg)'};${canBuy ? '' : 'opacity:0.6'}">
         <div style="font-size:28px;flex-shrink:0;width:36px;text-align:center">${crop.emoji}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:900;color:#1f2937">${crop.name} 씨앗</div>
@@ -356,17 +356,17 @@ function _farmRenderSellTab() {
       const sellPrice = Math.round(marketPrice * 0.7);
       const priceStr = _farmFmtPrice(sellPrice);
       html += `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:white;border:1.5px solid #e5e7eb;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--list-item-bg);border:1.5px solid var(--list-item-border);margin-bottom:6px">
           <div style="font-size:24px;flex-shrink:0">${crop.emoji}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:900;color:#1f2937">${crop.name} 씨앗 <span style="font-size:11px;color:#6b7280;font-weight:700">×${inv.quantity}</span></div>
             <div style="font-size:10px;color:#ef4444;margin-top:1px">개당 🌰 ${priceStr}</div>
           </div>
           <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-            <button onclick="_farmSellSeedQty('${inv.crop_id}',-1)" style="width:26px;height:26px;border-radius:7px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',-1)" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
             <span id="farmSeedQty_${inv.crop_id}" style="font-size:14px;font-weight:900;min-width:22px;text-align:center">1</span>
-            <button onclick="_farmSellSeedQty('${inv.crop_id}',1)" style="width:26px;height:26px;border-radius:7px;border:1px solid #d1d5db;background:white;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
-            <button onclick="_farmSellSeedQty('${inv.crop_id}',999)" style="padding:3px 8px;border-radius:7px;border:1px solid #d1d5db;background:white;font-size:9px;font-weight:800;cursor:pointer;color:#6b7280">ALL</button>
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',1)" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',999)" style="padding:3px 8px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:9px;font-weight:800;cursor:pointer;color:var(--qty-btn-text)">ALL</button>
             <button onclick="farmSellSeed('${inv.crop_id}')" style="padding:6px 12px;border-radius:10px;border:none;background:linear-gradient(135deg,#f87171,#ef4444);color:white;font-size:11px;font-weight:800;cursor:pointer">판매</button>
           </div>
         </div>`;
@@ -421,10 +421,10 @@ function _farmRenderSellTab() {
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
-            <button onclick="_farmSellCropQty('${inv.crop_id}',-1)" style="width:28px;height:28px;border-radius:8px;border:1px solid #d1d5db;background:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
+            <button onclick="_farmSellCropQty('${inv.crop_id}',-1)" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
             <span id="farmCropQty_${inv.crop_id}" style="font-size:15px;font-weight:900;min-width:28px;text-align:center">0</span>
-            <button onclick="_farmSellCropQty('${inv.crop_id}',1)" style="width:28px;height:28px;border-radius:8px;border:1px solid #d1d5db;background:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
-            <button onclick="_farmSellCropQty('${inv.crop_id}',${maxSellable})" style="padding:4px 10px;border-radius:8px;border:1px solid #d1d5db;background:white;font-size:10px;font-weight:800;cursor:pointer;color:#6b7280">ALL</button>
+            <button onclick="_farmSellCropQty('${inv.crop_id}',1)" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
+            <button onclick="_farmSellCropQty('${inv.crop_id}',${maxSellable})" style="padding:4px 10px;border-radius:8px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:10px;font-weight:800;cursor:pointer;color:var(--qty-btn-text)">ALL</button>
             <button onclick="farmSellCrop('${inv.crop_id}')" style="padding:6px 14px;border-radius:10px;border:none;background:linear-gradient(135deg,${tierColor},${tierColor}dd);color:white;font-size:12px;font-weight:800;cursor:pointer">판매</button>
           </div>
         </div>`;
@@ -588,7 +588,7 @@ async function farmExpandInventory() {
       <div style="font-size:16px;font-weight:900;color:#78350f;margin-bottom:16px">🌰 ${cost} 도토리</div>
       <div style="font-size:10px;color:#9ca3af;margin-bottom:12px">예치금에서 차감됩니다</div>
       <div style="display:flex;gap:8px">
-        <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280;font-weight:800;font-size:13px;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">취소</button>
+        <button onclick="closeModal()" class="btn flex-1" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-weight:800;font-size:13px;padding:12px;border-radius:14px;border:1.5px solid var(--btn-cancel-border)">취소</button>
         <button onclick="closeModal();farmDoExpandInventory()" class="btn btn-primary flex-1">확장!</button>
       </div>
     </div>
@@ -622,7 +622,7 @@ function farmShowExpandPlot(cost) {
       <div style="font-size:10px;color:#9ca3af;margin-bottom:${depositAcorns < cost ? '8' : '16'}px">예치금에서 차감됩니다 (보유: 🌰${depositAcorns})</div>
       ${depositAcorns < cost ? `<div style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:12px">⚠️ 예치금이 부족해요! (🌰${cost - depositAcorns} 더 필요)</div>` : ''}
       <div style="display:flex;gap:8px">
-        <button onclick="closeModal()" class="btn flex-1" style="background:#f3f4f6;color:#6b7280;font-weight:800;font-size:13px;padding:12px;border-radius:14px;border:1.5px solid #e5e7eb">취소</button>
+        <button onclick="closeModal()" class="btn flex-1" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-weight:800;font-size:13px;padding:12px;border-radius:14px;border:1.5px solid var(--btn-cancel-border)">취소</button>
         <button onclick="${depositAcorns >= cost ? "closeModal();farmDoExpandPlot()" : "toast('⚠️','예치금이 부족해요! 입금 후 다시 시도하세요')"}" class="btn btn-primary flex-1" style="${depositAcorns < cost ? 'opacity:0.5;cursor:not-allowed' : ''}">확장!</button>
       </div>
     </div>
@@ -661,7 +661,7 @@ function _farmRenderItemTab() {
 
   return `
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:${canAcc ? 'white' : '#f9fafb'};border:1.5px solid ${canAcc ? '#8b5cf6' : '#f3f4f6'};${canAcc ? '' : 'opacity:0.6'}">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:${canAcc ? 'var(--list-item-bg)' : 'var(--surface-50)'};border:1.5px solid ${canAcc ? '#8b5cf6' : 'var(--progress-track-bg)'};${canAcc ? '' : 'opacity:0.6'}">
         <div style="font-size:28px;flex-shrink:0;width:36px;text-align:center">⚡</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:900;color:#1f2937">촉진제</div>
@@ -673,7 +673,7 @@ function _farmRenderItemTab() {
         </div>
         <button onclick="${canAcc ? "farmBuyItem('accelerator')" : "toast('⚠️','예치금이 부족해요!')"}" style="padding:6px 14px;border-radius:10px;border:none;background:${canAcc ? 'linear-gradient(135deg,#a78bfa,#8b5cf6)' : '#e5e7eb'};color:${canAcc ? 'white' : '#9ca3af'};font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">구매</button>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:${canNut ? 'white' : '#f9fafb'};border:1.5px solid ${canNut ? '#10b981' : '#f3f4f6'};${canNut ? '' : 'opacity:0.6'}">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:${canNut ? 'var(--list-item-bg)' : 'var(--surface-50)'};border:1.5px solid ${canNut ? '#10b981' : 'var(--progress-track-bg)'};${canNut ? '' : 'opacity:0.6'}">
         <div style="font-size:28px;flex-shrink:0;width:36px;text-align:center">🧪</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:900;color:#1f2937">영양제</div>
