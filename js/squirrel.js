@@ -529,19 +529,20 @@ async function sqRenderGrid() {
   const _ftDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const filterBtn = (val, label) => {
     const active = filter === val;
+    // ── 필터 버튼 색상 (라이트/다크 × 활성/비활성) ──
     const bg = active
       ? (_ftDark ? 'linear-gradient(180deg,#fde68a,#fbbf24)' : 'linear-gradient(180deg,#fef3c7,#fde68a)')
       : (_ftDark ? 'linear-gradient(180deg,#2a3a4e,#1e2d40)' : 'linear-gradient(180deg,#ffffff,#f1f5f9)');
     const border = active
-      ? (_ftDark ? '#f59e0b' : '#fbbf24')
-      : (_ftDark ? '#3d5068' : '#e2e8f0');
+      ? (_ftDark ? '#d97706' : '#f59e0b')
+      : (_ftDark ? '#475569' : '#d1d5db');
     const color = active
-      ? (_ftDark ? '#451a03' : '#78350f')
-      : (_ftDark ? '#cbd5e1' : '#4b5563');
+      ? (_ftDark ? '#1e1e1e' : '#1e1e1e')
+      : (_ftDark ? '#e2e8f0' : '#4b5563');
     const shadow = active
-      ? (_ftDark ? '0 2px 0 #b45309,0 4px 10px rgba(245,158,11,0.2)' : '0 2px 0 #d97706,0 4px 10px rgba(251,191,36,0.15)')
+      ? (_ftDark ? '0 2px 0 #b45309,0 4px 10px rgba(245,158,11,0.25)' : '0 2px 0 #d97706,0 4px 10px rgba(251,191,36,0.15)')
       : (_ftDark ? '0 2px 0 #0f172a,0 3px 6px rgba(0,0,0,0.25)' : '0 2px 0 #e2e8f0,0 3px 6px rgba(0,0,0,0.04)');
-    const gloss = active ? 'rgba(255,255,255,0.35)' : (_ftDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)');
+    const gloss = active ? 'rgba(255,255,255,0.3)' : (_ftDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)');
     return `<button onclick="window._sqFilter='${val}';sqRenderGrid()"
       style="padding:5px 14px;border-radius:20px;
         border:1.5px solid ${border};
