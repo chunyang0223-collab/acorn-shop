@@ -2197,8 +2197,8 @@ async function sqExecuteExam(id) {
 
     // ── 대사 1: 인사 (타이핑 완료 → 클릭 대기) ──
     const greetings = itemCount > 0
-      ? '오호, 반짝이는 무언가를\n가져왔군... 어디 한번 살펴볼까?'
-      : '흠... 어디 한번\n실력을 볼까?';
+      ? '오호, 반짝이는 무언가를가져왔군...\n어디 한번 살펴볼까?'
+      : '흠... 어디 한번 실력을 볼까?';
     await new Promise(r => _sqTypeText('examDialogueText', greetings, 40, r));
     await _waitClick();
 
@@ -2229,9 +2229,10 @@ async function sqExecuteExam(id) {
             <div style="border:4px solid #22c55e;border-radius:12px;padding:6px 20px;background:rgba(34,197,94,0.15)">합격</div>
           </div>`;
       }
-      _sqExamPlayStamp();
       const stamp = document.getElementById('examStamp');
       if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(-5deg)'; }
+      await new Promise(r => setTimeout(r, 100));
+      _sqExamPlayStamp();
 
       // 합격 대사 (타이핑 완료 → 자동 전환)
       await new Promise(r => setTimeout(r, 600));
@@ -2257,14 +2258,15 @@ async function sqExecuteExam(id) {
             <div style="border:4px solid #ff3333;border-radius:12px;padding:6px 20px;background:rgba(255,20,20,0.25)">불합격</div>
           </div>`;
       }
-      _sqExamPlayStamp();
       const stamp = document.getElementById('examStamp');
       if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(3deg)'; }
+      await new Promise(r => setTimeout(r, 100));
+      _sqExamPlayStamp();
       _sqShakeScreen();
 
       // 불합격 대사 (타이핑 완료 → 자동 전환)
       await new Promise(r => setTimeout(r, 600));
-      await new Promise(r => _sqTypeText('examDialogueText', '아쉽군... 다음에 다시 도전하게.\n좀 더 준비해오라고.', 35, r));
+      await new Promise(r => _sqTypeText('examDialogueText', '아쉽군... 다음에 다시 도전하게.\n뭐라도 더 준비해오라고.', 35, r));
       playSound('reject');
       await new Promise(r => setTimeout(r, 1200));
 
