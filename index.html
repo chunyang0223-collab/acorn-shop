@@ -1622,72 +1622,70 @@
       </div>
     </div>
 
+    <!-- 아이템 관리 -->
+    <div id="atab-items" class="hidden">
+      <div class="clay-card p-4 mb-4">
+        <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">📦 <span>아이템 등록</span></h3>
+        <div class="space-y-2">
+          <input class="field" type="text" id="ni-name" placeholder="아이템명">
+          <div class="grid grid-cols-2 gap-2">
+            <input class="field" type="text" id="ni-icon" placeholder="이모지 📦">
+            <input class="field" type="text" id="ni-rewardType" placeholder="보상 타입 (예: EXAM_MATERIAL)" value="MANUAL_ITEM">
+          </div>
+          <input class="field" type="text" id="ni-desc" placeholder="설명">
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 text-xs font-bold text-gray-600">
+              <input type="checkbox" id="ni-stackable"> 스택 가능
+            </label>
+            <input class="field" type="number" id="ni-maxStack" placeholder="최대 스택 (기본 1)" min="1" value="1">
+          </div>
+          <button class="btn btn-primary w-full py-2 text-sm" onclick="addRegistryItem()">➕ 아이템 등록</button>
+        </div>
+      </div>
+      <div class="clay-card p-4">
+        <p class="text-sm font-black text-gray-700 mb-3">📦 전체 아이템 목록</p>
+        <div id="registryItemList" class="space-y-2"></div>
+      </div>
+    </div>
+
     <!-- 상품 -->
     <div id="atab-products" class="hidden">
 
-      <!-- 등록 폼: 2열 (상점 / 뽑기) -->
+      <!-- 상점 추가: 아이템 DB에서 선택 -->
       <div class="grid grid-cols-2 gap-3 mb-4" style="align-items:start">
 
-        <!-- 상점 상품 등록 -->
         <div class="clay-card p-4">
-          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🛍️ <span>상점 상품</span></h3>
+          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🛍️ <span>상점에 추가</span></h3>
+          <p class="text-xs text-gray-400 mb-2">아이템 DB에서 선택 후 가격·수량을 설정하세요</p>
+          <div id="ns-itemPicker" class="flex flex-wrap gap-1 mb-3 p-2 rounded-xl bg-gray-50 min-h-[40px]" style="max-height:160px;overflow-y:auto"></div>
+          <div id="ns-selectedInfo" class="hidden mb-2 p-2 rounded-lg bg-blue-50 text-xs font-bold text-blue-700"></div>
           <div class="space-y-2">
-            <input class="field" type="text" id="ns-name" placeholder="상품명">
-            <div class="grid grid-cols-2 gap-2">
-              <input class="field" type="text" id="ns-icon" placeholder="이모지 🎁">
-              <input class="field" type="number" id="ns-price" placeholder="가격(🌰)">
-            </div>
-            <input class="field" type="text" id="ns-desc" placeholder="설명">
-            <select class="field" id="ns-rewardType" onchange="toggleAcornField('ns')">
-              <option value="MANUAL_ITEM">📬 승인 필요</option>
-              <option value="AUTO_ACORN">⚡ 즉시 지급</option>
-            </select>
-            <div id="ns-acornWrap" class="hidden">
-              <input class="field" type="number" id="ns-acornAmt" placeholder="지급 도토리량">
-            </div>
+            <input class="field" type="number" id="ns-price" placeholder="가격(🌰)">
             <div>
               <label class="text-xs font-bold text-gray-500 mb-1 block">판매 수량</label>
               <div class="flex gap-2 items-center">
-                <select class="field" id="ns-stockType" onchange="toggleStockField()" style="flex:1">
-                  <option value="unlimited">♾️ 무제한 (상시판매)</option>
-                  <option value="limited">🔢 수량 제한</option>
-                </select>
+                <div class="flex rounded-lg overflow-hidden border border-gray-200" style="flex:1">
+                  <button id="ns-stockUnlimited" class="flex-1 py-1.5 text-xs font-bold bg-blue-100 text-blue-700" onclick="_nsSetStock('unlimited')">♾️ 무제한</button>
+                  <button id="ns-stockLimited" class="flex-1 py-1.5 text-xs font-bold bg-white text-gray-500" onclick="_nsSetStock('limited')">🔢 제한</button>
+                </div>
                 <input class="field hidden" type="number" id="ns-stock" placeholder="개수" min="1" style="width:80px;flex-shrink:0">
               </div>
             </div>
-            <button class="btn btn-primary w-full py-2 text-sm" onclick="addStoreProduct()">➕ 추가</button>
+            <button class="btn btn-primary w-full py-2 text-sm" onclick="addStoreProduct()">➕ 상점에 추가</button>
           </div>
         </div>
 
-        <!-- 뽑기 상품 등록 -->
+        <!-- 뽑기 추가: 아이템 DB에서 선택 -->
         <div class="clay-card p-4">
-          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🎲 <span>뽑기 상품</span></h3>
+          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🎲 <span>뽑기에 추가</span></h3>
+          <p class="text-xs text-gray-400 mb-2">아이템 DB에서 선택 후 확률을 설정하세요</p>
+          <div id="ng-itemPicker" class="flex flex-wrap gap-1 mb-3 p-2 rounded-xl bg-gray-50 min-h-[40px]" style="max-height:160px;overflow-y:auto"></div>
+          <div id="ng-selectedInfo" class="hidden mb-2 p-2 rounded-lg bg-purple-50 text-xs font-bold text-purple-700"></div>
           <div class="space-y-2">
-            <input class="field" type="text" id="ng-name" placeholder="아이템명">
-            <div class="grid grid-cols-2 gap-2">
-              <input class="field" type="text" id="ng-icon" placeholder="이모지 ✨">
-              <input class="field" type="number" id="ng-probability" placeholder="확률 %" step="0.1" min="0">
-            </div>
-            <input class="field" type="text" id="ng-desc" placeholder="설명">
-            <select class="field" id="ng-rewardType" onchange="toggleAcornField('ng');toggleCouponField('ng')">
-              <option value="MANUAL_ITEM">📬 아이템 (승인 필요)</option>
-              <option value="AUTO_ACORN">⚡ 즉시 도토리 지급</option>
-              <option value="COUPON">🎟️ 할인쿠폰</option>
-              <option value="ACORN_TICKET">🌰 도토리 티켓 (사용 시 즉시 지급)</option>
-              <option value="GACHA_TICKET">🎫 뽑기 티켓 (1회 무료 뽑기)</option>
-            </select>
-            <div id="ng-acornWrap" class="hidden">
-              <input class="field" type="number" id="ng-acornAmt" placeholder="지급 도토리량">
-            </div>
-            <div id="ng-couponWrap" class="hidden">
-              <input class="field" type="number" id="ng-discountPct" placeholder="할인율 % (예: 20)" min="1" max="100">
-              <p class="text-xs text-gray-400 mt-1">※ 상점 구매 시 1회 사용 가능</p>
-            </div>
-            <div id="ng-resellWrap">
-              <input class="field" type="number" id="ng-resellPrice" placeholder="되팔기 가격 🌰 (0=불가)" min="0">
-            </div>
+            <input class="field" type="number" id="ng-probability" placeholder="확률 %" step="0.1" min="0">
+            <input class="field" type="number" id="ng-resellPrice" placeholder="되팔기 가격 🌰 (0=불가)" min="0">
             <p class="text-xs text-gray-400">※ 확률 합≠100이어도 자동 정규화</p>
-            <button class="btn btn-purple w-full py-2 text-sm" onclick="addGachaProduct()">➕ 추가</button>
+            <button class="btn btn-purple w-full py-2 text-sm" onclick="addGachaProduct()">➕ 뽑기에 추가</button>
           </div>
         </div>
 
