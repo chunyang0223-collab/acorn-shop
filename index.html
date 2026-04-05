@@ -1460,7 +1460,7 @@
     <div class="adm-tabbar-wrap"><div id="adminTabBar" class="adm-tabbar">
       <!-- 1행 -->
       <button class="adm-tab-btn active" data-tab="home" onclick="aTab('home',this)">🏠 홈</button>
-      <button class="adm-tab-btn" data-tab="dashboard" onclick="aTab('dashboard',this)">📊 현황</button>
+      <button class="adm-tab-btn" data-tab="dashboard" onclick="aTab('dashboard',this)">🔧 점검</button>
       <button class="adm-tab-btn" data-tab="requests" onclick="aTab('requests',this)">📬 신청목록</button>
       <button class="adm-tab-btn" data-tab="quests" onclick="aTab('quests',this)">📋 퀘스트</button>
       <button class="adm-tab-btn" data-tab="events" onclick="aTab('events',this)">🎉 이벤트</button>
@@ -1469,11 +1469,19 @@
       <!-- 2행 -->
       <button class="adm-tab-btn" data-tab="products" onclick="aTab('products',this)">🛍️ 상품등록/수정</button>
       <button class="adm-tab-btn" data-tab="gachaTest" onclick="aTab('gachaTest',this)">🎲 뽑기테스트</button>
-      <button class="adm-tab-btn" data-tab="squirrelSettings" onclick="aTab('squirrelSettings',this)">🐿️ 다람쥐</button>
       <button class="adm-tab-btn" data-tab="minigameSettings" onclick="aTab('minigameSettings',this)">🎮 미니게임</button>
       <button class="adm-tab-btn" data-tab="ranking" onclick="aTab('ranking',this)">🏆 랭킹</button>
       <span class="adm-tab-row-break"></span>
-      <!-- 3행 -->
+      <!-- 3행: 다람쥐 -->
+      <span class="adm-tab-group-label">[다람쥐]</span>
+      <button class="adm-tab-btn" data-tab="sq_my" onclick="aTab('sq_my',this)">🏠 목록</button>
+      <button class="adm-tab-btn" data-tab="sq_shop" onclick="aTab('sq_shop',this)">🛒 상점</button>
+      <button class="adm-tab-btn" data-tab="sq_fuse" onclick="aTab('sq_fuse',this)">🧬 합성</button>
+      <button class="adm-tab-btn" data-tab="sq_expedition" onclick="aTab('sq_expedition',this)">⚔️ 탐험</button>
+      <button class="adm-tab-btn" data-tab="sq_farm" onclick="aTab('sq_farm',this)">🌾 농장</button>
+      <button class="adm-tab-btn" data-tab="bossraid" onclick="aTab('bossraid',this)">🐉 레이드</button>
+      <span class="adm-tab-row-break"></span>
+      <!-- 4행 -->
       <button class="adm-tab-btn" data-tab="items" onclick="aTab('items',this)">📦 아이템관리</button>
       <button class="adm-tab-btn" data-tab="txlog" onclick="aTab('txlog',this)">🗂️ 사용자로그</button>
       <button class="adm-tab-btn" data-tab="users" onclick="aTab('users',this)">👥 회원관리/지급</button>
@@ -1501,30 +1509,6 @@
         <div id="adminCurrentNotice"></div>
       </div>
 
-      <!-- 점검 관리 -->
-      <p class="adm-section-label">🔧 메뉴 점검</p>
-      <div class="adm-maint-row" id="maintRow">
-        <div class="adm-maint-chip" onclick="toggleMaintenance('shop')"><span class="maint-dot" id="maint-dot-shop"></span> 🛍️ 상점</div>
-        <div class="adm-maint-chip" onclick="toggleMaintenance('gacha')"><span class="maint-dot" id="maint-dot-gacha"></span> 🎲 뽑기</div>
-        <div class="adm-maint-chip" onclick="toggleMaintenance('quest')"><span class="maint-dot" id="maint-dot-quest"></span> 📋 퀘스트</div>
-        <div class="adm-maint-chip" onclick="toggleMaintenance('recycle')"><span class="maint-dot" id="maint-dot-recycle"></span> ♻️ 재활용</div>
-        <div class="adm-maint-chip" onclick="toggleMaintenance('minigame')"><span class="maint-dot" id="maint-dot-minigame"></span> 🎮 미니게임</div>
-        <div class="adm-maint-chip" onclick="toggleMaintenance('squirrel')"><span class="maint-dot" id="maint-dot-squirrel"></span> 🐿️ 다람쥐</div>
-        <div class="adm-maint-chip" onclick="toggleMaintenance('bossraid')"><span class="maint-dot" id="maint-dot-bossraid"></span> 🐉 레이드</div>
-        <div class="adm-maint-chip" onclick="toggleMaintenance('mypage')"><span class="maint-dot" id="maint-dot-mypage"></span> 👤 마이</div>
-      </div>
-
-      <!-- 보스레이드 설정 -->
-      <p class="adm-section-label">🐉 보스레이드</p>
-      <div class="clay-card p-4">
-        <button class="btn btn-primary w-full py-2 text-sm" onclick="brAdminOpenSettings()">⚙️ 보스레이드 설정 열기</button>
-      </div>
-      <p class="adm-section-label" style="margin-top:8px">🐿️ 다람쥐 서브탭 점검</p>
-      <div class="adm-maint-row" id="maintRowSqSub">
-        <div class="adm-maint-chip" onclick="toggleMaintenance('sq_farm')"><span class="maint-dot" id="maint-dot-sq_farm"></span> 🌾 농장</div>
-      </div>
-      <div class="text-xs text-gray-400 mt-1 mb-3" style="padding:0 4px">다람쥐 메뉴 전체 점검과 별개로, 서브탭만 개별 점검할 수 있어요.</div>
-
       <!-- 최근 활동 -->
       <p class="adm-section-label">📋 최근 활동</p>
       <div class="clay-card p-4"><div id="ds-activityLog"></div></div>
@@ -1532,42 +1516,28 @@
 
     <!-- 기존 대시보드 (현황 상세 — 그리드에서 "현황" 클릭 시) -->
     <div id="atab-dashboard" class="hidden">
-      <button class="adm-back-btn" onclick="aTabGrid('home')">← 홈으로</button>
-      <div id="dashboard-top" class="flex gap-3 mb-5 items-stretch">
-        <div class="dashboard-stats flex flex-col gap-2" style="flex:0 0 auto;min-width:130px">
-          <p class="text-xs font-black text-amber-600 uppercase tracking-wider px-1">오늘 현황</p>
-          <div class="clay-card p-3 flex items-center gap-2 bounce-in">
-            <span class="text-lg">👥</span>
-            <div><div class="text-base font-black text-orange-700 leading-none" id="ds-users2">—</div><div class="text-xs text-orange-400 font-bold">전체 사용자</div></div>
-          </div>
-          <div class="clay-card p-3 flex items-center gap-2 bounce-in" style="animation-delay:.05s">
-            <span class="text-lg">🎲</span>
-            <div><div class="text-base font-black text-blue-700 leading-none" id="ds-todayGacha2">—</div><div class="text-xs text-blue-400 font-bold">오늘 뽑기</div></div>
-          </div>
-          <div class="clay-card p-3 flex items-center gap-2 bounce-in" style="animation-delay:.1s">
-            <span class="text-lg">⬆️</span>
-            <div><div class="text-base font-black text-green-700 leading-none" id="ds-todayGiven2">—</div><div class="text-xs text-green-400 font-bold">오늘 지급</div></div>
-          </div>
-          <div class="clay-card p-3 flex items-center gap-2 bounce-in" style="animation-delay:.15s">
-            <span class="text-lg">⬇️</span>
-            <div><div class="text-base font-black text-purple-700 leading-none" id="ds-todayUsed2">—</div><div class="text-xs text-purple-400 font-bold">오늘 사용</div></div>
-          </div>
-        </div>
-        <div class="clay-card p-4 flex-1 flex flex-col">
-          <p class="text-xs font-black text-amber-600 uppercase tracking-wider mb-3 px-1">메뉴 점검 관리</p>
-          <div class="flex flex-col gap-2 flex-1 justify-around">
-            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🛍️ 상점</span><button id="maint-shop" onclick="toggleMaintenance('shop')" class="maint-btn"></button></div>
-            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎲 뽑기</span><button id="maint-gacha" onclick="toggleMaintenance('gacha')" class="maint-btn"></button></div>
-            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">📋 퀘스트</span><button id="maint-quest" onclick="toggleMaintenance('quest')" class="maint-btn"></button></div>
-            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">♻️ 재활용</span><button id="maint-recycle" onclick="toggleMaintenance('recycle')" class="maint-btn"></button></div>
-            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎮 미니게임</span><button id="maint-minigame" onclick="toggleMaintenance('minigame')" class="maint-btn"></button></div>
-            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐿️ 다람쥐</span><button id="maint-squirrel" onclick="toggleMaintenance('squirrel')" class="maint-btn"></button></div>
-            <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">👤 마이</span><button id="maint-mypage" onclick="toggleMaintenance('mypage')" class="maint-btn"></button></div>
-          </div>
+      <!-- 메인 메뉴 점검 -->
+      <p class="adm-section-label">🔧 메뉴 점검</p>
+      <div class="clay-card p-4 mb-4">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🛍️ 상점</span><button id="maint-shop" onclick="toggleMaintenance('shop')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎲 뽑기</span><button id="maint-gacha" onclick="toggleMaintenance('gacha')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">📋 퀘스트</span><button id="maint-quest" onclick="toggleMaintenance('quest')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">♻️ 재활용</span><button id="maint-recycle" onclick="toggleMaintenance('recycle')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎮 미니게임</span><button id="maint-minigame" onclick="toggleMaintenance('minigame')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐉 레이드</span><button id="maint-bossraid" onclick="toggleMaintenance('bossraid')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">👤 마이</span><button id="maint-mypage" onclick="toggleMaintenance('mypage')" class="maint-btn"></button></div>
         </div>
       </div>
-      <p class="text-xs font-black text-amber-600 uppercase tracking-wider mb-3 px-1">최근 활동</p>
-      <div class="clay-card p-4"><div id="ds-activityLog2"></div></div>
+      <!-- 다람쥐 점검 -->
+      <p class="adm-section-label">🐿️ 다람쥐 점검</p>
+      <div class="clay-card p-4 mb-2">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐿️ 다람쥐 전체</span><button id="maint-squirrel" onclick="toggleMaintenance('squirrel')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">🌾 농장</span><button id="maint-sq_farm" onclick="toggleMaintenance('sq_farm')" class="maint-btn"></button></div>
+        </div>
+      </div>
+      <div class="text-xs text-gray-400 font-bold mb-4" style="padding:0 4px">다람쥐 전체 점검과 별개로, 서브탭만 개별 점검할 수 있어요.</div>
     </div>
 
     <!-- 뽑기 테스트 -->
@@ -2096,6 +2066,14 @@
           </div>
           <button class="btn btn-primary" onclick="sqAdminEnter()">입장하기 →</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 🐉 보스레이드 설정 탭 -->
+    <div id="atab-bossraid" class="hidden">
+      <p class="adm-section-label">🐉 보스레이드 설정</p>
+      <div class="clay-card p-4">
+        <button class="btn btn-primary w-full py-2 text-sm" onclick="brAdminOpenSettings()">⚙️ 보스레이드 설정 열기</button>
       </div>
     </div>
 
