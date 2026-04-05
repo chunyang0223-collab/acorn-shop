@@ -1756,8 +1756,12 @@ async function brAdminOpenSettings() {
   var c = _brConfig;
   var is = 'background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)';
 
-  showModal(`
-    <div style="max-width:400px;margin:0 auto;max-height:80vh;overflow-y:auto;padding-right:2px">
+  // atab-bossraid가 있으면 인라인 렌더, 없으면 모달 폴백
+  var target = document.getElementById('atab-bossraid');
+  var renderInline = target && !target.classList.contains('hidden');
+
+  var html = `
+    <div style="max-width:400px;margin:0 auto;padding-right:2px${renderInline ? '' : ';max-height:80vh;overflow-y:auto'}">
       <h2 style="font-size:16px;font-weight:900;color:var(--text-primary,#374151);margin-bottom:12px">🐉 보스레이드 설정</h2>
 
       <!-- 기본 -->
@@ -1904,7 +1908,13 @@ async function brAdminOpenSettings() {
 
       <button onclick="brAdminSaveSettings()" style="width:100%;margin-top:8px;padding:12px;border-radius:10px;border:none;background:var(--primary,#8b5cf6);color:#fff;font-size:14px;font-weight:900;cursor:pointer">💾 저장</button>
     </div>
-  `);
+  `;
+
+  if (renderInline) {
+    target.innerHTML = html;
+  } else {
+    showModal(html);
+  }
 
   // 보스 목록 렌더
   _brRenderBossList();
