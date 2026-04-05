@@ -714,7 +714,7 @@ async function _confirmUseItemInner(inventoryId) {
   window._pendingInvIds.add(inventoryId);
 
   playSound('pop');
-  toast('✅', `${p.name || snap?.name} 신청 완료! 관리자 승인을 기다려주세요.`);
+  toast('✅', `${p.name} 신청 완료! 관리자 승인을 기다려주세요.`);
   triggerAutoQuest('itemUse');
 
   // 렌더링 먼저 — 버튼 즉시 변경
@@ -722,14 +722,14 @@ async function _confirmUseItemInner(inventoryId) {
   renderMypage();
 
   // 알림은 백그라운드 (UI 블로킹 없음)
-  pushNotif(myProfile.id, 'request', '신청 완료! ✋', `${p.icon||snap?.icon} ${p.name||snap?.name} 신청을 보냈어요. 관리자 승인 대기 중이에요.`).catch(()=>{});
+  pushNotif(myProfile.id, 'request', '신청 완료! ✋', `${p.icon} ${p.name} 신청을 보냈어요. 관리자 승인 대기 중이에요.`).catch(()=>{});
   sb.from('users').select('id').eq('is_admin', true).maybeSingle().then(({ data: adminUser }) => {
     if (adminUser) {
-      pushNotif(adminUser.id, 'request', `📬 신청 도착! ${snap?.icon} ${snap?.name}`,
+      pushNotif(adminUser.id, 'request', `📬 신청 도착! ${p.icon} ${p.name}`,
         `${myProfile.display_name}님이 아이템 사용을 신청했어요.`).catch(()=>{});
     }
   }).catch(()=>{});
-  sendBrowserNotif('📬 새 신청이 도착했어요!', `${myProfile.display_name}님: ${snap?.icon} ${snap?.name} 사용 신청`);
+  sendBrowserNotif('📬 새 신청이 도착했어요!', `${myProfile.display_name}님: ${p.icon} ${p.name} 사용 신청`);
 }
 
 // 브라우저 Push 알림 (Web Notification API)

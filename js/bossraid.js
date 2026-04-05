@@ -1662,24 +1662,23 @@ function _brRenderBossList() {
     wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;padding:8px;text-align:center">등록된 보스가 없어요</div>';
     return;
   }
-  var is = 'background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)';
   wrap.innerHTML = bosses.map(function(b, i) {
     var active = b.active !== false;
     var preview = _brCalcStats(b.lvMin, true);
     var previewMax = _brCalcStats(b.lvMax, true);
-    return '<div style="display:flex;align-items:center;gap:6px;padding:8px;border-radius:10px;background:rgba(255,255,255,0.04);margin-bottom:4px;opacity:' + (active ? '1' : '0.45') + '">' +
-      '<div onclick="_brAdmToggleBoss(' + i + ')" style="width:22px;height:22px;border-radius:6px;border:2px solid ' + (active ? '#22c55e' : '#9ca3af') + ';background:' + (active ? '#22c55e' : 'transparent') + ';cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+    return '<div style="display:flex;align-items:center;gap:6px;padding:8px;border-radius:10px;background:var(--bg-surface);border:1px solid var(--border-default,rgba(0,0,0,0.06));margin-bottom:4px;opacity:' + (active ? '1' : '0.45') + '">' +
+      '<div onclick="_brAdmToggleBoss(' + i + ')" style="width:22px;height:22px;border-radius:6px;border:2px solid ' + (active ? '#22c55e' : 'var(--text-muted)') + ';background:' + (active ? '#22c55e' : 'transparent') + ';cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
         (active ? '<span style="color:#fff;font-size:12px;line-height:1">✓</span>' : '') +
       '</div>' +
       '<span style="font-size:18px;flex-shrink:0">' + b.emoji + '</span>' +
       '<div style="flex:1;min-width:0">' +
-        '<div style="font-size:11px;font-weight:900;color:var(--text-primary,#374151)">' + b.name + '</div>' +
-        '<div style="font-size:10px;color:#9ca3af">Lv.' + b.lvMin + '~' + b.lvMax +
+        '<div style="font-size:11px;font-weight:900;color:var(--text-primary)">' + b.name + '</div>' +
+        '<div style="font-size:10px;color:var(--text-muted)">Lv.' + b.lvMin + '~' + b.lvMax +
           ' | HP ' + preview.hp + '~' + previewMax.hp +
           ' 공 ' + preview.atk + '~' + previewMax.atk +
           (b.reward_weights ? ' | <span style="color:#f59e0b;font-weight:700">★</span>' : '') + '</div>' +
       '</div>' +
-      '<button onclick="_brAdmEditBoss(' + i + ')" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(59,130,246,0.1);color:#3b82f6;font-size:10px;cursor:pointer;flex-shrink:0">✎</button>' +
+      '<button onclick="_brAdmEditBoss(' + i + ')" class="br-btn-add" style="width:22px;height:22px;padding:0;font-size:10px">✎</button>' +
     '</div>';
   }).join('');
 }
@@ -1694,31 +1693,30 @@ function _brAdmToggleBoss(idx) {
 function _brAdmEditBoss(idx) {
   var b = _brConfig.bosses[idx];
   if (!b) return;
-  var is = 'background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)';
   var editArea = document.getElementById('brAdmBossEdit');
   if (!editArea) return;
   editArea.innerHTML =
-    '<div style="padding:10px;border-radius:10px;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15)">' +
+    '<div class="br-card" style="border-color:rgba(59,130,246,0.2)">' +
       '<p style="font-size:11px;font-weight:900;color:#3b82f6;margin-bottom:6px">보스 편집 #' + (idx + 1) + '</p>' +
       '<div style="display:grid;grid-template-columns:40px 1fr;gap:6px;margin-bottom:6px">' +
-        '<input type="text" id="brBE_emoji" value="' + b.emoji + '" style="text-align:center;font-size:16px;padding:4px;border-radius:8px;' + is + '">' +
-        '<input type="text" id="brBE_name" value="' + b.name + '" style="padding:4px 8px;border-radius:8px;font-size:12px;font-weight:700;' + is + '">' +
+        '<input type="text" id="brBE_emoji" value="' + b.emoji + '" class="br-input" style="text-align:center;font-size:16px;padding:4px">' +
+        '<input type="text" id="brBE_name" value="' + b.name + '" class="br-input" style="text-align:left;padding:4px 8px">' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">' +
-        '<div><label style="font-size:10px;color:#9ca3af">최소 Lv</label><input type="number" id="brBE_lvMin" value="' + b.lvMin + '" min="1" max="99" style="width:100%;padding:4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;' + is + '"></div>' +
-        '<div><label style="font-size:10px;color:#9ca3af">최대 Lv</label><input type="number" id="brBE_lvMax" value="' + b.lvMax + '" min="1" max="99" style="width:100%;padding:4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;' + is + '"></div>' +
+        '<div><label class="br-label">최소 Lv</label><input type="number" id="brBE_lvMin" value="' + b.lvMin + '" min="1" max="99" class="br-input-sm"></div>' +
+        '<div><label class="br-label">최대 Lv</label><input type="number" id="brBE_lvMax" value="' + b.lvMax + '" min="1" max="99" class="br-input-sm"></div>' +
       '</div>' +
       '<div style="margin-bottom:8px">' +
-        '<p style="font-size:10px;color:#9ca3af;margin-bottom:3px">보상 등급 가중치 <span style="color:#d1d5db">(비우면 글로벌 설정)</span></p>' +
+        '<p class="br-label" style="margin-bottom:3px">보상 등급 가중치 <span style="color:var(--text-muted)">(비우면 글로벌 설정)</span></p>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">' +
-          '<div><label style="font-size:9px;color:#9ca3af">C등급</label><input type="number" id="brBE_rwC" value="' + (b.reward_weights ? b.reward_weights.C : '') + '" min="0" placeholder="' + _brConfig.reward_weights.C + '" style="width:100%;padding:3px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;' + is + '"></div>' +
-          '<div><label style="font-size:9px;color:#9ca3af">B등급</label><input type="number" id="brBE_rwB" value="' + (b.reward_weights ? b.reward_weights.B : '') + '" min="0" placeholder="' + _brConfig.reward_weights.B + '" style="width:100%;padding:3px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;' + is + '"></div>' +
-          '<div><label style="font-size:9px;color:#9ca3af">A등급</label><input type="number" id="brBE_rwA" value="' + (b.reward_weights ? b.reward_weights.A : '') + '" min="0" placeholder="' + _brConfig.reward_weights.A + '" style="width:100%;padding:3px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;' + is + '"></div>' +
+          '<div><label class="br-label" style="font-size:9px">C등급</label><input type="number" id="brBE_rwC" value="' + (b.reward_weights ? b.reward_weights.C : '') + '" min="0" placeholder="' + _brConfig.reward_weights.C + '" class="br-input-sm" style="padding:3px;border-radius:6px"></div>' +
+          '<div><label class="br-label" style="font-size:9px">B등급</label><input type="number" id="brBE_rwB" value="' + (b.reward_weights ? b.reward_weights.B : '') + '" min="0" placeholder="' + _brConfig.reward_weights.B + '" class="br-input-sm" style="padding:3px;border-radius:6px"></div>' +
+          '<div><label class="br-label" style="font-size:9px">A등급</label><input type="number" id="brBE_rwA" value="' + (b.reward_weights ? b.reward_weights.A : '') + '" min="0" placeholder="' + _brConfig.reward_weights.A + '" class="br-input-sm" style="padding:3px;border-radius:6px"></div>' +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:6px">' +
         '<button onclick="_brAdmSaveBossEdit(' + idx + ')" style="flex:1;padding:6px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-size:11px;font-weight:700;cursor:pointer">적용</button>' +
-        '<button onclick="document.getElementById(\'brAdmBossEdit\').innerHTML=\'\'" style="flex:1;padding:6px;border-radius:8px;border:none;background:rgba(0,0,0,0.06);color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer">취소</button>' +
+        '<button onclick="document.getElementById(\'brAdmBossEdit\').innerHTML=\'\'" style="flex:1;padding:6px;border-radius:8px;border:none;background:var(--bg-surface);color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border-default,rgba(0,0,0,0.06))">취소</button>' +
       '</div>' +
     '</div>';
 }
@@ -1754,57 +1752,55 @@ async function brAdminOpenSettings() {
   await _brLoadConfig();
   await _brLoadProducts();
   var c = _brConfig;
-  var is = 'background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)';
-
   // atab-bossraid가 있으면 인라인 렌더, 없으면 모달 폴백
   var target = document.getElementById('atab-bossraid');
   var renderInline = target && !target.classList.contains('hidden');
 
   var html = `
-    <div style="max-width:400px;margin:0 auto;padding-right:2px${renderInline ? '' : ';max-height:80vh;overflow-y:auto'}">
-      <h2 style="font-size:16px;font-weight:900;color:var(--text-primary,#374151);margin-bottom:12px">🐉 보스레이드 설정</h2>
+    <div class="br-settings-wrap"${renderInline ? '' : ' style="max-height:80vh;overflow-y:auto"'}>
+      <h2 class="br-settings-title">🐉 보스레이드 설정</h2>
 
       <!-- 기본 -->
-      <div style="margin-bottom:16px">
+      <div class="br-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:13px;font-weight:700">활성화</span>
-          <button id="brAdm_enabled" style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:8px;border:none;cursor:pointer;background:${c.enabled ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};color:${c.enabled ? '#22c55e' : '#ef4444'}" onclick="this.dataset.val=this.dataset.val==='true'?'false':'true';this.textContent=this.dataset.val==='true'?'ON':'OFF';this.style.background=this.dataset.val==='true'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)';this.style.color=this.dataset.val==='true'?'#22c55e':'#ef4444'" data-val="${c.enabled}">${c.enabled ? 'ON' : 'OFF'}</button>
+          <span style="font-size:13px;font-weight:700;color:var(--text-primary)">활성화</span>
+          <button id="brAdm_enabled" class="${c.enabled ? 'br-toggle-on' : 'br-toggle-off'}" onclick="this.dataset.val=this.dataset.val==='true'?'false':'true';this.textContent=this.dataset.val==='true'?'ON':'OFF';this.className=this.dataset.val==='true'?'br-toggle-on':'br-toggle-off'" data-val="${c.enabled}">${c.enabled ? 'ON' : 'OFF'}</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
           <div>
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">주간 제한</label>
-            <input type="number" id="brAdm_weeklyLimit" value="${c.weekly_limit}" min="1" max="50" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">주간 제한</label>
+            <input type="number" id="brAdm_weeklyLimit" value="${c.weekly_limit}" min="1" max="50" class="br-input">
           </div>
           <div>
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">SP 최소</label>
-            <input type="number" id="brAdm_spMin" value="${c.sp_min}" min="1" max="20" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">SP 최소</label>
+            <input type="number" id="brAdm_spMin" value="${c.sp_min}" min="1" max="20" class="br-input">
           </div>
           <div>
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">SP 최대</label>
-            <input type="number" id="brAdm_spMax" value="${c.sp_max}" min="1" max="30" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">SP 최대</label>
+            <input type="number" id="brAdm_spMax" value="${c.sp_max}" min="1" max="30" class="br-input">
           </div>
         </div>
         <div style="margin-top:6px">
-          <label style="font-size:10px;font-weight:700;color:#9ca3af">보스 스탯 배율</label>
-          <input type="number" id="brAdm_bossMult" value="${c.boss_stat_mult}" min="1" max="10" step="0.1" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+          <label class="br-label">보스 스탯 배율</label>
+          <input type="number" id="brAdm_bossMult" value="${c.boss_stat_mult}" min="1" max="10" step="0.1" class="br-input">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
           <div>
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">평타 배율</label>
-            <input type="number" id="brAdm_atkMult" value="${c.atk_multiplier || 1.0}" min="0.1" max="10" step="0.1" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">평타 배율</label>
+            <input type="number" id="brAdm_atkMult" value="${c.atk_multiplier || 1.0}" min="0.1" max="10" step="0.1" class="br-input">
           </div>
           <div>
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">스킬 배율</label>
-            <input type="number" id="brAdm_skillMult" value="${c.skill_multiplier}" min="0.1" max="10" step="0.05" style="width:100%;margin-top:2px;padding:5px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">스킬 배율</label>
+            <input type="number" id="brAdm_skillMult" value="${c.skill_multiplier}" min="0.1" max="10" step="0.05" class="br-input">
           </div>
         </div>
       </div>
 
       <!-- 보스 목록 -->
-      <div style="margin-bottom:16px">
+      <div class="br-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <p style="font-size:13px;font-weight:900">🐲 보스 목록</p>
-          <button onclick="_brAdmAddBoss()" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;border:none;background:rgba(59,130,246,0.1);color:#3b82f6;cursor:pointer">+ 추가</button>
+          <p class="br-section-title">🐲 보스 목록</p>
+          <button onclick="_brAdmAddBoss()" class="br-btn-add">+ 추가</button>
         </div>
         <div id="brAdmBossList"></div>
         <div id="brAdmBossEdit" style="margin-top:6px"></div>
@@ -1812,19 +1808,19 @@ async function brAdminOpenSettings() {
 
       <!-- 보상 등급 가중치 -->
       <div style="margin-bottom:12px">
-        <p style="font-size:13px;font-weight:900;margin-bottom:6px">🎁 보상 등급 가중치</p>
+        <p class="br-section-title">🎁 보상 등급 가중치</p>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
           <div style="text-align:center">
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">C등급</label>
-            <input type="number" id="brAdm_wC" value="${c.reward_weights.C}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">C등급</label>
+            <input type="number" id="brAdm_wC" value="${c.reward_weights.C}" min="0" class="br-input-sm">
           </div>
           <div style="text-align:center">
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">B등급</label>
-            <input type="number" id="brAdm_wB" value="${c.reward_weights.B}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">B등급</label>
+            <input type="number" id="brAdm_wB" value="${c.reward_weights.B}" min="0" class="br-input-sm">
           </div>
           <div style="text-align:center">
-            <label style="font-size:10px;font-weight:700;color:#9ca3af">A등급</label>
-            <input type="number" id="brAdm_wA" value="${c.reward_weights.A}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">A등급</label>
+            <input type="number" id="brAdm_wA" value="${c.reward_weights.A}" min="0" class="br-input-sm">
           </div>
         </div>
       </div>
@@ -1833,80 +1829,80 @@ async function brAdminOpenSettings() {
       ${['C', 'B', 'A'].map(function(g) {
         var rw = c['reward_' + g];
         return `
-        <div style="padding:10px;border-radius:10px;background:rgba(0,0,0,0.03);margin-bottom:8px">
-          <p style="font-size:11px;font-weight:900;color:var(--text-secondary,#6b7280);margin-bottom:6px">${g}등급 보상</p>
+        <div class="br-card">
+          <p class="br-sub-title">${g}등급 보상</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
             <div>
-              <label style="font-size:10px;color:#9ca3af">도토리 최소</label>
-              <input type="number" id="brAdm_r${g}_acMin" value="${rw.acorns[0]}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+              <label class="br-label">도토리 최소</label>
+              <input type="number" id="brAdm_r${g}_acMin" value="${rw.acorns[0]}" min="0" class="br-input-sm">
             </div>
             <div>
-              <label style="font-size:10px;color:#9ca3af">도토리 최대</label>
-              <input type="number" id="brAdm_r${g}_acMax" value="${rw.acorns[1]}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+              <label class="br-label">도토리 최대</label>
+              <input type="number" id="brAdm_r${g}_acMax" value="${rw.acorns[1]}" min="0" class="br-input-sm">
             </div>
           </div>
           <div style="margin-bottom:6px">
-            <label style="font-size:10px;color:#9ca3af">아이템 확률 (%)</label>
-            <input type="number" id="brAdm_r${g}_itemCh" value="${Math.round((rw.itemChance || 0) * 100)}" min="0" max="100" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">아이템 확률 (%)</label>
+            <input type="number" id="brAdm_r${g}_itemCh" value="${Math.round((rw.itemChance || 0) * 100)}" min="0" max="100" class="br-input-sm">
           </div>
           <div>
-            <label style="font-size:10px;color:#9ca3af">드랍 아이템 (클릭으로 선택)</label>
+            <label class="br-label">드랍 아이템 (클릭으로 선택)</label>
             <div id="brAdm_r${g}_items" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px"></div>
           </div>
         </div>`;
       }).join('')}
 
       <!-- 필살기 설정 -->
-      <div style="padding:10px;border-radius:10px;background:rgba(0,0,0,0.03);margin-bottom:8px">
-        <p style="font-size:11px;font-weight:900;color:var(--text-secondary,#6b7280);margin-bottom:6px">💥 필살기 설정</p>
+      <div class="br-card">
+        <p class="br-sub-title">💥 필살기 설정</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
           <div>
-            <label style="font-size:10px;color:#9ca3af">다람쥐당 횟수</label>
-            <input type="number" id="brAdm_ultiUses" value="${c.ultimate_uses || 1}" min="0" max="10" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">다람쥐당 횟수</label>
+            <input type="number" id="brAdm_ultiUses" value="${c.ultimate_uses || 1}" min="0" max="10" class="br-input-sm">
           </div>
           <div>
-            <label style="font-size:10px;color:#9ca3af">데미지 배율 (스킬 x)</label>
-            <input type="number" id="brAdm_ultiMult" value="${c.ultimate_mult || 2.0}" min="1" max="10" step="0.1" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">데미지 배율 (스킬 x)</label>
+            <input type="number" id="brAdm_ultiMult" value="${c.ultimate_mult || 2.0}" min="1" max="10" step="0.1" class="br-input-sm">
           </div>
         </div>
       </div>
 
       <!-- 패배 보상 -->
-      <div style="padding:10px;border-radius:10px;background:rgba(0,0,0,0.03);margin-bottom:8px">
+      <div class="br-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <p style="font-size:11px;font-weight:900;color:var(--text-secondary,#6b7280)">💀 패배 보상</p>
-          <button id="brAdm_defeatEnabled" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;border:none;cursor:pointer;background:${c.defeat_reward_enabled ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};color:${c.defeat_reward_enabled ? '#22c55e' : '#ef4444'}" onclick="this.dataset.val=this.dataset.val==='true'?'false':'true';this.textContent=this.dataset.val==='true'?'ON':'OFF';this.style.background=this.dataset.val==='true'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)';this.style.color=this.dataset.val==='true'?'#22c55e':'#ef4444'" data-val="${!!c.defeat_reward_enabled}">${c.defeat_reward_enabled ? 'ON' : 'OFF'}</button>
+          <p class="br-sub-title">💀 패배 보상</p>
+          <button id="brAdm_defeatEnabled" class="${c.defeat_reward_enabled ? 'br-toggle-on' : 'br-toggle-off'}" style="font-size:10px;padding:2px 8px;border-radius:6px" onclick="this.dataset.val=this.dataset.val==='true'?'false':'true';this.textContent=this.dataset.val==='true'?'ON':'OFF';this.className=this.dataset.val==='true'?'br-toggle-on':'br-toggle-off'" data-val="${!!c.defeat_reward_enabled}">${c.defeat_reward_enabled ? 'ON' : 'OFF'}</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
           <div>
-            <label style="font-size:10px;color:#9ca3af">도토리 최소</label>
-            <input type="number" id="brAdm_defAcMin" value="${(c.defeat_acorns || [2, 5])[0]}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">도토리 최소</label>
+            <input type="number" id="brAdm_defAcMin" value="${(c.defeat_acorns || [2, 5])[0]}" min="0" class="br-input-sm">
           </div>
           <div>
-            <label style="font-size:10px;color:#9ca3af">도토리 최대</label>
-            <input type="number" id="brAdm_defAcMax" value="${(c.defeat_acorns || [2, 5])[1]}" min="0" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+            <label class="br-label">도토리 최대</label>
+            <input type="number" id="brAdm_defAcMax" value="${(c.defeat_acorns || [2, 5])[1]}" min="0" class="br-input-sm">
           </div>
         </div>
         <div style="margin-bottom:6px">
-          <label style="font-size:10px;color:#9ca3af">아이템 확률 (%)</label>
-          <input type="number" id="brAdm_defItemCh" value="${Math.round((c.defeat_itemChance || 0) * 100)}" min="0" max="100" style="width:100%;margin-top:2px;padding:4px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;${is}">
+          <label class="br-label">아이템 확률 (%)</label>
+          <input type="number" id="brAdm_defItemCh" value="${Math.round((c.defeat_itemChance || 0) * 100)}" min="0" max="100" class="br-input-sm">
         </div>
         <div>
-          <label style="font-size:10px;color:#9ca3af">드랍 아이템 (클릭으로 선택)</label>
+          <label class="br-label">드랍 아이템 (클릭으로 선택)</label>
           <div id="brAdm_defItems" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px"></div>
         </div>
       </div>
 
       <!-- 횟수 리셋 -->
-      <div style="padding:10px;border-radius:10px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);margin-bottom:8px">
+      <div class="br-card-danger">
         <p style="font-size:11px;font-weight:900;color:#ef4444;margin-bottom:6px">🔄 주간 참여횟수 리셋</p>
         <div style="display:flex;gap:6px">
-          <button onclick="_brAdmResetWeeklyAll()" style="flex:1;padding:6px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:11px;font-weight:700;cursor:pointer">전체 리셋</button>
-          <button onclick="_brAdmResetWeeklySelf()" style="flex:1;padding:6px;border-radius:8px;border:none;background:rgba(239,68,68,0.15);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">내 횟수만 리셋</button>
+          <button onclick="_brAdmResetWeeklyAll()" class="br-btn-danger">전체 리셋</button>
+          <button onclick="_brAdmResetWeeklySelf()" class="br-btn-danger-outline">내 횟수만 리셋</button>
         </div>
       </div>
 
-      <button onclick="brAdminSaveSettings()" style="width:100%;margin-top:8px;padding:12px;border-radius:10px;border:none;background:var(--primary,#8b5cf6);color:#fff;font-size:14px;font-weight:900;cursor:pointer">💾 저장</button>
+      <button onclick="brAdminSaveSettings()" class="br-btn-save">💾 저장</button>
     </div>
   `;
 

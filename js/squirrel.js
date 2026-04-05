@@ -2650,7 +2650,7 @@ function sqFuseRenderSlots() {
           <div style="border-radius:14px;${gs.border};box-shadow:${gs.shadow};padding:2px;background:${gs.bg}">
             <img src="images/squirrels/${spriteFile}.png" style="width:48px;height:48px;object-fit:contain;border-radius:10px;display:block" onerror="this.outerHTML='<div style=\\'font-size:36px;line-height:48px;text-align:center\\'>🦔</div>'">
           </div>
-          <div style="font-size:11px;font-weight:900;color:#1f2937;margin-top:4px">${sq.name}</div>
+          <div style="font-size:11px;font-weight:900;color:var(--fuse-slot-name);margin-top:4px">${sq.name}</div>
           <div style="font-size:10px;font-weight:800;color:${gs.color}">${gs.label}</div>
           <div style="font-size:9px;font-weight:700;color:${sq.type==='explorer'?'#059669':'#7c3aed'};margin-top:1px">${sq.type==='explorer'?'탐험형':'애완형'}</div>
         </div>`;
@@ -2658,9 +2658,9 @@ function sqFuseRenderSlots() {
       slot.style.background = gs.bg;
     } else {
       const isPicking = _sqFuseSlotPicking === i;
-      slot.innerHTML = `<span style="font-size:32px;color:${isPicking ? '#f59e0b' : '#d1d5db'}">＋</span>`;
-      slot.style.border = isPicking ? '3px solid #f59e0b' : '3px dashed #d1d5db';
-      slot.style.background = isPicking ? '#fffbeb' : '#f9fafb';
+      slot.innerHTML = `<span style="font-size:32px;color:var(${isPicking ? '--fuse-slot-active-plus' : '--fuse-slot-plus'})">＋</span>`;
+      slot.style.border = isPicking ? '3px solid var(--fuse-slot-active-border)' : '3px dashed var(--fuse-slot-border)';
+      slot.style.background = isPicking ? 'var(--fuse-slot-active-bg)' : 'var(--fuse-slot-bg)';
     }
   }
 

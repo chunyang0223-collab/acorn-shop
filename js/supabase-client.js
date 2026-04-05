@@ -143,6 +143,7 @@ const supabase = (() => {
         lt(col, val)   { _filters.push(col + '=lt.'   + encodeURIComponent(val)); return q; },
         is(col, val)   { _filters.push(col + '=is.' + val); return q; },
         or(expr)       { _filters.push('or=(' + expr + ')'); return q; },
+        filter(col, op, val) { _filters.push(col + '=' + op + '.' + encodeURIComponent(val)); return q; },
         order(col, opts){ _order = col + (opts?.ascending === false ? '.desc' : '.asc'); return q; },
         limit(n)       { _filters.push('limit=' + n); return q; },
         range(from, to){ _filters.push('limit=' + (to - from + 1)); _filters.push('offset=' + from); return q; },
@@ -175,7 +176,9 @@ const supabase = (() => {
             // PATCH/DELETE + .select() 호출 시 return=representation 추가
             else if ((_method === 'PATCH' || _method === 'DELETE') && hasExplicitSelect) h['Prefer'] = 'return=representation';
             if (_countExact) h['Prefer'] = (h['Prefer'] ? h['Prefer'] + ',' : '') + 'count=exact';
-            if (_single || _maybeSingle) h['Accept'] = 'application/vnd.pgrst.object+json';
+            // maybeSingle: Accept 헤더 없이 배열로 받아서 첫 번째 요소 반환 (406 방지)
+            if (_single) h['Accept'] = 'application/vnd.pgrst.object+json';
+            if (_maybeSingle && !finalUrl.includes('limit=1')) { finalUrl += (finalUrl.endsWith('?') ? '' : '&') + 'limit=1'; }
 
             const r = await fetch(finalUrl, { method: _method, headers: h, body: _body });
             const text = await r.text();
@@ -188,13 +191,12 @@ const supabase = (() => {
             if (cr) { const m = cr.match(/\/(\d+)/); if (m) count = parseInt(m[1]); }
 
             if (!r.ok) {
-              // maybeSingle: 406(결과없음)은 에러 아님 → data:null, error:null
-              if (_maybeSingle && (r.status === 406 || r.status === 404)) {
-                resolve({ data: null, error: null, count });
-              } else {
-                resolve({ data: null, error: { message: d?.message || d?.hint || r.statusText }, count });
-              }
+              resolve({ data: null, error: { message: d?.message || d?.hint || r.statusText }, count });
             } else {
+              // maybeSingle: 배열에서 첫 번째 요소 추출, 없으면 null
+              if (_maybeSingle && Array.isArray(d)) {
+                d = d.length > 0 ? d[0] : null;
+              }
               resolve({ data: d, error: null, count });
             }
           } catch(e) {
