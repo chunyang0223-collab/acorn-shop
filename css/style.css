@@ -6373,8 +6373,8 @@ input[type="checkbox"]:active,
 }
 .up-item--checked {
   border-color: #8b5cf6;
-  background: rgba(139,92,246,0.08);
-  box-shadow: 0 0 0 2px rgba(139,92,246,0.12);
+  background: #ede9fe;
+  box-shadow: 0 0 0 2px #c4b5fd;
 }
 .up-item-name {
   font-size: 12px;
@@ -6410,8 +6410,8 @@ input[type="checkbox"]:active,
 }
 [data-theme="dark"] .up-item--checked {
   border-color: #a78bfa;
-  background: rgba(167,139,250,0.12);
-  box-shadow: 0 0 0 2px rgba(167,139,250,0.15);
+  background: #2e1065;
+  box-shadow: 0 0 0 2px #7c3aed;
 }
 [data-theme="dark"] .up-badge--store {
   background: rgba(96,165,250,0.15);
@@ -6420,4 +6420,62 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .up-badge--gacha {
   background: rgba(192,132,252,0.15);
   color: #c4b5fd;
+}
+
+/* ── 아이템 피커: 설정 패널 ── */
+.up-config-row {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-white);
+  border: 1.5px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.up-config-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.up-config-name {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+.up-config-fields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.up-config-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+.up-stock-toggle {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid var(--border-default);
+}
+.up-stock-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.up-stock-btn--active {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .up-config-row {
+  background: var(--surface-white);
+  border-color: rgba(255,255,255,0.08);
 }
