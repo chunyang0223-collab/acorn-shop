@@ -1973,13 +1973,12 @@ async function sqShowExamModal(id) {
       ${usableItems > 0 ? `
         <div style="background:#eef2ff;border-radius:14px;padding:14px;margin-bottom:12px">
           <div style="font-size:12px;font-weight:800;color:#4338ca;margin-bottom:8px">✨ 반짝이는 무언가 (보유: ${ownedItems}개)</div>
-          <div style="font-size:11px;color:#6366f1;margin-bottom:8px">1개당 합격률 +${boostPer}% (최대 ${maxItems}개)</div>
+          <div style="font-size:11px;color:#ef4444;margin-bottom:8px">심사관에게 건네면 좋은 일이 생길지도...?</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:10px">
             <button onclick="_sqExamItemAdj(-1)" style="width:32px;height:32px;border-radius:10px;border:2px solid #c7d2fe;background:#eef2ff;color:#4338ca;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">−</button>
             <span id="sqExamItemCount" style="min-width:32px;text-align:center;font-size:20px;font-weight:900;color:#4338ca">0</span>
             <button onclick="_sqExamItemAdj(1)" style="width:32px;height:32px;border-radius:10px;border:2px solid #c7d2fe;background:#eef2ff;color:#4338ca;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">＋</button>
           </div>
-          <div style="margin-top:8px;font-size:13px;font-weight:900;color:#059669" id="sqExamFinalRate">합격률: ${baseRate}%</div>
         </div>` : `
         <div style="background:#f5f5f5;border-radius:14px;padding:10px;margin-bottom:12px">
           <div style="font-size:11px;color:#ef4444">심사관에게 뇌물을 주면 합격률을 올릴 수 있다는데... ✨</div>
@@ -2004,7 +2003,6 @@ function _sqExamItemAdj(delta) {
   const el = document.getElementById('sqExamItemCount');
   if (el) el.textContent = count;
   const rateEl = document.getElementById('sqExamFinalRate');
-  if (rateEl) rateEl.textContent = '합격률: ' + Math.min(baseRate + boostPer * count, 100) + '%';
 }
 
 // ================================================================
