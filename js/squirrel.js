@@ -1651,7 +1651,6 @@ function sqShowTrainingModal(id) {
   const sq = _sqSquirrels.find(s => s.id === id);
   if (!sq) return;
   const tRemain = (sq.training_total || 0) - (sq.training_used || 0);
-  const dotRate = _sqSettings.training_dot_rate || 30;
   const grade = _sqCalcGrade(sq);
   const gs = _sqGradeStyle(grade);
   showModal(`
@@ -1671,10 +1670,6 @@ function sqShowTrainingModal(id) {
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;color:#64748b">남은 훈련 횟수</span>
           <span style="font-size:12px;font-weight:900;color:#0284c7">${tRemain}회</span>
-        </div>
-        <div style="display:flex;justify-content:space-between">
-          <span style="font-size:12px;color:#64748b">성공 확률</span>
-          <span style="font-size:12px;font-weight:900;color:#059669">동그라미당 ${dotRate}% (3/5 필요)</span>
         </div>
       </div>
       <div style="display:flex;gap:8px">
