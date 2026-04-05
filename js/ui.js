@@ -155,11 +155,12 @@ async function doSignup() {
 //  TABS
 // ──────────────────────────────────────────────
 const U_TABS = ['shop','gacha','quest','squirrel','bossraid','minigame','ranking','recycle','friend','mypage'];
-const A_TABS = ['home','dashboard','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking'];
+const A_TABS = ['home','dashboard','items','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking'];
 
 // ── 관리자 메뉴 정의 (개별 탭) ──
 const ADMIN_MENU_DEFS = {
   dashboard:        { icon: '📊', label: '현황' },
+  items:            { icon: '📦', label: '아이템' },
   requests:         { icon: '📬', label: '신청목록' },
   products:         { icon: '🛍️', label: '상품' },
   gachaTest:        { icon: '🎲', label: '뽑기' },
@@ -178,7 +179,7 @@ const ADMIN_CATS = {
   dashboard: { icon: '📊', label: '대시보드',   tabs: ['dashboard'] },
   shop:      { icon: '🛒', label: '상점 운영',  tabs: ['products', 'gachaTest', 'events', 'requests'] },
   users:     { icon: '👥', label: '유저 관리',  tabs: ['users', 'txlog', 'ranking'] },
-  content:   { icon: '🎮', label: '콘텐츠',    tabs: ['quests', 'minigameSettings', 'recycle'] },
+  content:   { icon: '🎮', label: '콘텐츠',    tabs: ['items', 'quests', 'minigameSettings', 'recycle'] },
   squirrel:  { icon: '🐿️', label: '다람쥐 마을', tabs: ['squirrelSettings'] }
 };
 
@@ -259,6 +260,7 @@ function aTab(tab, btn) {
   }
 
   if (tab === 'dashboard')  { renderDashboard(); loadMaintenanceSettings().then(renderMaintenanceBtns); }
+  if (tab === 'items')      renderItemRegistry();
   if (tab === 'gachaTest')  renderAdminGachaProbTable();
   if (tab === 'products')   renderProductAdmin();
   if (tab === 'quests')     renderQuestAdmin();

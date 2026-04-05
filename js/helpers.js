@@ -6,41 +6,66 @@
 // 일반 아이템은 기존대로 1개=1행 insert
 async function grantItem(userId, itemName, qty) {
   qty = qty || 1;
-  // products에서 조회
+  // products에서 조회 (active 여부 무관 — 비활성 아이템도 지급 가능)
   const { data: prod } = await sb.from('products')
     .select('id,name,icon,item_type,reward_type,stackable,max_stack')
-    .eq('name', itemName).limit(1).single();
-  if (!prod) { console.warn('grantItem: 상품 없음 -', itemName); return null; }
+    .eq('name', itemName).limit(1).maybeSingle();
+
+  // product가 DB에 없으면 기존 인벤토리 스냅샷에서 메타 복원 시도
+  var meta = prod;
+  if (!meta) {
+    const { data: snap } = await sb.from('inventory')
+      .select('product_snapshot')
+      .eq('status', 'held')
+      .filter('product_snapshot->>name', 'eq', itemName)
+      .limit(1).maybeSingle();
+    if (snap?.product_snapshot) {
+      meta = { id: null, name: snap.product_snapshot.name, icon: snap.product_snapshot.icon || '📦',
+               reward_type: snap.product_snapshot.reward_type || null, stackable: snap.product_snapshot.reward_type === 'EXAM_MATERIAL', max_stack: 99 };
+    }
+  }
+  if (!meta) { console.warn('grantItem: 아이템 정보 없음 -', itemName); return null; }
 
   // stackable 판정: DB 컬럼 또는 reward_type 기반 (EXAM_MATERIAL은 항상 스택형)
-  const isStackable = prod.stackable === true || prod.reward_type === 'EXAM_MATERIAL';
-  const maxStack = prod.max_stack || (isStackable ? 99 : 1);
+  const isStackable = meta.stackable === true || meta.reward_type === 'EXAM_MATERIAL';
+  const maxStack = meta.max_stack || (isStackable ? 99 : 1);
+  const productId = meta.id || null;
+  const snapshot = { name: meta.name, icon: meta.icon, reward_type: meta.reward_type };
 
   if (isStackable) {
-    // 스택형: 기존 보유 확인 (여러 행이 있을 수 있으므로 limit(1) 사용)
-    const { data: rows } = await sb.from('inventory')
-      .select('id,quantity')
-      .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
-      .order('created_at', { ascending: true })
-      .limit(1);
-
-    const existing = rows && rows.length > 0 ? rows[0] : null;
+    // 스택형: 기존 보유 확인 — product_id 또는 snapshot 이름 매칭
+    var existing = null;
+    if (productId) {
+      const { data: rows } = await sb.from('inventory')
+        .select('id,quantity')
+        .eq('user_id', userId).eq('product_id', productId).eq('status', 'held')
+        .order('created_at', { ascending: true }).limit(1);
+      existing = (rows && rows.length > 0) ? rows[0] : null;
+    }
+    if (!existing) {
+      const { data: rows2 } = await sb.from('inventory')
+        .select('id,quantity')
+        .eq('user_id', userId).eq('status', 'held')
+        .filter('product_snapshot->>name', 'eq', itemName)
+        .order('created_at', { ascending: true }).limit(1);
+      existing = (rows2 && rows2.length > 0) ? rows2[0] : null;
+    }
 
     if (existing) {
       const newQty = Math.min((existing.quantity || 1) + qty, maxStack);
       await sb.from('inventory').update({ quantity: newQty }).eq('id', existing.id);
-      return { id: existing.id, quantity: newQty, product: prod };
+      return { id: existing.id, quantity: newQty, product: meta };
     } else {
       const clamped = Math.min(qty, maxStack);
       const { data: ins } = await sb.from('inventory').insert({
         user_id: userId,
-        product_id: prod.id,
-        product_snapshot: { name: prod.name, icon: prod.icon, reward_type: prod.reward_type },
+        product_id: productId,
+        product_snapshot: snapshot,
         from_gacha: false,
         status: 'held',
         quantity: clamped
       }).select().single();
-      return { id: ins?.id, quantity: clamped, product: prod };
+      return { id: ins?.id, quantity: clamped, product: meta };
     }
   } else {
     // 비스택형: 기존 방식
@@ -48,42 +73,66 @@ async function grantItem(userId, itemName, qty) {
     for (let i = 0; i < qty; i++) {
       rows.push({
         user_id: userId,
-        product_id: prod.id,
-        product_snapshot: { name: prod.name, icon: prod.icon, reward_type: prod.reward_type },
+        product_id: productId,
+        product_snapshot: snapshot,
         from_gacha: false,
         status: 'held',
         quantity: 1
       });
     }
     await sb.from('inventory').insert(rows);
-    return { quantity: qty, product: prod };
+    return { quantity: qty, product: meta };
   }
 }
 
 // 스택형 아이템 보유량 조회
+// products 테이블 독립 — inventory.product_snapshot 기반 직접 조회
 async function getItemQuantity(userId, itemName) {
+  // 1차: product_id가 살아있는 행 (정상 케이스)
   const { data: prod } = await sb.from('products')
-    .select('id').eq('name', itemName).limit(1).single();
-  if (!prod) return 0;
-  const { data: rows } = await sb.from('inventory')
+    .select('id').eq('name', itemName).limit(1).maybeSingle();
+  if (prod) {
+    const { data: rows } = await sb.from('inventory')
+      .select('quantity')
+      .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
+      .order('created_at', { ascending: true }).limit(1);
+    if (rows && rows.length > 0) return rows[0].quantity || 0;
+  }
+  // 2차: product가 삭제됐거나 product_id가 null인 경우 → product_snapshot 이름으로 조회
+  const { data: fallback } = await sb.from('inventory')
     .select('quantity')
-    .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
+    .eq('user_id', userId).eq('status', 'held')
+    .filter('product_snapshot->>name', 'eq', itemName)
     .order('created_at', { ascending: true }).limit(1);
-  return (rows && rows.length > 0) ? (rows[0].quantity || 0) : 0;
+  return (fallback && fallback.length > 0) ? (fallback[0].quantity || 0) : 0;
 }
 
 // 스택형 아이템 차감
+// products 테이블 독립 — inventory.product_snapshot 기반 직접 조회
 async function consumeItem(userId, itemName, qty) {
   qty = qty || 1;
-  const { data: prod } = await sb.from('products')
-    .select('id').eq('name', itemName).limit(1).single();
-  if (!prod) return false;
+  var existing = null;
 
-  const { data: rows } = await sb.from('inventory')
-    .select('id,quantity')
-    .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
-    .order('created_at', { ascending: true }).limit(1);
-  const existing = (rows && rows.length > 0) ? rows[0] : null;
+  // 1차: product_id가 살아있는 행
+  const { data: prod } = await sb.from('products')
+    .select('id').eq('name', itemName).limit(1).maybeSingle();
+  if (prod) {
+    const { data: rows } = await sb.from('inventory')
+      .select('id,quantity')
+      .eq('user_id', userId).eq('product_id', prod.id).eq('status', 'held')
+      .order('created_at', { ascending: true }).limit(1);
+    existing = (rows && rows.length > 0) ? rows[0] : null;
+  }
+  // 2차: product가 삭제됐거나 product_id가 null인 경우 → product_snapshot 이름으로 조회
+  if (!existing) {
+    const { data: fallback } = await sb.from('inventory')
+      .select('id,quantity')
+      .eq('user_id', userId).eq('status', 'held')
+      .filter('product_snapshot->>name', 'eq', itemName)
+      .order('created_at', { ascending: true }).limit(1);
+    existing = (fallback && fallback.length > 0) ? fallback[0] : null;
+  }
+
   if (!existing || (existing.quantity || 0) < qty) return false;
 
   const newQty = (existing.quantity || 0) - qty;

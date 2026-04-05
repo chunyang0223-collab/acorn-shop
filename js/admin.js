@@ -71,12 +71,12 @@ function _productCard(p, i, listType) {
 }
 
 async function renderProductAdmin() {
-  const { data: products } = await sb.from('products').select('*').order('sort_order');
+  const { data: products } = await sb.from('products').select('*').eq('active', true).order('sort_order');
   const storeEl = document.getElementById('storeProductList');
   const gachaEl = document.getElementById('gachaProductList');
   if (!storeEl || !gachaEl) return;
 
-  const storeItems = (products||[]).filter(p => (p.item_type||'store') === 'store');
+  const storeItems = (products||[]).filter(p => p.item_type === 'store');
   const gachaItems = (products||[]).filter(p => p.item_type === 'gacha');
 
   storeEl.innerHTML = storeItems.length
@@ -86,6 +86,10 @@ async function renderProductAdmin() {
   gachaEl.innerHTML = gachaItems.length
     ? gachaItems.map((p,i) => _productCard(p,i,'gacha')).join('')
     : '<p class="text-xs text-gray-400 text-center py-3">상품이 없어요</p>';
+
+  // 아이템 선택 칩 렌더링
+  _renderItemPicker('ns-itemPicker', 'ns');
+  _renderItemPicker('ng-itemPicker', 'ng');
 }
 
 function toggleStockField() {
@@ -94,74 +98,134 @@ function toggleStockField() {
   if (fld) fld.classList.toggle('hidden', type !== 'limited');
 }
 
-async function addStoreProduct() {
-  const name       = document.getElementById('ns-name').value.trim();
-  const icon       = document.getElementById('ns-icon').value || '🎁';
-  const price      = parseInt(document.getElementById('ns-price').value) || 0;
-  const desc       = document.getElementById('ns-desc').value || '';
-  const rewardType = document.getElementById('ns-rewardType').value;
-  const acornAmt   = parseInt(document.getElementById('ns-acornAmt').value) || 0;
-  const stockType  = document.getElementById('ns-stockType')?.value || 'unlimited';
-  const stock      = stockType === 'limited' ? (parseInt(document.getElementById('ns-stock').value) || 1) : null;
-  if (!name) { toast('❌', '상품명을 입력해주세요'); return; }
-  if (!price) { toast('❌', '가격을 입력해주세요'); return; }
-  if (stockType === 'limited' && (!stock || stock < 1)) { toast('❌', '수량을 1개 이상 입력해주세요'); return; }
-  const { data: all } = await sb.from('products').select('id');
-  const { error } = await sb.from('products').insert({
-    name, price, icon, description: desc,
-    reward_type: rewardType, acorn_amt: acornAmt,
-    item_type: 'store', probability: 0,
-    stock: stock,
-    active: true, sort_order: (all?.length||0)+1
-  });
-  if (error) { toast('❌', '추가 실패: ' + (error.message || error.details || JSON.stringify(error))); console.error('product insert error:', error); return; }
-  ['ns-name','ns-icon','ns-price','ns-desc','ns-acornAmt','ns-stock'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
-  document.getElementById('ns-stockType').value = 'unlimited';
-  toggleStockField();
+// ── 아이템 선택 칩 (상점/뽑기 추가용) ──
+var _nsSelectedId = null;
+var _ngSelectedId = null;
+
+async function _renderItemPicker(containerId, prefix) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var { data: items } = await sb.from('products').select('id,name,icon,item_type,active').eq('active', true).order('sort_order');
+  if (!items || !items.length) {
+    el.innerHTML = '<p class="text-xs text-gray-400">등록된 아이템이 없어요. 아이템 관리에서 먼저 등록하세요.</p>';
+    return;
+  }
+  // 이미 해당 타입에 배정된 아이템은 뱃지 표시
+  var targetType = prefix === 'ns' ? 'store' : 'gacha';
+  el.innerHTML = items.map(function(item) {
+    var assigned = item.item_type === targetType;
+    var selectedVar = prefix === 'ns' ? '_nsSelectedId' : '_ngSelectedId';
+    return '<button class="' + (assigned ? 'opacity-40 ' : '') + 'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border transition-all'
+      + '" id="' + prefix + '-chip-' + item.id + '"'
+      + ' style="background:white;border-color:#e5e7eb;color:#374151"'
+      + ' onclick="_pickItem(\'' + prefix + '\',\'' + item.id + '\',\'' + (item.name || '').replace(/'/g, "\\'") + '\',\'' + (item.icon || '📦').replace(/'/g, "\\'") + '\')">'
+      + '<span>' + (item.icon || '📦') + '</span>'
+      + '<span>' + (item.name || '') + '</span>'
+      + (assigned ? '<span class="text-gray-400">(등록됨)</span>' : '')
+      + '</button>';
+  }).join('');
+}
+
+function _pickItem(prefix, id, name, icon) {
+  // 이전 선택 해제
+  var prevId = prefix === 'ns' ? _nsSelectedId : _ngSelectedId;
+  if (prevId) {
+    var prevEl = document.getElementById(prefix + '-chip-' + prevId);
+    if (prevEl) { prevEl.style.background = 'white'; prevEl.style.borderColor = '#e5e7eb'; prevEl.style.color = '#374151'; }
+  }
+  // 새 선택
+  if (prefix === 'ns') _nsSelectedId = id; else _ngSelectedId = id;
+  var chipEl = document.getElementById(prefix + '-chip-' + id);
+  if (chipEl) {
+    var accent = prefix === 'ns' ? '#3b82f6' : '#7c3aed';
+    chipEl.style.background = accent; chipEl.style.borderColor = accent; chipEl.style.color = 'white';
+  }
+  // 선택 정보 표시
+  var infoEl = document.getElementById(prefix + '-selectedInfo');
+  if (infoEl) {
+    infoEl.textContent = icon + ' ' + name + ' 선택됨';
+    infoEl.classList.remove('hidden');
+  }
   playSound('click');
-  renderProductAdmin(); toast('✅', '상점 상품 추가 완료!');
+}
+
+// 판매 수량 토글 (select 위젯 대신 버튼)
+var _nsStockType = 'unlimited';
+function _nsSetStock(type) {
+  _nsStockType = type;
+  var btnU = document.getElementById('ns-stockUnlimited');
+  var btnL = document.getElementById('ns-stockLimited');
+  var inp = document.getElementById('ns-stock');
+  if (type === 'unlimited') {
+    if (btnU) { btnU.style.background = '#dbeafe'; btnU.style.color = '#1d4ed8'; }
+    if (btnL) { btnL.style.background = 'white'; btnL.style.color = '#9ca3af'; }
+    if (inp) inp.classList.add('hidden');
+  } else {
+    if (btnU) { btnU.style.background = 'white'; btnU.style.color = '#9ca3af'; }
+    if (btnL) { btnL.style.background = '#dbeafe'; btnL.style.color = '#1d4ed8'; }
+    if (inp) inp.classList.remove('hidden');
+  }
+}
+
+async function addStoreProduct() {
+  if (!_nsSelectedId) { toast('⚠️', '아이템을 먼저 선택하세요'); return; }
+  var price = parseInt(document.getElementById('ns-price').value) || 0;
+  if (!price) { toast('❌', '가격을 입력해주세요'); return; }
+  var stock = _nsStockType === 'limited' ? (parseInt(document.getElementById('ns-stock').value) || 1) : null;
+  if (_nsStockType === 'limited' && (!stock || stock < 1)) { toast('❌', '수량을 1개 이상 입력해주세요'); return; }
+
+  var { error } = await sb.from('products').update({
+    item_type: 'store', price: price, stock: stock
+  }).eq('id', _nsSelectedId);
+  if (error) { toast('❌', '추가 실패: ' + error.message); return; }
+
+  _nsSelectedId = null;
+  var infoEl = document.getElementById('ns-selectedInfo');
+  if (infoEl) infoEl.classList.add('hidden');
+  document.getElementById('ns-price').value = '';
+  document.getElementById('ns-stock').value = '';
+  _nsSetStock('unlimited');
+  playSound('click');
+  renderProductAdmin();
+  _renderItemPicker('ns-itemPicker', 'ns');
+  toast('✅', '상점에 추가 완료!');
 }
 
 async function addGachaProduct() {
-  const name        = document.getElementById('ng-name').value.trim();
-  const icon        = document.getElementById('ng-icon').value || '✨';
-  const probability = parseFloat(document.getElementById('ng-probability').value) || 0;
-  const desc        = document.getElementById('ng-desc').value || '';
-  const rewardType  = document.getElementById('ng-rewardType').value;
-  const acornAmt    = parseInt(document.getElementById('ng-acornAmt').value) || 0;
-  const resellPrice = parseInt(document.getElementById('ng-resellPrice')?.value) || 0;
-  const discountPct = rewardType === 'COUPON' ? (parseInt(document.getElementById('ng-discountPct')?.value) || 0) : 0;
-  if (!name) { toast('❌', '아이템명을 입력해주세요'); return; }
+  if (!_ngSelectedId) { toast('⚠️', '아이템을 먼저 선택하세요'); return; }
+  var probability = parseFloat(document.getElementById('ng-probability').value) || 0;
   if (!probability) { toast('❌', '확률을 입력해주세요 (예: 10)'); return; }
-  if (rewardType === 'COUPON' && (!discountPct || discountPct < 1 || discountPct > 100)) { toast('❌', '할인율을 1~100 사이로 입력해주세요'); return; }
-  if (rewardType === 'ACORN_TICKET' && !acornAmt) { toast('❌', '지급할 도토리량을 입력해주세요'); return; }
-  const { data: all } = await sb.from('products').select('id');
-  const { error } = await sb.from('products').insert({
-    name, price: 0, icon, description: desc,
-    reward_type: rewardType, acorn_amt: acornAmt,
-    item_type: 'gacha', probability,
-    resell_price: resellPrice,
-    discount_pct: discountPct,
-    active: true, sort_order: (all?.length||0)+1
-  });
+  var resellPrice = parseInt(document.getElementById('ng-resellPrice')?.value) || 0;
+
+  var { error } = await sb.from('products').update({
+    item_type: 'gacha', probability: probability, resell_price: resellPrice
+  }).eq('id', _ngSelectedId);
   if (error) { toast('❌', '추가 실패: ' + error.message); return; }
-  ['ng-name','ng-icon','ng-probability','ng-desc','ng-acornAmt','ng-resellPrice','ng-discountPct'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+
+  _ngSelectedId = null;
+  var infoEl = document.getElementById('ng-selectedInfo');
+  if (infoEl) infoEl.classList.add('hidden');
+  document.getElementById('ng-probability').value = '';
+  if (document.getElementById('ng-resellPrice')) document.getElementById('ng-resellPrice').value = '';
   playSound('click');
-  renderProductAdmin(); toast('✅', '뽑기 상품 추가 완료!');
+  renderProductAdmin();
+  _renderItemPicker('ng-itemPicker', 'ng');
+  toast('✅', '뽑기에 추가 완료!');
 }
 
 async function deleteProduct(id) {
-  if (!confirm('정말 삭제할까요?')) return;
+  if (!confirm('상점/뽑기에서 제외할까요?\n아이템 DB에는 그대로 남아요.')) return;
 
-  // 인벤토리·신청 테이블의 product_id 참조 해제
-  // (product_snapshot에 상품 정보가 이미 저장되어 있어 기록 표시엔 문제 없음)
-  await sb.from('inventory').update({ product_id: null }).eq('product_id', id);
-  await sb.from('product_requests').update({ product_id: null }).eq('product_id', id);
-
-  const { error } = await sb.from('products').delete().eq('id', id);
-  if (error) { toast('❌', '삭제 실패: ' + error.message); return; }
+  // 상점/뽑기 배정 해제 — 아이템 자체는 보존 (active 유지)
+  // item_type을 'registry'로 변경하여 상점/뽑기 목록에서 제외
+  const { error } = await sb.from('products').update({
+    item_type: 'registry', price: 0, probability: 0, stock: null
+  }).eq('id', id);
+  if (error) { toast('❌', '제외 실패: ' + error.message); return; }
   renderProductAdmin();
-  toast('🗑️', '상품 삭제됨');
+  _renderItemPicker('ns-itemPicker', 'ns');
+  _renderItemPicker('ng-itemPicker', 'ng');
+  toast('📦', '상점/뽑기에서 제외됨 (아이템 DB는 유지)');
 }
 
 async function editProduct(id) {
@@ -1291,6 +1355,152 @@ async function renderDashboard() {
   if (logEl) logEl.innerHTML = logHTML;
   const logEl2 = document.getElementById('ds-activityLog2');
   if (logEl2) logEl2.innerHTML = logHTML;
+}
+
+// ──────────────────────────────────────────────
+//  ADMIN — 아이템 레지스트리 (독립 아이템 DB)
+// ──────────────────────────────────────────────
+
+function _itemCard(item) {
+  const typeBadge = item.item_type === 'store' ? '<span class="rt-manual text-xs">🛍️ 상점</span>'
+    : item.item_type === 'gacha' ? '<span class="rt-auto text-xs">🎲 뽑기</span>'
+    : '<span class="text-xs text-gray-400 font-bold">📦 미배정</span>';
+  const stackBadge = item.stackable ? `<span class="text-xs text-indigo-500 font-bold">x${item.max_stack || 99}</span>` : '';
+  const inactiveBadge = !item.active ? '<span class="badge-soldout-sm">비활성</span>' : '';
+  const actionBtn = item.active
+    ? `<button class="btn btn-red px-2 py-1 text-xs" onclick="deleteRegistryItem('${item.id}')">비활성화</button>`
+    : `<button class="btn px-2 py-1 text-xs" style="background:#d1fae5;color:#065f46" onclick="reactivateRegistryItem('${item.id}')">재활성화</button>`;
+  return `<div class="product-card p-3 rounded-xl bg-white border border-gray-100 shadow-sm${!item.active ? ' opacity-50' : ''}">
+    <div class="flex items-center gap-2">
+      <div class="text-xl">${item.icon || '📦'}</div>
+      <div class="flex-1 min-w-0">
+        <p class="font-black text-gray-800 text-sm truncate">${item.name}</p>
+        <div class="flex items-center gap-1 flex-wrap mt-0.5">
+          ${typeBadge} ${stackBadge}
+          <span class="text-xs text-gray-400">${item.reward_type || ''}</span>
+          ${inactiveBadge}
+        </div>
+        ${item.description ? `<p class="text-xs text-gray-400 mt-1 truncate">${item.description}</p>` : ''}
+      </div>
+    </div>
+    <div class="flex gap-1 mt-2">
+      <button class="btn btn-blue flex-1 py-1 text-xs" onclick="editRegistryItem('${item.id}')">수정</button>
+      ${actionBtn}
+    </div>
+  </div>`;
+}
+
+async function renderItemRegistry() {
+  const { data: items } = await sb.from('products').select('*').order('sort_order');
+  const el = document.getElementById('registryItemList');
+  if (!el) return;
+  const activeItems = (items || []).filter(i => i.active !== false);
+  const inactiveItems = (items || []).filter(i => i.active === false);
+  var html = '';
+  if (activeItems.length) {
+    html += activeItems.map(function(i) { return _itemCard(i); }).join('');
+  } else {
+    html += '<p class="text-xs text-gray-400 text-center py-3">등록된 아이템이 없어요</p>';
+  }
+  if (inactiveItems.length) {
+    html += '<div class="mt-4 pt-3 border-t border-gray-200">'
+      + '<p class="text-xs font-bold text-gray-400 mb-2">비활성 아이템 (' + inactiveItems.length + ')</p>'
+      + inactiveItems.map(function(i) { return _itemCard(i); }).join('')
+      + '</div>';
+  }
+  el.innerHTML = html;
+}
+
+async function addRegistryItem() {
+  var name = document.getElementById('ni-name')?.value?.trim();
+  var icon = document.getElementById('ni-icon')?.value?.trim() || '📦';
+  var rewardType = document.getElementById('ni-rewardType')?.value?.trim() || 'MANUAL_ITEM';
+  var desc = document.getElementById('ni-desc')?.value?.trim() || '';
+  var stackable = document.getElementById('ni-stackable')?.checked || false;
+  var maxStack = parseInt(document.getElementById('ni-maxStack')?.value) || 1;
+  if (!name) { toast('❌', '아이템명을 입력해주세요'); return; }
+
+  var { data: all } = await sb.from('products').select('id').eq('active', true);
+  var sortOrder = (all?.length || 0) + 1;
+
+  var { error } = await sb.from('products').insert({
+    name: name, icon: icon, description: desc,
+    price: 0, item_type: 'registry', reward_type: rewardType,
+    stackable: stackable, max_stack: stackable ? maxStack : 1,
+    active: true, sort_order: sortOrder, probability: 0
+  });
+  if (error) { toast('❌', '등록 실패: ' + error.message); return; }
+
+  document.getElementById('ni-name').value = '';
+  document.getElementById('ni-icon').value = '';
+  document.getElementById('ni-desc').value = '';
+  document.getElementById('ni-rewardType').value = 'MANUAL_ITEM';
+  document.getElementById('ni-stackable').checked = false;
+  document.getElementById('ni-maxStack').value = '1';
+  renderItemRegistry();
+  toast('✅', '아이템 등록 완료!');
+}
+
+async function editRegistryItem(id) {
+  var { data: item } = await sb.from('products').select('*').eq('id', id).single();
+  if (!item) return;
+  showModal(
+    '<h2 class="text-lg font-black text-gray-800 mb-4">✏️ 아이템 수정</h2>'
+    + '<div class="space-y-3">'
+    + '<input class="field" id="ei-name" value="' + (item.name || '') + '" placeholder="아이템명">'
+    + '<div class="grid grid-cols-2 gap-2">'
+    + '<input class="field" id="ei-icon" value="' + (item.icon || '') + '" placeholder="이모지">'
+    + '<input class="field" id="ei-rewardType" value="' + (item.reward_type || 'MANUAL_ITEM') + '" placeholder="보상 타입">'
+    + '</div>'
+    + '<input class="field" id="ei-desc" value="' + (item.description || '') + '" placeholder="설명">'
+    + '<div class="grid grid-cols-2 gap-2">'
+    + '<label class="flex items-center gap-2 text-xs font-bold text-gray-600">'
+    + '<input type="checkbox" id="ei-stackable"' + (item.stackable ? ' checked' : '') + '> 스택 가능'
+    + '</label>'
+    + '<input class="field" type="number" id="ei-maxStack" value="' + (item.max_stack || 1) + '" placeholder="최대 스택" min="1">'
+    + '</div>'
+    + '<div class="flex gap-2">'
+    + '<button class="btn btn-primary flex-1 py-2 text-sm" onclick="saveRegistryItem(\'' + id + '\')">💾 저장</button>'
+    + '<button class="btn flex-1 py-2 text-sm" onclick="closeModal()" style="background:#f1f5f9;color:#64748b">취소</button>'
+    + '</div>'
+    + '</div>'
+  );
+}
+
+async function saveRegistryItem(id) {
+  var name = document.getElementById('ei-name')?.value?.trim();
+  var icon = document.getElementById('ei-icon')?.value?.trim() || '📦';
+  var rewardType = document.getElementById('ei-rewardType')?.value?.trim() || 'MANUAL_ITEM';
+  var desc = document.getElementById('ei-desc')?.value?.trim() || '';
+  var stackable = document.getElementById('ei-stackable')?.checked || false;
+  var maxStack = parseInt(document.getElementById('ei-maxStack')?.value) || 1;
+  if (!name) { toast('❌', '아이템명을 입력해주세요'); return; }
+
+  var { error } = await sb.from('products').update({
+    name: name, icon: icon, description: desc,
+    reward_type: rewardType,
+    stackable: stackable, max_stack: stackable ? maxStack : 1
+  }).eq('id', id);
+  if (error) { toast('❌', '수정 실패: ' + error.message); return; }
+  closeModal();
+  renderItemRegistry();
+  toast('✅', '수정 완료!');
+}
+
+async function deleteRegistryItem(id) {
+  if (!confirm('이 아이템을 비활성화할까요?\n상점/뽑기에서 제외되지만 보유한 유저의 인벤토리에는 영향 없어요.')) return;
+  var { error } = await sb.from('products').update({ active: false }).eq('id', id);
+  if (error) { toast('❌', '비활성화 실패: ' + error.message); return; }
+  renderItemRegistry();
+  if (typeof renderProductAdmin === 'function') renderProductAdmin();
+  toast('📦', '아이템 비활성화됨');
+}
+
+async function reactivateRegistryItem(id) {
+  var { error } = await sb.from('products').update({ active: true }).eq('id', id);
+  if (error) { toast('❌', '활성화 실패: ' + error.message); return; }
+  renderItemRegistry();
+  toast('✅', '아이템 다시 활성화됨');
 }
 
 // ──────────────────────────────────────────────
