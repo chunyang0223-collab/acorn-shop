@@ -350,7 +350,8 @@ async function _brCreateBotRoom(presetIdx) {
       name: sq.name,
       sprite: sq.sprite,
       stats: { ...sq.stats },
-      status: 'explorer'
+      status: 'idle',
+      type: sq.type
     };
   });
 
@@ -469,9 +470,9 @@ async function _brRenderLobby(container, raid) {
   // 내 다람쥐 목록 로드 (관리자는 전체, 일반유저는 탐험형만)
   let _brSqQuery = sb.from('squirrels').select('*').eq('user_id', myProfile.id);
   if (!myProfile?.is_admin) {
-    _brSqQuery = _brSqQuery.eq('status', 'explorer');
+    _brSqQuery = _brSqQuery.eq('type', 'explorer').eq('status', 'idle');
   } else {
-    _brSqQuery = _brSqQuery.in('status', ['explorer', 'pet', 'farmer']);
+    _brSqQuery = _brSqQuery.in('type', ['explorer', 'pet']).eq('status', 'idle');
   }
   const { data: rawSquirrels } = await _brSqQuery;
 
@@ -532,7 +533,7 @@ async function _brRenderLobby(container, raid) {
           ${(mySquirrels || []).map(sq => {
             try {
               const selected = mySelectedIds.includes(sq.id);
-              const grade = (typeof _sqCalcGrade === 'function' && sq.status !== 'baby') ? _sqCalcGrade(sq) : 'normal';
+              const grade = (typeof _sqCalcGrade === 'function' && sq.type !== 'baby') ? _sqCalcGrade(sq) : 'normal';
               const gs = (typeof _sqGradeStyle === 'function') ? _sqGradeStyle(grade) : { border:'border:3px solid #788796', shadow:'0 0 4px rgba(120,135,150,.3)', color:'#9ca3af' };
               return '<div class="br-sq-pick ' + (selected ? 'br-sq-selected' : '') + '" onclick="_brToggleSquirrel(\'' + sq.id + '\')" style="' + gs.border + ';box-shadow:' + gs.shadow + '">' +
                 '<img src="images/squirrels/' + (sq.sprite || 'sq_acorn') + '.png" class="br-sq-img" onerror="this.outerHTML=\'<div class=\\\'text-2xl\\\'>🐿️</div>\'">' +

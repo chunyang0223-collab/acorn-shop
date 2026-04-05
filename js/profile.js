@@ -119,11 +119,11 @@ async function openProfile(userId) {
 function _buildSquirrelGrid(squirrels) {
   // 정렬: 등급 높은 순 → 상태 (explorer > pet > baby) 순
   const gradeOrder = { legend: 0, unique: 1, epic: 2, rare: 3, normal: 4 };
-  const statusOrder = { exploring: 0, explorer: 1, recovering: 2, pet: 3, baby: 4 };
+  const statusOrder = { exploring: 0, idle: 1, recovering: 2 };
 
   const sorted = [...squirrels].sort((a, b) => {
-    const gA = a.status !== 'baby' ? _sqCalcGrade(a) : 'normal';
-    const gB = b.status !== 'baby' ? _sqCalcGrade(b) : 'normal';
+    const gA = a.type !== 'baby' ? _sqCalcGrade(a) : 'normal';
+    const gB = b.type !== 'baby' ? _sqCalcGrade(b) : 'normal';
     const gDiff = (gradeOrder[gA] ?? 5) - (gradeOrder[gB] ?? 5);
     if (gDiff !== 0) return gDiff;
     return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
@@ -135,7 +135,7 @@ function _buildSquirrelGrid(squirrels) {
   for (let i = 0; i < maxSlots; i++) {
     if (i < sorted.length) {
       const sq = sorted[i];
-      const isBaby = sq.status === 'baby';
+      const isBaby = sq.type === 'baby';
       const grade = isBaby ? null : _sqCalcGrade(sq);
       const gs = grade ? _sqGradeStyle(grade) : null;
       const spriteBase = sq.sprite || 'sq_acorn';
@@ -146,8 +146,8 @@ function _buildSquirrelGrid(squirrels) {
       let statusBadge = '';
       if (sq.status === 'exploring') statusBadge = '<span class="pf-sq-badge pf-sq-badge-exploring">⚔️</span>';
       else if (sq.status === 'recovering') statusBadge = '<span class="pf-sq-badge pf-sq-badge-recovering">😴</span>';
-      else if (sq.status === 'pet') statusBadge = '<span class="pf-sq-badge pf-sq-badge-pet">🏡</span>';
-      else if (sq.status === 'baby') statusBadge = '<span class="pf-sq-badge pf-sq-badge-baby">🍼</span>';
+      else if (sq.type === 'pet') statusBadge = '<span class="pf-sq-badge pf-sq-badge-pet">🏡</span>';
+      else if (sq.type === 'baby') statusBadge = '<span class="pf-sq-badge pf-sq-badge-baby">🍼</span>';
 
       // 등급 뱃지
       let gradeBadge = '';

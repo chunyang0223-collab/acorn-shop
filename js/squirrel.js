@@ -341,7 +341,7 @@ async function _sqPoll() {
           const tmp = document.createElement('div');
           tmp.innerHTML = sqCardHTML(sq);
           grid.appendChild(tmp.firstElementChild);
-          if (sq.status === 'baby' && sq.grows_at) {
+          if (sq.type === 'baby' && sq.grows_at) {
             _sqSetBusy(sq.id);
             _sqStartTimer(sq.id, sq);
           }
@@ -377,7 +377,7 @@ async function _sqPoll() {
       if (!updated.sprite && prev.sprite) updated.sprite = prev.sprite;
       _sqSquirrels[idx] = updated;
 
-      if (prev.status === 'baby' && updated.status !== 'baby') {
+      if (prev.type === 'baby' && updated.type !== 'baby') {
         _sqClearTimer(id);
         _sqGrowCard(id, updated.name, updated.status);
       } else if (!prev.grows_at && updated.grows_at) {
@@ -385,17 +385,17 @@ async function _sqPoll() {
         const gauge = document.getElementById('sqGauge-' + id);
         if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
         _sqStartTimer(id, updated);
-      } else if (prev.grows_at && !updated.grows_at && updated.status === 'baby') {
+      } else if (prev.grows_at && !updated.grows_at && updated.type === 'baby') {
         _sqClearTimer(id);
         _sqShowFeedButtons(id);
-      } else if (updated.status === 'baby') {
+      } else if (updated.type === 'baby') {
         const pct = Math.min(100, Math.round((updated.acorns_fed / updated.acorns_required) * 100));
         const gauge = document.getElementById('sqGauge-' + id);
         if (gauge) requestAnimationFrame(() => { gauge.style.width = pct + '%'; });
       }
-      // recovering ↔ explorer 전환 감지 → 카드 교체
-      if ((prev.status === 'recovering' && updated.status === 'explorer') ||
-          (prev.status === 'explorer' && updated.status === 'recovering') ||
+      // recovering ↔ idle 전환 감지 → 카드 교체
+      if ((prev.status === 'recovering' && updated.status === 'idle') ||
+          (prev.status === 'idle' && updated.status === 'recovering') ||
           (prev.status === 'exploring' && updated.status === 'recovering')) {
         _sqClearTimer(id);
         const cardEl = document.getElementById('sqCard-' + id);
@@ -437,18 +437,18 @@ async function sqLoadSquirrels() {
   // grows_at 만료 서버 체크 → grows_at만 null로, 성장은 사용자가 버튼으로
   const now = new Date();
   for (const sq of _sqSquirrels) {
-    if (sq.status === 'baby' && sq.grows_at && new Date(sq.grows_at) <= now) {
+    if (sq.type === 'baby' && sq.grows_at && new Date(sq.grows_at) <= now) {
       await sb.from('squirrels').update({ grows_at: null, acorns_fed: sq.acorns_required }).eq('id', sq.id);
       sq.grows_at = null;
       sq.acorns_fed = sq.acorns_required;
     }
     if (sq.status === 'recovering' && sq.recovers_at && new Date(sq.recovers_at) <= now) {
       const fullHp = sq.stats?.hp || 100;
-      await sb.from('squirrels').update({ status: 'explorer', recovers_at: null, hp_current: fullHp }).eq('id', sq.id);
-      sq.status = 'explorer'; sq.recovers_at = null; sq.hp_current = fullHp;
+      await sb.from('squirrels').update({ status: 'idle', recovers_at: null, hp_current: fullHp }).eq('id', sq.id);
+      sq.status = 'idle'; sq.recovers_at = null; sq.hp_current = fullHp;
     }
     // 성체인데 sprite가 없으면 1회만 배정 (이전 버전 호환)
-    if (sq.status !== 'baby' && !sq.sprite) {
+    if (sq.type !== 'baby' && !sq.sprite) {
       const newSprite = _sqRandomSprite();
       try {
         const { error } = await sb.from('squirrels').update({ sprite: newSprite }).eq('id', sq.id);
@@ -501,21 +501,21 @@ async function sqRenderGrid() {
   // 필터
   const filter = window._sqFilter || 'all';
   const filtered = filter === 'all' ? [..._sqSquirrels] : _sqSquirrels.filter(sq => {
-    if (filter === 'baby') return sq.status === 'baby';
-    if (filter === 'pet') return sq.status === 'pet';
-    if (filter === 'explorer') return sq.status === 'explorer' || sq.status === 'exploring' || sq.status === 'recovering';
+    if (filter === 'baby') return sq.type === 'baby';
+    if (filter === 'pet') return sq.type === 'pet';
+    if (filter === 'explorer') return sq.type === 'explorer';
     return true;
   });
 
   // 등급순 자동정렬 (높은 등급이 위)
   const _gradeRank = { legend: 5, unique: 4, epic: 3, rare: 2, normal: 1 };
   const _typeRank = (sq) => {
-    const isExplorer = sq.status === 'explorer' || sq.status === 'exploring' || sq.status === 'recovering';
+    const isExplorer = sq.type === 'explorer';
     if (isExplorer) return 3;
     const isFarmer = typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id);
-    if (sq.status === 'pet' && isFarmer) return 1;
-    if (sq.status === 'pet') return 2;
-    if (sq.status === 'baby') return 0;
+    if (sq.type === 'pet' && isFarmer) return 1;
+    if (sq.type === 'pet') return 2;
+    if (sq.type === 'baby') return 0;
     return 0;
   };
   filtered.sort((a, b) => {
@@ -570,7 +570,7 @@ async function sqRenderGrid() {
 
   // grows_at 남아있는 카드는 타이머 재개
   _sqSquirrels.forEach(sq => {
-    if (sq.status === 'baby' && sq.grows_at) {
+    if (sq.type === 'baby' && sq.grows_at) {
       _sqSetBusy(sq.id);
       _sqStartTimer(sq.id, sq);
     }
@@ -605,33 +605,31 @@ async function sqRenderGrid() {
 //  카드 HTML 생성
 // ================================================================
 function sqCardHTML(sq) {
-  const borderColor = (sq.status === 'explorer' || sq.status === 'exploring') ? '#3b82f6'
-                    : sq.status === 'pet' ? '#ec4899'
-                    : sq.status === 'recovering' ? '#f59e0b'
-                    : sq.status === 'baby' ? '#fbbf24' : '#a3a3a3';
-  const badgeStyle  = (sq.status === 'explorer' || sq.status === 'exploring') ? 'background:#dbeafe;color:#1e40af'
-                    : sq.status === 'pet' ? 'background:#fce7f3;color:#9d174d'
-                    : sq.status === 'recovering' ? 'background:#fef3c7;color:#92400e'
+  const borderColor = sq.type === 'explorer' ? '#3b82f6'
+                    : sq.type === 'pet' ? '#ec4899'
+                    : sq.type === 'baby' ? '#fbbf24' : '#a3a3a3';
+  const badgeStyle  = sq.type === 'explorer' ? 'background:#dbeafe;color:#1e40af'
+                    : sq.type === 'pet' ? 'background:#fce7f3;color:#9d174d'
                     : 'background:#fef3c7;color:#92400e';
-  const typeLabel   = { baby:'아기 다람쥐', explorer:'탐험형', pet:'애완형', exploring:'탐험 중', recovering:'회복 중' };
-  const badgeLabel  = { baby:'아기', explorer:'탐험형', pet:'애완형', exploring:'탐험형', recovering:'탐험형' };
+  const badgeLabel  = sq.type === 'explorer' ? '탐험형' : sq.type === 'pet' ? '애완형' : '아기';
 
   // 상태 텍스트 (이름 아래 표시)
-  const statusText = {
-    baby: '',
-    explorer: '<span style="color:#22c55e">🟢 대기 중</span>',
-    exploring: '<span style="color:#3b82f6">⚔️ 탐험 중</span>',
-    recovering: '',
-    pet: '<span style="color:#ec4899">🏡 편안하게 쉬는 중</span>'
+  const getStatusText = () => {
+    if (sq.type === 'baby') return '';
+    if (sq.status === 'idle') return sq.type === 'explorer' ? '<span style="color:#22c55e">🟢 대기 중</span>' : '<span style="color:#ec4899">🏡 편안하게 쉬는 중</span>';
+    if (sq.status === 'exploring') return '<span style="color:#3b82f6">⚔️ 탐험 중</span>';
+    if (sq.status === 'recovering') return '';
+    return '';
   };
+  const statusText = getStatusText();
 
   const spriteBase = sq.sprite || 'sq_acorn';
   const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? spriteBase + '_defeat' : spriteBase;
-  const grade = (sq.status !== 'baby') ? _sqCalcGrade(sq) : null;
+  const grade = (sq.type !== 'baby') ? _sqCalcGrade(sq) : null;
   const gs = grade ? _sqGradeStyle(grade) : null;
 
   let imgHTML;
-  if (sq.status === 'baby') {
+  if (sq.type === 'baby') {
     imgHTML = `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`;
   } else {
     imgHTML = `<div style="border-radius:18px;${gs.border};box-shadow:${gs.shadow};padding:2px;flex-shrink:0;background:${gs.bg}">` +
@@ -640,7 +638,7 @@ function sqCardHTML(sq) {
   }
 
   let babyHTML = '';
-  if (sq.status === 'baby') {
+  if (sq.type === 'baby') {
     const pct = Math.min(100, Math.round((sq.acorns_fed / sq.acorns_required) * 100));
     const isReadyToGrow = !sq.grows_at && sq.acorns_fed >= sq.acorns_required;
 
@@ -681,7 +679,7 @@ function sqCardHTML(sq) {
   }
 
   let statsHTML = '';
-  if (sq.status !== 'baby') {
+  if (sq.type !== 'baby') {
     statsHTML = `
       <div style="display:flex;gap:8px;margin-top:12px">
         <div style="flex:1;background:#f9fafb;border-radius:12px;padding:8px 4px;text-align:center">
@@ -769,7 +767,7 @@ function sqCardHTML(sq) {
   // 농부 / 역할 뱃지
   const _isActiveFarmer = typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id;
   let roleTag = '';
-  if (sq.status !== 'baby') {
+  if (sq.type !== 'baby') {
     if (_isActiveFarmer) {
       roleTag = '<span style="font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;padding:2px 6px;border-radius:6px;margin-left:4px">🌾 농부</span>';
     } else if (typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) {
@@ -779,15 +777,15 @@ function sqCardHTML(sq) {
 
   // 성체 다람쥐: 이미지를 클릭하면 액션 모달
   // 훈련 가능 → 💪 뱃지, 재심사 대기 중 → ⏳ 뱃지
-  const _hasTraining = sq.status !== 'baby' && ((sq.training_total || 0) - (sq.training_used || 0)) > 0 && !((sq.stats?.hp || 60) >= (_sqSettings.stat_hp_max || 150));
-  const _hasCooldown = sq.status !== 'baby' && sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
+  const _hasTraining = sq.type !== 'baby' && ((sq.training_total || 0) - (sq.training_used || 0)) > 0 && !((sq.stats?.hp || 60) >= (_sqSettings.stat_hp_max || 150));
+  const _hasCooldown = sq.type !== 'baby' && sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
   let badgeHTML = '';
   if (_hasTraining) {
     badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">💪</div>`;
   } else if (_hasCooldown) {
     badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-size:9px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">⏳</div>`;
   }
-  const clickableImg = (sq.status !== 'baby')
+  const clickableImg = (sq.type !== 'baby')
     ? `<div onclick="sqShowActionModal('${sq.id}')" style="cursor:pointer;position:relative" title="탭하여 관리">${imgHTML}${badgeHTML}</div>`
     : imgHTML;
 
@@ -802,9 +800,9 @@ function sqCardHTML(sq) {
             ${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}
             ${roleTag}
           </div>
-          <div style="font-size:11px;font-weight:700;margin-top:2px">${statusText[sq.status] || ''}</div>
+          <div style="font-size:11px;font-weight:700;margin-top:2px">${statusText}</div>
         </div>
-        <span style="font-size:12px;font-weight:900;padding:4px 10px;border-radius:99px;text-align:center;white-space:nowrap;${badgeStyle}">${badgeLabel[sq.status]||sq.status}</span>
+        <span style="font-size:12px;font-weight:900;padding:4px 10px;border-radius:99px;text-align:center;white-space:nowrap;${badgeStyle}">${badgeLabel}</span>
       </div>
       ${statsHTML}${recoverHTML}${apprenticeHTML}${babyHTML}
     </div>`;
@@ -849,7 +847,14 @@ function sqShowActionModal(id) {
   const spriteFile = (sq.status === 'recovering' || sq.hp_current <= 0) ? spriteBase + '_defeat' : spriteBase;
 
   // 상태 정보
-  const statusLabel = { explorer:'🟢 대기 중', exploring:'⚔️ 탐험 중', recovering:'😴 회복 중', pet:'🏡 편안하게 쉬는 중' };
+  const getActionStatusLabel = () => {
+    if (sq.type === 'baby') return '';
+    if (sq.status === 'idle') return sq.type === 'explorer' ? '🟢 대기 중' : '🏡 편안하게 쉬는 중';
+    if (sq.status === 'exploring') return '⚔️ 탐험 중';
+    if (sq.status === 'recovering') return '😴 회복 중';
+    return '';
+  };
+  const statusLabel = getActionStatusLabel();
 
   // 조건 계산
   const tTotal = sq.training_total || 0;
@@ -858,7 +863,7 @@ function sqShowActionModal(id) {
   const hpMax = _sqSettings.stat_hp_max || 150;
   const currentHp = sq.stats?.hp || 60;
   const hpMaxed = currentHp >= hpMax;
-  const canAct = sq.status === 'explorer' || sq.status === 'pet';
+  const canAct = sq.status === 'idle' && sq.type !== 'baby';
 
   const _isThisApprentice = typeof _farmData !== 'undefined' && _farmData?.farmer_status === 'apprentice' && _farmData?.apprentice_squirrel_id === sq.id;
   const _isActiveFarmer = typeof _farmData !== 'undefined' && _farmData?.active_farmer_id === sq.id;
@@ -938,7 +943,7 @@ function sqShowActionModal(id) {
   }
 
   // 4) 수습 농부 버튼 (관련 조건)
-  if (sq.status === 'pet' && !isFarmer && !_isThisApprentice && !_isActiveFarmer) {
+  if (sq.type === 'pet' && !isFarmer && !_isThisApprentice && !_isActiveFarmer) {
     const apprenticeDisabled = hasApprentice;
     buttons.push({
       label: apprenticeDisabled ? '🌾 다른 수습 중' : '🌾 농부로 전직',
@@ -972,7 +977,7 @@ function sqShowActionModal(id) {
   }
 
   // 7) 팔기 버튼 (맨 마지막)
-  if ((sq.status === 'pet' || sq.status === 'explorer') && !_isActiveFarmer && !_isThisApprentice) {
+  if (sq.status === 'idle' && sq.type !== 'baby' && !_isActiveFarmer && !_isThisApprentice) {
     buttons.push({
       label: '🏪 펫샵에 팔기', sub: '',
       action: `sqSellSquirrel('${sq.id}')`,
@@ -1005,7 +1010,7 @@ function sqShowActionModal(id) {
         <img src="images/squirrels/${spriteFile}.png" style="width:64px;height:64px;object-fit:contain;border-radius:14px;display:block" onerror="this.outerHTML='<div style=\\'font-size:48px;line-height:64px;text-align:center\\'>🦔</div>'">
       </div>
       <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:2px">${sq.name}</div>
-      <div style="font-size:12px;font-weight:700;margin-bottom:4px">${statusLabel[sq.status] || ''}</div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:4px">${statusLabel}</div>
       <div style="display:flex;justify-content:center;gap:4px;margin-bottom:14px">
         <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 8px;border-radius:8px">${gs.label}</span>
       </div>
@@ -1108,12 +1113,12 @@ function _sqStartRecoverTimer(id, sq) {
 
     if (remaining <= 0) {
       _sqClearTimer(id);
-      // 회복 완료 → explorer 복원 + HP 풀회복
+      // 회복 완료 → idle 복원 + HP 풀회복
       const fullHp = sq.stats?.hp || 100;
       try {
-        await sb.from('squirrels').update({ status: 'explorer', recovers_at: null, hp_current: fullHp }).eq('id', id);
+        await sb.from('squirrels').update({ status: 'idle', recovers_at: null, hp_current: fullHp }).eq('id', id);
       } catch(e) {}
-      _sqUpdate(id, { status: 'explorer', recovers_at: null, hp_current: fullHp });
+      _sqUpdate(id, { status: 'idle', recovers_at: null, hp_current: fullHp });
       _sqSetIdle(id);
       // 카드 교체
       const cardEl = document.getElementById('sqCard-' + id);
@@ -1178,9 +1183,9 @@ async function sqInstantRecover(id) {
   try {
     await spendAcorns(cost, '다람쥐 즉시회복');
     const fullHp = sq.stats?.hp || 100;
-    await sb.from('squirrels').update({ status: 'explorer', recovers_at: null, hp_current: fullHp }).eq('id', id);
+    await sb.from('squirrels').update({ status: 'idle', recovers_at: null, hp_current: fullHp }).eq('id', id);
     _sqClearTimer(id);
-    _sqUpdate(id, { status: 'explorer', recovers_at: null, hp_current: fullHp });
+    _sqUpdate(id, { status: 'idle', recovers_at: null, hp_current: fullHp });
     _sqSetIdle(id);
 
     // 회복 성공 사운드 (상승 치유음)
@@ -1234,7 +1239,7 @@ function _sqGrowCard(id, name, growType) {
   const cardEl = document.getElementById('sqCard-' + id);
   if (!cardEl) {
     // 카드가 DOM에 없으면 로컬 상태만 갱신하고 카드 새로 추가
-    _sqUpdate(id, { status: growType, grows_at: null });
+    _sqUpdate(id, { type: growType, status: 'idle', grows_at: null });
     _sqSetIdle(id);
     return;
   }
@@ -1269,7 +1274,7 @@ function _sqGrowCard(id, name, growType) {
       _sqSpawnParticlesAt(cx, cy, true, 20);
 
       // 로컬 캐시 업데이트
-      _sqUpdate(id, { status: growType, grows_at: null });
+      _sqUpdate(id, { type: growType, status: 'idle', grows_at: null });
       _sqSetIdle(id);
 
       const sq = _sqSquirrels.find(s => s.id === id);
@@ -1356,7 +1361,8 @@ async function sqFeedSquirrel(id) {
   // 3) 타이머 완료 후 100% 도달 → 성장
   else if (sq.grows_at && new Date(sq.grows_at) <= new Date() && newFed >= sq.acorns_required) {
     const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
-    updates.status = growType;
+    updates.type = growType;
+    updates.status = 'idle';
     updates.grows_at = null;
     updates.sprite = _sqRandomSprite();
     action = 'grow:' + growType;
@@ -1364,7 +1370,8 @@ async function sqFeedSquirrel(id) {
   // 4) needs_time 없이 100% 도달 → 성장
   else if (!sq.needs_time && !sq.grows_at && newFed >= sq.acorns_required) {
     const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
-    updates.status = growType;
+    updates.type = growType;
+    updates.status = 'idle';
     updates.sprite = _sqRandomSprite();
     action = 'grow:' + growType;
   }
@@ -1402,7 +1409,7 @@ async function sqFeedSquirrel(id) {
 
     } else if (action.startsWith('grow:')) {
       const growType = action.split(':')[1];
-      _sqUpdate(id, { status: growType, grows_at: null, sprite: updates.sprite });
+      _sqUpdate(id, { type: growType, status: 'idle', grows_at: null, sprite: updates.sprite });
       // 게이지 100% 보여주고 성장 연출 (busy는 _sqGrowCard 완료 시 풀림)
       if (gauge) requestAnimationFrame(() => { gauge.style.width = '100%'; });
       setTimeout(() => _sqGrowCard(id, sq.name, growType), 1200);
@@ -1483,7 +1490,7 @@ async function sqDoBuySquirrel(price) {
     await spendAcorns(price, '다람쥐 구매');
 
     const insertData = {
-      user_id: myProfile.id, name: sqRandomName(), status: 'baby',
+      user_id: myProfile.id, name: sqRandomName(), type: 'baby', status: 'idle',
       acorns_fed: 0, acorns_required: acornsNeeded, needs_time: needsTime,
       stats: { hp: baseHp, atk: baseAtk, def: baseDef },
       hp_current: baseHp, acquired_from: 'shop'
@@ -1553,7 +1560,7 @@ function sqSyncAcornBadge() {
 // ================================================================
 async function sqRevealGrowth(id) {
   const sq = _sqSquirrels.find(s => s.id === id);
-  if (!sq || sq.status !== 'baby') return;
+  if (!sq || sq.type !== 'baby') return;
 
   const growType = Math.random() < 0.5 ? 'explorer' : 'pet';
   const sprite = _sqRandomSprite();
@@ -1562,11 +1569,11 @@ async function sqRevealGrowth(id) {
   const trainingTotal = _sqPickFromPool(countPool);
   try {
     await sb.from('squirrels').update({
-      status: growType, grows_at: null, sprite: sprite,
+      type: growType, status: 'idle', grows_at: null, sprite: sprite,
       training_total: trainingTotal, training_used: 0
     }).eq('id', id);
     _sqUpdate(id, {
-      status: growType, grows_at: null, sprite: sprite,
+      type: growType, status: 'idle', grows_at: null, sprite: sprite,
       training_total: trainingTotal, training_used: 0
     });
     // 성장 연출 (흔들림 → 페이드 → 새 카드)
@@ -1599,7 +1606,7 @@ function _sqBuildWeightedPool(min, max) {
 async function sqDoTraining(id) {
   const sq = _sqSquirrels.find(s => s.id === id);
   if (!sq) return;
-  if (sq.status === 'baby') { toast('⚠️', '아기 다람쥐는 훈련할 수 없어요'); return; }
+  if (sq.type === 'baby') { toast('⚠️', '아기 다람쥐는 훈련할 수 없어요'); return; }
 
   const total = sq.training_total || 0;
   const used  = sq.training_used  || 0;
@@ -1839,7 +1846,7 @@ async function sqExecuteTraining(id) {
 
 // 심사 가능 여부 체크
 function sqCanExam(sq) {
-  if (!sq || sq.status === 'baby') return { ok: false, reason: '아기 다람쥐는 심사할 수 없어요' };
+  if (!sq || sq.type === 'baby') return { ok: false, reason: '아기 다람쥐는 심사할 수 없어요' };
   const total = sq.training_total || 0;
   const used  = sq.training_used  || 0;
   if (used < total) return { ok: false, reason: '아직 훈련 횟수가 남아있어요 (' + (total - used) + '회)' };
@@ -2444,7 +2451,7 @@ function sqSellSquirrel(id) {
   const statSum   = (sq.stats?.hp||100) + (sq.stats?.atk||10) * 3 + (sq.stats?.def||5) * 2;
   const maxStat   = (_sqSettings.stat_hp_max||150) + (_sqSettings.stat_atk_max||20) * 3 + (_sqSettings.stat_def_max||20) * 2;
   const price     = Math.round(sellBase + (statSum / maxStat) * (sellMax - sellBase));
-  const desc      = sq.status === 'explorer' ? '탐험을 즐기는 활발한 녀석이군요!' : '온순하고 귀여운 애완 다람쥐네요!';
+  const desc      = sq.type === 'explorer' ? '탐험을 즐기는 활발한 녀석이군요!' : '온순하고 귀여운 애완 다람쥐네요!';
 
   showModal(`
     <div class="text-center">
@@ -2523,7 +2530,7 @@ async function sqLoadActiveExpedition() {
 }
 
 async function sqStartExpeditionFlow() {
-  const explorers = _sqSquirrels.filter(s => s.status === 'explorer');
+  const explorers = _sqSquirrels.filter(s => s.type === 'explorer' && s.status === 'idle');
   const recovering = _sqSquirrels.filter(s => s.status === 'recovering');
 
   if (explorers.length === 0) {
@@ -2645,7 +2652,7 @@ function sqFuseRenderSlots() {
           </div>
           <div style="font-size:11px;font-weight:900;color:#1f2937;margin-top:4px">${sq.name}</div>
           <div style="font-size:10px;font-weight:800;color:${gs.color}">${gs.label}</div>
-          <div style="font-size:9px;font-weight:700;color:${sq.status==='explorer'?'#059669':'#7c3aed'};margin-top:1px">${sq.status==='explorer'?'탐험형':'애완형'}</div>
+          <div style="font-size:9px;font-weight:700;color:${sq.type==='explorer'?'#059669':'#7c3aed'};margin-top:1px">${sq.type==='explorer'?'탐험형':'애완형'}</div>
         </div>`;
       slot.style.border = '3px solid ' + gs.color;
       slot.style.background = gs.bg;
@@ -2667,7 +2674,7 @@ function sqFuseRenderSlots() {
     if (g1 !== g2) {
       info.innerHTML = `<div style="color:#dc2626;font-size:13px;font-weight:800">⚠️ 같은 등급끼리만 합성할 수 있어요</div>`;
       btn.style.display = 'none';
-    } else if (sq1.status !== sq2.status) {
+    } else if (sq1.type !== sq2.type) {
       info.innerHTML = `<div style="color:#dc2626;font-size:13px;font-weight:800">⚠️ 같은 타입끼리만 합성할 수 있어요 (탐험+탐험 or 애완+애완)</div>`;
       btn.style.display = 'none';
     } else {
@@ -2707,7 +2714,7 @@ function sqFuseRenderGrid() {
   // baby, exploring, recovering, 장착 농부 제외
   const activeFarmerId = typeof _farmData !== 'undefined' ? _farmData?.active_farmer_id : null;
   const fusable = _sqSquirrels.filter(sq =>
-    (sq.status === 'explorer' || sq.status === 'pet') && sq.id !== activeFarmerId
+    (sq.type === 'explorer' || sq.type === 'pet') && sq.status === 'idle' && sq.id !== activeFarmerId
   );
 
   if (!fusable.length) {
@@ -2738,7 +2745,7 @@ function sqFuseRenderGrid() {
             <img src="images/squirrels/${spriteFile}.png" style="width:40px;height:40px;object-fit:contain;border-radius:8px;display:block" onerror="this.outerHTML='<div style=\\'font-size:28px;line-height:40px\\'>🦔</div>'">
           </div>
           <div style="font-size:10px;font-weight:900;color:#1f2937;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px">${sq.name}</div>
-          <div style="font-size:9px;font-weight:700;color:${sq.status==='explorer'?'#059669':'#7c3aed'}">${sq.status==='explorer'?'탐험형':'애완형'}</div>
+          <div style="font-size:9px;font-weight:700;color:${sq.type==='explorer'?'#059669':'#7c3aed'}">${sq.type==='explorer'?'탐험형':'애완형'}</div>
           <div style="font-size:8px;color:#9ca3af;margin-top:1px;white-space:nowrap">❤${sq.hp_current||0} ⚔${sq.stats?.atk||0} 🛡${sq.stats?.def||0}</div>
           ${isSelected ? '<div style="font-size:10px;color:#f59e0b;font-weight:800">선택됨</div>' : ''}
         </div>`;
@@ -2840,7 +2847,7 @@ async function sqFuseConfirm() {
   if (!sq1 || !sq2) return;
 
   const grade = _sqCalcGrade(sq1);
-  if (sq1.status !== sq2.status) { toast('⚠️', '같은 타입끼리만 합성 가능'); return; }
+  if (sq1.type !== sq2.type) { toast('⚠️', '같은 타입끼리만 합성 가능'); return; }
   const cost = _sqSettings.fuse_cost ?? 10;
 
   // 도토리 차감
@@ -2858,14 +2865,15 @@ async function sqFuseConfirm() {
   // 해당 등급 범위의 스탯 생성
   const stats = _sqFuseGenerateStats(resultGrade);
   const sprite = _sqRandomSprite();
-  const growType = sq1.status; // 재료와 같은 타입 유지
+  const fusionType = sq1.type; // 재료와 같은 타입 유지
 
   // DB: 새 다람쥐 생성 먼저 → 성공하면 재료 삭제 (안전한 순서)
   try {
     const { data: newSq, error: insErr } = await sb.from('squirrels').insert({
       user_id: myProfile.id,
       name: sq1.name,
-      status: growType,
+      type: fusionType,
+      status: 'idle',
       sprite: sprite,
       stats: stats,
       hp_current: stats.hp,
@@ -2925,7 +2933,7 @@ function _sqFuseGenerateStats(targetGrade) {
 function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
   const gs = _sqGradeStyle(newGrade);
   const spriteFile = newSq.sprite || 'sq_acorn';
-  const typeLabel = newSq.status === 'explorer' ? '탐험형' : '애완형';
+  const typeLabel = newSq.type === 'explorer' ? '탐험형' : '애완형';
 
   // Phase 1: 합성 중 연출 모달
   showModal(`
@@ -3189,8 +3197,8 @@ async function sqAdminLoadList() {
       const cooldownBtn = hasCooldown
         ? `<button onclick="sqAdminResetCooldownAny('${sq.id}','${sq.name.replace(/'/g,"\\'")}');event.stopPropagation()" style="flex-shrink:0;padding:4px 10px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit">⏩ 해제</button>`
         : '';
-      const statusIcon = sq.status==='baby'?'🐿️':sq.status==='pet'?'🐱':sq.status==='recovering'?'😴':'🦔';
-      const statLine = sq.status==='baby'
+      const statusIcon = sq.type==='baby'?'🐿️':sq.type==='pet'?'🐱':sq.status==='recovering'?'😴':'🦔';
+      const statLine = sq.type==='baby'
         ? `게이지 ${sq.acorns_fed}/${sq.acorns_required}`
         : `HP ${sq.hp_current} / ATK ${sq.stats?.atk||'?'} / DEF ${sq.stats?.def||'?'}`;
       return `

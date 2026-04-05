@@ -1788,11 +1788,11 @@ async function _expFinish(status) {
       var currentHp = Math.max(0, p.hp);
 
       if (currentHp >= maxHp) {
-        // HP 풀 → 바로 explorer 복귀
+        // HP 풀 → 바로 idle 복귀
         await sb.from('squirrels').update({
-          status: 'explorer', hp_current: maxHp, recovers_at: null
+          status: 'idle', hp_current: maxHp, recovers_at: null
         }).eq('id', p.id);
-        _sqUpdate(p.id, { status: 'explorer', hp_current: maxHp, recovers_at: null });
+        _sqUpdate(p.id, { status: 'idle', hp_current: maxHp, recovers_at: null });
       } else {
         // HP 부족 → recovering 상태 + recovers_at 설정
         var lostPct = 1 - (currentHp / maxHp); // 0~1 (0%~100% 손실)

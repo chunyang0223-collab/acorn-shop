@@ -959,7 +959,7 @@ async function _executeDeleteUser(userId, userName) {
       return error;
     };
     // 관련 데이터 순서대로 삭제 (FK 제약 고려 — 자식 테이블 먼저)
-    await sb.from('squirrels').update({ status: 'explorer' }).eq('user_id', userId).eq('status', 'exploring');
+    await sb.from('squirrels').update({ status: 'idle' }).eq('user_id', userId).eq('status', 'exploring');
     await _del('expeditions', 'user_id', userId);
     await _del('squirrels', 'user_id', userId);
     await _del('farm_farmers', 'user_id', userId);
