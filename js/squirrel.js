@@ -608,7 +608,7 @@ function sqCardHTML(sq) {
   const borderColor = sq.type === 'explorer' ? '#3b82f6'
                     : sq.type === 'pet' ? '#ec4899'
                     : sq.type === 'baby' ? '#fbbf24' : '#a3a3a3';
-  const badgeStyle  = sq.type === 'explorer' ? 'background:#dbeafe;color:#1e40af'
+  const badgeStyle  = sq.type === 'explorer' ? 'background:#3b82f6;color:#ffffff'
                     : sq.type === 'pet' ? 'background:#fce7f3;color:#9d174d'
                     : 'background:#fef3c7;color:#92400e';
   const badgeLabel  = sq.type === 'explorer' ? '탐험형' : sq.type === 'pet' ? '애완형' : '아기';
