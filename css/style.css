@@ -345,6 +345,41 @@
   --header-acorn-text: #92400e;
   --header-ticket-text: #7c3aed;
 
+  /* === 모달 내부 박스 (인포, 심사, 아이템 선택 등) === */
+  --modal-infobox-bg: #f0f9ff;
+  --modal-infobox-border: #dbeafe;
+  --modal-infobox-text: #64748b;
+  --modal-infobox-value: #1f2937;
+  --modal-itembox-bg: #eef2ff;
+  --modal-itembox-border: #c7d2fe;
+  --modal-itembox-text: #4338ca;
+  --modal-hintbox-bg: #f5f5f5;
+  --modal-hintbox-text: #ef4444;
+  --modal-title-text: #1f2937;
+  --modal-subtitle-text: #6b7280;
+
+  /* === 닫기/취소 버튼 (모달 내부 인라인) === */
+  --btn-cancel-bg: #f1f5f9;
+  --btn-cancel-text: #64748b;
+  --btn-cancel-border: #e2e8f0;
+
+  /* === 범용 리스트 아이템, 수량 조절 === */
+  --list-item-bg: #ffffff;
+  --list-item-border: #e5e7eb;
+  --qty-btn-bg: #ffffff;
+  --qty-btn-border: #d1d5db;
+  --qty-btn-text: #374151;
+  --progress-track-bg: #f3f4f6;
+
+  /* === 다람쥐 카드 === */
+  --sq-card-bg: #ffffff;
+  --sq-card-shadow: 0 4px 20px rgba(0,0,0,0.07);
+
+  /* === 피드/엠버 조절 버튼 === */
+  --feed-btn-bg: #fffbeb;
+  --feed-btn-border: #fde68a;
+  --feed-btn-text: #92400e;
+
   /* === row item === */
   --row-item-bg: rgba(0,0,0,0.03);
 
@@ -1313,6 +1348,41 @@
   --header-icon-text: #c4b5fd;
   --header-acorn-text: #fde68a;
   --header-ticket-text: #c4b5fd;
+
+  /* === 모달 내부 박스 === */
+  --modal-infobox-bg: #1a2636;
+  --modal-infobox-border: #2a3a4a;
+  --modal-infobox-text: #94a3b8;
+  --modal-infobox-value: #e2e8f0;
+  --modal-itembox-bg: #1e2240;
+  --modal-itembox-border: #3730a3;
+  --modal-itembox-text: #a5b4fc;
+  --modal-hintbox-bg: #1e2230;
+  --modal-hintbox-text: #f87171;
+  --modal-title-text: #f1f5f9;
+  --modal-subtitle-text: #94a3b8;
+
+  /* === 닫기/취소 버튼 === */
+  --btn-cancel-bg: #1e2838;
+  --btn-cancel-text: #94a3b8;
+  --btn-cancel-border: #2a3a4a;
+
+  /* === 범용 리스트 아이템, 수량 조절 === */
+  --list-item-bg: #1a2636;
+  --list-item-border: #2a3a4a;
+  --qty-btn-bg: #1e2838;
+  --qty-btn-border: #3a4a5a;
+  --qty-btn-text: #e2e8f0;
+  --progress-track-bg: #1e2838;
+
+  /* === 다람쥐 카드 === */
+  --sq-card-bg: #161e2a;
+  --sq-card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+
+  /* === 피드/엠버 조절 버튼 === */
+  --feed-btn-bg: #2a2218;
+  --feed-btn-border: #5c4a20;
+  --feed-btn-text: #fcd34d;
 
   /* === row item === */
   --row-item-bg: rgba(255,255,255,0.05);
