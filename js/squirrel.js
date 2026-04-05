@@ -988,7 +988,7 @@ function sqShowActionModal(id) {
   // ── 버튼 HTML 생성 ──
   // 모달을 여는 액션(showTrainingModal, showExamModal)은 closeModal 불필요 (showModal이 교체함)
   // 즉시 실행 액션(sell, recover, farmStart 등)은 closeModal 필요
-  const modalActions = ['sqShowTrainingModal', 'sqShowExamModal', 'farmRevealResult', 'sqSellSquirrel', 'farmStartApprentice', 'sqAdminResetCooldown'];
+  const modalActions = ['sqShowTrainingModal', 'sqShowExamModal', 'farmRevealResult', 'sqSellSquirrel', 'farmStartApprentice', 'sqAdminResetCooldown', 'toast'];
   const btnHTML = buttons.map(b => {
     const needsClose = b.action && !modalActions.some(ma => b.action.includes(ma));
     const onclick = b.action ? (needsClose ? b.action + ';closeModal()' : b.action) : '';
