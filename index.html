@@ -1651,44 +1651,40 @@
     <!-- 상품 -->
     <div id="atab-products" class="hidden">
 
-      <!-- 상점 추가: 아이템 DB에서 선택 -->
-      <div class="grid grid-cols-2 gap-3 mb-4" style="align-items:start">
+      <!-- 통합 아이템 피커 -->
+      <div class="clay-card p-4 mb-4">
+        <h3 class="font-black text-gray-800 mb-1 flex items-center gap-1">📦 <span>아이템 배치</span></h3>
+        <p class="text-xs text-gray-400 mb-3">아이템을 선택한 뒤, 상점 또는 뽑기에 배치하세요</p>
 
-        <div class="clay-card p-4">
-          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🛍️ <span>상점에 추가</span></h3>
-          <p class="text-xs text-gray-400 mb-2">아이템 DB에서 선택 후 가격·수량을 설정하세요</p>
-          <div id="ns-itemPicker" class="flex flex-wrap gap-1 mb-3 p-2 rounded-xl bg-gray-50 min-h-[40px]" style="max-height:160px;overflow-y:auto"></div>
-          <div id="ns-selectedInfo" class="hidden mb-2 p-2 rounded-lg bg-blue-50 text-xs font-bold text-blue-700"></div>
-          <div class="space-y-2">
-            <input class="field" type="number" id="ns-price" placeholder="가격(🌰)">
-            <div>
-              <label class="text-xs font-bold text-gray-500 mb-1 block">판매 수량</label>
-              <div class="flex gap-2 items-center">
-                <div class="flex rounded-lg overflow-hidden border border-gray-200" style="flex:1">
-                  <button id="ns-stockUnlimited" class="flex-1 py-1.5 text-xs font-bold bg-blue-100 text-blue-700" onclick="_nsSetStock('unlimited')">♾️ 무제한</button>
-                  <button id="ns-stockLimited" class="flex-1 py-1.5 text-xs font-bold bg-white text-gray-500" onclick="_nsSetStock('limited')">🔢 제한</button>
-                </div>
-                <input class="field hidden" type="number" id="ns-stock" placeholder="개수" min="1" style="width:80px;flex-shrink:0">
-              </div>
-            </div>
-            <button class="btn btn-primary w-full py-2 text-sm" onclick="addStoreProduct()">➕ 상점에 추가</button>
+        <!-- 검색 -->
+        <div class="relative mb-2">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm pointer-events-none text-gray-400">🔍</span>
+          <input class="field w-full pl-8" type="text" id="up-search" placeholder="아이템 검색..." oninput="_upRenderList()">
+        </div>
+
+        <!-- 아이템 리스트 (체크박스 복수선택) -->
+        <div id="up-list" class="space-y-1 mb-2" style="max-height:220px;overflow-y:auto"></div>
+
+        <!-- 액션 바: N개 선택됨 + 목적지 버튼 -->
+        <div id="up-actionBar" class="hidden mt-2 p-3 rounded-xl" style="background:rgba(124,58,237,0.06);border:1.5px solid rgba(124,58,237,0.15)">
+          <p class="text-xs font-black mb-2" id="up-countLabel" style="color:#7c3aed"></p>
+          <div class="flex gap-2">
+            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2);color:#3b82f6" onclick="_upOpenConfig('store')">🛍️ 상점에 추가</button>
+            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2);color:#a855f7" onclick="_upOpenConfig('gacha')">🎲 뽑기에 추가</button>
           </div>
         </div>
 
-        <!-- 뽑기 추가: 아이템 DB에서 선택 -->
-        <div class="clay-card p-4">
-          <h3 class="font-black text-gray-800 mb-3 flex items-center gap-1">🎲 <span>뽑기에 추가</span></h3>
-          <p class="text-xs text-gray-400 mb-2">아이템 DB에서 선택 후 확률을 설정하세요</p>
-          <div id="ng-itemPicker" class="flex flex-wrap gap-1 mb-3 p-2 rounded-xl bg-gray-50 min-h-[40px]" style="max-height:160px;overflow-y:auto"></div>
-          <div id="ng-selectedInfo" class="hidden mb-2 p-2 rounded-lg bg-purple-50 text-xs font-bold text-purple-700"></div>
-          <div class="space-y-2">
-            <input class="field" type="number" id="ng-probability" placeholder="확률 %" step="0.1" min="0">
-            <input class="field" type="number" id="ng-resellPrice" placeholder="되팔기 가격 🌰 (0=불가)" min="0">
-            <p class="text-xs text-gray-400">※ 확률 합≠100이어도 자동 정규화</p>
-            <button class="btn btn-purple w-full py-2 text-sm" onclick="addGachaProduct()">➕ 뽑기에 추가</button>
+        <!-- 설정 패널 (목적지 선택 후 표시) -->
+        <div id="up-configPanel" class="hidden mt-2 rounded-xl overflow-hidden" style="border:1.5px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.04)">
+          <div class="flex items-center justify-between px-3 py-2" style="border-bottom:1px solid rgba(124,58,237,0.1)">
+            <span class="text-xs font-black" id="up-configLabel" style="color:#7c3aed"></span>
+            <span class="text-xs font-bold text-gray-400 cursor-pointer" onclick="_upCloseConfig()">← 돌아가기</span>
+          </div>
+          <div id="up-configItems" class="px-3 py-2 space-y-2"></div>
+          <div class="px-3 pb-3">
+            <button class="btn w-full py-2 text-sm font-black text-white rounded-lg" id="up-submitBtn" onclick="_upSubmit()"></button>
           </div>
         </div>
-
       </div>
 
       <!-- 목록: 2열 (상점 / 뽑기) -->
