@@ -872,7 +872,7 @@ function sqShowActionModal(id) {
   if (tTotal > 0 && tRemain > 0 && !hpMaxed) {
     const canTrain = canAct;
     const trainLabel = canTrain ? '💪 체력 훈련' : (sq.status === 'exploring' ? '⚔️ 탐험 중엔 훈련 불가' : '😴 회복 후 훈련 가능');
-    const trainSub = canTrain ? `남은 횟수 ${tRemain}/${tTotal} · 동그라미 ${_sqSettings.training_dot_rate || 30}%` : '';
+    const trainSub = canTrain ? `남은 횟수 ${tRemain}/${tTotal}` : '';
     buttons.push({
       label: trainLabel, sub: trainSub,
       action: canTrain ? `sqShowTrainingModal('${sq.id}')` : '',
@@ -882,26 +882,36 @@ function sqShowActionModal(id) {
     });
   }
 
-  // 2) 등급심사 버튼 (훈련 횟수를 다 썼거나 0회 배정이면 표시)
-  if (tRemain <= 0 && !hpMaxed) {
-    const examCheck = sqCanExam(sq);
-    const canExam = examCheck.ok && canAct;
-    // 심사 자체는 가능하지만 행동불가(탐험중/회복중)인 경우 별도 사유 표시
-    let examLabel = '📋 등급심사 신청';
-    if (!canExam) {
-      if (examCheck.reason) examLabel = examCheck.reason;
-      else if (sq.status === 'exploring') examLabel = '⚔️ 탐험 중엔 심사 불가';
-      else if (sq.status === 'recovering') examLabel = '😴 회복 중엔 심사 불가';
-      else examLabel = '현재 심사 불가';
+  // 2) 등급심사 버튼
+  if (tRemain <= 0) {
+    if (hpMaxed) {
+      buttons.push({
+        label: '📋 등급심사 신청',
+        sub: '',
+        action: `toast('⚠️','HP가 이미 최대치예요!')`,
+        bg: '#e2e8f0',
+        color: '#94a3b8',
+        disabled: false
+      });
+    } else {
+      const examCheck = sqCanExam(sq);
+      const canExam = examCheck.ok && canAct;
+      let examLabel = '📋 등급심사 신청';
+      if (!canExam) {
+        if (examCheck.reason) examLabel = examCheck.reason;
+        else if (sq.status === 'exploring') examLabel = '⚔️ 탐험 중엔 심사 불가';
+        else if (sq.status === 'recovering') examLabel = '😴 회복 중엔 심사 불가';
+        else examLabel = '현재 심사 불가';
+      }
+      buttons.push({
+        label: examLabel,
+        sub: canExam ? `비용 ${_sqSettings.exam_cost || 10} 도토리` : '',
+        action: canExam ? `sqShowExamModal('${sq.id}')` : '',
+        bg: canExam ? 'linear-gradient(135deg,#a78bfa,#7c3aed)' : '#e2e8f0',
+        color: canExam ? 'white' : '#94a3b8',
+        disabled: !canExam
+      });
     }
-    buttons.push({
-      label: examLabel,
-      sub: canExam ? `비용 ${_sqSettings.exam_cost || 10} 도토리` : '',
-      action: canExam ? `sqShowExamModal('${sq.id}')` : '',
-      bg: canExam ? 'linear-gradient(135deg,#a78bfa,#7c3aed)' : '#e2e8f0',
-      color: canExam ? 'white' : '#94a3b8',
-      disabled: !canExam
-    });
   }
 
   // 2-1) 관리자 쿨타임 초기화 버튼
@@ -1972,7 +1982,7 @@ async function sqShowExamModal(id) {
           <div style="margin-top:8px;font-size:13px;font-weight:900;color:#059669" id="sqExamFinalRate">합격률: ${baseRate}%</div>
         </div>` : `
         <div style="background:#f5f5f5;border-radius:14px;padding:10px;margin-bottom:12px">
-          <div style="font-size:11px;color:#9ca3af">심사관에게 뇌물을 주면 합격률을 올릴 수 있다는데... ✨</div>
+          <div style="font-size:11px;color:#ef4444">심사관에게 뇌물을 주면 합격률을 올릴 수 있다는데... ✨</div>
         </div>`}
       <div style="display:flex;gap:8px">
         <button onclick="sqExecuteExam('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #5b21b6'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3)'">📋 심사 받기!</button>
