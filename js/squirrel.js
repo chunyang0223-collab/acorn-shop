@@ -2231,7 +2231,7 @@ async function sqExecuteExam(id) {
       }
       const stamp = document.getElementById('examStamp');
       if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(-5deg)'; }
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 30));
       _sqExamPlayStamp();
 
       // 합격 대사 (타이핑 완료 → 자동 전환)
