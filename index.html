@@ -399,6 +399,134 @@
     <div id="utab-friend" class="hidden">
       <div id="friendContent"></div>
     </div>
+
+    <div id="utab-squirrel" class="hidden">
+      <!-- 서브탭 -->
+      <div class="clay-card p-2 flex gap-1 mb-4" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        <button class="tab-btn active" onclick="sqTab('my')"         id="sqtab-my" style="flex:1 0 auto;min-width:0">🏠 내 다람쥐</button>
+        <button class="tab-btn"        onclick="sqTab('shop')"       id="sqtab-shop" style="flex:1 0 auto;min-width:0">🛒 상점</button>
+        <button class="tab-btn"        onclick="sqTab('fuse')"       id="sqtab-fuse" style="flex:1 0 auto;min-width:0">🧬 합성</button>
+        <button class="tab-btn"        onclick="sqTab('expedition')" id="sqtab-expedition" style="flex:1 0 auto;min-width:0">⚔️ 탐험</button>
+        <button class="tab-btn"        onclick="sqTab('farm')"       id="sqtab-farm" style="flex:1 0 auto;min-width:0">🌾 농장</button>
+      </div>
+    <div id="utab-sq_my">
+      <div class="clay-card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="title-font text-base text-gray-700">🐿️ 보유 다람쥐</span>
+          <span class="text-xs text-gray-400 font-bold" id="squirrelCount">0 / 10</span>
+        </div>
+        <div id="squirrelGrid" class="flex flex-col">
+          <div class="flex justify-center py-8"><div class="spinner"></div></div>
+        </div>
+      </div>
+      <!-- 관리자 전용: 다람쥐 기본 설정 -->
+    </div>
+    <div id="utab-sq_shop" class="hidden">
+      <div class="clay-card p-4">
+        <div class="title-font text-base text-gray-700 mb-3">🛒 다람쥐 분양</div>
+        <div class="clay-card p-5 text-center" style="background:var(--adopt-card-bg)">
+          <img src="images/baby-squirrel.png" style="width:110px;height:110px;object-fit:contain;animation:idle-bounce 2s ease-in-out infinite" class="mx-auto mb-2">
+          <div class="title-font text-lg text-amber-800 mb-1">아기 다람쥐 분양</div>
+          <div class="text-xs text-gray-500 mb-4">도토리를 먹여서 키워보세요!</div>
+          <div class="flex gap-2 justify-center">
+            <button class="btn btn-primary" onclick="sqBuySquirrel('shop')" style="width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:900;box-shadow:0 4px 0 #b45309,0 6px 20px rgba(245,158,11,.2)">🌰 30 도토리로 분양받기</button>
+          </div>
+        </div>
+      </div>
+      <div class="clay-card p-4 mt-4">
+        <div class="title-font text-sm text-gray-600 mb-3">💡 알아두면 좋아요</div>
+        <details class="sq-help-acc">
+          <summary>🐿️ 다람쥐는 어떻게 키우나요?</summary>
+          <div class="sq-help-body">분양받은 아기 다람쥐에게 도토리를 먹이면 성장 게이지가 올라가요. 게이지가 다 차면 <b>탐험형</b> 또는 <b>애완형</b> 중 하나로 성장합니다!</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>⚔️ 탐험형은 뭘 할 수 있나요?</summary>
+          <div class="sq-help-body">탐험형 다람쥐는 탐험에 보낼 수 있어요. 몬스터와 싸우고, 보물을 찾아 도토리와 아이템을 가져옵니다. 스탯이 높을수록 유리해요!</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>🏡 애완형은 어떤 다람쥐인가요?</summary>
+          <div class="sq-help-body">애완형 다람쥐는 탐험에는 나갈 수 없지만, 함께할 수 있어요. 필요 없다면 <b>펫샵에 팔아</b> 도토리를 돌려받을 수도 있습니다.</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>⭐ 등급은 어떻게 정해지나요?</summary>
+          <div class="sq-help-body">다람쥐의 HP, 공격, 방어 스탯에 따라 일반 → 레어 → 희귀 → 유일 → 레전드 등급이 결정돼요. 등급이 높을수록 테두리가 화려합니다!</div>
+        </details>
+        <details class="sq-help-acc">
+          <summary>✨ 뇌물이 필요해요!</summary>
+          <div class="sq-help-body">탐험에서 몬스터를 처치하거나 보스레이드에 참가해보세요!</div>
+        </details>
+      </div>
+      <!-- 관리자 전용: 상점 설정 -->
+    </div>
+    <div id="utab-sq_fuse" class="hidden">
+      <div class="clay-card p-5 mb-4">
+        <div class="text-center mb-4">
+          <div style="font-size:48px" class="mb-2">🧬</div>
+          <div class="title-font text-lg text-gray-700 mb-1">다람쥐 합성</div>
+          <div class="text-sm text-gray-400">같은 등급 다람쥐 두 마리를 합성하여 새 다람쥐를 얻어요</div>
+          <div class="text-xs text-gray-400 mt-1">🌰 합성 비용: <strong id="sqFuseCostDisplay">10</strong> 도토리</div>
+        </div>
+        <div id="sqFuseSlots" style="display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:20px">
+          <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
+            <span style="font-size:32px;color:#d1d5db">＋</span>
+          </div>
+          <div style="font-size:28px;font-weight:900;color:#d1d5db">＋</div>
+          <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
+            <span style="font-size:32px;color:#d1d5db">＋</span>
+          </div>
+        </div>
+        <div id="sqFuseInfo" style="text-align:center;margin-bottom:16px"></div>
+        <button id="sqFuseBtn" onclick="sqFuseExecute()" class="btn btn-primary w-full" style="display:none">🧬 합성하기!</button>
+      </div>
+      <div id="sqFuseList" class="clay-card p-4">
+        <div class="title-font text-sm text-gray-600 mb-3">합성 가능한 다람쥐</div>
+        <div id="sqFuseGrid"></div>
+      </div>
+      <!-- 관리자 전용: 합성 설정 -->
+
+    </div>
+    <div id="utab-sq_expedition" class="hidden">
+      <div class="clay-card p-5 text-center mb-4">
+        <div style="font-size:48px" class="mb-2">🗺️</div>
+        <div class="title-font text-lg text-gray-700 mb-1">탐험 준비</div>
+        <div class="text-sm text-gray-400 mb-4">탐험형 다람쥐를 보유해야 출발할 수 있어요</div>
+        <button class="btn btn-primary" onclick="sqStartExpeditionFlow()">탐험 출발 →</button>
+      </div>
+      <div id="sqActiveExpeditionArea"></div>
+      <div class="clay-card p-4 mt-4">
+        <div class="title-font text-sm text-gray-600 mb-3">💡 탐험 가이드</div>
+        <div class="sq-help-grid">
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">✨</div>
+            <div class="sq-help-card-title">SP 전략</div>
+            <div class="sq-help-card-desc">스킬 포인트(SP)는 탐험마다 랜덤 횟수가 부여돼요. 보스전을 위해 아껴두세요!</div>
+          </div>
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">💨</div>
+            <div class="sq-help-card-title">도망치기</div>
+            <div class="sq-help-card-desc">위험하면 도망! 단, 전리품의 50%만 가져가요</div>
+          </div>
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">🌰</div>
+            <div class="sq-help-card-title">포션 사용</div>
+            <div class="sq-help-card-desc">전투 중 도토리 1개로 HP를 회복할 수 있어요</div>
+          </div>
+          <div class="sq-help-card">
+            <div style="font-size:24px;margin-bottom:4px">🎁</div>
+            <div class="sq-help-card-title">보상 획득</div>
+            <div class="sq-help-card-desc">전투 승리 시 카드 뽑기! 등급(C/B/A)에 따라 보상이 달라요</div>
+          </div>
+        </div>
+      </div>
+      <!-- 관리자 전용: 탐험 설정 -->
+    </div>
+    <div id="utab-sq_farm" class="hidden">
+      <div id="sqFarmArea"></div>
+      <!-- 관리자 전용: 농장 설정 -->
+    </div>
+    </div>
+
+
   </div>
 
 
@@ -951,24 +1079,9 @@
         <div id="eventHistoryList" class="space-y-2"></div>
       </div>
     </div>
-  </div>
 
-  <!-- 🐿️ 다람쥐 (공통, userMode/adminMode 양쪽에서 사용) -->
-  <div id="utab-squirrel" class="hidden">
-    <!-- 관리자 전용 뒤로가기 -->
-    <div id="sqAdminBackBar" class="hidden mb-3">
-      <button onclick="sqAdminBack()" class="btn btn-gray btn-sm">← 관리자 화면으로</button>
-    </div>
-    <!-- 서브탭 -->
-    <div class="clay-card p-2 flex gap-1 mb-4" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-      <button class="tab-btn active" onclick="sqTab('my')"         id="sqtab-my" style="flex:1 0 auto;min-width:0">🏠 내 다람쥐</button>
-      <button class="tab-btn"        onclick="sqTab('shop')"       id="sqtab-shop" style="flex:1 0 auto;min-width:0">🛒 상점</button>
-      <button class="tab-btn"        onclick="sqTab('fuse')"       id="sqtab-fuse" style="flex:1 0 auto;min-width:0">🧬 합성</button>
-      <button class="tab-btn"        onclick="sqTab('expedition')" id="sqtab-expedition" style="flex:1 0 auto;min-width:0">⚔️ 탐험</button>
-      <button class="tab-btn"        onclick="sqTab('farm')"       id="sqtab-farm" style="flex:1 0 auto;min-width:0">🌾 농장</button>
-    </div>
-    <!-- 내 다람쥐 -->
-    <div id="sqcontent-my">
+    <!-- atab-sq_my (관리자 다람쥐 독립 탭) -->
+    <div id="atab-sq_my" class="hidden">
       <div class="clay-card p-4">
         <div class="flex items-center justify-between mb-3">
           <span class="title-font text-base text-gray-700">🐿️ 보유 다람쥐</span>
@@ -979,7 +1092,7 @@
         </div>
       </div>
       <!-- 관리자 전용: 다람쥐 기본 설정 -->
-      <div class="sq-admin-panel hidden">
+      <div class="sq-admin-panel">
         <div class="cfg-panel" style="padding:12px;margin-top:12px" id="sqSettingsForm">
           <div class="fc-header"><h2>🐿️ 다람쥐 설정</h2></div>
 
@@ -1284,8 +1397,9 @@
         </div>
       </div>
     </div>
-    <!-- 상점 -->
-    <div id="sqcontent-shop" class="hidden">
+
+    <!-- atab-sq_shop (관리자 다람쥐 독립 탭) -->
+    <div id="atab-sq_shop" class="hidden">
       <div class="clay-card p-4">
         <div class="title-font text-base text-gray-700 mb-3">🛒 다람쥐 분양</div>
         <div class="clay-card p-5 text-center" style="background:var(--adopt-card-bg)">
@@ -1321,7 +1435,7 @@
         </details>
       </div>
       <!-- 관리자 전용: 상점 설정 -->
-      <div class="sq-admin-panel hidden">
+      <div class="sq-admin-panel">
         <div class="cfg-panel" style="padding:12px;margin-top:12px">
           <div class="fc-header"><h2>🛒 상점 설정</h2></div>
           <div class="fc-section open">
@@ -1343,8 +1457,9 @@
         </div>
       </div>
     </div>
-    <!-- 합성 -->
-    <div id="sqcontent-fuse" class="hidden">
+
+    <!-- atab-sq_fuse (관리자 다람쥐 독립 탭) -->
+    <div id="atab-sq_fuse" class="hidden">
       <div class="clay-card p-5 mb-4">
         <div class="text-center mb-4">
           <div style="font-size:48px" class="mb-2">🧬</div>
@@ -1369,7 +1484,7 @@
         <div id="sqFuseGrid"></div>
       </div>
       <!-- 관리자 전용: 합성 설정 -->
-      <div class="sq-admin-panel hidden">
+      <div class="sq-admin-panel">
         <div class="cfg-panel" style="padding:12px;margin-top:12px">
           <div class="fc-header"><h2>🧬 합성 설정</h2></div>
 
@@ -1415,8 +1530,9 @@
       </div>
 
     </div>
-    <!-- 탐험 -->
-    <div id="sqcontent-expedition" class="hidden">
+
+    <!-- atab-sq_expedition (관리자 다람쥐 독립 탭) -->
+    <div id="atab-sq_expedition" class="hidden">
       <div class="clay-card p-5 text-center mb-4">
         <div style="font-size:48px" class="mb-2">🗺️</div>
         <div class="title-font text-lg text-gray-700 mb-1">탐험 준비</div>
@@ -1450,7 +1566,7 @@
         </div>
       </div>
       <!-- 관리자 전용: 탐험 설정 -->
-      <div class="sq-admin-panel hidden">
+      <div class="sq-admin-panel">
         <div class="cfg-panel" style="padding:12px;margin-top:12px">
           <div class="fc-header"><h2>⚔️ 탐험 보상 설정</h2></div>
 
@@ -1822,11 +1938,12 @@
         </div>
       </div>
     </div>
-    <!-- 농장 -->
-    <div id="sqcontent-farm" class="hidden">
+
+    <!-- atab-sq_farm (관리자 다람쥐 독립 탭) -->
+    <div id="atab-sq_farm" class="hidden">
       <div id="sqFarmArea"></div>
       <!-- 관리자 전용: 농장 설정 -->
-      <div class="sq-admin-panel hidden">
+      <div class="sq-admin-panel">
         <div class="cfg-panel" style="padding:12px;margin-top:12px">
           <div class="fc-header"><h2>🌾 농장 설정</h2></div>
 
@@ -2005,7 +2122,11 @@
         </div>
       </div>
     </div>
+
+
   </div>
+
+  <!-- 🐿️ 다람쥐 (공통, userMode/adminMode 양쪽에서 사용) -->
 
 
     <!-- ♻️ 관리자 재활용센터 -->
@@ -2215,6 +2336,8 @@
 <script src="js/minigame_2048.js"></script>
 <script src="js/minigame_roulette.js"></script>
 <script src="js/squirrel.js"></script>
+<script src="js/sq_shop.js"></script>
+<script src="js/sq_fuse.js"></script>
 <script src="js/expedition.js"></script>
 <script src="js/bossraid.js"></script>
 <script src="js/farm_core.js"></script>
