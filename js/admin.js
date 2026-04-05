@@ -952,34 +952,33 @@ async function _executeDeleteUser(userId, userName) {
   closeModal();
   toast('⏳', `${userName} 탈퇴 처리 중...`);
   try {
+    const _del = async (table, col, val) => {
+      const { error } = await sb.from(table).delete().eq(col, val);
+      if (error) console.warn(`[탈퇴-삭제실패] ${table}.${col}:`, error.message);
+      else console.log(`[탈퇴-삭제OK] ${table}.${col}`);
+      return error;
+    };
     // 관련 데이터 순서대로 삭제 (FK 제약 고려 — 자식 테이블 먼저)
-    // 1) 탐험 중인 다람쥐 원복 후 탐험 삭제
     await sb.from('squirrels').update({ status: 'explorer' }).eq('user_id', userId).eq('status', 'exploring');
-    await sb.from('expeditions').delete().eq('user_id', userId);
-    // 2) 다람쥐 삭제
-    await sb.from('squirrels').delete().eq('user_id', userId);
-    // 3) 농장 데이터
-    await sb.from('farm_farmers').delete().eq('user_id', userId);
-    await sb.from('farm_data').delete().eq('user_id', userId);
-    // 4) 친구 관계 (양방향 — 각각 삭제)
-    await sb.from('friends').delete().eq('user_id', userId);
-    await sb.from('friends').delete().eq('friend_id', userId);
-    // 5) 가챠 관련
-    await sb.from('gacha_logs').delete().eq('user_id', userId);
-    await sb.from('gacha_tickets').delete().eq('user_id', userId);
-    await sb.from('free_gacha_usage').delete().eq('user_id', userId);
-    // 6) 기존 테이블들
-    const tables = ['notifications','minigame_plays','inventory','transactions'];
-    for (const t of tables) {
-      const { error } = await sb.from(t).delete().eq('user_id', userId);
-      if (error) console.warn(`[delete] ${t}:`, error.message);
-    }
-    // 보너스 횟수 데이터
+    await _del('expeditions', 'user_id', userId);
+    await _del('squirrels', 'user_id', userId);
+    await _del('farm_farmers', 'user_id', userId);
+    await _del('farm_data', 'user_id', userId);
+    await _del('friends', 'requester_id', userId);
+    await _del('friends', 'receiver_id', userId);
+    await _del('gacha_logs', 'user_id', userId);
+    await _del('gacha_tickets', 'user_id', userId);
+    await _del('free_gacha_usage', 'user_id', userId);
+    await _del('notifications', 'user_id', userId);
+    await _del('minigame_plays', 'user_id', userId);
+    await _del('inventory', 'user_id', userId);
+    await _del('transactions', 'user_id', userId);
     await sb.from('app_settings').delete().eq('key', 'mg_bonus_' + userId);
     // 유저 삭제
     const { error } = await sb.from('users').delete().eq('id', userId);
     if (error) {
-      toast('❌', '회원 삭제 실패: ' + error.message + ' (RLS 정책 확인 필요)');
+      console.error('[탈퇴-유저삭제실패]', error.message);
+      toast('❌', '회원 삭제 실패: ' + error.message);
       return;
     }
     toast('✅', `${userName} 탈퇴 처리 완료`);
