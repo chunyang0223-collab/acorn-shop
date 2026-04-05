@@ -2226,7 +2226,7 @@ async function sqExecuteExam(id) {
             <div style="border:4px solid #22c55e;border-radius:12px;padding:6px 20px;background:rgba(34,197,94,0.15)">합격</div>
           </div>`;
       }
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 1200));
       _sqExamPlayStamp();
       const stamp = document.getElementById('examStamp');
       if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(-5deg)'; }
@@ -2255,7 +2255,7 @@ async function sqExecuteExam(id) {
             <div style="border:4px solid #ff3333;border-radius:12px;padding:6px 20px;background:rgba(255,20,20,0.25)">불합격</div>
           </div>`;
       }
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 1200));
       _sqExamPlayStamp();
       const stamp = document.getElementById('examStamp');
       if (stamp) { stamp.style.opacity = '1'; stamp.style.transform = 'scale(1) rotate(3deg)'; }
