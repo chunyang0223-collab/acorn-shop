@@ -387,7 +387,7 @@ function _brUnsubscribe() {
   }
   _brPollRaidId = null;
   if (_brReplayTimer) {
-    clearTimeout(_brReplayTimer);
+    clearInterval(_brReplayTimer);
     _brReplayTimer = null;
   }
 }
@@ -981,7 +981,7 @@ function _brRenderBattle(container, raid) {
 }
 
 function _brStartReplay(log, partyInit) {
-  if (_brReplayTimer) clearTimeout(_brReplayTimer);
+  if (_brReplayTimer) clearInterval(_brReplayTimer);
 
   // 배경음 재생
   if (typeof _sndPlayBGM === 'function') _sndPlayBGM('boss');
@@ -992,17 +992,9 @@ function _brStartReplay(log, partyInit) {
   // init 엔트리는 스킵
   const skipTypes = ['init'];
 
-  // 공격 타입별 딜레이 (ms)
-  function _brGetDelay(entry) {
-    if (!entry) return 470;
-    if (entry.type === 'ultimate') return 700;
-    if (entry.type === 'skill') return 550;
-    if (entry.type === 'boss_attack') return 500;
-    return 420; // 평타
-  }
-
-  function _brReplayStep() {
+  _brReplayTimer = setInterval(() => {
     if (idx >= log.length) {
+      clearInterval(_brReplayTimer);
       _brReplayTimer = null;
       if (typeof _sndStopBGM === 'function') _sndStopBGM();
       // 파티 영역을 결과 카드로 교체
@@ -1034,10 +1026,7 @@ function _brStartReplay(log, partyInit) {
     const entry = log[idx];
     idx++;
 
-    if (skipTypes.includes(entry.type)) {
-      _brReplayTimer = setTimeout(_brReplayStep, 0);
-      return;
-    }
+    if (skipTypes.includes(entry.type)) return;
 
     // 로그 표시
     if (entry.text) {
@@ -1088,15 +1077,15 @@ function _brStartReplay(log, partyInit) {
             card.classList.add('br-attacking-ulti', 'br-ultimate-glow');
             setTimeout(() => {
               card.classList.remove('br-attacking-ulti', 'br-ultimate-glow');
-            }, 550);
+            }, 750);
           } else if (entry.type === 'skill') {
             card.classList.add('br-attacking-skill');
-            setTimeout(() => card.classList.remove('br-attacking-skill'), 400);
+            setTimeout(() => card.classList.remove('br-attacking-skill'), 500);
           } else {
             card.classList.add(entry.bigHit ? 'br-attacking-big' : 'br-attacking');
             setTimeout(() => {
               card.classList.remove('br-attacking', 'br-attacking-big');
-            }, 350);
+            }, entry.bigHit ? 320 : 280);
           }
         }
 
@@ -1175,13 +1164,7 @@ function _brStartReplay(log, partyInit) {
       }
     }
 
-    // 다음 엔트리 딜레이 결정 후 예약
-    var nextDelay = _brGetDelay(log[idx]);
-    _brReplayTimer = setTimeout(_brReplayStep, nextDelay);
-  }
-
-  // 첫 스텝 시작
-  _brReplayTimer = setTimeout(_brReplayStep, _brGetDelay(log[0]));
+  }, 470);
 }
 
 // ── 데미지 팝업 헬퍼 ──
@@ -1201,7 +1184,7 @@ function _brShowDmgPopup(parentId, dmg, type) {
   popup.style.left = 'calc(50% + ' + offsetX + 'px)';
   parent.style.position = 'relative';
   parent.appendChild(popup);
-  var removeDelay = type === 'ultimate' ? 1200 : type === 'hit' ? 900 : 1000;
+  var removeDelay = type === 'ultimate' ? 1300 : type === 'skill' ? 950 : type === 'hit' ? 900 : 700;
   setTimeout(() => popup.remove(), removeDelay);
 
   // 필살기 파티클 효과
@@ -1305,7 +1288,7 @@ async function _brRenderResult(container, raid) {
   if (_brResultRendered) return;
   _brResultRendered = true;
 
-  if (_brReplayTimer) { clearTimeout(_brReplayTimer); _brReplayTimer = null; }
+  if (_brReplayTimer) { clearInterval(_brReplayTimer); _brReplayTimer = null; }
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
 
   const isHost = raid.host_id === myProfile.id;
