@@ -1001,7 +1001,11 @@ async function renderAdminRanking() {
     }).join('');
   } catch(e) { list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">랭킹 조회 실패</p>'; }
   _mgLogOffset = 0;
-  renderMinigameLog();
+  // 로그는 접혀있을 때 렌더 안 함
+  if (_mgLogOpen) renderMinigameLog();
+  // 주간 보상 설정 + 내역 렌더
+  renderWeeklyRewardSettings();
+  renderWeeklyRewardHistory();
 }
 
 async function renderMinigameLog() {
@@ -1067,4 +1071,323 @@ function _renderLogRows(data, nameMap) {
       <span class="mg-log-time">${timeStr}</span>
     </div>`;
   }).join('');
+}
+
+// ──────────────────────────────────────────────
+//  미니게임 이용 로그 접기/펼치기
+// ──────────────────────────────────────────────
+let _mgLogOpen = false;
+function toggleMgLogSection() {
+  _mgLogOpen = !_mgLogOpen;
+  const body = document.getElementById('mgLogCollapsible');
+  const icon = document.getElementById('mgLogToggleIcon');
+  if (_mgLogOpen) {
+    body.classList.remove('hidden');
+    icon.textContent = '▲';
+    renderMinigameLog();
+  } else {
+    body.classList.add('hidden');
+    icon.textContent = '▼';
+  }
+}
+
+// ──────────────────────────────────────────────
+//  주간 랭킹 보상 시스템
+// ──────────────────────────────────────────────
+
+// 기본 보상 설정
+const WEEKLY_REWARD_DEFAULTS = {
+  catch: { 1: 50, 2: 30, 3: 10 },
+  '2048': { 1: 50, 2: 30, 3: 10 }
+};
+
+let _weeklyRewardSettings = null;
+
+// ── 이전 주 월요일 날짜 계산 (KST 기준) ──
+function _getPrevWeekMonday() {
+  const kst = _kstNow();
+  const day = kst.getUTCDay() || 7;
+  const monday = new Date(kst);
+  monday.setUTCDate(kst.getUTCDate() - (day - 1) - 7);
+  return monday.toISOString().slice(0, 10);
+}
+
+// ── 현재 주 월요일 날짜 계산 (KST 기준) ──
+function _getCurrentWeekMonday() {
+  const kst = _kstNow();
+  const day = kst.getUTCDay() || 7;
+  const monday = new Date(kst);
+  monday.setUTCDate(kst.getUTCDate() - (day - 1));
+  return monday.toISOString().slice(0, 10);
+}
+
+// ── 특정 주의 월~일 범위 반환 ──
+function _getWeekRange(mondayStr) {
+  const sunday = new Date(mondayStr + 'T00:00:00+09:00');
+  sunday.setDate(sunday.getDate() + 6);
+  const sunStr = sunday.toISOString().slice(0, 10);
+  return {
+    from: mondayStr + 'T00:00:00+09:00',
+    to:   sunStr + 'T23:59:59+09:00'
+  };
+}
+
+// ── 보상 설정 로드 ──
+async function loadWeeklyRewardSettings() {
+  try {
+    const { data } = await sb.from('app_settings').select('value')
+      .eq('key', 'weekly_reward_settings').maybeSingle();
+    _weeklyRewardSettings = _parseValue(data?.value) || WEEKLY_REWARD_DEFAULTS;
+  } catch(e) {
+    console.warn('[weeklyReward] 설정 로드 실패', e);
+    _weeklyRewardSettings = WEEKLY_REWARD_DEFAULTS;
+  }
+  return _weeklyRewardSettings;
+}
+
+// ── 보상 설정 저장 (관리자) ──
+async function saveWeeklyRewardSettings() {
+  const settings = {};
+  for (const gameId of Object.keys(MG_DEFAULTS)) {
+    if (gameId === 'roulette') continue;
+    settings[gameId] = {};
+    for (let rank = 1; rank <= 3; rank++) {
+      const input = document.getElementById(`wr_${gameId}_${rank}`);
+      settings[gameId][rank] = parseInt(input?.value) || 0;
+    }
+  }
+  try {
+    await sb.from('app_settings').upsert({ key: 'weekly_reward_settings', value: settings });
+    _weeklyRewardSettings = settings;
+    showToast('✅', '주간 보상 설정이 저장되었습니다');
+  } catch(e) {
+    console.warn('[weeklyReward] 설정 저장 실패', e);
+    showToast('❌', '저장 실패');
+  }
+}
+
+// ── 관리자 보상 설정 UI 렌더 ──
+async function renderWeeklyRewardSettings() {
+  const area = document.getElementById('weeklyRewardSettings');
+  if (!area) return;
+  if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
+  const s = _weeklyRewardSettings;
+
+  const gameIds = Object.keys(MG_DEFAULTS).filter(g => g !== 'roulette');
+  const medals = ['🥇', '🥈', '🥉'];
+
+  let html = '';
+  for (const gameId of gameIds) {
+    const gName = MG_DEFAULTS[gameId]?.icon + ' ' + MG_DEFAULTS[gameId]?.name;
+    const rewards = s[gameId] || WEEKLY_REWARD_DEFAULTS[gameId] || {};
+    html += `<div class="mb-4">
+      <p class="text-sm font-bold text-gray-700 mb-2">${gName}</p>
+      <div class="flex gap-3">`;
+    for (let rank = 1; rank <= 3; rank++) {
+      html += `<div class="flex-1">
+          <label class="text-xs text-gray-500 block mb-1">${medals[rank - 1]} ${rank}위</label>
+          <div class="flex items-center gap-1">
+            <input type="number" id="wr_${gameId}_${rank}" class="field text-sm text-center"
+              value="${rewards[rank] ?? 0}" min="0" style="width:100%">
+            <span class="text-xs text-gray-400">🌰</span>
+          </div>
+        </div>`;
+    }
+    html += `</div></div>`;
+  }
+  html += `<div class="text-right mt-3">
+    <button class="btn btn-primary px-4 py-2 text-sm" onclick="saveWeeklyRewardSettings()">저장</button>
+  </div>`;
+
+  area.innerHTML = html;
+}
+
+// ── 주간 보상 지급 내역 렌더 (관리자) ──
+async function renderWeeklyRewardHistory() {
+  const area = document.getElementById('weeklyRewardHistory');
+  if (!area) return;
+
+  try {
+    const { data } = await sb.from('weekly_ranking_rewards')
+      .select('week_id, game_id, rank, user_id, score, reward_amount, paid, paid_at, created_at')
+      .order('week_id', { ascending: false })
+      .order('game_id').order('rank')
+      .limit(30);
+
+    if (!data?.length) {
+      area.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">지급 내역이 없습니다</p>';
+      return;
+    }
+
+    const uids = [...new Set(data.map(r => r.user_id))];
+    const { data: users } = await sb.from('users').select('id, display_name').in('id', uids);
+    const nameMap = {};
+    (users || []).forEach(u => nameMap[u.id] = u.display_name);
+
+    const medals = ['', '🥇', '🥈', '🥉'];
+    let currentWeek = '';
+    let html = '';
+    for (const r of data) {
+      const weekLabel = r.week_id;
+      if (weekLabel !== currentWeek) {
+        if (currentWeek) html += '</div>';
+        currentWeek = weekLabel;
+        html += `<div class="mb-3"><p class="text-xs font-bold text-gray-500 mb-2">📅 ${weekLabel} 주차</p>`;
+      }
+      const gameIcon = MG_DEFAULTS[r.game_id]?.icon || '🎮';
+      const paidBadge = r.paid
+        ? '<span class="text-xs text-green-600 font-bold">지급완료</span>'
+        : '<span class="text-xs text-amber-500 font-bold">미지급</span>';
+      html += `<div class="flex items-center gap-2 text-sm py-1">
+        <span>${medals[r.rank]}</span>
+        <span>${gameIcon}</span>
+        <span class="flex-1 font-semibold text-gray-700">${nameMap[r.user_id] || '알 수 없음'}</span>
+        <span class="text-gray-500">${r.score.toLocaleString()}점</span>
+        <span class="font-bold text-gray-800">+${r.reward_amount}🌰</span>
+        ${paidBadge}
+      </div>`;
+    }
+    if (currentWeek) html += '</div>';
+    area.innerHTML = html;
+  } catch(e) {
+    console.warn('[weeklyReward] 내역 조회 실패', e);
+    area.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">조회 실패</p>';
+  }
+}
+
+// ──────────────────────────────────────────────
+//  주간 스냅샷 생성 + 보상 지급 (클라이언트 트리거)
+// ──────────────────────────────────────────────
+
+// 앱 시작 시 호출 — 이전 주 스냅샷이 없으면 생성 + 보상 지급
+async function checkAndProcessWeeklyRewards() {
+  try {
+    if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
+
+    const prevMonday = _getPrevWeekMonday();
+
+    // 이미 이전 주 스냅샷이 존재하는지 확인 (멱등성)
+    const { data: existing } = await sb.from('weekly_ranking_rewards')
+      .select('id').eq('week_id', prevMonday).limit(1);
+
+    if (existing?.length) {
+      console.log('[weeklyReward] 이전 주 스냅샷 이미 존재:', prevMonday);
+      // 미지급 보상만 처리
+      await _payUnpaidRewards(prevMonday);
+      return;
+    }
+
+    // 이전 주에 플레이 기록이 있는지 확인
+    const range = _getWeekRange(prevMonday);
+    const gameIds = Object.keys(MG_DEFAULTS).filter(g => g !== 'roulette');
+
+    for (const gameId of gameIds) {
+      const rewards = _weeklyRewardSettings[gameId];
+      if (!rewards) continue;
+
+      // 이전 주 최고 점수 기준 상위 3명
+      const { data: plays } = await sb.from('minigame_plays')
+        .select('user_id, score')
+        .eq('game_id', gameId)
+        .gte('played_at', range.from)
+        .lte('played_at', range.to)
+        .order('score', { ascending: false })
+        .limit(200);
+
+      if (!plays?.length) continue;
+
+      // 유저별 최고 점수
+      const best = {};
+      for (const r of plays) {
+        if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score;
+      }
+      const sorted = Object.entries(best)
+        .map(([uid, score]) => ({ uid, score }))
+        .sort((a, b) => b.score - a.score);
+
+      // 상위 3명 스냅샷 저장
+      for (let i = 0; i < Math.min(3, sorted.length); i++) {
+        const rank = i + 1;
+        const rewardAmount = rewards[rank] || 0;
+        try {
+          await sb.from('weekly_ranking_rewards').upsert({
+            week_id: prevMonday,
+            game_id: gameId,
+            rank: rank,
+            user_id: sorted[i].uid,
+            score: sorted[i].score,
+            reward_amount: rewardAmount,
+            paid: false
+          }, { onConflict: 'week_id,game_id,rank' });
+        } catch(e) {
+          console.warn(`[weeklyReward] 스냅샷 저장 실패 (${gameId} ${rank}위)`, e);
+        }
+      }
+    }
+
+    console.log('[weeklyReward] 이전 주 스냅샷 생성 완료:', prevMonday);
+
+    // 보상 지급 실행
+    await _payUnpaidRewards(prevMonday);
+  } catch(e) {
+    console.warn('[weeklyReward] 주간 보상 처리 실패', e);
+  }
+}
+
+// ── 미지급 보상 처리 ──
+async function _payUnpaidRewards(weekId) {
+  try {
+    const { data: unpaid } = await sb.from('weekly_ranking_rewards')
+      .select('id, user_id, reward_amount, game_id, rank')
+      .eq('week_id', weekId).eq('paid', false);
+
+    if (!unpaid?.length) return;
+
+    for (const r of unpaid) {
+      if (r.reward_amount <= 0) {
+        // 보상이 0이면 지급 처리만
+        await sb.from('weekly_ranking_rewards')
+          .update({ paid: true, paid_at: new Date().toISOString() })
+          .eq('id', r.id);
+        continue;
+      }
+      try {
+        // 도토리 지급
+        const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
+        await sb.rpc('adjust_acorns', {
+          p_user_id: r.user_id,
+          p_amount: r.reward_amount,
+          p_reason: `주간 랭킹 ${r.rank}위 보상 — ${gameName}`
+        });
+        // 지급 완료 표시
+        await sb.from('weekly_ranking_rewards')
+          .update({ paid: true, paid_at: new Date().toISOString() })
+          .eq('id', r.id);
+        console.log(`[weeklyReward] 보상 지급: ${r.game_id} ${r.rank}위 → ${r.reward_amount}🌰`);
+      } catch(e) {
+        console.warn(`[weeklyReward] 보상 지급 실패 (${r.id})`, e);
+      }
+    }
+  } catch(e) {
+    console.warn('[weeklyReward] 미지급 보상 처리 실패', e);
+  }
+}
+
+// ── 유저에게 주간 보상 알림 표시 ──
+async function showWeeklyRewardNotification() {
+  if (!myProfile) return;
+  try {
+    const prevMonday = _getPrevWeekMonday();
+    const { data } = await sb.from('weekly_ranking_rewards')
+      .select('game_id, rank, reward_amount, score')
+      .eq('user_id', myProfile.id).eq('week_id', prevMonday).eq('paid', true);
+
+    if (!data?.length) return;
+
+    const medals = ['', '🥇', '🥈', '🥉'];
+    for (const r of data) {
+      const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
+      showToast(medals[r.rank], `${gameName} 주간 ${r.rank}위! +${r.reward_amount}🌰`);
+    }
+  } catch(e) { console.warn('[weeklyReward] 알림 표시 실패', e); }
 }
