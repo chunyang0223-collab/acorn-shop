@@ -136,9 +136,9 @@ async function _brIncrementWeekly() {
 // ══════════════════════════════════════════════
 async function renderBossRaid() {
   console.log('[BossRaid] renderBossRaid: 진입');
-  const container = document.getElementById('utab-bossraid');
+  const container = _brGetContainer();
   if (!container) { console.log('[BossRaid] renderBossRaid: container 없음!'); return; }
-  console.log('[BossRaid] renderBossRaid: container 찾음, display:', container.style.display, 'offsetParent:', container.offsetParent);
+  console.log('[BossRaid] renderBossRaid: container 찾음, id:', container.id, 'display:', container.style.display, 'offsetParent:', container.offsetParent);
 
   try {
   await _brLoadConfig();
