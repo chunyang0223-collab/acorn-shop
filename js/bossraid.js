@@ -387,7 +387,7 @@ function _brUnsubscribe() {
   }
   _brPollRaidId = null;
   if (_brReplayTimer) {
-    clearInterval(_brReplayTimer);
+    clearTimeout(_brReplayTimer);
     _brReplayTimer = null;
   }
 }
@@ -981,7 +981,7 @@ function _brRenderBattle(container, raid) {
 }
 
 function _brStartReplay(log, partyInit) {
-  if (_brReplayTimer) clearInterval(_brReplayTimer);
+  if (_brReplayTimer) clearTimeout(_brReplayTimer);
 
   // 배경음 재생
   if (typeof _sndPlayBGM === 'function') _sndPlayBGM('boss');
@@ -992,16 +992,23 @@ function _brStartReplay(log, partyInit) {
   // init 엔트리는 스킵
   const skipTypes = ['init'];
 
-  _brReplayTimer = setInterval(() => {
+  // 공격 타입별 딜레이 (ms)
+  function _brGetDelay(entry) {
+    if (!entry) return 470;
+    if (entry.type === 'ultimate') return 700;
+    if (entry.type === 'skill') return 550;
+    if (entry.type === 'boss_attack') return 500;
+    return 420; // 평타
+  }
+
+  function _brReplayStep() {
     if (idx >= log.length) {
-      clearInterval(_brReplayTimer);
       _brReplayTimer = null;
       if (typeof _sndStopBGM === 'function') _sndStopBGM();
       // 파티 영역을 결과 카드로 교체
       setTimeout(() => {
         if (!_brState) return;
         const isVictory = _brState.result === 'victory';
-        // ① 승리 판정: raid_victory BGM 반복재생 / 패배: 효과음만
         if (isVictory) {
           if (typeof _sndPlayBGM === 'function') _sndPlayBGM('raid_victory');
         } else {
@@ -1027,7 +1034,10 @@ function _brStartReplay(log, partyInit) {
     const entry = log[idx];
     idx++;
 
-    if (skipTypes.includes(entry.type)) return;
+    if (skipTypes.includes(entry.type)) {
+      _brReplayTimer = setTimeout(_brReplayStep, 0);
+      return;
+    }
 
     // 로그 표시
     if (entry.text) {
@@ -1165,7 +1175,13 @@ function _brStartReplay(log, partyInit) {
       }
     }
 
-  }, 470);
+    // 다음 엔트리 딜레이 결정 후 예약
+    var nextDelay = _brGetDelay(log[idx]);
+    _brReplayTimer = setTimeout(_brReplayStep, nextDelay);
+  }
+
+  // 첫 스텝 시작
+  _brReplayTimer = setTimeout(_brReplayStep, _brGetDelay(log[0]));
 }
 
 // ── 데미지 팝업 헬퍼 ──
@@ -1185,7 +1201,21 @@ function _brShowDmgPopup(parentId, dmg, type) {
   popup.style.left = 'calc(50% + ' + offsetX + 'px)';
   parent.style.position = 'relative';
   parent.appendChild(popup);
-  setTimeout(() => popup.remove(), 900);
+  var removeDelay = type === 'ultimate' ? 1200 : type === 'hit' ? 900 : 1000;
+  setTimeout(() => popup.remove(), removeDelay);
+
+  // 필살기 파티클 효과
+  if (type === 'ultimate') {
+    for (var pi = 0; pi < 8; pi++) {
+      var spark = document.createElement('div');
+      spark.className = 'br-ulti-spark';
+      var sx = (Math.random() - 0.5) * 60;
+      var sy = (Math.random() - 0.5) * 40;
+      spark.style.cssText = 'left:calc(50% + ' + offsetX + 'px);--sx:' + sx + 'px;--sy:' + sy + 'px;animation-delay:' + (pi * 30) + 'ms';
+      parent.appendChild(spark);
+      setTimeout(function(s) { return function() { s.remove(); }; }(spark), 800);
+    }
+  }
 }
 
 // ── 딜 미터기 갱신 ──
@@ -1275,7 +1305,7 @@ async function _brRenderResult(container, raid) {
   if (_brResultRendered) return;
   _brResultRendered = true;
 
-  if (_brReplayTimer) { clearInterval(_brReplayTimer); _brReplayTimer = null; }
+  if (_brReplayTimer) { clearTimeout(_brReplayTimer); _brReplayTimer = null; }
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
 
   const isHost = raid.host_id === myProfile.id;
