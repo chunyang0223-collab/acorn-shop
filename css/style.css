@@ -6383,11 +6383,12 @@ input[type="checkbox"]:active,
 .br-dmg-bar-track {
   flex: 1; height: 13px; background: rgba(255,255,255,0.06); border-radius: 6px;
   overflow: hidden; display: flex; position: relative; cursor: default;
+  box-shadow: 0 0 4px rgba(255,255,255,0.08), inset 0 1px 2px rgba(0,0,0,0.3);
 }
 .br-dmg-seg { height: 100%; transition: width .5s ease; min-width: 0; opacity: 1; }
-.br-dmg-seg-atk  { background: #ea580c; }
-.br-dmg-seg-skill { background: #eab308; }
-.br-dmg-seg-ulti  { background: #dc2626; }
+.br-dmg-seg-atk  { background: #9ca3af; box-shadow: 0 0 6px rgba(156,163,175,0.4); }
+.br-dmg-seg-skill { background: #facc15; box-shadow: 0 0 8px rgba(250,204,21,0.5); }
+.br-dmg-seg-ulti  { background: #dc2626; box-shadow: 0 0 10px rgba(220,38,38,0.6); }
 .br-dmg-seg:first-child { border-radius: 6px 0 0 6px; }
 .br-dmg-seg:last-child { border-radius: 0 6px 6px 0; }
 .br-dmg-seg:only-child { border-radius: 6px; }
