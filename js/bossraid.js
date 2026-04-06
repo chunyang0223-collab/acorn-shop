@@ -902,7 +902,7 @@ function _brRenderBattle(container, raid) {
 
   // 딜 미터기 초기화 데이터
   window._brDmgData = {};
-  party.forEach(sq => { window._brDmgData[sq.id] = { name: sq.name, ownerName: sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'), owner: sq.owner, gradeColor: sq.gradeColor || '#e2e8f0', dmg: 0 }; });
+  party.forEach(sq => { window._brDmgData[sq.id] = { name: sq.name, ownerName: sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'), owner: sq.owner, gradeColor: sq.gradeColor || '#e2e8f0', dmg: 0, dmgAtk: 0, dmgSkill: 0, dmgUlti: 0 }; });
 
   container.innerHTML = `
     <div class="br-battle-wrap">
@@ -957,10 +957,11 @@ function _brRenderBattle(container, raid) {
               <span class="br-dmg-owner" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">${_escHtml(sq.ownerName || '')}</span>
               <span class="br-dmg-name" style="color:${sq.gradeColor || '#e2e8f0'}">${sq.name}</span>
             </div>
-            <div class="br-dmg-bar-track">
-              <div class="br-dmg-bar-fill ${sq.owner === 'host' ? 'br-dmg-host' : 'br-dmg-guest'}" id="brDmgBar_${sq.id}" style="width:0%">
-                <span id="brDmgVal_${sq.id}">0</span>
-              </div>
+            <div class="br-dmg-bar-track" id="brDmgBar_${sq.id}" title="">
+              <div class="br-dmg-seg br-dmg-seg-atk" id="brDmgSeg_atk_${sq.id}" style="width:0%"></div>
+              <div class="br-dmg-seg br-dmg-seg-skill" id="brDmgSeg_skill_${sq.id}" style="width:0%"></div>
+              <div class="br-dmg-seg br-dmg-seg-ulti" id="brDmgSeg_ulti_${sq.id}" style="width:0%"></div>
+              <span class="br-dmg-val" id="brDmgVal_${sq.id}">0</span>
             </div>
             <div class="br-dmg-pct" id="brDmgPct_${sq.id}" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">0%</div>
           </div>
@@ -1106,11 +1107,14 @@ function _brStartReplay(log, partyInit) {
         _brShowDmgPopup('brBossEmoji', entry.dmg, entry.type);
       }
 
-      // 딜 미터기 업데이트
+      // 딜 미터기 업데이트 (타입별 분류)
       if (entry.dmg && entry.sqId && window._brDmgData) {
         const dd = window._brDmgData[entry.sqId];
         if (dd) {
           dd.dmg += entry.dmg;
+          if (entry.type === 'ultimate') dd.dmgUlti += entry.dmg;
+          else if (entry.type === 'skill') dd.dmgSkill += entry.dmg;
+          else dd.dmgAtk += entry.dmg;
           _brUpdateDmgMeter();
         }
       }
@@ -1256,12 +1260,32 @@ function _brUpdateDmgMeter() {
   for (const e of entries) {
     const pct = Math.round(e.dmg / totalDmg * 100);
     const barW = Math.max(2, e.dmg / maxDmg * 100);
-    const bar = document.getElementById('brDmgBar_' + e.id);
     const val = document.getElementById('brDmgVal_' + e.id);
     const pctEl = document.getElementById('brDmgPct_' + e.id);
-    if (bar) bar.style.width = barW + '%';
     if (val) val.textContent = e.dmg;
     if (pctEl) pctEl.textContent = pct + '%';
+
+    // 타입별 세그먼트 비율 계산
+    var eDmg = e.dmg || 1;
+    var atkW = e.dmgAtk / eDmg * barW;
+    var skillW = e.dmgSkill / eDmg * barW;
+    var ultiW = e.dmgUlti / eDmg * barW;
+
+    var segAtk = document.getElementById('brDmgSeg_atk_' + e.id);
+    var segSkill = document.getElementById('brDmgSeg_skill_' + e.id);
+    var segUlti = document.getElementById('brDmgSeg_ulti_' + e.id);
+    if (segAtk) segAtk.style.width = atkW + '%';
+    if (segSkill) segSkill.style.width = skillW + '%';
+    if (segUlti) segUlti.style.width = ultiW + '%';
+
+    // 툴팁
+    var track = document.getElementById('brDmgBar_' + e.id);
+    if (track && e.dmg > 0) {
+      var atkPct = Math.round(e.dmgAtk / e.dmg * 100);
+      var skillPct = Math.round(e.dmgSkill / e.dmg * 100);
+      var ultiPct = Math.round(e.dmgUlti / e.dmg * 100);
+      track.title = '평타 ' + e.dmgAtk + ' (' + atkPct + '%) / 스킬 ' + e.dmgSkill + ' (' + skillPct + '%) / 필살기 ' + e.dmgUlti + ' (' + ultiPct + '%)';
+    }
   }
 }
 
