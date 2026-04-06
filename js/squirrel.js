@@ -286,8 +286,11 @@ function sqTab(tab) {
 //  초기화
 // ================================================================
 async function sqInit() {
+  console.log('[sqInit] 시작');
   await sqLoadSettings();
+  console.log('[sqInit] sqLoadSettings 완료');
   await sqLoadSquirrels();
+  console.log('[sqInit] sqLoadSquirrels 완료, _sqSquirrels =', _sqSquirrels?.length);
   await sqLoadActiveExpedition();
   _sqSubscribe();
   // 최초 진입 시 배경음 (기본 탭이 '내 다람쥐')
@@ -430,8 +433,10 @@ async function sqLoadSettings() {
 //  다람쥐 목록 로드 (초기 진입·탐험 시작에만 사용)
 // ================================================================
 async function sqLoadSquirrels() {
-  const { data } = await sb.from('squirrels')
+  console.log('[sqLoadSquirrels] DB 조회 시작, user_id =', myProfile?.id);
+  const { data, error } = await sb.from('squirrels')
     .select('*').eq('user_id', myProfile.id).order('created_at');
+  console.log('[sqLoadSquirrels] DB 조회 완료, data =', data?.length, ', error =', error);
   _sqSquirrels = data || [];
 
   // grows_at 만료 서버 체크 → grows_at만 null로, 성장은 사용자가 버튼으로
@@ -471,8 +476,9 @@ async function sqLoadSquirrels() {
 //  그리드 렌더링 (초기 진입·전체 재렌더 시에만)
 // ================================================================
 async function sqRenderGrid() {
+  console.log('[sqRenderGrid] 호출됨, _sqSquirrels =', _sqSquirrels?.length);
   const grid = document.getElementById('squirrelGrid');
-  if (!grid) return;
+  if (!grid) { console.log('[sqRenderGrid] grid 요소 없음, return'); return; }
   document.getElementById('squirrelCount')?.setAttribute('textContent', _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10));
   const countEl = document.getElementById('squirrelCount');
   if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);

@@ -264,10 +264,15 @@ async function aTab(tab, btn) {
     // 다람쥐 탭 초기화 (독립 atab-sq_* 사용)
     if (!_sqAdminInited) {
       _sqAdminInited = true;
+      console.log('[aTab] sqInit 시작');
       if (typeof sqInit === 'function') await sqInit();
+      console.log('[aTab] sqInit 완료');
+      console.log('[aTab] sqAdminInit 시작');
       if (typeof sqAdminInit === 'function') await sqAdminInit();
+      console.log('[aTab] sqAdminInit 완료');
     }
     const subTab = sqSubMap[tab];
+    console.log('[aTab] subTab =', subTab, '/ _sqSquirrels =', _sqSquirrels?.length);
     if (subTab === 'my')         sqRenderGrid();
     if (subTab === 'shop')       {} // 정적 HTML
     if (subTab === 'fuse')       { if (typeof sqFuseInit === 'function') sqFuseInit(); }
@@ -534,6 +539,44 @@ function renderMaintenanceBtns() {
       btn.title = '정상 운영 중 (클릭하여 점검 전환)';
     }
   });
+  renderMinigameAllBtn();
+}
+
+// ── 미니게임 전체 점검 토글 (maintenance.minigame + minigame_settings 일괄 동기화) ──
+const MG_SUB_IDS = ['catch', '2048', 'roulette'];
+
+async function toggleMinigameAll() {
+  // 1) maintenance.minigame 토글
+  const { data } = await sb.from('app_settings').select('value').eq('key', 'maintenance').single();
+  const maint = data?.value || {};
+  maint.minigame = !maint.minigame;
+  await sb.from('app_settings').update({ value: maint, updated_at: new Date().toISOString() }).eq('key', 'maintenance');
+  window._maintSettings = maint;
+  renderMaintenanceBtns();
+
+  // 2) minigame_settings 하위 게임도 일괄 동기화
+  await loadMinigameSettings();
+  MG_SUB_IDS.forEach(id => {
+    if (!_mgSettings[id]) _mgSettings[id] = {};
+    _mgSettings[id].maintenance = maint.minigame;
+  });
+  await sb.from('app_settings').update({ value: _mgSettings, updated_at: new Date().toISOString() }).eq('key', 'minigame_settings');
+  renderMgMaintBtns();
+  renderMinigameAllBtn();
+  toast(maint.minigame ? '🔧' : '✅', `미니게임 전체 ${maint.minigame ? '점검 중으로 전환' : '정상 운영으로 전환'}`);
+}
+
+function renderMinigameAllBtn() {
+  const btn = document.getElementById('maint-minigame-all');
+  if (!btn) return;
+  const maint = window._maintSettings || {};
+  if (maint.minigame) {
+    btn.classList.add('on');
+    btn.title = '점검 중 (클릭하여 해제)';
+  } else {
+    btn.classList.remove('on');
+    btn.title = '정상 운영 중 (클릭하여 점검 전환)';
+  }
 }
 
 // ── 미니게임 개별 점검 토글 (minigame_settings 내 maintenance 필드) ──
