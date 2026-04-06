@@ -978,7 +978,13 @@ async function renderAdminRanking() {
       .eq('game_id', gameId).gte('played_at', range.from).lte('played_at', range.to)
       .order('score', { ascending: false }).limit(200);
 
-    if (!data?.length) { list.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">📊 ${_periodLabel(_adminRankPeriod)} 기록이 없습니다</p>`; renderMinigameLog(); return; }
+    if (!data?.length) {
+      list.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">📊 ${_periodLabel(_adminRankPeriod)} 기록이 없습니다</p>`;
+      if (_mgLogOpen) renderMinigameLog();
+      renderWeeklyRewardSettings();
+      renderWeeklyRewardHistory();
+      return;
+    }
 
     const best = {};
     for (const r of data) { if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score; }
@@ -1168,8 +1174,9 @@ async function saveWeeklyRewardSettings() {
 
 // ── 관리자 보상 설정 UI 렌더 ──
 async function renderWeeklyRewardSettings() {
+  console.log('[weeklyReward] renderWeeklyRewardSettings 호출');
   const area = document.getElementById('weeklyRewardSettings');
-  if (!area) return;
+  if (!area) { console.warn('[weeklyReward] #weeklyRewardSettings 엘리먼트 없음'); return; }
   if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
   const s = _weeklyRewardSettings;
 
@@ -1204,8 +1211,9 @@ async function renderWeeklyRewardSettings() {
 
 // ── 주간 보상 지급 내역 렌더 (관리자) ──
 async function renderWeeklyRewardHistory() {
+  console.log('[weeklyReward] renderWeeklyRewardHistory 호출');
   const area = document.getElementById('weeklyRewardHistory');
-  if (!area) return;
+  if (!area) { console.warn('[weeklyReward] #weeklyRewardHistory 엘리먼트 없음'); return; }
 
   try {
     const { data } = await sb.from('weekly_ranking_rewards')
