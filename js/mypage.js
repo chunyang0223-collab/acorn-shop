@@ -265,7 +265,7 @@ function _renderInvGrid() {
     const pageItems = items.slice(pg * PAGE_SIZE, (pg + 1) * PAGE_SIZE);
     let slotsHtml = '';
     for (const item of pageItems) {
-      const p = item.product_snapshot || item.products || {};
+      const p = { ...(item.products || {}), ...(item.product_snapshot || {}) };
       const isPending = pendingIds.has(item.id);
       const qty = item.quantity || 1;
       const showQty = qty > 1;
@@ -336,7 +336,7 @@ function goInvPage(pg) {
 function openInvDetail(inventoryId) {
   const item = (window._invCache || []).find(i => i.id === inventoryId);
   if (!item) return;
-  const p = item.product_snapshot || item.products || {};
+  const p = { ...(item.products || {}), ...(item.product_snapshot || {}) };
   const isPending = (window._invPendingIds || new Set()).has(item.id);
 
   const isCoupon       = p.reward_type === 'COUPON';
@@ -700,22 +700,8 @@ async function _confirmUseItemInner(inventoryId) {
         if (res.data?.success) myProfile.acorns = res.data.balance;
         grantedItems.push({ icon: it.icon, name: it.name, qty, method: 'acorn' });
       } else {
-        // 일반 아이템 → 인벤토리에 삽입
-        for (let q = 0; q < qty; q++) {
-          await sb.from('inventory').insert({
-            user_id: myProfile.id,
-            product_id: null,
-            product_snapshot: {
-              name: it.name,
-              icon: it.icon || '🎁',
-              reward_type: it.reward_type || 'MANUAL_ITEM',
-              description: `주간 랭킹 보상으로 획득`
-            },
-            quantity: 1,
-            status: 'held',
-            from_gacha: false
-          });
-        }
+        // 일반 아이템 → grantItem으로 지급 (스택형 아이템 자동 합산)
+        await grantItem(myProfile.id, it.name, qty);
         grantedItems.push({ icon: it.icon, name: it.name, qty, method: 'inventory' });
       }
     }

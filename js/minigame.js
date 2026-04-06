@@ -1217,7 +1217,9 @@ async function openWrItemPicker(gameId, rank, slotIdx) {
     <div class="text-xs font-bold text-gray-500">직접 입력</div>
   </div>`;
 
-  for (const p of (products || [])) {
+  // AUTO_ACORN은 뽑기 즉시 도토리 합산 전용 — 선물상자 구성품으로 사용 불가
+  const filtered = (products || []).filter(p => p.reward_type !== 'AUTO_ACORN');
+  for (const p of filtered) {
     const escaped = (p.name || '').replace(/'/g, "\\'");
     const rtype = (p.reward_type || '').replace(/'/g, "\\'");
     html += `<div class="wr-item-pick-card" onclick="_wrPickItem('${escaped}','${p.icon || '🎁'}','${rtype}')">

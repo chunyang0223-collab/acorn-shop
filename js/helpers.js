@@ -8,7 +8,7 @@ async function grantItem(userId, itemName, qty) {
   qty = qty || 1;
   // products에서 조회 (active 여부 무관 — 비활성 아이템도 지급 가능)
   const { data: prod } = await sb.from('products')
-    .select('id,name,icon,item_type,reward_type,stackable,max_stack')
+    .select('id,name,icon,item_type,reward_type,stackable,max_stack,discount_pct,acorn_amt')
     .eq('name', itemName).limit(1).maybeSingle();
 
   // product가 DB에 없으면 기존 인벤토리 스냅샷에서 메타 복원 시도
@@ -31,6 +31,9 @@ async function grantItem(userId, itemName, qty) {
   const maxStack = meta.max_stack || (isStackable ? 99 : 1);
   const productId = meta.id || null;
   const snapshot = { name: meta.name, icon: meta.icon, reward_type: meta.reward_type };
+  // 타입별 핵심 속성 보존 (쿠폰 할인율, 도토리 교환량 등)
+  if (meta.discount_pct) snapshot.discount_pct = meta.discount_pct;
+  if (meta.acorn_amt) snapshot.acorn_amt = meta.acorn_amt;
 
   if (isStackable) {
     // 스택형: 기존 보유 확인 — product_id 또는 snapshot 이름 매칭
