@@ -961,7 +961,7 @@ function _brRenderBattle(container, raid) {
               <div class="br-dmg-seg br-dmg-seg-atk" id="brDmgSeg_atk_${sq.id}" style="width:0%"></div>
               <div class="br-dmg-seg br-dmg-seg-skill" id="brDmgSeg_skill_${sq.id}" style="width:0%"></div>
               <div class="br-dmg-seg br-dmg-seg-ulti" id="brDmgSeg_ulti_${sq.id}" style="width:0%"></div>
-              <span class="br-dmg-val" id="brDmgVal_${sq.id}">0</span>
+              <span class="br-dmg-val" id="brDmgVal_${sq.id}" style="display:none">0</span>
             </div>
             <div class="br-dmg-pct" id="brDmgPct_${sq.id}" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">0%</div>
           </div>
