@@ -202,8 +202,8 @@ async function _pollSync() {
       const rd = await rr.json();
       if (Array.isArray(rd)) {
         const cnt = rd.length;
-        // 배지 업데이트
-        const badge = document.getElementById('reqBadge');
+        // 배지 업데이트 (탭바)
+        const badge = document.getElementById('reqBadgeTab');
         if (badge) {
           if (cnt > 0) {
             badge.textContent = cnt > 9 ? '9+' : cnt;

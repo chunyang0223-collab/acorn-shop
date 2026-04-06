@@ -378,195 +378,159 @@ function exitMinigame() {
 //  관리자: 미니게임 설정 UI
 // ══════════════════════════════════════════════
 
+var _mgActiveTab = 'catch';
+
+function _mgSwitchTab(gameId) {
+  _mgActiveTab = gameId;
+  var games = ['catch', '2048', 'roulette'];
+  games.forEach(function(id) {
+    var pane = document.getElementById('mgPane-' + id);
+    var btn  = document.getElementById('mgTabBtn-' + id);
+    if (!pane || !btn) return;
+    if (id === gameId) {
+      pane.classList.remove('hidden');
+      btn.classList.add('mg-tab-active');
+    } else {
+      pane.classList.add('hidden');
+      btn.classList.remove('mg-tab-active');
+    }
+  });
+}
+
 async function renderMinigameAdmin() {
   await loadMinigameSettings();
   const list  = document.getElementById('mgSettingsList');
   const games = ['catch', '2048', 'roulette'];
 
-  list.innerHTML = games.map(id => {
-    const def = MG_DEFAULTS[id];
-    const s   = _mgSettings[id] || {};
-    const val = (key) => s[key] ?? def[key];
+  /* ── 탭 버튼 ── */
+  var tabBar = '<div class="mg-tab-bar">' +
+    games.map(function(id) {
+      var def = MG_DEFAULTS[id];
+      var s   = _mgSettings[id] || {};
+      var isMaint = (s.maintenance ?? def.maintenance);
+      return '<button id="mgTabBtn-' + id + '" class="mg-tab-btn' + (id === _mgActiveTab ? ' mg-tab-active' : '') + '" onclick="_mgSwitchTab(\'' + id + '\')">' +
+        '<span class="mg-tab-icon">' + def.icon + '</span>' +
+        '<span class="mg-tab-name">' + def.name + '</span>' +
+        (isMaint ? '<span class="mg-tab-badge-maint">점검</span>' : '') +
+      '</button>';
+    }).join('') +
+  '</div>';
 
-    // 룰렛은 전용 UI
+  /* ── 각 게임 패널 ── */
+  var panes = games.map(function(id) {
+    var def = MG_DEFAULTS[id];
+    var s   = _mgSettings[id] || {};
+    var val = function(key) { return s[key] ?? def[key]; };
+    var hidden = id === _mgActiveTab ? '' : ' hidden';
+
+    var inner = '';
+
+    /* 공통 헤더: 점검 토글 */
+    inner += '<div class="flex items-center justify-between mb-3">' +
+      '<h3 class="font-black text-gray-800 text-base">' + def.icon + ' ' + def.name + '</h3>' +
+      '<label class="flex items-center gap-2 cursor-pointer">' +
+        '<span class="text-xs font-bold ' + (val('maintenance') ? 'text-red-500' : 'text-gray-400') + '">🔧 점검</span>' +
+        '<input type="checkbox" id="mg-' + id + '-maintenance" ' + (val('maintenance') ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:#ef4444">' +
+      '</label>' +
+    '</div>';
+
+    inner += '<div class="space-y-2">';
+
     if (id === 'roulette') {
+      /* ── 룰렛 전용 ── */
       var rProb = s.probs || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
       var rWidth = s.widths || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
-      return `
-      <div class="clay-card p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="font-black text-gray-800 text-base">${def.icon} ${def.name}</h3>
-          <label class="flex items-center gap-2 cursor-pointer">
-            <span class="text-xs font-bold ${val('maintenance') ? 'text-red-500' : 'text-gray-400'}">🔧 점검</span>
-            <input type="checkbox" id="mg-roulette-maintenance" ${val('maintenance') ? 'checked' : ''} style="width:18px;height:18px;accent-color:#ef4444">
-          </label>
-        </div>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
-            <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-roulette-playLimit" value="${val('playLimit')}">
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 1일 보상 횟수</label>
-            <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-roulette-rewardLimit" value="${val('rewardLimit')}">
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 참가비 (기본)</label>
-            <input class="field text-center" type="number" min="1" max="1000" style="width:80px" id="mg-roulette-entryFee" value="${val('entryFee')}">
-          </div>
-          <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
-          <div class="text-xs font-black text-gray-600 mb-1">🎯 당첨 확률 (합계 100%)</div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">꽝 (0배)</label>
-            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-miss" value="${rProb.miss}"><span class="text-xs text-gray-400">%</span></div>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1 (본전)</label>
-            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-x1" value="${rProb.x1}"><span class="text-xs text-gray-400">%</span></div>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1.5 (소당첨)</label>
-            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-x15" value="${rProb.x15}"><span class="text-xs text-gray-400">%</span></div>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×3 (당첨)</label>
-            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" style="width:60px" id="mg-roulette-prob-x3" value="${rProb.x3}"><span class="text-xs text-gray-400">%</span></div>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×10 (대박)</label>
-            <div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100" step="0.1" style="width:60px" id="mg-roulette-prob-x10" value="${rProb.x10}"><span class="text-xs text-gray-400">%</span></div>
-          </div>
-          <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
-          <div class="text-xs font-black text-gray-600 mb-1">🎡 룰렛 칸 너비 (보이는 비율, 합계 100)</div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">꽝</label>
-            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-miss" value="${rWidth.miss}">
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1</label>
-            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x1" value="${rWidth.x1}">
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×1.5</label>
-            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x15" value="${rWidth.x15}">
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×3</label>
-            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x3" value="${rWidth.x3}">
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <label class="text-xs font-bold text-gray-400 whitespace-nowrap">×10</label>
-            <input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-x10" value="${rWidth.x10}">
-          </div>
-        </div>
-        <button class="btn btn-primary w-full py-2 mt-3 text-sm" onclick="saveMinigameSetting('roulette')">💾 저장</button>
-      </div>`;
+
+      inner += _mgRow('🎮 1일 도전 횟수', '<input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-roulette-playLimit" value="' + val('playLimit') + '">');
+      inner += _mgRow('🌰 1일 보상 횟수', '<input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-roulette-rewardLimit" value="' + val('rewardLimit') + '">');
+      inner += _mgRow('🌰 참가비 (기본)', '<input class="field text-center" type="number" min="1" max="1000" style="width:80px" id="mg-roulette-entryFee" value="' + val('entryFee') + '">');
+      inner += _mgSep();
+      inner += '<div class="text-xs font-black text-gray-600 mb-1">🎯 당첨 확률 (합계 100%)</div>';
+      var probKeys = [['miss','꽝 (0배)'],['x1','×1 (본전)'],['x15','×1.5 (소당첨)'],['x3','×3 (당첨)'],['x10','×10 (대박)']];
+      probKeys.forEach(function(pk) {
+        var step = pk[0] === 'x10' ? ' step="0.1"' : '';
+        inner += _mgRow(pk[1], '<div class="flex items-center gap-1"><input class="field text-center" type="number" min="0" max="100"' + step + ' style="width:60px" id="mg-roulette-prob-' + pk[0] + '" value="' + rProb[pk[0]] + '"><span class="text-xs text-gray-400">%</span></div>', true);
+      });
+      inner += _mgSep();
+      inner += '<div class="text-xs font-black text-gray-600 mb-1">🎡 룰렛 칸 너비 (보이는 비율, 합계 100)</div>';
+      [['miss','꽝'],['x1','×1'],['x15','×1.5'],['x3','×3'],['x10','×10']].forEach(function(wk) {
+        inner += _mgRow(wk[1], '<input class="field text-center" type="number" min="1" max="100" style="width:60px" id="mg-roulette-width-' + wk[0] + '" value="' + rWidth[wk[0]] + '">', true);
+      });
+    } else {
+      /* ── 캐치 / 2048 공통 ── */
+      inner += '<div class="flex items-center justify-between gap-3">' +
+        '<label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>' +
+        '<div class="flex items-center gap-2">' +
+          '<input class="field text-center" type="number" min="0" max="100" style="width:70px" id="mg-' + id + '-playLimit" value="' + val('playLimit') + '"' + (val('unlimitedPlays') ? ' disabled style="width:70px;opacity:0.4"' : '') + '>' +
+          '<label class="flex items-center gap-1 cursor-pointer">' +
+            '<input type="checkbox" id="mg-' + id + '-unlimitedPlays" ' + (val('unlimitedPlays') ? 'checked' : '') + ' onchange="document.getElementById(\'mg-' + id + '-playLimit\').disabled=this.checked;document.getElementById(\'mg-' + id + '-playLimit\').style.opacity=this.checked?\'0.4\':\'1\'" style="width:16px;height:16px">' +
+            '<span class="text-xs font-bold text-gray-400">무제한</span>' +
+          '</label>' +
+        '</div>' +
+      '</div>';
+
+      if (id !== '2048') {
+        inner += _mgRow('🌰 1일 보상 횟수', '<input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-' + id + '-rewardLimit" value="' + val('rewardLimit') + '">');
+      }
+      inner += _mgRow('🌰 참가비', '<input class="field text-center" type="number" min="0" max="1000" style="width:80px" id="mg-' + id + '-entryFee" value="' + val('entryFee') + '">');
+
+      if (id !== '2048') {
+        inner += _mgRow('📊 N점당 1도토리', '<input class="field text-center" type="number" min="1" max="1000" style="width:80px" id="mg-' + id + '-rewardRate" value="' + val('rewardRate') + '">');
+        inner += _mgRow('🎁 최대 보상', '<input class="field text-center" type="number" min="0" max="1000" style="width:80px" id="mg-' + id + '-maxReward" value="' + val('maxReward') + '">');
+      }
+
+      if (id === '2048') {
+        inner += _mgSep();
+        inner += '<div class="text-xs font-black text-gray-600 mb-1">🌰 도토리 드롭</div>';
+        inner += _mgRow('합칠 때 드롭 확률(%)', '<input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-2048-dropChance" value="' + (val('dropChance') ?? 20) + '">', true);
+        inner += _mgRow('최소 드롭 개수', '<input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropMin" value="' + (val('dropMin') ?? 1) + '">', true);
+        inner += _mgRow('최대 드롭 개수', '<input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropMax" value="' + (val('dropMax') ?? 1) + '">', true);
+        inner += _mgSep();
+        inner += '<div class="text-xs font-black text-gray-600 mb-1">🎫 아이템 드롭 (뽑기 티켓)</div>';
+        inner += _mgRow('합칠 때 드롭 확률(%)', '<input class="field text-center" type="number" min="0" max="100" step="0.1" style="width:80px" id="mg-2048-itemDropChance" value="' + (val('itemDropChance') ?? 0) + '">', true);
+        inner += _mgRow('드롭 개수', '<input class="field text-center" type="number" min="1" max="10" style="width:80px" id="mg-2048-itemDropAmount" value="' + (val('itemDropAmount') ?? 1) + '">', true);
+        inner += '<p class="text-xs text-gray-400 mt-1">0%로 두면 아이템 꺼짐. 도토리와 독립 확률.</p>';
+      }
+
+      if (def.duration > 0 || id === 'catch' || id === '2048') {
+        inner += _mgRow('⏱ 게임 시간(초)', '<input class="field text-center" type="number" min="10" max="300" style="width:80px" id="mg-' + id + '-duration" value="' + val('duration') + '">');
+      }
+      if (id === 'catch') {
+        inner += _mgRow('🐌 시작 속도', '<input class="field text-center" type="number" min="0.5" max="10" step="0.1" style="width:80px" id="mg-' + id + '-baseSpeed" value="' + (val('baseSpeed') ?? 2.2) + '">');
+        inner += _mgRow('🚀 최대 속도', '<input class="field text-center" type="number" min="1" max="20" step="0.1" style="width:80px" id="mg-' + id + '-maxSpeed" value="' + (val('maxSpeed') ?? 5.5) + '">');
+      }
+      if (id === '2048') {
+        inner += _mgSep();
+        inner += '<div class="text-xs font-black text-gray-600 mb-1">💀 폭탄 설정</div>';
+        inner += _mgRow('폭탄 시작 턴', '<input class="field text-center" type="number" min="1" max="20" style="width:80px" id="mg-2048-bombStartTurn" value="' + (val('bombStartTurn') ?? 3) + '">', true);
+        inner += _mgRow('최대 등장 확률(%)', '<input class="field text-center" type="number" min="5" max="100" style="width:80px" id="mg-2048-bombMaxChance" value="' + (val('bombMaxChance') ?? 60) + '">', true);
+        inner += _mgSep();
+        inner += '<div class="text-xs font-black text-gray-600 mb-1">🔥 보너스 설정</div>';
+        inner += _mgRow('💥 상쇄 보너스(초)', '<input class="field text-center" type="number" min="0" max="10" step="0.1" style="width:80px" id="mg-2048-defuseBonus" value="' + (val('defuseBonus') ?? 1.2) + '">', true);
+        inner += _mgRow('🔥 콤보당 보너스(초)', '<input class="field text-center" type="number" min="0" max="5" step="0.1" style="width:80px" id="mg-2048-comboBonus" value="' + (val('comboBonus') ?? 0.5) + '">', true);
+      }
     }
 
-    return `
-    <div class="clay-card p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-black text-gray-800 text-base">${def.icon} ${def.name}</h3>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <span class="text-xs font-bold ${val('maintenance') ? 'text-red-500' : 'text-gray-400'}">🔧 점검</span>
-          <input type="checkbox" id="mg-${id}-maintenance" ${val('maintenance') ? 'checked' : ''} style="width:18px;height:18px;accent-color:#ef4444">
-        </label>
-      </div>
-      <div class="space-y-2">
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎮 1일 도전 횟수</label>
-          <div class="flex items-center gap-2">
-            <input class="field text-center" type="number" min="0" max="100" style="width:70px" id="mg-${id}-playLimit" value="${val('playLimit')}" ${val('unlimitedPlays') ? 'disabled style="width:70px;opacity:0.4"' : ''}>
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input type="checkbox" id="mg-${id}-unlimitedPlays" ${val('unlimitedPlays') ? 'checked' : ''} onchange="document.getElementById('mg-${id}-playLimit').disabled=this.checked;document.getElementById('mg-${id}-playLimit').style.opacity=this.checked?'0.4':'1'" style="width:16px;height:16px">
-              <span class="text-xs font-bold text-gray-400">무제한</span>
-            </label>
-          </div>
-        </div>
-        ${id !== '2048' ? `
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 1일 보상 횟수</label>
-          <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-${id}-rewardLimit" value="${val('rewardLimit')}">
-        </div>` : ''}
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🌰 참가비</label>
-          <input class="field text-center" type="number" min="0" max="1000" style="width:80px" id="mg-${id}-entryFee" value="${val('entryFee')}">
-        </div>
-        ${id !== '2048' ? `
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">📊 N점당 1도토리</label>
-          <input class="field text-center" type="number" min="1" max="1000" style="width:80px" id="mg-${id}-rewardRate" value="${val('rewardRate')}">
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🎁 최대 보상</label>
-          <input class="field text-center" type="number" min="0" max="1000" style="width:80px" id="mg-${id}-maxReward" value="${val('maxReward')}">
-        </div>` : ''}
-        ${id === '2048' ? `
-        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
-        <div class="text-xs font-black text-gray-600 mb-1">🌰 도토리 드롭</div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">합칠 때 드롭 확률(%)</label>
-          <input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-2048-dropChance" value="${val('dropChance') ?? 20}">
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">최소 드롭 개수</label>
-          <input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropMin" value="${val('dropMin') ?? 1}">
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">최대 드롭 개수</label>
-          <input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-2048-dropMax" value="${val('dropMax') ?? 1}">
-        </div>
-        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
-        <div class="text-xs font-black text-gray-600 mb-1">🎫 아이템 드롭 (뽑기 티켓)</div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">합칠 때 드롭 확률(%)</label>
-          <input class="field text-center" type="number" min="0" max="100" step="0.1" style="width:80px" id="mg-2048-itemDropChance" value="${val('itemDropChance') ?? 0}">
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">드롭 개수</label>
-          <input class="field text-center" type="number" min="1" max="10" style="width:80px" id="mg-2048-itemDropAmount" value="${val('itemDropAmount') ?? 1}">
-        </div>
-        <p class="text-xs text-gray-400 mt-1">0%로 두면 아이템 꺼짐. 도토리와 독립 확률.</p>` : ''}
-        ${def.duration > 0 || id === 'catch' || id === '2048' ? `
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">⏱ 게임 시간(초)</label>
-          <input class="field text-center" type="number" min="10" max="300" style="width:80px" id="mg-${id}-duration" value="${val('duration')}">
-        </div>` : ''}
-        ${id === 'catch' ? `
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🐌 시작 속도</label>
-          <input class="field text-center" type="number" min="0.5" max="10" step="0.1" style="width:80px" id="mg-${id}-baseSpeed" value="${val('baseSpeed') ?? 2.2}">
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-500 whitespace-nowrap">🚀 최대 속도</label>
-          <input class="field text-center" type="number" min="1" max="20" step="0.1" style="width:80px" id="mg-${id}-maxSpeed" value="${val('maxSpeed') ?? 5.5}">
-        </div>` : ''}
-        ${id === '2048' ? `
-        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
-        <div class="text-xs font-black text-gray-600 mb-1">💀 폭탄 설정</div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">폭탄 시작 턴</label>
-          <input class="field text-center" type="number" min="1" max="20" style="width:80px" id="mg-2048-bombStartTurn" value="${val('bombStartTurn') ?? 3}">
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">최대 등장 확률(%)</label>
-          <input class="field text-center" type="number" min="5" max="100" style="width:80px" id="mg-2048-bombMaxChance" value="${val('bombMaxChance') ?? 60}">
-        </div>
-        <hr style="border-color:rgba(0,0,0,.08);margin:8px 0">
-        <div class="text-xs font-black text-gray-600 mb-1">🔥 보너스 설정</div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">💥 상쇄 보너스(초)</label>
-          <input class="field text-center" type="number" min="0" max="10" step="0.1" style="width:80px" id="mg-2048-defuseBonus" value="${val('defuseBonus') ?? 1.2}">
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <label class="text-xs font-bold text-gray-400 whitespace-nowrap">🔥 콤보당 보너스(초)</label>
-          <input class="field text-center" type="number" min="0" max="5" step="0.1" style="width:80px" id="mg-2048-comboBonus" value="${val('comboBonus') ?? 0.5}">
-        </div>` : ''}
-      </div>
-      <button class="btn btn-primary w-full py-2 mt-3 text-sm" onclick="saveMinigameSetting('${id}')">💾 저장</button>
-    </div>`;
+    inner += '</div>'; // space-y-2
+    inner += '<button class="btn btn-primary w-full py-2 mt-3 text-sm" onclick="saveMinigameSetting(\'' + id + '\')">💾 저장</button>';
+
+    return '<div id="mgPane-' + id + '" class="' + hidden + '">' + inner + '</div>';
   }).join('');
+
+  list.innerHTML = tabBar + panes;
   _renderMinigameStats();
+}
+
+/* ── 헬퍼 ── */
+function _mgRow(label, input, sub) {
+  var cls = sub ? 'text-gray-400' : 'text-gray-500';
+  return '<div class="flex items-center justify-between gap-3">' +
+    '<label class="text-xs font-bold ' + cls + ' whitespace-nowrap">' + label + '</label>' +
+    input +
+  '</div>';
+}
+function _mgSep() {
+  return '<hr style="border-color:rgba(0,0,0,.08);margin:8px 0">';
 }
 
 async function saveMinigameSetting(gameId) {

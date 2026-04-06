@@ -1388,14 +1388,8 @@ async function renderDashboard() {
   _set('ds-todayGiven2', '+' + todayGiven);
   _set('ds-todayUsed2', '-' + todayUsed);
 
-  // 신청 뱃지 (그리드)
-  const reqBadge = document.getElementById('reqBadgeGrid');
-  if (reqBadge) {
-    const { data: pendingReqs } = await sb.from('product_requests').select('id').eq('status', 'pending');
-    const cnt = pendingReqs?.length || 0;
-    if (cnt > 0) { reqBadge.textContent = cnt; reqBadge.classList.remove('hidden'); }
-    else reqBadge.classList.add('hidden');
-  }
+  // 신청 뱃지 갱신
+  updateReqBadge();
 
   // 활동 로그 (홈 + 상세)
   const logHTML = recentTxs?.length
@@ -1424,6 +1418,31 @@ async function renderDashboard() {
 // ──────────────────────────────────────────────
 //  ADMIN — 아이템 레지스트리 (독립 아이템 DB)
 // ──────────────────────────────────────────────
+
+const REWARD_TYPE_OPTIONS = [
+  { value: 'MANUAL_ITEM',   label: '📬 일반 아이템',       help: '인벤토리에 저장됨 · 관리자 승인 후 지급 · 가장 범용적인 타입' },
+  { value: 'AUTO_ACORN',    label: '⚡ 즉시 도토리 지급',  help: '인벤토리에 들어가지 않음 · 구매 즉시 acorn_amt만큼 도토리 지급 · acorn_amt 미설정 시 지급량 0' },
+  { value: 'COUPON',        label: '🎟️ 할인 쿠폰',        help: '인벤토리에 저장됨 · 상점 할인에 사용 · discount_pct 미설정 시 0% 쿠폰이 됨' },
+  { value: 'GACHA_TICKET',  label: '🎰 뽑기권',           help: '인벤토리에 들어가지 않음 · 뽑기권 카운터에 적립 · 일반 아이템과 저장 경로가 다름' },
+  { value: 'ACORN_TICKET',  label: '🌰 도토리 교환권',     help: '인벤토리에 저장됨 · 마이페이지에서 사용 시 도토리로 교환' },
+  { value: 'EXAM_MATERIAL', label: '📝 시험 자료',         help: '인벤토리에 저장됨 · 자동 스택 처리 · 시험 성적 부스트용' },
+];
+
+function _rewardTypeSelectHTML(idPrefix, selectedValue) {
+  selectedValue = selectedValue || 'MANUAL_ITEM';
+  var opts = REWARD_TYPE_OPTIONS.map(function(o) {
+    return '<option value="' + o.value + '"' + (o.value === selectedValue ? ' selected' : '') + '>' + o.label + '</option>';
+  }).join('');
+  return '<select class="field" id="' + idPrefix + '-rewardType" onchange="updateRewardTypeHelp(\'' + idPrefix + '\')">' + opts + '</select>';
+}
+
+function updateRewardTypeHelp(idPrefix) {
+  var sel = document.getElementById(idPrefix + '-rewardType');
+  var helpEl = document.getElementById(idPrefix + '-rewardHelp');
+  if (!sel || !helpEl) return;
+  var found = REWARD_TYPE_OPTIONS.find(function(o) { return o.value === sel.value; });
+  helpEl.textContent = found ? found.help : '';
+}
 
 function _itemCard(item) {
   const typeBadge = item.item_type === 'store' ? '<span class="rt-manual text-xs">🛍️ 상점</span>'
@@ -1499,6 +1518,7 @@ async function addRegistryItem() {
   document.getElementById('ni-icon').value = '';
   document.getElementById('ni-desc').value = '';
   document.getElementById('ni-rewardType').value = 'MANUAL_ITEM';
+  updateRewardTypeHelp('ni');
   document.getElementById('ni-stackable').checked = false;
   document.getElementById('ni-maxStack').value = '1';
   renderItemRegistry();
@@ -1508,14 +1528,16 @@ async function addRegistryItem() {
 async function editRegistryItem(id) {
   var { data: item } = await sb.from('products').select('*').eq('id', id).single();
   if (!item) return;
+  var currentHelp = (REWARD_TYPE_OPTIONS.find(function(o) { return o.value === (item.reward_type || 'MANUAL_ITEM'); }) || REWARD_TYPE_OPTIONS[0]).help;
   showModal(
     '<h2 class="text-lg font-black text-gray-800 mb-4">✏️ 아이템 수정</h2>'
     + '<div class="space-y-3">'
-    + '<input class="field" id="ei-name" value="' + (item.name || '') + '" placeholder="아이템명">'
+    + '<input class="field" id="ei-name" value="' + (item.name || '') + '" placeholder="* 아이템명">'
     + '<div class="grid grid-cols-2 gap-2">'
     + '<input class="field" id="ei-icon" value="' + (item.icon || '') + '" placeholder="이모지">'
-    + '<input class="field" id="ei-rewardType" value="' + (item.reward_type || 'MANUAL_ITEM') + '" placeholder="보상 타입">'
+    + _rewardTypeSelectHTML('ei', item.reward_type || 'MANUAL_ITEM')
     + '</div>'
+    + '<div id="ei-rewardHelp" class="text-xs text-gray-400 px-1 -mt-1">' + currentHelp + '</div>'
     + '<input class="field" id="ei-desc" value="' + (item.description || '') + '" placeholder="설명">'
     + '<div class="grid grid-cols-2 gap-2">'
     + '<label class="flex items-center gap-2 text-xs font-bold text-gray-600">'

@@ -340,40 +340,13 @@ function _farmRenderBuyTab() {
 
 // ── 판매 탭 렌더링 ──
 function _farmRenderSellTab() {
-  const seeds = (_farmInventory || []).filter(i => i.item_type === 'seed' && i.quantity > 0);
-  const crops = (_farmInventory || []).filter(i => i.item_type === 'crop' && i.quantity > 0);
+  const seeds = (_farmInventory || []).filter(i => i.item_type === 'seed' && i.quantity > 0)
+    .sort((a, b) => a.crop_id.localeCompare(b.crop_id));
+  const crops = (_farmInventory || []).filter(i => i.item_type === 'crop' && i.quantity > 0)
+    .sort((a, b) => a.crop_id.localeCompare(b.crop_id));
   let html = '';
 
-  html += `<div style="font-size:12px;font-weight:900;color:#1f2937;margin-bottom:8px">🌱 씨앗 되팔기 <span style="font-size:10px;color:#9ca3af;font-weight:700">(현재 시세의 70%)</span></div>`;
-  if (seeds.length === 0) {
-    html += `<div style="font-size:11px;color:#9ca3af;padding:12px;text-align:center">보유 씨앗이 없어요</div>`;
-  } else {
-    seeds.forEach(inv => {
-      const crop = _farmCrops.find(c => c.id === inv.crop_id);
-      if (!crop) return;
-      const priceRow = _farmPrices.find(p => p.crop_id === inv.crop_id);
-      const marketPrice = priceRow ? priceRow.current_price : crop.base_price * 100;
-      const sellPrice = Math.round(marketPrice * 0.7);
-      const priceStr = _farmFmtPrice(sellPrice);
-      html += `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--list-item-bg);border:1.5px solid var(--list-item-border);margin-bottom:6px">
-          <div style="font-size:24px;flex-shrink:0">${crop.emoji}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:900;color:#1f2937">${crop.name} 씨앗 <span style="font-size:11px;color:#6b7280;font-weight:700">×${inv.quantity}</span></div>
-            <div style="font-size:10px;color:#ef4444;margin-top:1px">개당 🌰 ${priceStr}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-            <button onclick="_farmSellSeedQty('${inv.crop_id}',-1)" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
-            <span id="farmSeedQty_${inv.crop_id}" style="font-size:14px;font-weight:900;min-width:22px;text-align:center">1</span>
-            <button onclick="_farmSellSeedQty('${inv.crop_id}',1)" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
-            <button onclick="_farmSellSeedQty('${inv.crop_id}',999)" style="padding:3px 8px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:9px;font-weight:800;cursor:pointer;color:var(--qty-btn-text)">ALL</button>
-            <button onclick="farmSellSeed('${inv.crop_id}')" style="padding:6px 12px;border-radius:10px;border:none;background:linear-gradient(135deg,#f87171,#ef4444);color:white;font-size:11px;font-weight:800;cursor:pointer">판매</button>
-          </div>
-        </div>`;
-    });
-  }
-
-  html += `<div style="font-size:12px;font-weight:900;color:#1f2937;margin-top:14px;margin-bottom:8px">🥕 작물 판매 <span style="font-size:10px;color:#9ca3af;font-weight:700">(단계별 가격)</span></div>`;
+  html += `<div style="font-size:12px;font-weight:900;color:#1f2937;margin-bottom:8px">🥕 작물 판매 <span style="font-size:10px;color:#9ca3af;font-weight:700">(단계별 가격)</span></div>`;
   if (crops.length === 0) {
     html += `<div style="font-size:10px;color:#9ca3af;padding:8px;text-align:center">보유 작물이 없어요</div>`;
   } else {
@@ -430,6 +403,36 @@ function _farmRenderSellTab() {
         </div>`;
     });
   }
+
+  html += `<div style="font-size:12px;font-weight:900;color:#1f2937;margin-top:14px;margin-bottom:8px">🌱 씨앗 되팔기 <span style="font-size:10px;color:#9ca3af;font-weight:700">(현재 시세의 70%)</span></div>`;
+  if (seeds.length === 0) {
+    html += `<div style="font-size:11px;color:#9ca3af;padding:12px;text-align:center">보유 씨앗이 없어요</div>`;
+  } else {
+    seeds.forEach(inv => {
+      const crop = _farmCrops.find(c => c.id === inv.crop_id);
+      if (!crop) return;
+      const priceRow = _farmPrices.find(p => p.crop_id === inv.crop_id);
+      const marketPrice = priceRow ? priceRow.current_price : crop.base_price * 100;
+      const sellPrice = Math.round(marketPrice * 0.7);
+      const priceStr = _farmFmtPrice(sellPrice);
+      html += `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--list-item-bg);border:1.5px solid var(--list-item-border);margin-bottom:6px">
+          <div style="font-size:24px;flex-shrink:0">${crop.emoji}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:900;color:#1f2937">${crop.name} 씨앗 <span style="font-size:11px;color:#6b7280;font-weight:700">×${inv.quantity}</span></div>
+            <div style="font-size:10px;color:#ef4444;margin-top:1px">개당 🌰 ${priceStr}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',-1)" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
+            <span id="farmSeedQty_${inv.crop_id}" style="font-size:14px;font-weight:900;min-width:22px;text-align:center">1</span>
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',1)" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
+            <button onclick="_farmSellSeedQty('${inv.crop_id}',999)" style="padding:3px 8px;border-radius:7px;border:1px solid var(--qty-btn-border);background:var(--qty-btn-bg);font-size:9px;font-weight:800;cursor:pointer;color:var(--qty-btn-text)">ALL</button>
+            <button onclick="farmSellSeed('${inv.crop_id}')" style="padding:6px 12px;border-radius:10px;border:none;background:linear-gradient(135deg,#f87171,#ef4444);color:white;font-size:11px;font-weight:800;cursor:pointer">판매</button>
+          </div>
+        </div>`;
+    });
+  }
+
   return html;
 }
 

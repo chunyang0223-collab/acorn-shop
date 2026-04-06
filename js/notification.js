@@ -13,21 +13,21 @@ async function updateReqBadge() {
     const show = cnt > 0;
     const label = cnt > 9 ? '9+' : String(cnt);
 
-    // 그리드 뱃지
-    const gridBadge = document.getElementById('reqBadgeGrid');
-    if (gridBadge) {
-      if (show) { gridBadge.textContent = label; gridBadge.classList.remove('hidden'); }
-      else gridBadge.classList.add('hidden');
+    // 탭바 뱃지
+    const tabBadge = document.getElementById('reqBadgeTab');
+    if (tabBadge) {
+      if (show) { tabBadge.textContent = label; tabBadge.classList.remove('hidden'); }
+      else tabBadge.classList.add('hidden');
     }
 
-    // 핀 탭바에 requests가 있으면 dot 표시
+    // 핀 탭바에 requests가 있으면 뱃지 표시
     const pinIdx = (window._adminPins || []).indexOf('requests');
     if (pinIdx >= 0) {
       const pinBtn = document.getElementById('pinTab' + (pinIdx + 1));
       if (pinBtn) {
         const def = ADMIN_MENU_DEFS?.requests;
         if (def) {
-          pinBtn.innerHTML = def.icon + ' ' + def.label + (show ? ' <span style="color:#ef4444;font-size:8px">●</span>' : '');
+          pinBtn.innerHTML = def.icon + ' ' + def.label + (show ? ` <span class="req-badge">${label}</span>` : '');
         }
       }
     }

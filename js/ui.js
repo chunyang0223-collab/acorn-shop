@@ -233,7 +233,7 @@ function openAdminCat(catId) {
   aTab(cat.tabs[0]);
 }
 
-function aTab(tab, btn) {
+async function aTab(tab, btn) {
   playSound('tab');
   A_TABS.forEach(t => { const el = document.getElementById('atab-'+t); if(el) el.classList.add('hidden'); });
   document.querySelectorAll('#adminTabBar .adm-tab-btn').forEach(b => b.classList.remove('active'));
@@ -264,8 +264,8 @@ function aTab(tab, btn) {
     // 다람쥐 탭 초기화 (독립 atab-sq_* 사용)
     if (!_sqAdminInited) {
       _sqAdminInited = true;
-      if (typeof sqInit === 'function') sqInit();
-      if (typeof sqAdminInit === 'function') sqAdminInit();
+      if (typeof sqInit === 'function') await sqInit();
+      if (typeof sqAdminInit === 'function') await sqAdminInit();
     }
     const subTab = sqSubMap[tab];
     if (subTab === 'my')         sqRenderGrid();
@@ -291,7 +291,7 @@ function aTab(tab, btn) {
     return;
   }
 
-  if (tab === 'dashboard')  { loadMaintenanceSettings().then(renderMaintenanceBtns); }
+  if (tab === 'dashboard')  { loadMaintenanceSettings().then(renderMaintenanceBtns); loadMinigameSettings().then(renderMgMaintBtns); }
   if (tab === 'items')      renderItemRegistry();
   if (tab === 'gachaTest')  renderAdminGachaProbTable();
   if (tab === 'products')   renderProductAdmin();
@@ -335,7 +335,7 @@ function _injectCatSubtabs(tab, tabEl) {
 // ── 점검 상태 도트 (홈 화면용) ──
 function renderMaintDots() {
   const m = window._maintSettings || {};
-  ['shop','gacha','quest','recycle','minigame','squirrel','bossraid','mypage','sq_farm'].forEach(k => {
+  ['shop','gacha','quest','recycle','minigame','squirrel','bossraid','mypage','sq_shop','sq_fuse','sq_expedition','sq_farm'].forEach(k => {
     const dot = document.getElementById('maint-dot-' + k);
     if (dot) {
       dot.className = 'maint-dot ' + (m[k] ? 'off' : 'on');
@@ -479,13 +479,19 @@ function uTab(tab, btn) {
 }
 
 // ── 메뉴 점검 관리 ──
-const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','bossraid','mypage','sq_farm'];
+const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','bossraid','mypage','sq_shop','sq_fuse','sq_expedition','sq_farm'];
+const SQ_SUB_MAINT = ['sq_shop','sq_fuse','sq_expedition','sq_farm'];
 
 async function toggleMaintenance(tab) {
   // 현재 DB 값 읽기
   const { data } = await sb.from('app_settings').select('value').eq('key', 'maintenance').single();
   const maint = data?.value || {};
   maint[tab] = !maint[tab];
+
+  // 다람쥐 전체 토글 시 하위 메뉴도 일괄 동기화
+  if (tab === 'squirrel') {
+    SQ_SUB_MAINT.forEach(sub => { maint[sub] = maint[tab]; });
+  }
 
   // DB 업데이트
   await sb.from('app_settings').update({ value: maint, updated_at: new Date().toISOString() }).eq('key', 'maintenance');
@@ -521,6 +527,32 @@ function renderMaintenanceBtns() {
     const btn = document.getElementById('maint-'+tab);
     if (!btn) return;
     if (maint[tab]) {
+      btn.classList.add('on');
+      btn.title = '점검 중 (클릭하여 해제)';
+    } else {
+      btn.classList.remove('on');
+      btn.title = '정상 운영 중 (클릭하여 점검 전환)';
+    }
+  });
+}
+
+// ── 미니게임 개별 점검 토글 (minigame_settings 내 maintenance 필드) ──
+async function toggleMgMaint(gameId) {
+  await loadMinigameSettings();
+  const s = _mgSettings[gameId] || {};
+  s.maintenance = !s.maintenance;
+  _mgSettings[gameId] = s;
+  await sb.from('app_settings').update({ value: _mgSettings, updated_at: new Date().toISOString() }).eq('key', 'minigame_settings');
+  renderMgMaintBtns();
+  toast(s.maintenance ? '🔧' : '✅', `${(MG_DEFAULTS[gameId]?.name || gameId)} ${s.maintenance ? '점검 중으로 전환' : '정상 운영으로 전환'}`);
+}
+
+function renderMgMaintBtns() {
+  ['catch', '2048', 'roulette'].forEach(id => {
+    const btn = document.getElementById('maint-mg_' + id);
+    if (!btn) return;
+    const s = _mgSettings[id] || MG_DEFAULTS[id] || {};
+    if (s.maintenance) {
       btn.classList.add('on');
       btn.title = '점검 중 (클릭하여 해제)';
     } else {

@@ -238,21 +238,34 @@ function sqTab(tab) {
     document.getElementById('sqtab-' + t)?.classList.toggle('active', t === tab);
   });
 
-  // 서브탭 점검 체크 (농장)
-  if (tab === 'farm') {
+  // 서브탭 점검 체크
+  const _sqMaintKey = { shop:'sq_shop', fuse:'sq_fuse', expedition:'sq_expedition', farm:'sq_farm' };
+  const _sqMaintMsg = { shop:'상점', fuse:'합성', expedition:'탐험', farm:'농장' };
+  if (_sqMaintKey[tab]) {
     const maint = window._maintSettings || {};
-    const area = document.getElementById('sqFarmArea');
-    if (area) {
-      if (maint['sq_farm'] && !_isMaintBypassed()) {
-        area.innerHTML = `
+    if (maint[_sqMaintKey[tab]] && !_isMaintBypassed()) {
+      // 점검 오버레이 표시
+      const overlay = document.getElementById('sq-maint-overlay');
+      if (overlay) {
+        overlay.innerHTML = `
           <div class="clay-card p-8 text-center mt-4">
             <div style="font-size:3rem;margin-bottom:12px">🔧</div>
             <p class="text-lg font-black text-gray-700 mb-2">점검 중입니다</p>
-            <p class="text-sm text-gray-400">농장 기능을 준비하고 있어요!</p>
+            <p class="text-sm text-gray-400">${_sqMaintMsg[tab]} 기능을 준비하고 있어요!</p>
           </div>`;
-      } else {
-        sqFarmInit();
+        overlay.classList.remove('hidden');
       }
+      // 실제 탭 콘텐츠 숨김
+      document.getElementById('utab-sq_' + tab)?.classList.add('hidden');
+      return;
+    } else {
+      // 점검 아닌 경우 오버레이 숨김
+      const overlay = document.getElementById('sq-maint-overlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+    if (tab === 'farm') {
+      const farmArea = document.getElementById('sqFarmArea');
+      if (farmArea) sqFarmInit();
     }
   }
 
