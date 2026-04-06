@@ -311,6 +311,7 @@
         <div class="flex gap-1 mb-4">
           <button class="rank-period-btn active" data-period="daily" onclick="setRankPeriod('daily',this)">오늘</button>
           <button class="rank-period-btn" data-period="weekly" onclick="setRankPeriod('weekly',this)">이번 주</button>
+          <button class="rank-period-btn" data-period="prevweek" onclick="setRankPeriod('prevweek',this)">지난주</button>
           <button class="rank-period-btn" data-period="alltime" onclick="setRankPeriod('alltime',this)">전체</button>
         </div>
         <div id="userRankingList" class="space-y-2">
@@ -2232,7 +2233,16 @@
       </div>
       <!-- 주간 보상 설정 -->
       <div class="clay-card p-5 mb-4">
-        <h2 class="text-lg font-black text-gray-800 mb-4">🎁 주간 랭킹 보상 설정</h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-black text-gray-800">🎁 주간 랭킹 보상 설정</h2>
+          <div class="flex items-center gap-2">
+            <span id="wrToggleLabel" class="text-xs font-bold text-gray-400">OFF</span>
+            <button id="wrToggleBtn" class="wr-toggle-btn" onclick="toggleWeeklyRewardEnabled()">
+              <span class="wr-toggle-knob"></span>
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mb-4">ON: 지난주 랭킹에서 1~3위 보상받기 버튼 표시 / OFF: 숨김</p>
         <div id="weeklyRewardSettings">
           <p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>
         </div>
