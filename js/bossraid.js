@@ -538,7 +538,11 @@ async function _brRenderLobby(container, raid) {
               return '<div class="br-sq-pick ' + (selected ? 'br-sq-selected' : '') + '" onclick="_brToggleSquirrel(\'' + sq.id + '\')" style="' + gs.border + ';box-shadow:' + gs.shadow + '">' +
                 '<img src="images/squirrels/' + (sq.sprite || 'sq_acorn') + '.png" class="br-sq-img" onerror="this.outerHTML=\'<div class=\\\'text-2xl\\\'>🐿️</div>\'">' +
                 '<p class="text-xs font-black mt-1" style="color:' + gs.color + '">' + _escHtml(sq.name) + '</p>' +
-                '<p class="text-xs text-gray-400">HP ' + (sq.stats?.hp || 0) + ' ATK ' + (sq.stats?.atk || 0) + ' DEF ' + (sq.stats?.def || 0) + '</p>' +
+                '<div style="display:flex;gap:3px;justify-content:center;margin-top:2px;flex-wrap:wrap">' +
+                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:#ef4444;color:#fff;padding:1px 3px;border-radius:3px;font-weight:700">HP</span><span style="color:#9ca3af">' + (sq.stats?.hp || 0) + '</span></span>' +
+                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:#f59e0b;color:#fff;padding:1px 3px;border-radius:3px;font-weight:700">공</span><span style="color:#9ca3af">' + (sq.stats?.atk || 0) + '</span></span>' +
+                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:#3b82f6;color:#fff;padding:1px 3px;border-radius:3px;font-weight:700">방</span><span style="color:#9ca3af">' + (sq.stats?.def || 0) + '</span></span>' +
+                '</div>' +
               '</div>';
             } catch(e) {
               console.error('br-sq-pick render error:', e);

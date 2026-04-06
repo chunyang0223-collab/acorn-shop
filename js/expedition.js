@@ -9,6 +9,18 @@
    ================================================================ */
 
 // ================================================================
+//  컨테이너 선택 헬퍼 (admin/user 탭 중 현재 보이는 쪽 반환)
+// ================================================================
+function _expGetContainer() {
+  var admin = document.getElementById('atab-sq_expedition');
+  var user  = document.getElementById('utab-sq_expedition');
+  // admin 탭이 실제로 보이는 경우(hidden 아님) → admin 반환
+  if (admin && !admin.classList.contains('hidden')) return admin;
+  // 아니면 user 탭 반환
+  return user;
+}
+
+// ================================================================
 //  탐험 진입 함수 (squirrel.js에서 이동)
 // ================================================================
 async function sqLoadActiveExpedition() {
@@ -614,7 +626,7 @@ function _expGenerateTiles(total) {
 // ================================================================
 function _expRenderMap() {
   var s = _expState;
-  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
+  var container = _expGetContainer();
   if (!container) return;
 
   var totalAcorns = 0;
@@ -768,7 +780,7 @@ function _expAdvance() {
 
 // ── 탐험 전용 토스트 (B형 하단 슬라이드) ──
 function _expToast(emoji, text) {
-  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
+  var container = _expGetContainer();
   if (!container) { toast(emoji, text); return; }
 
   // 파티 그리드 위에 겹쳐서 표시
@@ -834,7 +846,7 @@ function _expShowOverlay(emoji, title, body, btn1Text, btn1Fn, btn2Text, btn2Fn)
 
 // ── 화면 흔들림 ──
 function _expShakeScreen() {
-  var el = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
+  var el = _expGetContainer();
   if (!el) return;
   el.style.animation = 'expShake 0.4s ease-in-out';
   setTimeout(function() { el.style.animation = ''; }, 500);
@@ -920,7 +932,7 @@ function _expHandleTreasure(tile) {
 // ── 몬스터/보스 전투 ──
 function _expHandleBattle(tile) {
   var s = _expState;
-  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
+  var container = _expGetContainer();
   if (!container) return;
 
   var isBoss = tile.type === 'boss';
@@ -1707,7 +1719,7 @@ function _expShowSummary(finishStatus) {
   // 전투 BGM 정지 (패배/승리 효과음은 전투 종료 시점에서 이미 재생됨)
   _sndStopBGM();
 
-  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
+  var container = _expGetContainer();
   if (!container) { _expFinish(status); return; }
 
   // 전리품 집계
@@ -2010,7 +2022,7 @@ async function _expFinish(status) {
   _expState = null;
 
   // expedition 탭 HTML을 원래 상태로 복원 (도움말 포함)
-  var container = document.getElementById('atab-sq_expedition') || document.getElementById('utab-sq_expedition');
+  var container = _expGetContainer();
   if (container) {
     container.innerHTML =
       '<div class="clay-card p-5 text-center mb-4">' +
