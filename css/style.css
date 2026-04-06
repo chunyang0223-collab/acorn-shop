@@ -4734,6 +4734,18 @@ input[type="checkbox"]:active,
   border-color: var(--exp-item-chip-border);
   background: var(--exp-item-chip-bg);
 }
+[data-theme="dark"] .exp-item-chip:hover {
+  border-color: #5b8af5;
+  background: #1e2d45;
+}
+[data-theme="dark"] .exp-item-chip.selected {
+  border-color: #34d399;
+  background: #133027;
+  box-shadow: 0 0 0 1px #2ac480;
+}
+[data-theme="dark"] .exp-item-chip.selected .exp-item-chip-name {
+  color: #6ee7b7;
+}
 [data-theme="dark"] .exp-item-chip-name { color: var(--exp-item-chip-name-text); }
 
 /* ══════════════════════════════════════════════════════
@@ -6753,4 +6765,63 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .br-btn-danger-outline {
   background: rgba(239,68,68,0.2);
   color: #f87171;
+}
+
+/* ══════════════════════════════════════════════════════
+   🎮 미니게임 관리자 탭 바
+   ══════════════════════════════════════════════════════ */
+.mg-tab-bar {
+  display: flex; gap: 6px; margin-bottom: 16px;
+}
+.mg-tab-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 8px; border-radius: 12px;
+  border: 2px solid var(--border-main, #e5e7eb);
+  background: var(--bg-card, #fff);
+  cursor: pointer; transition: all .15s;
+  font-size: 13px; font-weight: 800;
+  color: var(--text-secondary, #6b7280);
+}
+.mg-tab-btn:hover {
+  border-color: var(--primary, #6366f1);
+  background: var(--bg-hover, #f3f4f6);
+}
+.mg-tab-btn.mg-tab-active {
+  border-color: var(--primary, #6366f1);
+  background: var(--primary, #6366f1);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+}
+.mg-tab-icon { font-size: 16px; line-height: 1; }
+.mg-tab-name { font-size: 12px; }
+.mg-tab-badge-maint {
+  font-size: 9px; font-weight: 900;
+  padding: 1px 5px; border-radius: 6px;
+  background: #fecaca; color: #dc2626;
+}
+.mg-tab-btn.mg-tab-active .mg-tab-badge-maint {
+  background: rgba(255,255,255,0.25); color: #fff;
+}
+
+/* 다크모드 */
+[data-theme="dark"] .mg-tab-btn {
+  border-color: #2a3a4a;
+  background: #1a2535;
+  color: #94a3b8;
+}
+[data-theme="dark"] .mg-tab-btn:hover {
+  border-color: #818cf8;
+  background: #1e2d45;
+}
+[data-theme="dark"] .mg-tab-btn.mg-tab-active {
+  border-color: #818cf8;
+  background: #4f46e5;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79,70,229,0.35);
+}
+[data-theme="dark"] .mg-tab-badge-maint {
+  background: rgba(239,68,68,0.25); color: #f87171;
+}
+[data-theme="dark"] .mg-tab-btn.mg-tab-active .mg-tab-badge-maint {
+  background: rgba(255,255,255,0.2); color: #fff;
 }
