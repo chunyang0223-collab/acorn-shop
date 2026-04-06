@@ -868,6 +868,11 @@ function _getPeriodRange(period) {
     const todStr = getToday();
     return { from: monKST + 'T00:00:00+09:00', to: todStr + 'T23:59:59+09:00' };
   }
+  if (period === 'prevweek') {
+    const prevMon = _getPrevWeekMonday();
+    const range = _getWeekRange(prevMon);
+    return range;
+  }
   return { from: '2020-01-01T00:00:00+09:00', to: '2099-12-31T23:59:59+09:00' };
 }
 
@@ -878,7 +883,7 @@ function _medalEmoji(rank) {
   return `<span class="rank-num">${rank}</span>`;
 }
 
-function _periodLabel(p) { return p === 'daily' ? '오늘' : p === 'weekly' ? '이번 주' : '전체'; }
+function _periodLabel(p) { return p === 'daily' ? '오늘' : p === 'weekly' ? '이번 주' : p === 'prevweek' ? '지난주' : '전체'; }
 
 function setRankPeriod(period, btn) {
   _rankPeriod = period;
@@ -892,6 +897,25 @@ async function renderUserRanking() {
   const range  = _getPeriodRange(_rankPeriod);
   const list   = document.getElementById('userRankingList');
   list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
+
+  // 지난주 탭: 보상 활성화 여부 + 기존 수령 상태 조회
+  let rewardEnabled = false;
+  let claimedRanks = {}; // { rank: true } — 이미 수령한 순위
+  const isPrevWeek = _rankPeriod === 'prevweek';
+  const prevMonday = isPrevWeek ? _getPrevWeekMonday() : null;
+
+  if (isPrevWeek) {
+    const { data: enabledRow } = await sb.from('app_settings').select('value')
+      .eq('key', 'weekly_reward_enabled').maybeSingle();
+    rewardEnabled = enabledRow?.value === true || enabledRow?.value === 'true';
+
+    if (rewardEnabled) {
+      const { data: claimed } = await sb.from('weekly_ranking_rewards')
+        .select('rank, user_id, paid')
+        .eq('week_id', prevMonday).eq('game_id', gameId);
+      (claimed || []).forEach(c => { claimedRanks[c.rank] = c; });
+    }
+  }
 
   try {
     const { data } = await sb.from('minigame_plays').select('user_id, score')
@@ -918,10 +942,21 @@ async function renderUserRanking() {
 
     list.innerHTML = sorted.slice(0, 20).map((r, i) => {
       const rank = i + 1, isMe = r.uid === myId;
+      // 지난주 1~3위 보상 버튼
+      let rewardBtnHtml = '';
+      if (isPrevWeek && rewardEnabled && rank <= 3 && isMe) {
+        const existing = claimedRanks[rank];
+        if (existing?.paid) {
+          rewardBtnHtml = '<span class="wr-claimed-badge">수령완료</span>';
+        } else {
+          rewardBtnHtml = `<button class="wr-claim-btn" onclick="claimWeeklyReward('${gameId}','${prevMonday}',${rank},${r.score})">🎁 보상받기</button>`;
+        }
+      }
       return `<div class="rank-row ${isMe ? 'rank-row-me' : ''} ${rank <= 3 ? 'rank-row-top' : ''}">
         <div class="rank-medal">${_medalEmoji(rank)}</div>
         <div class="rank-name">${r.name}${isMe ? ' <span class="rank-me-badge">나</span>' : ''}</div>
         <div class="rank-score">${r.score.toLocaleString()}점</div>
+        ${rewardBtnHtml}
       </div>`;
     }).join('');
 
@@ -1286,12 +1321,49 @@ function _wrClearItemSlot(gameId, rank, slotIdx) {
   if (labelEl) { labelEl.textContent = '비어 있음'; labelEl.style.color = '#9ca3af'; }
 }
 
+// ── 주간 보상 보상받기 버튼 토글 (관리자) ──
+let _weeklyRewardEnabled = false;
+
+async function loadWeeklyRewardToggle() {
+  const { data } = await sb.from('app_settings').select('value')
+    .eq('key', 'weekly_reward_enabled').maybeSingle();
+  _weeklyRewardEnabled = data?.value === true || data?.value === 'true';
+  _updateWrToggleUI();
+}
+
+function _updateWrToggleUI() {
+  const btn = document.getElementById('wrToggleBtn');
+  const label = document.getElementById('wrToggleLabel');
+  if (!btn || !label) return;
+  if (_weeklyRewardEnabled) {
+    btn.classList.add('active');
+    label.textContent = 'ON';
+  } else {
+    btn.classList.remove('active');
+    label.textContent = 'OFF';
+  }
+}
+
+async function toggleWeeklyRewardEnabled() {
+  const newVal = !_weeklyRewardEnabled;
+  try {
+    await sb.from('app_settings').upsert({ key: 'weekly_reward_enabled', value: newVal });
+    _weeklyRewardEnabled = newVal;
+    _updateWrToggleUI();
+    toast('✅', newVal ? '보상받기 버튼 활성화' : '보상받기 버튼 비활성화');
+  } catch(e) {
+    console.warn('[weeklyReward] 토글 실패', e);
+    toast('❌', '변경 실패');
+  }
+}
+
 // ── 관리자 보상 설정 UI 렌더 ──
 async function renderWeeklyRewardSettings() {
   console.log('[weeklyReward] renderWeeklyRewardSettings 호출');
   const area = document.getElementById('weeklyRewardSettings');
   if (!area) { console.warn('[weeklyReward] #weeklyRewardSettings 엘리먼트 없음'); return; }
   if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
+  await loadWeeklyRewardToggle();
   const s = _weeklyRewardSettings;
 
   const gameIds = Object.keys(MG_DEFAULTS).filter(g => g !== 'roulette');
@@ -1394,162 +1466,101 @@ async function renderWeeklyRewardHistory() {
   }
 }
 
-// ──────────────────────────────────────────────
-//  주간 스냅샷 생성 + 선물상자 지급 (클라이언트 트리거)
-// ──────────────────────────────────────────────
+// ── 유저 직접 보상 수령 (지난주 랭킹에서 클릭) ──
+async function claimWeeklyReward(gameId, weekId, rank, score) {
+  if (!myProfile) return;
+  if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
 
-async function checkAndProcessWeeklyRewards() {
+  const cfg = _weeklyRewardSettings[gameId]?.[rank] || { acorns: 0, items: [] };
+  const gameName = MG_DEFAULTS[gameId]?.name || gameId;
+  const gameIcon = MG_DEFAULTS[gameId]?.icon || '🎮';
+  const medals = ['', '🥇', '🥈', '🥉'];
+
+  // 보상 내용이 전부 비어있으면
+  if ((cfg.acorns || 0) <= 0 && (!cfg.items || cfg.items.length === 0)) {
+    toast('ℹ️', '이 순위에 설정된 보상이 없습니다');
+    return;
+  }
+
   try {
-    if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
+    // 1. 스냅샷 레코드 생성 (이미 있으면 건드리지 않음)
+    const { error: snapErr } = await sb.from('weekly_ranking_rewards').upsert({
+      week_id: weekId,
+      game_id: gameId,
+      rank: rank,
+      user_id: myProfile.id,
+      score: score,
+      reward_amount: cfg.acorns || 0,
+      paid: false
+    }, { onConflict: 'week_id,game_id,rank', ignoreDuplicates: true });
+    if (snapErr) throw snapErr;
 
-    const prevMonday = _getPrevWeekMonday();
+    // 2. 이미 수령했는지 다시 확인 (다른 탭에서 수령했을 수 있음)
+    const { data: check } = await sb.from('weekly_ranking_rewards')
+      .select('id, paid')
+      .eq('week_id', weekId).eq('game_id', gameId).eq('rank', rank)
+      .single();
 
-    // 이미 이전 주 스냅샷이 존재하는지 확인 (멱등성)
-    const { data: existing } = await sb.from('weekly_ranking_rewards')
-      .select('id').eq('week_id', prevMonday).limit(1);
-
-    if (existing?.length) {
-      console.log('[weeklyReward] 이전 주 스냅샷 이미 존재:', prevMonday);
-      await _deliverUnpaidBoxes(prevMonday);
+    if (check?.paid) {
+      toast('ℹ️', '이미 수령한 보상입니다');
+      renderUserRanking();
       return;
     }
 
-    const range = _getWeekRange(prevMonday);
-    const gameIds = Object.keys(MG_DEFAULTS).filter(g => g !== 'roulette');
+    // 3. paid=true 선점 (race condition 방지)
+    const { data: claimed, error: claimErr } = await sb.from('weekly_ranking_rewards')
+      .update({ paid: true, paid_at: new Date().toISOString() })
+      .eq('id', check.id).eq('paid', false)
+      .select('id');
 
-    for (const gameId of gameIds) {
-      const gameCfg = _weeklyRewardSettings[gameId];
-      if (!gameCfg) continue;
-
-      const { data: plays } = await sb.from('minigame_plays')
-        .select('user_id, score')
-        .eq('game_id', gameId)
-        .gte('played_at', range.from)
-        .lte('played_at', range.to)
-        .order('score', { ascending: false })
-        .limit(200);
-
-      if (!plays?.length) continue;
-
-      // 유저별 최고 점수
-      const best = {};
-      for (const r of plays) {
-        if (!best[r.user_id] || r.score > best[r.user_id]) best[r.user_id] = r.score;
-      }
-      const sorted = Object.entries(best)
-        .map(([uid, score]) => ({ uid, score }))
-        .sort((a, b) => b.score - a.score);
-
-      for (let i = 0; i < Math.min(3, sorted.length); i++) {
-        const rank = i + 1;
-        const cfg = gameCfg[rank] || { acorns: 0, items: [] };
-        // reward_amount는 요약용 (도토리 수량만)
-        try {
-          await sb.from('weekly_ranking_rewards').upsert({
-            week_id: prevMonday,
-            game_id: gameId,
-            rank: rank,
-            user_id: sorted[i].uid,
-            score: sorted[i].score,
-            reward_amount: cfg.acorns || 0,
-            paid: false
-          }, { onConflict: 'week_id,game_id,rank' });
-        } catch(e) {
-          console.warn(`[weeklyReward] 스냅샷 저장 실패 (${gameId} ${rank}위)`, e);
-        }
-      }
+    if (claimErr || !claimed?.length) {
+      toast('ℹ️', '이미 수령한 보상입니다');
+      renderUserRanking();
+      return;
     }
 
-    console.log('[weeklyReward] 이전 주 스냅샷 생성 완료:', prevMonday);
-    await _deliverUnpaidBoxes(prevMonday);
+    // 4. 인벤토리에 선물상자 삽입
+    const boxSnapshot = {
+      name: `${gameName} 주간 ${rank}위 보상`,
+      icon: '🎁',
+      reward_type: 'REWARD_BOX',
+      description: `${medals[rank]} ${weekId} 주차 ${gameName} ${rank}위 (${score.toLocaleString()}점)`,
+      box_contents: {
+        acorns: cfg.acorns || 0,
+        items: (cfg.items || []).filter(it => it.name)
+      },
+      _meta: {
+        week_id: weekId,
+        game_id: gameId,
+        game_icon: gameIcon,
+        rank: rank,
+        score: score
+      }
+    };
+
+    const { error: invErr } = await sb.from('inventory').insert({
+      user_id: myProfile.id,
+      product_id: null,
+      product_snapshot: boxSnapshot,
+      quantity: 1,
+      status: 'held',
+      from_gacha: false
+    });
+
+    if (invErr) {
+      // 인벤토리 삽입 실패 → paid 롤백
+      await sb.from('weekly_ranking_rewards')
+        .update({ paid: false, paid_at: null })
+        .eq('id', check.id);
+      throw invErr;
+    }
+
+    toast('🎁', `${gameName} 주간 ${rank}위 보상이 인벤토리에 도착했습니다!`);
+    console.log(`[weeklyReward] 수동 수령: ${gameId} ${rank}위 (${weekId})`);
+    renderUserRanking();
   } catch(e) {
-    console.warn('[weeklyReward] 주간 보상 처리 실패', e);
+    console.warn('[weeklyReward] 보상 수령 실패', e);
+    toast('❌', '보상 수령에 실패했습니다');
   }
 }
 
-// ── 미지급 선물상자 인벤토리 삽입 ──
-async function _deliverUnpaidBoxes(weekId) {
-  try {
-    const { data: unpaid } = await sb.from('weekly_ranking_rewards')
-      .select('id, user_id, game_id, rank, score, reward_amount')
-      .eq('week_id', weekId).eq('paid', false);
-
-    if (!unpaid?.length) return;
-
-    if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
-
-    for (const r of unpaid) {
-      const cfg = _weeklyRewardSettings[r.game_id]?.[r.rank] || { acorns: 0, items: [] };
-      const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
-      const gameIcon = MG_DEFAULTS[r.game_id]?.icon || '🎮';
-      const medals = ['', '🥇', '🥈', '🥉'];
-
-      // 보상 내용이 전부 비어있으면 지급 처리만
-      if ((cfg.acorns || 0) <= 0 && (!cfg.items || cfg.items.length === 0)) {
-        await sb.from('weekly_ranking_rewards')
-          .update({ paid: true, paid_at: new Date().toISOString() })
-          .eq('id', r.id);
-        continue;
-      }
-
-      // 인벤토리에 선물상자 삽입
-      const boxSnapshot = {
-        name: `${gameName} 주간 ${r.rank}위 보상`,
-        icon: '🎁',
-        reward_type: 'REWARD_BOX',
-        description: `${medals[r.rank]} ${weekId} 주차 ${gameName} ${r.rank}위 (${r.score.toLocaleString()}점)`,
-        box_contents: {
-          acorns: cfg.acorns || 0,
-          items: (cfg.items || []).filter(it => it.name)
-        },
-        // 메타 정보 (표시용)
-        _meta: {
-          week_id: weekId,
-          game_id: r.game_id,
-          game_icon: gameIcon,
-          rank: r.rank,
-          score: r.score
-        }
-      };
-
-      try {
-        await sb.from('inventory').insert({
-          user_id: r.user_id,
-          product_id: null,
-          product_snapshot: boxSnapshot,
-          quantity: 1,
-          status: 'held',
-          from_gacha: false
-        });
-        // 지급 완료 표시
-        await sb.from('weekly_ranking_rewards')
-          .update({ paid: true, paid_at: new Date().toISOString() })
-          .eq('id', r.id);
-        console.log(`[weeklyReward] 선물상자 지급: ${r.game_id} ${r.rank}위 → ${r.user_id}`);
-      } catch(e) {
-        console.warn(`[weeklyReward] 선물상자 지급 실패 (${r.id})`, e);
-      }
-    }
-  } catch(e) {
-    console.warn('[weeklyReward] 선물상자 지급 처리 실패', e);
-  }
-}
-
-// ── 유저에게 주간 보상 알림 표시 ──
-async function showWeeklyRewardNotification() {
-  if (!myProfile) return;
-  try {
-    const prevMonday = _getPrevWeekMonday();
-    const { data } = await sb.from('weekly_ranking_rewards')
-      .select('game_id, rank, score')
-      .eq('user_id', myProfile.id).eq('week_id', prevMonday).eq('paid', true);
-
-    if (!data?.length) return;
-
-    const medals = ['', '🥇', '🥈', '🥉'];
-    for (const r of data) {
-      const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
-      toast(medals[r.rank], `${gameName} 주간 ${r.rank}위! 인벤토리를 확인하세요 🎁`);
-    }
-  } catch(e) { console.warn('[weeklyReward] 알림 표시 실패', e); }
-}

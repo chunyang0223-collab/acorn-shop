@@ -57,8 +57,6 @@ async function initAppUI() {
       renderShopEventBanner(); // 이벤트 배너
     }
     setTimeout(() => triggerAutoQuest('attendance'), 500);
-    // 주간 랭킹 보상 체크 (이전 주 미처리 시 스냅샷 생성 + 보상 지급)
-    checkAndProcessWeeklyRewards().then(() => showWeeklyRewardNotification());
   }
   // 탭바 드래그 스크롤 초기화 (PC 웹 대응)
   setTimeout(() => {
