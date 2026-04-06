@@ -1369,10 +1369,7 @@ async function renderWeeklyRewardSettings() {
   const gameIds = Object.keys(MG_DEFAULTS).filter(g => g !== 'roulette');
   const medals = ['🥇', '🥈', '🥉'];
 
-  // 저장 버튼 (상단)
-  let html = `<div class="text-right mb-4">
-    <button class="btn btn-primary px-5 py-2 text-sm" onclick="saveWeeklyRewardSettings()">저장</button>
-  </div>`;
+  let html = '';
 
   for (const gameId of gameIds) {
     const gIcon = MG_DEFAULTS[gameId]?.icon || '🎮';
