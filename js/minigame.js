@@ -1369,24 +1369,38 @@ async function renderWeeklyRewardSettings() {
   const gameIds = Object.keys(MG_DEFAULTS).filter(g => g !== 'roulette');
   const medals = ['🥇', '🥈', '🥉'];
 
-  let html = '';
+  // 저장 버튼 (상단)
+  let html = `<div class="text-right mb-4">
+    <button class="btn btn-primary px-5 py-2 text-sm" onclick="saveWeeklyRewardSettings()">저장</button>
+  </div>`;
+
   for (const gameId of gameIds) {
-    const gName = MG_DEFAULTS[gameId]?.icon + ' ' + MG_DEFAULTS[gameId]?.name;
-    html += `<div class="mb-5">
-      <p class="text-sm font-black text-gray-700 mb-3">${gName}</p>`;
+    const gIcon = MG_DEFAULTS[gameId]?.icon || '🎮';
+    const gName = MG_DEFAULTS[gameId]?.name || gameId;
+    // 요약: 각 순위의 도토리 수
+    const cfg1 = s[gameId]?.[1] || { acorns: 0 };
+    const cfg2 = s[gameId]?.[2] || { acorns: 0 };
+    const cfg3 = s[gameId]?.[3] || { acorns: 0 };
+    const summary = `🌰 ${cfg1.acorns||0} / ${cfg2.acorns||0} / ${cfg3.acorns||0}`;
+
+    html += `<div class="wr-game-section mb-3">
+      <div class="wr-game-header" onclick="_wrToggleGame('${gameId}')">
+        <span class="wr-game-title">${gIcon} ${gName}</span>
+        <span class="wr-game-summary">${summary}</span>
+        <span class="wr-game-chevron" id="wrChevron_${gameId}">▼</span>
+      </div>
+      <div class="wr-game-body hidden" id="wrBody_${gameId}">`;
 
     for (let rank = 1; rank <= 3; rank++) {
       const cfg = s[gameId]?.[rank] || { acorns: 0, items: [] };
       html += `<div class="wr-box-card mb-3">
         <div class="wr-box-header">${medals[rank - 1]} ${rank}위 선물상자</div>
         <div class="wr-box-body">
-          <!-- 도토리 -->
           <div class="wr-box-row">
             <span class="wr-box-row-label">🌰 도토리</span>
             <input type="number" id="wr_${gameId}_${rank}_acorns" class="field text-sm text-center" value="${cfg.acorns || 0}" min="0" style="width:72px">
           </div>`;
 
-      // 아이템 슬롯 3개
       for (let si = 0; si < 3; si++) {
         const item = cfg.items?.[si] || {};
         const hasItem = !!item.name;
@@ -1402,15 +1416,21 @@ async function renderWeeklyRewardSettings() {
             </div>
           </div>`;
       }
-      html += `</div></div>`; // close wr-box-body, wr-box-card
+      html += `</div></div>`;
     }
-    html += `</div>`; // close game section
+    html += `</div></div>`; // close wr-game-body, wr-game-section
   }
-  html += `<div class="text-right mt-2">
-    <button class="btn btn-primary px-5 py-2 text-sm" onclick="saveWeeklyRewardSettings()">저장</button>
-  </div>`;
 
   area.innerHTML = html;
+}
+
+function _wrToggleGame(gameId) {
+  const body = document.getElementById('wrBody_' + gameId);
+  const chevron = document.getElementById('wrChevron_' + gameId);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden');
+  if (chevron) chevron.textContent = isOpen ? '▼' : '▲';
 }
 
 // ── 주간 보상 지급 내역 렌더 (관리자) ──
