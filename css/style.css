@@ -3966,6 +3966,84 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .mg-log-time { color: var(--mg-log-time-color); }
 
 /* ══════════════════════════════════════════════
+   주간 보상 설정 카드
+   ══════════════════════════════════════════════ */
+.wr-box-card {
+  background: rgba(249,250,251,0.8);
+  border: 1.5px solid rgba(209,213,219,0.3);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.wr-box-header {
+  background: rgba(243,244,246,0.9);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(209,213,219,0.2);
+}
+.wr-box-body { padding: 10px 14px; }
+.wr-box-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+}
+.wr-box-row + .wr-box-row {
+  border-top: 1px solid rgba(229,231,235,0.4);
+}
+.wr-box-row-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 아이템 선택 카드 (모달 내) */
+.wr-item-pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(209,213,219,0.3);
+  background: rgba(249,250,251,0.8);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 70px;
+}
+.wr-item-pick-card:active {
+  transform: scale(0.96);
+  background: rgba(233,235,240,0.9);
+}
+
+/* 다크모드 */
+[data-theme="dark"] .wr-box-card {
+  background: rgba(55,65,81,0.4);
+  border-color: rgba(75,85,99,0.4);
+}
+[data-theme="dark"] .wr-box-header {
+  background: rgba(55,65,81,0.6);
+  border-bottom-color: rgba(75,85,99,0.3);
+}
+[data-theme="dark"] .wr-box-row + .wr-box-row {
+  border-top-color: rgba(75,85,99,0.3);
+}
+[data-theme="dark"] .wr-item-pick-card {
+  background: rgba(55,65,81,0.5);
+  border-color: rgba(75,85,99,0.4);
+}
+[data-theme="dark"] .wr-item-pick-card:active {
+  background: rgba(75,85,99,0.6);
+}
+
+/* ══════════════════════════════════════════════
    게임횟수 조정 모달
    ══════════════════════════════════════════════ */
 .mgc-status {
