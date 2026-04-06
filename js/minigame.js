@@ -1238,11 +1238,13 @@ function _wrPickItem(name, icon, rewardType) {
   const nameEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_name`);
   const iconEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_icon`);
   const rTypeEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_rtype`);
+  const qtyEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_qty`);
   const labelEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_label`);
   if (nameEl) nameEl.value = name;
   if (iconEl) iconEl.value = icon;
   if (rTypeEl) rTypeEl.value = rewardType;
-  if (labelEl) labelEl.textContent = icon + ' ' + name;
+  if (labelEl) { labelEl.textContent = icon + ' ' + name; labelEl.style.color = ''; }
+  if (qtyEl) { qtyEl.disabled = false; if (!qtyEl.value || qtyEl.value === '0') qtyEl.value = '1'; }
   closeModal();
 }
 
@@ -1278,8 +1280,8 @@ function _wrClearItemSlot(gameId, rank, slotIdx) {
   if (nameEl) nameEl.value = '';
   if (iconEl) iconEl.value = '';
   if (rTypeEl) rTypeEl.value = '';
-  if (qtyEl) qtyEl.value = '1';
-  if (labelEl) labelEl.textContent = '비어 있음';
+  if (qtyEl) { qtyEl.value = '1'; qtyEl.disabled = true; }
+  if (labelEl) { labelEl.textContent = '비어 있음'; labelEl.style.color = '#9ca3af'; }
 }
 
 // ── 관리자 보상 설정 UI 렌더 ──
@@ -1321,7 +1323,7 @@ async function renderWeeklyRewardSettings() {
             <input type="hidden" id="wr_${gameId}_${rank}_item${si}_icon" value="${(item.icon || '').replace(/"/g, '&quot;')}">
             <input type="hidden" id="wr_${gameId}_${rank}_item${si}_rtype" value="${(item.reward_type || '').replace(/"/g, '&quot;')}">
             <div class="flex items-center gap-1">
-              <input type="number" id="wr_${gameId}_${rank}_item${si}_qty" class="field text-sm text-center" value="${item.qty || 1}" min="1" style="width:48px" ${hasItem ? '' : 'disabled'}>
+              <input type="number" id="wr_${gameId}_${rank}_item${si}_qty" class="field text-sm text-center" value="${item.qty || 1}" min="1" style="width:64px" ${hasItem ? '' : 'disabled'}>
               <button class="text-xs text-gray-400 hover:text-red-400" onclick="_wrClearItemSlot('${gameId}',${rank},${si})" title="비우기">✕</button>
             </div>
           </div>`;
