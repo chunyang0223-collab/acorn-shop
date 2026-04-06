@@ -135,8 +135,10 @@ async function _brIncrementWeekly() {
 //  메인 탭 렌더
 // ══════════════════════════════════════════════
 async function renderBossRaid() {
+  console.log('[BossRaid] renderBossRaid: 진입');
   const container = document.getElementById('utab-bossraid');
-  if (!container) return;
+  if (!container) { console.log('[BossRaid] renderBossRaid: container 없음!'); return; }
+  console.log('[BossRaid] renderBossRaid: container 찾음, display:', container.style.display, 'offsetParent:', container.offsetParent);
 
   try {
   await _brLoadConfig();
@@ -1676,10 +1678,13 @@ async function _brClaimReward(idx) {
     toast('⚠️', '보상 처리 중 오류가 발생했지만 화면을 복구합니다');
   }
 
-  _brFinish();
+  console.log('[BossRaid] _brClaimReward: _brFinish 호출');
+  await _brFinish();
+  console.log('[BossRaid] _brClaimReward: _brFinish 완료');
 }
 
 async function _brFinish() {
+  console.log('[BossRaid] _brFinish: 진입');
   _brUnsubscribe();
   _brState = null;
   _brWeeklyDone = false;
@@ -1692,7 +1697,13 @@ async function _brFinish() {
   window._brSpMax = null;
   window._brBossRewardWeights = null;
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
-  renderBossRaid();
+  console.log('[BossRaid] _brFinish: 상태 초기화 완료, renderBossRaid 호출');
+  try {
+    await renderBossRaid();
+    console.log('[BossRaid] _brFinish: renderBossRaid 완료');
+  } catch (err) {
+    console.log('[BossRaid] _brFinish: renderBossRaid 에러', err);
+  }
 }
 
 // ══════════════════════════════════════════════
