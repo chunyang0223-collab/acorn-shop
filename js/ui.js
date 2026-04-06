@@ -155,7 +155,7 @@ async function doSignup() {
 //  TABS
 // ──────────────────────────────────────────────
 const U_TABS = ['shop','gacha','quest','squirrel','bossraid','minigame','ranking','recycle','friend','mypage'];
-const A_TABS = ['home','dashboard','items','gachaTest','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking','bossraid','sq_my','sq_shop','sq_fuse','sq_expedition','sq_farm'];
+const A_TABS = ['home','dashboard','items','gachaTest','raidBot','products','quests','requests','txlog','users','events','recycle','minigameSettings','squirrelSettings','ranking','bossraid','sq_my','sq_shop','sq_fuse','sq_expedition','sq_farm'];
 
 // ── 관리자 메뉴 정의 (개별 탭) ──
 const ADMIN_MENU_DEFS = {
@@ -164,6 +164,7 @@ const ADMIN_MENU_DEFS = {
   requests:         { icon: '📬', label: '신청목록' },
   products:         { icon: '🛍️', label: '상품' },
   gachaTest:        { icon: '🎲', label: '뽑기' },
+  raidBot:          { icon: '🤖', label: '레이드(봇전)' },
   quests:           { icon: '📋', label: '퀘스트' },
   recycle:          { icon: '♻️', label: '재활용' },
   events:           { icon: '🎉', label: '이벤트' },
@@ -179,7 +180,7 @@ const ADMIN_CATS = {
   dashboard: { icon: '📊', label: '대시보드',   tabs: ['dashboard'] },
   shop:      { icon: '🛒', label: '상점 운영',  tabs: ['products', 'gachaTest', 'events', 'requests'] },
   users:     { icon: '👥', label: '유저 관리',  tabs: ['users', 'txlog', 'ranking'] },
-  content:   { icon: '🎮', label: '콘텐츠',    tabs: ['items', 'quests', 'minigameSettings', 'recycle'] },
+  content:   { icon: '🎮', label: '콘텐츠',    tabs: ['items', 'quests', 'minigameSettings', 'raidBot', 'recycle'] },
   squirrel:  { icon: '🐿️', label: '다람쥐 마을', tabs: ['squirrelSettings'] }
 };
 
@@ -309,6 +310,7 @@ async function aTab(tab, btn) {
   if (tab === 'minigameSettings') renderMinigameAdmin();
   if (tab === 'squirrelSettings') sqAdminInit();
   if (tab === 'ranking') renderAdminRanking();
+  if (tab === 'raidBot')  { if (typeof brAdminRenderBotTest === 'function') brAdminRenderBotTest(); }
   if (tab === 'bossraid') { if (typeof brAdminOpenSettings === 'function') brAdminOpenSettings(); }
 }
 

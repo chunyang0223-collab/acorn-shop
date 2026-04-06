@@ -538,7 +538,7 @@ async function _brRenderLobby(container, raid) {
               return '<div class="br-sq-pick ' + (selected ? 'br-sq-selected' : '') + '" onclick="_brToggleSquirrel(\'' + sq.id + '\')" style="' + gs.border + ';box-shadow:' + gs.shadow + '">' +
                 '<img src="images/squirrels/' + (sq.sprite || 'sq_acorn') + '.png" class="br-sq-img" onerror="this.outerHTML=\'<div class=\\\'text-2xl\\\'>🐿️</div>\'">' +
                 '<p class="text-xs font-black mt-1" style="color:' + gs.color + '">' + _escHtml(sq.name) + '</p>' +
-                '<p class="text-xs text-gray-400">HP ' + (sq.stats?.hp || 0) + ' ATK ' + (sq.stats?.atk || 0) + '</p>' +
+                '<p class="text-xs text-gray-400">HP ' + (sq.stats?.hp || 0) + ' ATK ' + (sq.stats?.atk || 0) + ' DEF ' + (sq.stats?.def || 0) + '</p>' +
               '</div>';
             } catch(e) {
               console.error('br-sq-pick render error:', e);
@@ -1746,6 +1746,48 @@ function _brAdmSaveBossEdit(idx) {
 function _brAdmAddBoss() {
   _brConfig.bosses.push({ name: '새 보스', emoji: '👾', lvMin: 10, lvMax: 15, active: true });
   _brRenderBossList();
+}
+
+// ── 관리자 봇전 테스트 (독립 탭 렌더) ──
+async function brAdminRenderBotTest() {
+  var container = document.getElementById('atab-raidBot');
+  if (!container) return;
+
+  await _brLoadConfig();
+  if (typeof sqLoadSettings === 'function') await sqLoadSettings();
+
+  var weeklyCount = await _brGetWeeklyCount();
+  var remaining = Math.max(0, _brConfig.weekly_limit - weeklyCount);
+
+  container.innerHTML =
+    '<div class="clay-card p-6 text-center mb-4">' +
+      '<div class="text-4xl mb-2">🤖</div>' +
+      '<h2 class="text-lg font-black text-gray-800 mb-1">레이드 봇전 테스트</h2>' +
+      '<p class="text-xs text-gray-400 font-semibold mb-3">봇 다람쥐와 함께 레이드를 테스트합니다</p>' +
+      '<p class="text-xs font-bold mb-4" style="color:' + (remaining > 0 ? '#22c55e' : '#ef4444') + '">' +
+        '이번 주 남은 횟수: <span class="text-base">' + remaining + '</span> / ' + _brConfig.weekly_limit +
+      '</p>' +
+      (!_brConfig.enabled ? '<p class="text-xs text-red-400 font-bold mb-3">⚠️ 레이드가 현재 비활성 상태입니다 (봇전은 가능)</p>' : '') +
+      '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+        _brBotPresets.map(function(bp, i) {
+          return '<button onclick="_brCreateBotRoom(' + i + ')" class="btn" style="padding:10px 18px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6;border:1px solid rgba(139,92,246,0.15)"' +
+            (remaining <= 0 ? ' disabled style="opacity:0.4;cursor:not-allowed;padding:10px 18px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(139,92,246,0.1);color:#8b5cf6;border:1px solid rgba(139,92,246,0.15)"' : '') + '>' +
+            bp.emoji + ' ' + bp.label + '<br><span style="font-size:10px;color:#9ca3af">' + bp.desc + '</span>' +
+          '</button>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="clay-card p-4">' +
+      '<p class="text-xs font-bold text-gray-500 mb-2">📋 봇 프리셋 스탯</p>' +
+      _brBotPresets.map(function(bp) {
+        return '<div class="mb-2">' +
+          '<p class="text-xs font-bold text-gray-600">' + bp.emoji + ' ' + bp.label + ' (' + bp.desc + ')</p>' +
+          bp.squirrels.map(function(sq) {
+            return '<p class="text-xs text-gray-400" style="padding-left:12px">' + sq.name + ' — HP:' + sq.stats.hp + ' ATK:' + sq.stats.atk + ' DEF:' + sq.stats.def + '</p>';
+          }).join('') +
+        '</div>';
+      }).join('') +
+    '</div>';
 }
 
 async function brAdminOpenSettings() {
