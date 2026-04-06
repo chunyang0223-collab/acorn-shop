@@ -4043,6 +4043,82 @@ input[type="checkbox"]:active,
   background: rgba(75,85,99,0.6);
 }
 
+/* 보상받기 / 수령완료 버튼 */
+.wr-claim-btn {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(134,196,160,0.35);
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.wr-claim-btn:active {
+  transform: scale(0.95);
+  background: rgba(134,196,160,0.55);
+}
+.wr-claimed-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(209,213,219,0.3);
+  color: rgba(156,163,175,0.8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+[data-theme="dark"] .wr-claim-btn {
+  background: rgba(110,170,140,0.25);
+  color: #86efac;
+}
+[data-theme="dark"] .wr-claim-btn:active {
+  background: rgba(110,170,140,0.45);
+}
+[data-theme="dark"] .wr-claimed-badge {
+  background: rgba(75,85,99,0.3);
+  color: rgba(156,163,175,0.6);
+}
+
+/* 주간 보상 토글 버튼 (관리자) */
+.wr-toggle-btn {
+  position: relative;
+  width: 44px; height: 24px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(209,213,219,0.6);
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+}
+.wr-toggle-btn .wr-toggle-knob {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+.wr-toggle-btn.active {
+  background: rgba(134,196,160,0.85);
+}
+.wr-toggle-btn.active .wr-toggle-knob {
+  transform: translateX(20px);
+}
+[data-theme="dark"] .wr-toggle-btn {
+  background: rgba(75,85,99,0.5);
+}
+[data-theme="dark"] .wr-toggle-btn .wr-toggle-knob {
+  background: rgba(229,231,235,0.9);
+}
+[data-theme="dark"] .wr-toggle-btn.active {
+  background: rgba(110,170,140,0.7);
+}
+
 /* ══════════════════════════════════════════════
    게임횟수 조정 모달
    ══════════════════════════════════════════════ */
