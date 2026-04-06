@@ -3968,6 +3968,47 @@ input[type="checkbox"]:active,
 /* ══════════════════════════════════════════════
    주간 보상 설정 카드
    ══════════════════════════════════════════════ */
+/* 게임별 드롭다운 섹션 */
+.wr-game-section {
+  border: 1.5px solid rgba(209,213,219,0.3);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(249,250,251,0.5);
+}
+.wr-game-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.wr-game-header:active {
+  background: rgba(243,244,246,0.6);
+}
+.wr-game-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.wr-game-summary {
+  flex: 1;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+.wr-game-chevron {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s;
+  margin-left: 4px;
+}
+.wr-game-body {
+  padding: 0 14px 14px;
+}
+
 .wr-box-card {
   background: rgba(249,250,251,0.8);
   border: 1.5px solid rgba(209,213,219,0.3);
@@ -4024,6 +4065,13 @@ input[type="checkbox"]:active,
 }
 
 /* 다크모드 */
+[data-theme="dark"] .wr-game-section {
+  background: rgba(45,55,72,0.4);
+  border-color: rgba(75,85,99,0.4);
+}
+[data-theme="dark"] .wr-game-header:active {
+  background: rgba(55,65,81,0.5);
+}
 [data-theme="dark"] .wr-box-card {
   background: rgba(55,65,81,0.4);
   border-color: rgba(75,85,99,0.4);
