@@ -1098,16 +1098,17 @@ function toggleMgLogSection() {
 }
 
 // ──────────────────────────────────────────────
-//  주간 랭킹 보상 시스템
+//  주간 랭킹 보상 시스템 (선물상자 방식)
 // ──────────────────────────────────────────────
 
-// 기본 보상 설정
+// 설정 구조: { [gameId]: { [rank]: { acorns, items: [{ name, icon, qty }, ...] } } }
 const WEEKLY_REWARD_DEFAULTS = {
-  catch: { 1: 50, 2: 30, 3: 10 },
-  '2048': { 1: 50, 2: 30, 3: 10 }
+  catch:  { 1: { acorns: 50, items: [] }, 2: { acorns: 30, items: [] }, 3: { acorns: 10, items: [] } },
+  '2048': { 1: { acorns: 50, items: [] }, 2: { acorns: 30, items: [] }, 3: { acorns: 10, items: [] } }
 };
 
 let _weeklyRewardSettings = null;
+let _wrItemPickerTarget = null;  // 현재 아이템 선택 중인 슬롯 식별자
 
 // ── 이전 주 월요일 날짜 계산 (KST 기준) ──
 function _getPrevWeekMonday() {
@@ -1143,7 +1144,18 @@ async function loadWeeklyRewardSettings() {
   try {
     const { data } = await sb.from('app_settings').select('value')
       .eq('key', 'weekly_reward_settings').maybeSingle();
-    _weeklyRewardSettings = _parseValue(data?.value) || WEEKLY_REWARD_DEFAULTS;
+    const raw = _parseValue(data?.value);
+    // 이전 형식(단순 숫자) 호환: { catch: { 1: 50 } } → { catch: { 1: { acorns: 50, items: [] } } }
+    if (raw) {
+      for (const gid of Object.keys(raw)) {
+        for (const rank of Object.keys(raw[gid])) {
+          if (typeof raw[gid][rank] === 'number') {
+            raw[gid][rank] = { acorns: raw[gid][rank], items: [] };
+          }
+        }
+      }
+    }
+    _weeklyRewardSettings = raw || WEEKLY_REWARD_DEFAULTS;
   } catch(e) {
     console.warn('[weeklyReward] 설정 로드 실패', e);
     _weeklyRewardSettings = WEEKLY_REWARD_DEFAULTS;
@@ -1158,8 +1170,24 @@ async function saveWeeklyRewardSettings() {
     if (gameId === 'roulette') continue;
     settings[gameId] = {};
     for (let rank = 1; rank <= 3; rank++) {
-      const input = document.getElementById(`wr_${gameId}_${rank}`);
-      settings[gameId][rank] = parseInt(input?.value) || 0;
+      const acornsInput = document.getElementById(`wr_${gameId}_${rank}_acorns`);
+      const acorns = parseInt(acornsInput?.value) || 0;
+      const items = [];
+      for (let s = 0; s < 3; s++) {
+        const nameEl = document.getElementById(`wr_${gameId}_${rank}_item${s}_name`);
+        const iconEl = document.getElementById(`wr_${gameId}_${rank}_item${s}_icon`);
+        const qtyEl  = document.getElementById(`wr_${gameId}_${rank}_item${s}_qty`);
+        const rTypeEl = document.getElementById(`wr_${gameId}_${rank}_item${s}_rtype`);
+        if (nameEl?.value) {
+          items.push({
+            name: nameEl.value,
+            icon: iconEl?.value || '🎁',
+            qty: parseInt(qtyEl?.value) || 1,
+            reward_type: rTypeEl?.value || ''
+          });
+        }
+      }
+      settings[gameId][rank] = { acorns, items };
     }
   }
   try {
@@ -1170,6 +1198,88 @@ async function saveWeeklyRewardSettings() {
     console.warn('[weeklyReward] 설정 저장 실패', e);
     showToast('❌', '저장 실패');
   }
+}
+
+// ── 아이템 선택 모달 (관리자 보상 설정용) ──
+async function openWrItemPicker(gameId, rank, slotIdx) {
+  _wrItemPickerTarget = { gameId, rank, slotIdx };
+  // products 테이블에서 활성 아이템 로드
+  const { data: products } = await sb.from('products').select('id, name, icon, reward_type, item_type')
+    .eq('active', true).order('sort_order');
+
+  let html = `<div style="max-height:60vh;overflow-y:auto">
+    <h3 class="text-base font-black text-gray-800 mb-3">아이템 선택</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">`;
+
+  // 직접 입력 옵션
+  html += `<div class="wr-item-pick-card" onclick="_wrPickCustomItem()" style="border:1.5px dashed rgba(156,163,175,0.4)">
+    <div style="font-size:1.5rem">✏️</div>
+    <div class="text-xs font-bold text-gray-500">직접 입력</div>
+  </div>`;
+
+  for (const p of (products || [])) {
+    const escaped = (p.name || '').replace(/'/g, "\\'");
+    const rtype = (p.reward_type || '').replace(/'/g, "\\'");
+    html += `<div class="wr-item-pick-card" onclick="_wrPickItem('${escaped}','${p.icon || '🎁'}','${rtype}')">
+      <div style="font-size:1.5rem">${p.icon || '🎁'}</div>
+      <div class="text-xs font-bold text-gray-600" style="line-height:1.2;word-break:keep-all">${p.name}</div>
+    </div>`;
+  }
+
+  html += `</div>
+    <button class="btn btn-gray w-full py-2 text-sm mt-3" onclick="closeModal()">취소</button>
+  </div>`;
+  showModal(html);
+}
+
+function _wrPickItem(name, icon, rewardType) {
+  if (!_wrItemPickerTarget) return;
+  const { gameId, rank, slotIdx } = _wrItemPickerTarget;
+  const nameEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_name`);
+  const iconEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_icon`);
+  const rTypeEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_rtype`);
+  const labelEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_label`);
+  if (nameEl) nameEl.value = name;
+  if (iconEl) iconEl.value = icon;
+  if (rTypeEl) rTypeEl.value = rewardType;
+  if (labelEl) labelEl.textContent = icon + ' ' + name;
+  closeModal();
+}
+
+function _wrPickCustomItem() {
+  if (!_wrItemPickerTarget) return;
+  const { gameId, rank, slotIdx } = _wrItemPickerTarget;
+  showModal(`<div>
+    <h3 class="text-base font-black text-gray-800 mb-3">직접 입력</h3>
+    <label class="text-xs text-gray-500 block mb-1">아이콘 (이모지)</label>
+    <input type="text" id="_wrCustomIcon" class="field text-sm mb-2" value="🎁" maxlength="4">
+    <label class="text-xs text-gray-500 block mb-1">아이템 이름</label>
+    <input type="text" id="_wrCustomName" class="field text-sm mb-3" placeholder="예: 특별 칭호">
+    <div class="flex gap-2">
+      <button class="btn btn-gray flex-1 py-2 text-sm" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary flex-1 py-2 text-sm" onclick="_wrApplyCustomItem('${gameId}',${rank},${slotIdx})">확인</button>
+    </div>
+  </div>`);
+}
+
+function _wrApplyCustomItem(gameId, rank, slotIdx) {
+  const icon = document.getElementById('_wrCustomIcon')?.value || '🎁';
+  const name = document.getElementById('_wrCustomName')?.value || '';
+  if (!name) { showToast('⚠️', '아이템 이름을 입력하세요'); return; }
+  _wrPickItem(name, icon, '');
+}
+
+function _wrClearItemSlot(gameId, rank, slotIdx) {
+  const nameEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_name`);
+  const iconEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_icon`);
+  const rTypeEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_rtype`);
+  const qtyEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_qty`);
+  const labelEl = document.getElementById(`wr_${gameId}_${rank}_item${slotIdx}_label`);
+  if (nameEl) nameEl.value = '';
+  if (iconEl) iconEl.value = '';
+  if (rTypeEl) rTypeEl.value = '';
+  if (qtyEl) qtyEl.value = '1';
+  if (labelEl) labelEl.textContent = '비어 있음';
 }
 
 // ── 관리자 보상 설정 UI 렌더 ──
@@ -1186,24 +1296,42 @@ async function renderWeeklyRewardSettings() {
   let html = '';
   for (const gameId of gameIds) {
     const gName = MG_DEFAULTS[gameId]?.icon + ' ' + MG_DEFAULTS[gameId]?.name;
-    const rewards = s[gameId] || WEEKLY_REWARD_DEFAULTS[gameId] || {};
-    html += `<div class="mb-4">
-      <p class="text-sm font-bold text-gray-700 mb-2">${gName}</p>
-      <div class="flex gap-3">`;
+    html += `<div class="mb-5">
+      <p class="text-sm font-black text-gray-700 mb-3">${gName}</p>`;
+
     for (let rank = 1; rank <= 3; rank++) {
-      html += `<div class="flex-1">
-          <label class="text-xs text-gray-500 block mb-1">${medals[rank - 1]} ${rank}위</label>
-          <div class="flex items-center gap-1">
-            <input type="number" id="wr_${gameId}_${rank}" class="field text-sm text-center"
-              value="${rewards[rank] ?? 0}" min="0" style="width:100%">
-            <span class="text-xs text-gray-400">🌰</span>
-          </div>
-        </div>`;
+      const cfg = s[gameId]?.[rank] || { acorns: 0, items: [] };
+      html += `<div class="wr-box-card mb-3">
+        <div class="wr-box-header">${medals[rank - 1]} ${rank}위 선물상자</div>
+        <div class="wr-box-body">
+          <!-- 도토리 -->
+          <div class="wr-box-row">
+            <span class="wr-box-row-label">🌰 도토리</span>
+            <input type="number" id="wr_${gameId}_${rank}_acorns" class="field text-sm text-center" value="${cfg.acorns || 0}" min="0" style="width:72px">
+          </div>`;
+
+      // 아이템 슬롯 3개
+      for (let si = 0; si < 3; si++) {
+        const item = cfg.items?.[si] || {};
+        const hasItem = !!item.name;
+        const label = hasItem ? (item.icon || '🎁') + ' ' + item.name : '비어 있음';
+        html += `<div class="wr-box-row">
+            <span class="wr-box-row-label" id="wr_${gameId}_${rank}_item${si}_label" style="cursor:pointer;${hasItem ? '' : 'color:#9ca3af'}" onclick="openWrItemPicker('${gameId}',${rank},${si})">${label}</span>
+            <input type="hidden" id="wr_${gameId}_${rank}_item${si}_name" value="${(item.name || '').replace(/"/g, '&quot;')}">
+            <input type="hidden" id="wr_${gameId}_${rank}_item${si}_icon" value="${(item.icon || '').replace(/"/g, '&quot;')}">
+            <input type="hidden" id="wr_${gameId}_${rank}_item${si}_rtype" value="${(item.reward_type || '').replace(/"/g, '&quot;')}">
+            <div class="flex items-center gap-1">
+              <input type="number" id="wr_${gameId}_${rank}_item${si}_qty" class="field text-sm text-center" value="${item.qty || 1}" min="1" style="width:48px" ${hasItem ? '' : 'disabled'}>
+              <button class="text-xs text-gray-400 hover:text-red-400" onclick="_wrClearItemSlot('${gameId}',${rank},${si})" title="비우기">✕</button>
+            </div>
+          </div>`;
+      }
+      html += `</div></div>`; // close wr-box-body, wr-box-card
     }
-    html += `</div></div>`;
+    html += `</div>`; // close game section
   }
-  html += `<div class="text-right mt-3">
-    <button class="btn btn-primary px-4 py-2 text-sm" onclick="saveWeeklyRewardSettings()">저장</button>
+  html += `<div class="text-right mt-2">
+    <button class="btn btn-primary px-5 py-2 text-sm" onclick="saveWeeklyRewardSettings()">저장</button>
   </div>`;
 
   area.innerHTML = html;
@@ -1251,7 +1379,6 @@ async function renderWeeklyRewardHistory() {
         <span>${gameIcon}</span>
         <span class="flex-1 font-semibold text-gray-700">${nameMap[r.user_id] || '알 수 없음'}</span>
         <span class="text-gray-500">${r.score.toLocaleString()}점</span>
-        <span class="font-bold text-gray-800">+${r.reward_amount}🌰</span>
         ${paidBadge}
       </div>`;
     }
@@ -1264,10 +1391,9 @@ async function renderWeeklyRewardHistory() {
 }
 
 // ──────────────────────────────────────────────
-//  주간 스냅샷 생성 + 보상 지급 (클라이언트 트리거)
+//  주간 스냅샷 생성 + 선물상자 지급 (클라이언트 트리거)
 // ──────────────────────────────────────────────
 
-// 앱 시작 시 호출 — 이전 주 스냅샷이 없으면 생성 + 보상 지급
 async function checkAndProcessWeeklyRewards() {
   try {
     if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
@@ -1280,20 +1406,17 @@ async function checkAndProcessWeeklyRewards() {
 
     if (existing?.length) {
       console.log('[weeklyReward] 이전 주 스냅샷 이미 존재:', prevMonday);
-      // 미지급 보상만 처리
-      await _payUnpaidRewards(prevMonday);
+      await _deliverUnpaidBoxes(prevMonday);
       return;
     }
 
-    // 이전 주에 플레이 기록이 있는지 확인
     const range = _getWeekRange(prevMonday);
     const gameIds = Object.keys(MG_DEFAULTS).filter(g => g !== 'roulette');
 
     for (const gameId of gameIds) {
-      const rewards = _weeklyRewardSettings[gameId];
-      if (!rewards) continue;
+      const gameCfg = _weeklyRewardSettings[gameId];
+      if (!gameCfg) continue;
 
-      // 이전 주 최고 점수 기준 상위 3명
       const { data: plays } = await sb.from('minigame_plays')
         .select('user_id, score')
         .eq('game_id', gameId)
@@ -1313,10 +1436,10 @@ async function checkAndProcessWeeklyRewards() {
         .map(([uid, score]) => ({ uid, score }))
         .sort((a, b) => b.score - a.score);
 
-      // 상위 3명 스냅샷 저장
       for (let i = 0; i < Math.min(3, sorted.length); i++) {
         const rank = i + 1;
-        const rewardAmount = rewards[rank] || 0;
+        const cfg = gameCfg[rank] || { acorns: 0, items: [] };
+        // reward_amount는 요약용 (도토리 수량만)
         try {
           await sb.from('weekly_ranking_rewards').upsert({
             week_id: prevMonday,
@@ -1324,7 +1447,7 @@ async function checkAndProcessWeeklyRewards() {
             rank: rank,
             user_id: sorted[i].uid,
             score: sorted[i].score,
-            reward_amount: rewardAmount,
+            reward_amount: cfg.acorns || 0,
             paid: false
           }, { onConflict: 'week_id,game_id,rank' });
         } catch(e) {
@@ -1334,50 +1457,77 @@ async function checkAndProcessWeeklyRewards() {
     }
 
     console.log('[weeklyReward] 이전 주 스냅샷 생성 완료:', prevMonday);
-
-    // 보상 지급 실행
-    await _payUnpaidRewards(prevMonday);
+    await _deliverUnpaidBoxes(prevMonday);
   } catch(e) {
     console.warn('[weeklyReward] 주간 보상 처리 실패', e);
   }
 }
 
-// ── 미지급 보상 처리 ──
-async function _payUnpaidRewards(weekId) {
+// ── 미지급 선물상자 인벤토리 삽입 ──
+async function _deliverUnpaidBoxes(weekId) {
   try {
     const { data: unpaid } = await sb.from('weekly_ranking_rewards')
-      .select('id, user_id, reward_amount, game_id, rank')
+      .select('id, user_id, game_id, rank, score, reward_amount')
       .eq('week_id', weekId).eq('paid', false);
 
     if (!unpaid?.length) return;
 
+    if (!_weeklyRewardSettings) await loadWeeklyRewardSettings();
+
     for (const r of unpaid) {
-      if (r.reward_amount <= 0) {
-        // 보상이 0이면 지급 처리만
+      const cfg = _weeklyRewardSettings[r.game_id]?.[r.rank] || { acorns: 0, items: [] };
+      const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
+      const gameIcon = MG_DEFAULTS[r.game_id]?.icon || '🎮';
+      const medals = ['', '🥇', '🥈', '🥉'];
+
+      // 보상 내용이 전부 비어있으면 지급 처리만
+      if ((cfg.acorns || 0) <= 0 && (!cfg.items || cfg.items.length === 0)) {
         await sb.from('weekly_ranking_rewards')
           .update({ paid: true, paid_at: new Date().toISOString() })
           .eq('id', r.id);
         continue;
       }
+
+      // 인벤토리에 선물상자 삽입
+      const boxSnapshot = {
+        name: `${gameName} 주간 ${r.rank}위 보상`,
+        icon: '🎁',
+        reward_type: 'REWARD_BOX',
+        description: `${medals[r.rank]} ${weekId} 주차 ${gameName} ${r.rank}위 (${r.score.toLocaleString()}점)`,
+        box_contents: {
+          acorns: cfg.acorns || 0,
+          items: (cfg.items || []).filter(it => it.name)
+        },
+        // 메타 정보 (표시용)
+        _meta: {
+          week_id: weekId,
+          game_id: r.game_id,
+          game_icon: gameIcon,
+          rank: r.rank,
+          score: r.score
+        }
+      };
+
       try {
-        // 도토리 지급
-        const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
-        await sb.rpc('adjust_acorns', {
-          p_user_id: r.user_id,
-          p_amount: r.reward_amount,
-          p_reason: `주간 랭킹 ${r.rank}위 보상 — ${gameName}`
+        await sb.from('inventory').insert({
+          user_id: r.user_id,
+          product_id: null,
+          product_snapshot: boxSnapshot,
+          quantity: 1,
+          status: 'held',
+          from_gacha: false
         });
         // 지급 완료 표시
         await sb.from('weekly_ranking_rewards')
           .update({ paid: true, paid_at: new Date().toISOString() })
           .eq('id', r.id);
-        console.log(`[weeklyReward] 보상 지급: ${r.game_id} ${r.rank}위 → ${r.reward_amount}🌰`);
+        console.log(`[weeklyReward] 선물상자 지급: ${r.game_id} ${r.rank}위 → ${r.user_id}`);
       } catch(e) {
-        console.warn(`[weeklyReward] 보상 지급 실패 (${r.id})`, e);
+        console.warn(`[weeklyReward] 선물상자 지급 실패 (${r.id})`, e);
       }
     }
   } catch(e) {
-    console.warn('[weeklyReward] 미지급 보상 처리 실패', e);
+    console.warn('[weeklyReward] 선물상자 지급 처리 실패', e);
   }
 }
 
@@ -1387,7 +1537,7 @@ async function showWeeklyRewardNotification() {
   try {
     const prevMonday = _getPrevWeekMonday();
     const { data } = await sb.from('weekly_ranking_rewards')
-      .select('game_id, rank, reward_amount, score')
+      .select('game_id, rank, score')
       .eq('user_id', myProfile.id).eq('week_id', prevMonday).eq('paid', true);
 
     if (!data?.length) return;
@@ -1395,7 +1545,7 @@ async function showWeeklyRewardNotification() {
     const medals = ['', '🥇', '🥈', '🥉'];
     for (const r of data) {
       const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
-      showToast(medals[r.rank], `${gameName} 주간 ${r.rank}위! +${r.reward_amount}🌰`);
+      showToast(medals[r.rank], `${gameName} 주간 ${r.rank}위! 인벤토리를 확인하세요 🎁`);
     }
   } catch(e) { console.warn('[weeklyReward] 알림 표시 실패', e); }
 }

@@ -345,6 +345,7 @@ function openInvDetail(inventoryId) {
   const isGiftTicket   = p.reward_type === 'GIFT_GACHA_TICKET';
   const isGiftAcorn    = p.reward_type === 'GIFT_ACORN';
   const isExamMaterial = p.reward_type === 'EXAM_MATERIAL';
+  const isRewardBox    = p.reward_type === 'REWARD_BOX';
   const qty = item.quantity || 1;
 
   const icon = isGiftAcorn ? '🎁' : (p.icon || '🎁');
@@ -367,6 +368,7 @@ function openInvDetail(inventoryId) {
   if (isGachaTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:#6d28d9">🎫 뽑기권</span>`;
   if (isGiftTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:#6d28d9">🎫 티켓 ${p.gift_qty||1}장</span>`;
   if (isGiftAcorn) badges += `<span class="inv-detail-badge" style="background:rgba(52,211,153,0.15);color:#065f46">🌰 도토리 ${p.gift_qty||0}개</span>`;
+  if (isRewardBox) badges += `<span class="inv-detail-badge" style="background:rgba(251,191,36,0.2);color:#92400e">🏆 주간 랭킹 보상</span>`;
   if (qty > 1) badges += `<span class="inv-detail-badge" style="background:rgba(99,102,241,0.15);color:#4338ca">x${qty}</span>`;
 
   // 액션 버튼
@@ -375,6 +377,8 @@ function openInvDetail(inventoryId) {
     actionsHtml = `<button class="btn w-full py-2 text-sm" disabled style="background:#fef3c7;color:#92400e;border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`;
   } else if (isExamMaterial) {
     // 등급심사 재료: 사용 버튼 없음
+  } else if (isRewardBox) {
+    actionsHtml += `<button class="btn btn-primary w-full py-2 text-sm" onclick="closeModal();useInventoryItem('${item.id}')">🎁 선물상자 열기</button>`;
   } else {
     // 사용하기 버튼
     let btnLabel = '사용하기';
@@ -433,6 +437,38 @@ async function renderInventory() {
 async function useInventoryItem(inventoryId) {
   const item = (window._invCache || []).find(i => i.id === inventoryId);
   const p = item?.products || item?.product_snapshot || {};
+
+  // 주간 랭킹 보상 선물상자
+  if (p.reward_type === 'REWARD_BOX') {
+    const contents = p.box_contents || {};
+    const meta = p._meta || {};
+    const medals = ['', '🥇', '🥈', '🥉'];
+    const medal = medals[meta.rank] || '🏆';
+
+    let previewHtml = '';
+    if (contents.acorns > 0) {
+      previewHtml += `<div class="flex items-center justify-center gap-1 text-sm font-bold" style="color:#065f46">🌰 도토리 ${contents.acorns}개</div>`;
+    }
+    for (const it of (contents.items || [])) {
+      previewHtml += `<div class="flex items-center justify-center gap-1 text-sm font-bold" style="color:#4338ca">${it.icon || '🎁'} ${it.name} x${it.qty || 1}</div>`;
+    }
+    if (!previewHtml) previewHtml = '<p class="text-sm text-gray-400">내용물 없음</p>';
+
+    showModal(`<div style="text-align:center">
+      <div style="font-size:3rem;margin-bottom:4px;animation:float 3s ease-in-out infinite">🎁</div>
+      <h2 class="text-lg font-black" style="color:var(--text-primary);margin-bottom:2px">${p.name || '주간 랭킹 보상'}</h2>
+      <p class="text-xs" style="color:var(--text-secondary);margin-bottom:12px">${p.description || ''}</p>
+      <div style="background:rgba(251,191,36,0.1);border:1.5px solid rgba(251,191,36,0.25);border-radius:14px;padding:12px;margin-bottom:14px">
+        <p class="text-xs font-bold text-gray-500 mb-2">상자 내용물</p>
+        <div class="space-y-1">${previewHtml}</div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">닫기</button>
+        <button class="btn btn-primary flex-1 py-2" onclick="closeModal();confirmUseItem('${inventoryId}')">🎁 열기</button>
+      </div>
+    </div>`);
+    return;
+  }
 
   // 도토리 티켓 확인 모달
   if (p.reward_type === 'ACORN_TICKET') {
@@ -620,6 +656,98 @@ async function _confirmUseItemInner(inventoryId) {
     if (existingReq && existingReq.length > 0) {
       toast('⏳', '이미 승인 대기 중인 신청이 있어요!'); return;
     }
+  }
+
+  // ── 주간 랭킹 선물상자 개봉 ──
+  if (p.reward_type === 'REWARD_BOX') {
+    const contents = p.box_contents || item.product_snapshot?.box_contents || {};
+    const meta = p._meta || item.product_snapshot?._meta || {};
+    const acorns = contents.acorns || 0;
+    const items = (contents.items || []).filter(it => it.name);
+
+    // 인벤토리에서 사용 처리 (held → used, 중복 개봉 방지)
+    const { data: updated } = await sb.from('inventory')
+      .update({ status: 'used' }).eq('id', inventoryId).eq('status', 'held').select('id');
+    if (!updated?.length) { toast('❌', '이미 개봉된 상자예요'); renderInventory(); return; }
+
+    // 도토리 지급
+    if (acorns > 0) {
+      const res = await sb.rpc('adjust_acorns', {
+        p_user_id: myProfile.id,
+        p_amount: acorns,
+        p_reason: `주간 랭킹 선물상자 — ${p.name || '보상'}`
+      });
+      if (res.data?.success) myProfile.acorns = res.data.balance;
+    }
+
+    // 아이템별 분배
+    const grantedItems = [];
+    for (const it of items) {
+      const qty = it.qty || 1;
+      if (it.reward_type === 'GACHA_TICKET' || it.reward_type === 'GIFT_GACHA_TICKET') {
+        // 뽑기 티켓 → 카운터에 합산
+        const { data: tr } = await sb.rpc('adjust_gacha_tickets', {
+          p_user_id: myProfile.id, p_amount: qty
+        });
+        if (tr?.success) window._gachaTicketCount = tr.count;
+        grantedItems.push({ icon: it.icon, name: it.name, qty, method: 'ticket' });
+      } else if (it.reward_type === 'GIFT_ACORN' || it.reward_type === 'AUTO_ACORN' || it.reward_type === 'ACORN_TICKET') {
+        // 도토리 계열 → 즉시 합산
+        const res = await sb.rpc('adjust_acorns', {
+          p_user_id: myProfile.id, p_amount: qty,
+          p_reason: `주간 랭킹 선물상자 아이템 — ${it.name}`
+        });
+        if (res.data?.success) myProfile.acorns = res.data.balance;
+        grantedItems.push({ icon: it.icon, name: it.name, qty, method: 'acorn' });
+      } else {
+        // 일반 아이템 → 인벤토리에 삽입
+        for (let q = 0; q < qty; q++) {
+          await sb.from('inventory').insert({
+            user_id: myProfile.id,
+            product_id: null,
+            product_snapshot: {
+              name: it.name,
+              icon: it.icon || '🎁',
+              reward_type: it.reward_type || 'MANUAL_ITEM',
+              description: `주간 랭킹 보상으로 획득`
+            },
+            quantity: 1,
+            status: 'held',
+            from_gacha: false
+          });
+        }
+        grantedItems.push({ icon: it.icon, name: it.name, qty, method: 'inventory' });
+      }
+    }
+
+    // 결과 모달
+    let resultHtml = '<div style="text-align:center">';
+    resultHtml += '<div style="font-size:3rem;margin-bottom:8px">🎉</div>';
+    resultHtml += `<h2 class="text-lg font-black" style="color:var(--text-primary);margin-bottom:12px">선물상자 개봉!</h2>`;
+    resultHtml += '<div style="background:rgba(52,211,153,0.08);border:1.5px solid rgba(52,211,153,0.2);border-radius:14px;padding:14px;margin-bottom:16px">';
+
+    if (acorns > 0) {
+      resultHtml += `<div class="flex items-center justify-center gap-2 text-base font-black" style="color:#065f46;margin-bottom:${grantedItems.length ? '8px' : '0'}">🌰 도토리 +${acorns}</div>`;
+    }
+    for (const gi of grantedItems) {
+      const methodLabel = gi.method === 'ticket' ? '(티켓 합산)' : gi.method === 'acorn' ? '(즉시 지급)' : '(인벤토리)';
+      resultHtml += `<div class="flex items-center justify-center gap-2 text-sm font-bold" style="color:#4338ca">${gi.icon} ${gi.name} x${gi.qty} <span class="text-xs text-gray-400">${methodLabel}</span></div>`;
+    }
+    if (acorns <= 0 && grantedItems.length === 0) {
+      resultHtml += '<p class="text-sm text-gray-400">내용물이 비어있었어요</p>';
+    }
+    resultHtml += '</div>';
+    resultHtml += `<button class="btn btn-primary w-full py-2 text-sm" onclick="closeModal()">확인</button>`;
+    resultHtml += '</div>';
+
+    playSound('reward');
+    showModal(resultHtml);
+    updateAcornDisplay();
+    triggerAutoQuest('itemUse');
+    window._gachaTicketCount = undefined;
+    renderInventory();
+    renderMypage();
+    return;
   }
 
   // ── 선물 뽑기 티켓: 즉시 카운터 추가 ──
