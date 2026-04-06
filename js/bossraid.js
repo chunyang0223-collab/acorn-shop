@@ -1594,64 +1594,88 @@ async function _brClaimReward(idx) {
   const wasVictory = window._brIsVictory;
   const rewardSource = wasVictory ? 'boss_raid' : 'boss_raid_defeat';
 
-  // 도토리 지급
-  if (chosen.acorns > 0) {
-    await sb.rpc('adjust_acorns', {
-      p_user_id: myProfile.id,
-      p_amount: chosen.acorns,
-      p_reason: wasVictory ? '보스레이드 보상' : '보스레이드 패배 위로 보상'
-    });
-    // 메모리 잔고 즉시 반영
-    myProfile.acorns = (myProfile.acorns || 0) + chosen.acorns;
-  }
-
-  // 아이템 지급 (스택형 아이템 자동 처리)
-  if (chosen.item) {
-    if (typeof grantItem === 'function') {
-      await grantItem(myProfile.id, chosen.item.name, 1);
-    } else {
-      // fallback: 기존 방식
-      const { data: product } = await sb.from('products')
-        .select('id').eq('name', chosen.item.name).maybeSingle();
-      await sb.from('inventory').insert({
-        user_id: myProfile.id,
-        product_id: product?.id || null,
-        product_snapshot: { name: chosen.item.name, icon: chosen.item.icon, from: rewardSource },
-        from_gacha: false,
-        status: 'held'
+  try {
+    // 도토리 지급
+    console.log('[BossRaid] step1: 도토리 지급 시작', { acorns: chosen.acorns, userId: myProfile.id });
+    if (chosen.acorns > 0) {
+      const acornRes = await sb.rpc('adjust_acorns', {
+        p_user_id: myProfile.id,
+        p_amount: chosen.acorns,
+        p_reason: wasVictory ? '보스레이드 보상' : '보스레이드 패배 위로 보상'
       });
+      console.log('[BossRaid] step1: 도토리 지급 결과', { data: acornRes.data, error: acornRes.error });
+      if (acornRes.error) throw new Error('도토리 지급 실패: ' + JSON.stringify(acornRes.error));
+      // 메모리 잔고 즉시 반영
+      myProfile.acorns = (myProfile.acorns || 0) + chosen.acorns;
     }
-  }
 
-  // 주간 횟수 증가 (중복 방지)
-  if (!_brWeeklyDone) {
-    _brWeeklyDone = true;
-    await _brIncrementWeekly();
-  }
-
-  // 보상 수령 완료 표시 (봇 모드면 양쪽 다 처리)
-  const isBotMode = _brState.host_id === _brState.guest_id;
-  if (isBotMode) {
-    await sb.from('boss_raids').update({
-      host_rewarded: true, guest_rewarded: true, status: 'finished'
-    }).eq('id', _brState.id);
-  } else {
-    await sb.from('boss_raids').update({
-      [isHost ? 'host_rewarded' : 'guest_rewarded']: true
-    }).eq('id', _brState.id);
-
-    // 양쪽 다 보상 수령했으면 finished
-    const { data: latest } = await sb.from('boss_raids')
-      .select('host_rewarded, guest_rewarded').eq('id', _brState.id).single();
-    if (latest && latest.host_rewarded && latest.guest_rewarded) {
-      await sb.from('boss_raids').update({ status: 'finished' }).eq('id', _brState.id);
+    // 아이템 지급 (스택형 아이템 자동 처리)
+    console.log('[BossRaid] step2: 아이템 지급 시작', { item: chosen.item });
+    if (chosen.item) {
+      if (typeof grantItem === 'function') {
+        await grantItem(myProfile.id, chosen.item.name, 1);
+        console.log('[BossRaid] step2: grantItem 완료');
+      } else {
+        // fallback: 기존 방식
+        const { data: product } = await sb.from('products')
+          .select('id').eq('name', chosen.item.name).maybeSingle();
+        console.log('[BossRaid] step2: product 조회', { product });
+        const invRes = await sb.from('inventory').insert({
+          user_id: myProfile.id,
+          product_id: product?.id || null,
+          product_snapshot: { name: chosen.item.name, icon: chosen.item.icon, from: rewardSource },
+          from_gacha: false,
+          status: 'held'
+        });
+        console.log('[BossRaid] step2: inventory insert 결과', { data: invRes.data, error: invRes.error });
+        if (invRes.error) throw new Error('아이템 지급 실패: ' + JSON.stringify(invRes.error));
+      }
     }
+
+    // 주간 횟수 증가 (중복 방지)
+    console.log('[BossRaid] step3: 주간 횟수 증가', { alreadyDone: _brWeeklyDone });
+    if (!_brWeeklyDone) {
+      _brWeeklyDone = true;
+      await _brIncrementWeekly();
+      console.log('[BossRaid] step3: 주간 횟수 증가 완료');
+    }
+
+    // 보상 수령 완료 표시 (봇 모드면 양쪽 다 처리)
+    const isBotMode = _brState.host_id === _brState.guest_id;
+    console.log('[BossRaid] step4: DB 상태 업데이트', { raidId: _brState.id, isBotMode, isHost });
+    if (isBotMode) {
+      const upRes = await sb.from('boss_raids').update({
+        host_rewarded: true, guest_rewarded: true, status: 'finished'
+      }).eq('id', _brState.id);
+      console.log('[BossRaid] step4: 봇모드 update 결과', { data: upRes.data, error: upRes.error });
+      if (upRes.error) throw new Error('레이드 상태 업데이트 실패: ' + JSON.stringify(upRes.error));
+    } else {
+      const upRes = await sb.from('boss_raids').update({
+        [isHost ? 'host_rewarded' : 'guest_rewarded']: true
+      }).eq('id', _brState.id);
+      console.log('[BossRaid] step4: 보상수령 update 결과', { data: upRes.data, error: upRes.error });
+      if (upRes.error) throw new Error('보상수령 표시 실패: ' + JSON.stringify(upRes.error));
+
+      // 양쪽 다 보상 수령했으면 finished
+      const { data: latest } = await sb.from('boss_raids')
+        .select('host_rewarded, guest_rewarded').eq('id', _brState.id).single();
+      console.log('[BossRaid] step4: 양쪽 수령 확인', latest);
+      if (latest && latest.host_rewarded && latest.guest_rewarded) {
+        await sb.from('boss_raids').update({ status: 'finished' }).eq('id', _brState.id);
+        console.log('[BossRaid] step4: 양쪽 완료 → finished');
+      }
+    }
+
+    // 도토리 표시 갱신
+    if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
+
+    console.log('[BossRaid] step5: 보상 수령 완료');
+    toast('🎉', `보상 수령 완료! 🌰 ${chosen.acorns}개${chosen.item ? ' + ' + chosen.item.icon + chosen.item.name : ''}`);
+  } catch (err) {
+    console.log('[BossRaid] _brClaimReward error:', err);
+    toast('⚠️', '보상 처리 중 오류가 발생했지만 화면을 복구합니다');
   }
 
-  // 도토리 표시 갱신
-  if (typeof updateAcornDisplay === 'function') updateAcornDisplay();
-
-  toast('🎉', `보상 수령 완료! 🌰 ${chosen.acorns}개${chosen.item ? ' + ' + chosen.item.icon + chosen.item.name : ''}`);
   _brFinish();
 }
 
