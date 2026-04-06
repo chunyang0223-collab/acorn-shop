@@ -1193,10 +1193,10 @@ async function saveWeeklyRewardSettings() {
   try {
     await sb.from('app_settings').upsert({ key: 'weekly_reward_settings', value: settings });
     _weeklyRewardSettings = settings;
-    showToast('✅', '주간 보상 설정이 저장되었습니다');
+    toast('✅', '주간 보상 설정이 저장되었습니다');
   } catch(e) {
     console.warn('[weeklyReward] 설정 저장 실패', e);
-    showToast('❌', '저장 실패');
+    toast('❌', '저장 실패');
   }
 }
 
@@ -1267,7 +1267,7 @@ function _wrPickCustomItem() {
 function _wrApplyCustomItem(gameId, rank, slotIdx) {
   const icon = document.getElementById('_wrCustomIcon')?.value || '🎁';
   const name = document.getElementById('_wrCustomName')?.value || '';
-  if (!name) { showToast('⚠️', '아이템 이름을 입력하세요'); return; }
+  if (!name) { toast('⚠️', '아이템 이름을 입력하세요'); return; }
   _wrPickItem(name, icon, '');
 }
 
@@ -1547,7 +1547,7 @@ async function showWeeklyRewardNotification() {
     const medals = ['', '🥇', '🥈', '🥉'];
     for (const r of data) {
       const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
-      showToast(medals[r.rank], `${gameName} 주간 ${r.rank}위! 인벤토리를 확인하세요 🎁`);
+      toast(medals[r.rank], `${gameName} 주간 ${r.rank}위! 인벤토리를 확인하세요 🎁`);
     }
   } catch(e) { console.warn('[weeklyReward] 알림 표시 실패', e); }
 }
