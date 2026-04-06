@@ -47,6 +47,16 @@ var _sqSettings  = {
 };
 var _sqAudioCtx = null;
 
+// ── 모드별 요소 선택 헬퍼 ──
+function _sqEl(id) {
+  const isAdmin = !document.getElementById('adminMode')?.classList.contains('hidden');
+  if (isAdmin) {
+    const adminEl = document.getElementById(id + 'Admin');
+    if (adminEl) return adminEl;
+  }
+  return document.getElementById(id);
+}
+
 // ── 스프라이트 목록 (17종) ──
 var _sqSprites = ['sq_acorn','sq_white','sq_choco','sq_black','sq_beige','sq_gold','sq_pink','sq_gray','sq_darkbrown','sq_stripe','sq_ribbon1','sq_ribbon2','sq_mahogany','sq_cream','sq_mocha','sq_silver','sq_heart','sq_curious'];
 function _sqRandomSprite() {
@@ -338,7 +348,7 @@ async function _sqPoll() {
       if (!localIds.has(sq.id)) {
         _sqSquirrels.push(sq);
         _sqState[sq.id] = 'idle';
-        const grid = document.getElementById('squirrelGrid');
+        const grid = _sqEl('squirrelGrid');
         if (grid) {
           grid.querySelector('.text-center.py-8')?.remove();
           const tmp = document.createElement('div');
@@ -349,7 +359,7 @@ async function _sqPoll() {
             _sqStartTimer(sq.id, sq);
           }
         }
-        const countEl = document.getElementById('squirrelCount');
+        const countEl = _sqEl('squirrelCount');
         if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
       }
     });
@@ -361,7 +371,7 @@ async function _sqPoll() {
         delete _sqState[sq.id];
         _sqClearTimer(sq.id);
         document.getElementById('sqCard-' + sq.id)?.remove();
-        const countEl = document.getElementById('squirrelCount');
+        const countEl = _sqEl('squirrelCount');
         if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
       }
     });
@@ -477,10 +487,10 @@ async function sqLoadSquirrels() {
 // ================================================================
 async function sqRenderGrid() {
   console.log('[sqRenderGrid] 호출됨, _sqSquirrels =', _sqSquirrels?.length);
-  const grid = document.getElementById('squirrelGrid');
+  const grid = _sqEl('squirrelGrid');
   if (!grid) { console.log('[sqRenderGrid] grid 요소 없음, return'); return; }
-  document.getElementById('squirrelCount')?.setAttribute('textContent', _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10));
-  const countEl = document.getElementById('squirrelCount');
+  _sqEl('squirrelCount')?.setAttribute('textContent', _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10));
+  const countEl = _sqEl('squirrelCount');
   if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
 
   // 농부 데이터가 아직 로드되지 않았으면 한 번 로드
@@ -2358,10 +2368,10 @@ async function sqDoSell(id, price) {
     delete _sqState[id];
     _sqClearTimer(id);
     document.getElementById('sqCard-' + id)?.remove();
-    const countEl = document.getElementById('squirrelCount');
+    const countEl = _sqEl('squirrelCount');
     if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
     if (_sqSquirrels.length === 0) {
-      const grid = document.getElementById('squirrelGrid');
+      const grid = _sqEl('squirrelGrid');
       if (grid) grid.innerHTML = `
         <div class="text-center py-8">
           <div style="font-size:48px">🐿️</div>

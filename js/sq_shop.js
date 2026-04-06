@@ -85,8 +85,8 @@ async function sqDoBuySquirrel(price) {
     _sqState[inserted.id] = 'idle';
     if (typeof _btlSound === 'function') _btlSound('buy');
 
-    const grid = document.getElementById('squirrelGrid');
-    const countEl = document.getElementById('squirrelCount');
+    const grid = _sqEl('squirrelGrid');
+    const countEl = _sqEl('squirrelCount');
     if (countEl) countEl.textContent = _sqSquirrels.length + ' / ' + (_sqSettings.max_squirrels || 10);
     if (grid) {
       grid.querySelector('.text-center.py-8')?.remove(); // 빈 상태 메시지 제거
