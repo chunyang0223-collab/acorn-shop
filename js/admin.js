@@ -1179,6 +1179,53 @@ async function showGiftItemModal(userId, userName) {
     return '📬 아이템';
   };
 
+  // 주간 보상 선물상자 옵션 생성
+  let rewardBoxOptions = '';
+  if (typeof _weeklyRewardSettings !== 'undefined' && _weeklyRewardSettings) {
+    const medals = ['', '🥇', '🥈', '🥉'];
+    for (const gameId of Object.keys(MG_DEFAULTS || {})) {
+      if (gameId === 'roulette') continue;
+      const gameCfg = _weeklyRewardSettings[gameId];
+      if (!gameCfg) continue;
+      const gameName = MG_DEFAULTS[gameId]?.name || gameId;
+      const gameIcon = MG_DEFAULTS[gameId]?.icon || '🎮';
+      for (let rank = 1; rank <= 3; rank++) {
+        const cfg = gameCfg[rank];
+        if (!cfg) continue;
+        const hasContent = (cfg.acorns > 0) || (cfg.items?.length > 0);
+        if (!hasContent) continue;
+        const summary = [];
+        if (cfg.acorns > 0) summary.push(`🌰${cfg.acorns}`);
+        for (const it of (cfg.items || [])) { if (it.name) summary.push(`${it.icon}${it.name}x${it.qty||1}`); }
+        rewardBoxOptions += `<option value="REWARD_BOX:${gameId}:${rank}">${gameIcon} ${gameName} ${medals[rank]}${rank}위 (${summary.join(' + ')})</option>`;
+      }
+    }
+  }
+  // 설정이 아직 안 로드됐으면 로드 시도
+  if (!rewardBoxOptions && typeof loadWeeklyRewardSettings === 'function') {
+    await loadWeeklyRewardSettings();
+    if (_weeklyRewardSettings) {
+      const medals = ['', '🥇', '🥈', '🥉'];
+      for (const gameId of Object.keys(MG_DEFAULTS || {})) {
+        if (gameId === 'roulette') continue;
+        const gameCfg = _weeklyRewardSettings[gameId];
+        if (!gameCfg) continue;
+        const gameName = MG_DEFAULTS[gameId]?.name || gameId;
+        const gameIcon = MG_DEFAULTS[gameId]?.icon || '🎮';
+        for (let rank = 1; rank <= 3; rank++) {
+          const cfg = gameCfg[rank];
+          if (!cfg) continue;
+          const hasContent = (cfg.acorns > 0) || (cfg.items?.length > 0);
+          if (!hasContent) continue;
+          const summary = [];
+          if (cfg.acorns > 0) summary.push(`🌰${cfg.acorns}`);
+          for (const it of (cfg.items || [])) { if (it.name) summary.push(`${it.icon}${it.name}x${it.qty||1}`); }
+          rewardBoxOptions += `<option value="REWARD_BOX:${gameId}:${rank}">${gameIcon} ${gameName} ${medals[rank]}${rank}위 (${summary.join(' + ')})</option>`;
+        }
+      }
+    }
+  }
+
   showModal(`
     <div>
       <div class="text-center mb-4">
@@ -1188,7 +1235,10 @@ async function showGiftItemModal(userId, userName) {
       </div>
       <select id="giftProductId" class="field w-full mb-3">
         <option value="">상품 선택</option>
+        ${rewardBoxOptions ? `<optgroup label="🎁 주간 보상 선물상자">${rewardBoxOptions}</optgroup>` : ''}
+        <optgroup label="📦 일반 상품">
         ${giftable.map(p => `<option value="${p.id}">${p.icon} ${p.name} (${typeLabel(p)})</option>`).join('')}
+        </optgroup>
       </select>
       <input type="number" id="giftQty" class="field w-full mb-4" placeholder="수량 (기본 1)" min="1" max="99" value="1">
       <div class="flex gap-2">
@@ -1202,6 +1252,47 @@ async function confirmGiftItem(userId, userName) {
   const productId = document.getElementById('giftProductId')?.value;
   const qty = parseInt(document.getElementById('giftQty')?.value) || 1;
   if (!productId) { toast('❌', '상품을 선택해주세요'); return; }
+
+  // 주간 보상 선물상자 처리
+  if (productId.startsWith('REWARD_BOX:')) {
+    const [, gameId, rankStr] = productId.split(':');
+    const rank = parseInt(rankStr);
+    const cfg = _weeklyRewardSettings?.[gameId]?.[rank];
+    if (!cfg) { toast('❌', '보상 설정을 찾을 수 없어요'); return; }
+    closeModal();
+
+    const gameName = MG_DEFAULTS[gameId]?.name || gameId;
+    const gameIcon = MG_DEFAULTS[gameId]?.icon || '🎮';
+    const medals = ['', '🥇', '🥈', '🥉'];
+
+    for (let i = 0; i < qty; i++) {
+      const boxSnapshot = {
+        name: `${gameName} 주간 ${rank}위 보상`,
+        icon: '🎁',
+        reward_type: 'REWARD_BOX',
+        description: `${medals[rank]} ${gameName} ${rank}위 선물상자`,
+        box_contents: {
+          acorns: cfg.acorns || 0,
+          items: (cfg.items || []).filter(it => it.name)
+        },
+        _meta: { game_id: gameId, game_icon: gameIcon, rank: rank }
+      };
+      const { error } = await sb.from('inventory').insert({
+        user_id: userId,
+        product_id: null,
+        product_snapshot: boxSnapshot,
+        quantity: 1,
+        status: 'held',
+        from_gacha: false
+      });
+      if (error) { toast('❌', '선물 실패: ' + error.message); return; }
+    }
+
+    await pushNotif(userId, 'reward', '선물 도착! 🎁', `관리자가 ${gameIcon} ${gameName} ${rank}위 선물상자를 보냈어요! 인벤토리를 확인하세요.`);
+    toast('🎁', `${userName}님께 ${gameIcon} ${gameName} ${rank}위 선물상자 ${qty}개 선물했어요!`);
+    playSound('approve');
+    return;
+  }
 
   const { data: p } = await sb.from('products').select('*').eq('id', productId).single();
   if (!p) { toast('❌', '상품을 찾을 수 없어요'); return; }
