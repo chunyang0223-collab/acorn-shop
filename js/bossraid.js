@@ -156,7 +156,8 @@ async function renderBossRaid() {
   }
 
   const weeklyCount = await _brGetWeeklyCount();
-  const remaining = Math.max(0, _brConfig.weekly_limit - weeklyCount);
+  const _isAdminUser = !!myProfile?.is_admin;
+  const remaining = _isAdminUser ? Infinity : Math.max(0, _brConfig.weekly_limit - weeklyCount);
 
   // 진행 중인 레이드 확인
   const { data: activeRaids, error: activeErr } = await sb.from('boss_raids')
@@ -217,7 +218,7 @@ async function renderBossRaid() {
       <h2 class="text-xl font-black text-gray-800 mb-1">협동 보스레이드</h2>
       <p class="text-sm text-gray-400 font-semibold mb-1">친구와 함께 강력한 보스에 도전하세요!</p>
       <p class="text-xs font-bold mb-4" style="color:${remaining > 0 ? '#22c55e' : '#ef4444'}">
-        이번 주 남은 횟수: <span class="text-base">${remaining}</span> / ${_brConfig.weekly_limit}
+        이번 주 남은 횟수: <span class="text-base">${_isAdminUser ? '∞' : remaining}</span> / ${_brConfig.weekly_limit}${_isAdminUser ? ' (관리자 무제한)' : ''}
       </p>
       <button class="btn btn-primary px-8 py-3 text-base" onclick="_brCreateRoom()" ${remaining <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
         🐉 방 만들기
@@ -227,7 +228,7 @@ async function renderBossRaid() {
           <p style="font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:8px">🤖 관리자 테스트 (봇과 함께)</p>
           <div style="display:flex;gap:6px;justify-content:center">
             ${_brBotPresets.map((bp, i) => `
-              <button onclick="_brCreateBotRoom(${i})" style="padding:6px 12px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6" ${remaining <= 0 ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
+              <button onclick="_brCreateBotRoom(${i})" style="padding:6px 12px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6">
                 ${bp.emoji} ${bp.label}<br><span style="font-size:9px;color:#9ca3af">${bp.desc}</span>
               </button>
             `).join('')}
@@ -274,10 +275,12 @@ async function renderBossRaid() {
 //  방 생성 / 참가
 // ══════════════════════════════════════════════
 async function _brCreateRoom() {
-  const weeklyCount = await _brGetWeeklyCount();
-  if (weeklyCount >= _brConfig.weekly_limit) {
-    toast('❌', '이번 주 레이드 횟수를 모두 사용했어요');
-    return;
+  if (!myProfile?.is_admin) {
+    const weeklyCount = await _brGetWeeklyCount();
+    if (weeklyCount >= _brConfig.weekly_limit) {
+      toast('❌', '이번 주 레이드 횟수를 모두 사용했어요');
+      return;
+    }
   }
 
   toast('⏳', '방을 만드는 중...');
@@ -295,10 +298,12 @@ async function _brCreateRoom() {
 }
 
 async function _brJoinRoom(raidId) {
-  const weeklyCount = await _brGetWeeklyCount();
-  if (weeklyCount >= _brConfig.weekly_limit) {
-    toast('❌', '이번 주 레이드 횟수를 모두 사용했어요');
-    return;
+  if (!myProfile?.is_admin) {
+    const weeklyCount = await _brGetWeeklyCount();
+    if (weeklyCount >= _brConfig.weekly_limit) {
+      toast('❌', '이번 주 레이드 횟수를 모두 사용했어요');
+      return;
+    }
   }
 
   toast('⏳', '참가하는 중...');
@@ -323,11 +328,6 @@ var _brBotSquirrels = null; // 현재 봇 다람쥐 정보 (전투 시뮬에서 
 
 async function _brCreateBotRoom(presetIdx) {
   if (!myProfile?.is_admin) return;
-  const weeklyCount = await _brGetWeeklyCount();
-  if (weeklyCount >= _brConfig.weekly_limit) {
-    toast('❌', '이번 주 레이드 횟수를 모두 사용했어요');
-    return;
-  }
 
   const preset = _brBotPresets[presetIdx];
   if (!preset) return;
@@ -1865,21 +1865,20 @@ async function brAdminRenderBotTest() {
   if (typeof sqLoadSettings === 'function') await sqLoadSettings();
 
   var weeklyCount = await _brGetWeeklyCount();
-  var remaining = Math.max(0, _brConfig.weekly_limit - weeklyCount);
+  var remaining = Infinity; // 관리자 봇전 탭은 항상 무제한
 
   container.innerHTML =
     '<div class="clay-card p-6 text-center mb-4">' +
       '<div class="text-4xl mb-2">🤖</div>' +
       '<h2 class="text-lg font-black text-gray-800 mb-1">레이드 봇전 테스트</h2>' +
       '<p class="text-xs text-gray-400 font-semibold mb-3">봇 다람쥐와 함께 레이드를 테스트합니다</p>' +
-      '<p class="text-xs font-bold mb-4" style="color:' + (remaining > 0 ? '#22c55e' : '#ef4444') + '">' +
-        '이번 주 남은 횟수: <span class="text-base">' + remaining + '</span> / ' + _brConfig.weekly_limit +
+      '<p class="text-xs font-bold mb-4" style="color:#22c55e">' +
+        '이번 주 남은 횟수: <span class="text-base">∞</span> / ' + _brConfig.weekly_limit + ' (관리자 무제한)' +
       '</p>' +
       (!_brConfig.enabled ? '<p class="text-xs text-red-400 font-bold mb-3">⚠️ 레이드가 현재 비활성 상태입니다 (봇전은 가능)</p>' : '') +
       '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
         _brBotPresets.map(function(bp, i) {
-          return '<button onclick="_brCreateBotRoom(' + i + ')" class="btn" style="padding:10px 18px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6;border:1px solid rgba(139,92,246,0.15)"' +
-            (remaining <= 0 ? ' disabled style="opacity:0.4;cursor:not-allowed;padding:10px 18px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(139,92,246,0.1);color:#8b5cf6;border:1px solid rgba(139,92,246,0.15)"' : '') + '>' +
+          return '<button onclick="_brCreateBotRoom(' + i + ')" class="btn" style="padding:10px 18px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6;border:1px solid rgba(139,92,246,0.15)">' +
             bp.emoji + ' ' + bp.label + '<br><span style="font-size:10px;color:#9ca3af">' + bp.desc + '</span>' +
           '</button>';
         }).join('') +
