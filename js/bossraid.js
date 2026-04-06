@@ -83,6 +83,13 @@ var _brWeeklyDone = false; // 주간 횟수 중복 차감 방지 플래그
 var _brLobbySeq = 0;      // 로비 렌더 race-condition 방지용 시퀀스
 var _brResultRendered = false; // 결과 화면 중복 렌더 방지 플래그
 
+// ── 활성 컨테이너 결정 (관리자 봇전 탭 vs 유저 탭) ──
+function _brGetContainer() {
+  var admin = document.getElementById('atab-raidBot');
+  if (admin && !admin.classList.contains('hidden')) return admin;
+  return document.getElementById('utab-bossraid');
+}
+
 // ── 설정 로드 ──
 async function _brLoadConfig() {
   const { data } = await sb.from('app_settings')
@@ -281,7 +288,7 @@ async function _brCreateRoom() {
 
   _brState = data;
   _brSubscribe(data.id);
-  _brRenderLobby(document.getElementById('utab-bossraid'), data);
+  _brRenderLobby(_brGetContainer(), data);
   toast('✅', '방이 생성되었어요! 상대를 기다리는 중...');
 }
 
@@ -305,7 +312,7 @@ async function _brJoinRoom(raidId) {
 
   _brState = data;
   _brSubscribe(data.id);
-  _brRenderLobby(document.getElementById('utab-bossraid'), data);
+  _brRenderLobby(_brGetContainer(), data);
   toast('✅', '참가했어요!');
 }
 
@@ -357,7 +364,7 @@ async function _brCreateBotRoom(presetIdx) {
 
   _brState = data;
   _brSubscribe(data.id);
-  _brRenderLobby(document.getElementById('utab-bossraid'), data);
+  _brRenderLobby(_brGetContainer(), data);
   toast('🤖', preset.label + ' 봇이 참가했어요! 다람쥐를 선택하세요.');
 }
 
@@ -411,7 +418,7 @@ async function _brPoll(raidId) {
 }
 
 function _brOnStateChange(raid) {
-  const container = document.getElementById('utab-bossraid');
+  const container = _brGetContainer();
   if (!container) return;
 
   switch (raid.status) {
@@ -601,7 +608,7 @@ async function _brToggleSquirrel(sqId) {
 
   await sb.from('boss_raids').update({ [field]: ids }).eq('id', _brState.id);
   _brState[field] = ids;
-  _brRenderLobby(document.getElementById('utab-bossraid'), _brState);
+  _brRenderLobby(_brGetContainer(), _brState);
 }
 
 // ── Ready 버튼 ──
@@ -618,7 +625,7 @@ async function _brReady() {
   toast('✅', '준비완료! 상대를 기다리는 중...');
 
   // UI 즉시 갱신
-  _brRenderLobby(document.getElementById('utab-bossraid'), _brState);
+  _brRenderLobby(_brGetContainer(), _brState);
 
   // 양쪽 다 Ready인지 확인
   const { data: latest } = await sb.from('boss_raids').select('host_ready, guest_ready').eq('id', _brState.id).single();
@@ -1247,7 +1254,7 @@ function _brUpdateDmgMeter() {
 
 function _brGoToResult() {
   if (typeof _sndStopBGM === 'function') _sndStopBGM();
-  if (_brState) _brRenderResult(document.getElementById('utab-bossraid'), _brState);
+  if (_brState) _brRenderResult(_brGetContainer(), _brState);
 }
 
 function _brAddLog(text, cls) {
@@ -1913,6 +1920,35 @@ async function brAdminOpenSettings() {
         </div>
       </div>
 
+      <!-- 전투 밸런스 -->
+      <div class="br-card">
+        <p class="br-sub-title">⚔️ 전투 밸런스</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div>
+            <label class="br-label">다람쥐 방어 효율 (%)</label>
+            <input type="number" id="brAdm_sqDefEff" value="${c.sq_def_effect || 48}" min="0" max="100" class="br-input-sm">
+          </div>
+          <div>
+            <label class="br-label">보스 방어 효율 (%)</label>
+            <input type="number" id="brAdm_monDefEff" value="${c.mon_def_effect || 38}" min="0" max="100" class="br-input-sm">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div>
+            <label class="br-label">평타 편차</label>
+            <input type="number" id="brAdm_atkSwing" value="${c.atk_swing || 3}" min="0" max="50" class="br-input-sm">
+          </div>
+          <div>
+            <label class="br-label">스킬 편차</label>
+            <input type="number" id="brAdm_skillSwing" value="${c.skill_swing || 5}" min="0" max="50" class="br-input-sm">
+          </div>
+          <div>
+            <label class="br-label">보스 공격 편차</label>
+            <input type="number" id="brAdm_monSwing" value="${c.mon_swing || 3}" min="0" max="50" class="br-input-sm">
+          </div>
+        </div>
+      </div>
+
       <!-- 패배 보상 -->
       <div class="br-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -2002,6 +2038,12 @@ async function brAdminSaveSettings() {
     // 필살기
     ultimate_uses: +el('brAdm_ultiUses').value || 1,
     ultimate_mult: +el('brAdm_ultiMult').value || 2.0,
+    // 전투 밸런스
+    sq_def_effect: +el('brAdm_sqDefEff').value,
+    mon_def_effect: +el('brAdm_monDefEff').value,
+    atk_swing: +el('brAdm_atkSwing').value,
+    skill_swing: +el('brAdm_skillSwing').value,
+    mon_swing: +el('brAdm_monSwing').value,
     // 패배 보상
     defeat_reward_enabled: el('brAdm_defeatEnabled').dataset.val === 'true',
     defeat_acorns: [+(el('brAdm_defAcMin')?.value) || 0, +(el('brAdm_defAcMax')?.value) || 0],
