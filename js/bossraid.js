@@ -1278,6 +1278,31 @@ function _brUpdateDmgMeter() {
     if (segSkill) segSkill.style.width = skillW + '%';
     if (segUlti) segUlti.style.width = ultiW + '%';
 
+    // 실제 너비가 있는 세그먼트에만 라운드 + 글로우 적용
+    var segs = [
+      { el: segAtk, w: e.dmgAtk, glow: '0 0 6px rgba(156,163,175,0.5)' },
+      { el: segSkill, w: e.dmgSkill, glow: '0 0 8px rgba(250,204,21,0.6)' },
+      { el: segUlti, w: e.dmgUlti, glow: '0 0 10px rgba(220,38,38,0.7)' }
+    ];
+    var active = segs.filter(function(s) { return s.w > 0; });
+    for (var si = 0; si < segs.length; si++) {
+      var s = segs[si];
+      if (!s.el) continue;
+      if (s.w <= 0) {
+        s.el.style.borderRadius = '0';
+        s.el.style.boxShadow = 'none';
+        continue;
+      }
+      var isFirst = active.length > 0 && active[0].el === s.el;
+      var isLast = active.length > 0 && active[active.length - 1].el === s.el;
+      var rTL = isFirst ? '6px' : '0';
+      var rBL = isFirst ? '6px' : '0';
+      var rTR = isLast ? '6px' : '0';
+      var rBR = isLast ? '6px' : '0';
+      s.el.style.borderRadius = rTL + ' ' + rTR + ' ' + rBR + ' ' + rBL;
+      s.el.style.boxShadow = s.glow;
+    }
+
     // 툴팁
     var track = document.getElementById('brDmgBar_' + e.id);
     if (track && e.dmg > 0) {
