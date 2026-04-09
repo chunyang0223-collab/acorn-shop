@@ -486,7 +486,7 @@ function uTab(tab, btn) {
 }
 
 // ── 메뉴 점검 관리 ──
-const MAINT_TABS = ['shop','gacha','quest','recycle','minigame','squirrel','bossraid','mypage','sq_shop','sq_fuse','sq_expedition','sq_farm'];
+const MAINT_TABS = ['shop','gacha','quest','recycle','squirrel','bossraid','mypage','sq_shop','sq_fuse','sq_expedition','sq_farm'];
 const SQ_SUB_MAINT = ['sq_shop','sq_fuse','sq_expedition','sq_farm'];
 
 async function toggleMaintenance(tab) {
@@ -545,7 +545,7 @@ function renderMaintenanceBtns() {
 }
 
 // ── 미니게임 전체 점검 토글 (maintenance.minigame + minigame_settings 일괄 동기화) ──
-const MG_SUB_IDS = ['catch', '2048', 'roulette'];
+const MG_SUB_IDS = ['catch', '2048', 'roulette', 'crossword', 'squirrelThief'];
 
 async function toggleMinigameAll() {
   // 1) maintenance.minigame 토글
@@ -593,7 +593,7 @@ async function toggleMgMaint(gameId) {
 }
 
 function renderMgMaintBtns() {
-  ['catch', '2048', 'roulette'].forEach(id => {
+  MG_SUB_IDS.forEach(id => {
     const btn = document.getElementById('maint-mg_' + id);
     if (!btn) return;
     const s = _mgSettings[id] || MG_DEFAULTS[id] || {};
