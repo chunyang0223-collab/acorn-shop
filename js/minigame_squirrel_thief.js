@@ -723,8 +723,10 @@ async function _stStartFishing() {
 
   _stFishingState = { phase: 'waiting', timer: null };
 
-  // 랜덤 시간 후 찌 반응 (3~12초)
-  const waitTime = 3000 + Math.random() * 9000;
+  // 랜덤 시간 후 찌 반응 (수동: 3~12초, 자동: 1~4초)
+  const waitTime = _stAutoFishing
+    ? (1000 + Math.random() * 3000)
+    : (3000 + Math.random() * 9000);
 
   _stFishingState.timer = setTimeout(() => {
     if (!_stFishingState) return;
@@ -739,9 +741,9 @@ async function _stStartFishing() {
     btn.disabled = false;
     btn.onclick = () => _stCatchFish();
 
-    // 자동낚시 모드면 자동으로 잡아당기기
+    // 자동낚시 모드면 자동으로 잡아당기기 (즉시 반응)
     if (_stAutoFishing) {
-      setTimeout(() => _stAutoFishBite(), 300 + Math.random() * 400);
+      setTimeout(() => _stAutoFishBite(), 100 + Math.random() * 150);
     }
 
     // 타이밍 윈도우 (1.5초 내 클릭해야 함)
@@ -767,7 +769,7 @@ function _stFishTooEarly() {
   _stRenderFishingTab();
   // 자동낚시 모드면 다음 낚시 진행 (패널티 없으므로 계속)
   if (_stAutoFishing) {
-    setTimeout(() => _stAutoFishNext(), 1000);
+    setTimeout(() => _stAutoFishNext(), 300);
   }
 }
 
@@ -778,7 +780,7 @@ function _stFishMissed() {
   _stRenderFishingTab();
   // 자동낚시 모드면 다음 낚시 진행 (패널티 없으므로 계속)
   if (_stAutoFishing) {
-    setTimeout(() => _stAutoFishNext(), 1000);
+    setTimeout(() => _stAutoFishNext(), 300);
   }
 }
 
@@ -844,15 +846,15 @@ async function _stCatchFish() {
     console.error('[다람쥐도둑] 낚시 저장 실패:', e);
   }
 
-  // 2초 후 리셋
+  // 리셋 (자동: 0.7초, 수동: 2초)
   setTimeout(() => {
     _stResetFishing();
     _stRenderFishingTab();
     // 자동낚시 모드면 다음 낚시 진행
     if (_stAutoFishing) {
-      setTimeout(() => _stAutoFishNext(), 500);
+      setTimeout(() => _stAutoFishNext(), 200);
     }
-  }, 2000);
+  }, _stAutoFishing ? 700 : 2000);
 }
 
 function _stResetFishing() {
@@ -1240,11 +1242,22 @@ async function _stDispatchSquirrel() {
     .filter(p => p.id !== _stPlayer.id)
     .map(p => p.id);
 
-  const { data: availableBlocks } = await sb.from('sq_thief_blocks')
+  if (otherPlayerIds.length === 0) {
+    toast('⚠️', '다른 플레이어가 없어서 훔칠 수 없어요!');
+    return;
+  }
+
+  const { data: availableBlocks, error: blockErr } = await sb.from('sq_thief_blocks')
     .select('*')
     .eq('room_id', _stRoom.id)
     .in('owner_id', otherPlayerIds)
     .eq('status', 'inventory'); // 숨김(hidden)과 잠김(locked) 제외
+
+  if (blockErr || !availableBlocks) {
+    console.error('[ST] 블록 조회 실패:', blockErr);
+    toast('❌', '블록 정보를 불러올 수 없어요. 다시 시도해주세요.');
+    return;
+  }
 
   const results = [];
   let stolenCount = 0;

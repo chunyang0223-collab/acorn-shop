@@ -155,6 +155,7 @@ const supabase = (() => {
         delete()       { _method = 'DELETE'; return q; },
 
         async then(resolve, reject) {
+          let _retried = false;
           try {
             let finalUrl = _url;
             // .select()가 명시적으로 호출되었는지 추적
@@ -190,6 +191,28 @@ const supabase = (() => {
             const cr = r.headers?.get?.('Content-Range');
             if (cr) { const m = cr.match(/\/(\d+)/); if (m) count = parseInt(m[1]); }
 
+            // 401 → 토큰 만료 가능성 → 자동 갱신 후 재시도 (1회)
+            if (r.status === 401 && _session?.refresh_token && !_retried) {
+              console.log('[supabase-client] 401 감지, 토큰 갱신 후 재시도');
+              _retried = true;
+              await _refreshSession();
+              // 갱신된 헤더로 재요청
+              const h2 = { ...h, 'Authorization': headers['Authorization'] };
+              const r2 = await fetch(finalUrl, { method: _method, headers: h2, body: _body });
+              const text2 = await r2.text();
+              let d2 = null;
+              try { d2 = text2 ? JSON.parse(text2) : null; } catch(e) { d2 = null; }
+              let count2 = null;
+              const cr2 = r2.headers?.get?.('Content-Range');
+              if (cr2) { const m = cr2.match(/\/(\d+)/); if (m) count2 = parseInt(m[1]); }
+              if (!r2.ok) {
+                resolve({ data: null, error: { message: d2?.message || d2?.hint || r2.statusText }, count: count2 });
+              } else {
+                if (_maybeSingle && Array.isArray(d2)) d2 = d2.length > 0 ? d2[0] : null;
+                resolve({ data: d2, error: null, count: count2 });
+              }
+              return;
+            }
             if (!r.ok) {
               resolve({ data: null, error: { message: d?.message || d?.hint || r.statusText }, count });
             } else {
