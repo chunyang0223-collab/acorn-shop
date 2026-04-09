@@ -611,7 +611,7 @@ function _stRenderFishingTab() {
     b.obtained_method === 'fished' &&
     b.obtained_at?.slice(0, 10) === today
   ).length;
-  const maxDaily = 7;
+  const maxDaily = getMgSetting('squirrelThief', 'dailyFishing');
   const remaining = Math.max(0, maxDaily - todayFished);
 
   if (fishingMaint) {
@@ -1030,7 +1030,7 @@ function _stRenderThiefTab() {
 
   // 오늘 출정 횟수
   const todayDispatches = _stPlayer?.dispatch_counts?.[today] || 0;
-  const maxDispatches = 2;
+  const maxDispatches = getMgSetting('squirrelThief', 'dailyDispatch');
   const remaining = Math.max(0, maxDispatches - todayDispatches);
 
   _stDispatchTargets = [null, null, null, null, null];
@@ -1130,7 +1130,7 @@ async function _stDispatchSquirrel() {
 
   const today = _stGetTodayKST();
   const todayDispatches = _stPlayer?.dispatch_counts?.[today] || 0;
-  if (todayDispatches >= 2) {
+  if (todayDispatches >= getMgSetting('squirrelThief', 'dailyDispatch')) {
     toast('⚠️', '오늘 출정 횟수를 모두 사용했어요!');
     return;
   }
@@ -1148,7 +1148,7 @@ async function _stDispatchSquirrel() {
 
   const results = [];
   let stolenCount = 0;
-  const maxStolen = 2;
+  const maxStolen = getMgSetting('squirrelThief', 'maxSteal');
 
   playSound('stDispatchStart');
 
@@ -1320,7 +1320,7 @@ function _stRenderShopTab() {
   const tc = document.getElementById('st-tab-content');
   const today = _stGetTodayKST();
   const alreadyPurchased = _stPlayer?.shop_purchases?.[today] || false;
-  const acornCost = 3;
+  const acornCost = getMgSetting('squirrelThief', 'shopPrice');
 
   tc.innerHTML = `
     <div class="clay-card p-4 mb-3" style="animation:clayPop .3s var(--ease-bounce)">
@@ -1358,7 +1358,7 @@ function _stShowPurchasePicker() {
   showModal(`<div class="text-center">
     <div class="text-2xl mb-2">🏪</div>
     <h3 class="font-black text-gray-800 mb-3">구매할 블록을 선택하세요</h3>
-    <p class="text-xs text-gray-500 mb-3">🌰 3 도토리가 차감됩니다.</p>
+    <p class="text-xs text-gray-500 mb-3">🌰 ${getMgSetting('squirrelThief', 'shopPrice')} 도토리가 차감됩니다.</p>
     <div style="max-height:200px;overflow-y:auto">${options}</div>
     <button class="btn btn-gray mt-3 px-4 py-2" onclick="closeModal()">취소</button>
   </div>`);
@@ -1367,7 +1367,7 @@ function _stShowPurchasePicker() {
 async function _stPurchaseBlock(letter) {
   closeModal();
 
-  const acornCost = 3;
+  const acornCost = getMgSetting('squirrelThief', 'shopPrice');
   if ((myProfile?.acorns || 0) < acornCost) {
     toast('❌', `도토리가 부족해요! (필요: 🌰${acornCost}, 보유: 🌰${myProfile?.acorns || 0})`);
     return;
@@ -1931,7 +1931,17 @@ async function _stAdminTestStart() {
 
     toast('🧪', '테스트 모드 시작! 현재: 화요일 (낚시)');
 
-    // 미니게임 화면으로 전환
+    // 관리자 화면 → 사용자 미니게임 플레이 화면으로 전환
+    const adminMode = document.getElementById('adminMode');
+    const userMode = document.getElementById('userMode');
+    if (adminMode) adminMode.classList.add('hidden');
+    if (userMode) userMode.classList.remove('hidden');
+
+    // 사용자 탭 중 미니게임만 표시
+    document.querySelectorAll('[id^="utab-"]').forEach(el => el.classList.add('hidden'));
+    const mgTab = document.getElementById('utab-minigame');
+    if (mgTab) mgTab.classList.remove('hidden');
+
     const hub = document.getElementById('minigame-hub');
     const play = document.getElementById('minigame-play');
     if (hub) hub.classList.add('hidden');
@@ -2065,5 +2075,16 @@ function _stTestEnd() {
   _stWords = [];
 
   toast('🧪', '테스트 모드를 종료했어요.');
-  exitMinigame();
+
+  // 관리자 화면으로 복귀
+  const adminMode = document.getElementById('adminMode');
+  const userMode = document.getElementById('userMode');
+  if (adminMode) adminMode.classList.remove('hidden');
+  if (userMode) userMode.classList.add('hidden');
+
+  // 미니게임 플레이 영역 정리
+  const hub = document.getElementById('minigame-hub');
+  const play = document.getElementById('minigame-play');
+  if (hub) hub.classList.remove('hidden');
+  if (play) { play.classList.add('hidden'); play.innerHTML = ''; }
 }

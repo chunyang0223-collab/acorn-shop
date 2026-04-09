@@ -42,7 +42,11 @@ const MG_DEFAULTS = {
     maintenance: true,
     fishingMaintenance: false,
     playLimit: 0, rewardLimit: 0,
-    entryFee: 0, maxReward: 0, duration: 0
+    entryFee: 0, maxReward: 0, duration: 0,
+    dailyFishing: 7,       // 1일 낚시 횟수
+    dailyDispatch: 2,      // 1일 출정 횟수
+    maxSteal: 2,           // 출정당 최대 도둑 수
+    shopPrice: 3           // 상점 블록 가격 (도토리)
   }
 };
 
@@ -450,7 +454,7 @@ function _mgSwitchTab(gameId) {
 async function renderMinigameAdmin() {
   await loadMinigameSettings();
   const list  = document.getElementById('mgSettingsList');
-  const games = ['catch', '2048', 'roulette', 'squirrelThief'];
+  const games = ['catch', '2048', 'roulette', 'crossword', 'squirrelThief'];
 
   /* ── 탭 버튼 ── */
   var tabBar = '<div class="mg-tab-bar">' +
@@ -493,7 +497,13 @@ async function renderMinigameAdmin() {
         '<input type="checkbox" id="mg-squirrelThief-fishingMaintenance" ' + (val('fishingMaintenance') ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:#f97316">' +
       '</label>';
       inner += '<p class="text-xs text-gray-400 mb-3">게임 전체 점검은 위의 🔧 점검 토글, 낚시터만 닫으려면 🎣 낚시터 점검을 켜세요.</p>';
-      inner += '<div style="border-top:1.5px dashed #e5e7eb;padding-top:12px;margin-top:8px">' +
+      inner += _mgSep();
+      inner += '<div class="text-xs font-black text-gray-600 mb-1">⚙️ 게임 설정</div>';
+      inner += _mgRow('🎣 1일 낚시 횟수', '<input class="field text-center" type="number" min="1" max="30" style="width:80px" id="mg-squirrelThief-dailyFishing" value="' + val('dailyFishing') + '">');
+      inner += _mgRow('🐿️ 1일 출정 횟수', '<input class="field text-center" type="number" min="1" max="10" style="width:80px" id="mg-squirrelThief-dailyDispatch" value="' + val('dailyDispatch') + '">');
+      inner += _mgRow('🎒 출정당 최대 도둑 수', '<input class="field text-center" type="number" min="1" max="5" style="width:80px" id="mg-squirrelThief-maxSteal" value="' + val('maxSteal') + '">');
+      inner += _mgRow('🏪 상점 블록 가격', '<input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-squirrelThief-shopPrice" value="' + val('shopPrice') + '">');
+      inner += '<div style="border-top:1.5px dashed #e5e7eb;padding-top:12px;margin-top:12px">' +
         '<p class="text-xs font-black text-amber-700 mb-2">🧪 테스트 모드</p>' +
         '<p class="text-xs text-gray-400 mb-2">봇 3명과 함께 즉시 게임을 시작하고, 날짜를 건너뛰며 일주일치 전체를 테스트할 수 있어요.</p>' +
         '<button class="btn btn-green px-4 py-2 text-xs font-black" onclick="_stAdminTestStart()">🧪 테스트 시작</button>' +
@@ -596,7 +606,7 @@ function _mgSep() {
 }
 
 async function saveMinigameSetting(gameId) {
-  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropMin', 'dropMax', 'itemDropAmount'];
+  const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropMin', 'dropMax', 'itemDropAmount', 'dailyFishing', 'dailyDispatch', 'maxSteal', 'shopPrice'];
   const floatKeys = ['baseSpeed', 'maxSpeed', 'defuseBonus', 'comboBonus', 'itemDropChance'];
   const updated = {};
   for (const key of intKeys) {
