@@ -205,7 +205,7 @@ async function renderMinigameHub() {
     if (_mgEvtDisc > 0 && fee > 0) fee = Math.max(0, fee - _mgEvtDisc);
     const maxReward = getMgSetting(g.id, 'maxReward');
     const duration  = getMgSetting(g.id, 'duration');
-    const maint     = getMgSetting(g.id, 'maintenance');
+    const maint     = getMgSetting(g.id, 'maintenance') && !_isMaintBypassed();
     const unlimited = getMgSetting(g.id, 'unlimitedPlays');
     const exhausted = !unlimited && pRemain <= 0 && g.ready;
     const blocked   = !g.ready || maint || exhausted;
@@ -312,7 +312,7 @@ async function startMinigame(id) {
   await loadMinigameSettings();
   await loadTodayPlays();
 
-  if (getMgSetting(id, 'maintenance')) {
+  if (getMgSetting(id, 'maintenance') && !_isMaintBypassed()) {
     toast('🔧', '이 게임은 현재 점검중이에요!');
     return;
   }

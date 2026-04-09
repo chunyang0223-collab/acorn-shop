@@ -603,7 +603,7 @@ function _stRenderFishingTab() {
   const tc = document.getElementById('st-tab-content');
   const phase = _stGetCurrentPhase();
   const isFishingPhase = (phase === ST_PHASE.FISHING);
-  const fishingMaint = getMgSetting('squirrelThief', 'fishingMaintenance');
+  const fishingMaint = getMgSetting('squirrelThief', 'fishingMaintenance') && !_isMaintBypassed();
 
   // 오늘 낚은 수 계산
   const today = _stGetTodayKST();
