@@ -6,6 +6,12 @@
 // 실제 운영 값은 반드시 DB(app_settings)에서 로드됨
 // maintenance: true → DB 미로드 시 점검중 표시 (안전장치)
 const MG_DEFAULTS = {
+  crossword: {
+    name: '단어 게임', icon: '✏️',
+    maintenance: false,
+    playLimit: 1, rewardLimit: 1,
+    entryFee: 1, maxReward: 25, duration: 0
+  },
   catch: {
     name: '도토리 캐치', icon: '🧺',
     maintenance: true,
@@ -30,6 +36,13 @@ const MG_DEFAULTS = {
     maintenance: true,
     playLimit: 3, rewardLimit: 1,
     entryFee: 5, rewardRate: 1, maxReward: 10, duration: 0
+  },
+  squirrelThief: {
+    name: '다람쥐 도둑', icon: '🐿️',
+    maintenance: true,
+    fishingMaintenance: false,
+    playLimit: 0, rewardLimit: 0,
+    entryFee: 0, maxReward: 0, duration: 0
   }
 };
 
@@ -144,9 +157,11 @@ async function recordPlay(gameId, score, rewarded, actualReward) {
 }
 
 const MINIGAMES = [
-  { id: 'catch',    name: '🌰 도토리 캐치',   desc: '하늘에서 떨어지는 도토리를 바구니로 받아요!', icon: '🧺', color: 'linear-gradient(135deg, #87CEEB, #90EE90)', ready: true },
-  { id: '2048',     name: '⚡ 2048 하드코어',  desc: '30초 생존! 폭탄을 피하고 콤보를 터뜨려라!', icon: '💀', color: 'linear-gradient(135deg, #fecaca, #fde68a)', ready: true },
-  { id: 'roulette', name: '🎡 행운의 룰렛',   desc: '도토리를 걸고 룰렛을 돌려보세요!',            icon: '🎡', color: 'linear-gradient(135deg, #fce4ff, #dbeafe)', ready: true }
+  { id: 'catch',      name: '🌰 도토리 캐치',   desc: '하늘에서 떨어지는 도토리를 바구니로 받아요!', icon: '🧺', color: 'linear-gradient(135deg, #87CEEB, #90EE90)', ready: true },
+  { id: '2048',       name: '⚡ 2048 하드코어',  desc: '30초 생존! 폭탄을 피하고 콤보를 터뜨려라!', icon: '💀', color: 'linear-gradient(135deg, #fecaca, #fde68a)', ready: true },
+  { id: 'roulette',   name: '🎡 행운의 룰렛',   desc: '도토리를 걸고 룰렛을 돌려보세요!',            icon: '🎡', color: 'linear-gradient(135deg, #fce4ff, #dbeafe)', ready: true },
+  { id: 'crossword',  name: '✏️ 단어 게임',     desc: '영어 단어 힌트를 보고 크로스워드를 완성하세요!', icon: '✏️', color: 'linear-gradient(135deg, #ede9ff, #dbeafe)', ready: true },
+  { id: 'squirrelThief', name: '🐿️ 다람쥐 도둑', desc: '스펠링을 낚고, 단어를 완성하고, 다람쥐를 보내 훔쳐오세요!', icon: '🐿️', color: 'linear-gradient(135deg, #fef3c7, #d9f99d)', ready: true }
 ];
 
 // ──────────────────────────────────────────────
@@ -302,6 +317,12 @@ async function startMinigame(id) {
     return;
   }
 
+  // 다람쥐 도둑은 자체 방 시스템 사용 — 참가비/횟수 체크 우회
+  if (id === 'squirrelThief') {
+    startSquirrelThiefGame();
+    return;
+  }
+
   const pLimit = getPlayLimit(id);
   const played = _mgTodayPlays[id] || 0;
   const unlimited = getMgSetting(id, 'unlimitedPlays');
@@ -361,6 +382,35 @@ async function _confirmStartGame(id, fee) {
   if (id === 'catch') startCatchGame();
   else if (id === '2048') start2048Game();
   else if (id === 'roulette') startRouletteGame();
+  else if (id === 'crossword') _showCrosswordDifficultyModal();
+  else if (id === 'squirrelThief') startSquirrelThiefGame();
+}
+
+function _showCrosswordDifficultyModal() {
+  showModal(`
+    <div style="text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:8px;">✏️</div>
+      <h2 style="font-size:1.1rem;font-weight:800;color:#2d2a3e;margin-bottom:4px;">난이도를 선택하세요</h2>
+      <p style="font-size:.82rem;color:#8b87a8;margin-bottom:16px;">게임 도중 변경할 수 없어요</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button onclick="closeModal();startCrosswordGame('easy')"
+          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:#e8faf3;color:#065f46;box-shadow:0 3px 0 #b0dfc8;text-align:left;">
+          😊 Easy
+          <span style="display:block;font-size:.75rem;font-weight:500;color:#047857;margin-top:2px;">단어 힌트 50% 공개 · 맞춘 단어당 🌰2 · 최대 🌰12</span>
+        </button>
+        <button onclick="closeModal();startCrosswordGame('normal')"
+          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:#ede9ff;color:#4c1d95;box-shadow:0 3px 0 #c4b5fd;text-align:left;">
+          🧠 Normal
+          <span style="display:block;font-size:.75rem;font-weight:500;color:#6d28d9;margin-top:2px;">단어 힌트 25% 공개 · 맞춘 단어당 🌰3 · 전부 맞추면 최대 🌰20</span>
+        </button>
+        <button onclick="closeModal();startCrosswordGame('hard')"
+          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:#fff0f3;color:#9b1c1c;box-shadow:0 3px 0 #fca5a5;text-align:left;">
+          🔥 Hard
+          <span style="display:block;font-size:.75rem;font-weight:500;color:#dc2626;margin-top:2px;">교차점만 공개 · 맞춘 단어당 🌰3 · 전부 맞추면 최대 🌰25</span>
+        </button>
+      </div>
+      <button onclick="closeModal()" style="margin-top:14px;padding:10px 24px;border-radius:10px;border:1.5px solid #e2deff;background:#fff;color:#8b87a8;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;">취소</button>
+    </div>`);
 }
 
 function exitMinigame() {
@@ -400,7 +450,7 @@ function _mgSwitchTab(gameId) {
 async function renderMinigameAdmin() {
   await loadMinigameSettings();
   const list  = document.getElementById('mgSettingsList');
-  const games = ['catch', '2048', 'roulette'];
+  const games = ['catch', '2048', 'roulette', 'squirrelThief'];
 
   /* ── 탭 버튼 ── */
   var tabBar = '<div class="mg-tab-bar">' +
@@ -436,7 +486,19 @@ async function renderMinigameAdmin() {
 
     inner += '<div class="space-y-2">';
 
-    if (id === 'roulette') {
+    if (id === 'squirrelThief') {
+      /* ── 다람쥐 도둑 전용 ── */
+      inner += '<label class="flex items-center gap-2 cursor-pointer mb-3">' +
+        '<span class="text-xs font-bold ' + (val('fishingMaintenance') ? 'text-orange-500' : 'text-gray-400') + '">🎣 낚시터 점검</span>' +
+        '<input type="checkbox" id="mg-squirrelThief-fishingMaintenance" ' + (val('fishingMaintenance') ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:#f97316">' +
+      '</label>';
+      inner += '<p class="text-xs text-gray-400 mb-3">게임 전체 점검은 위의 🔧 점검 토글, 낚시터만 닫으려면 🎣 낚시터 점검을 켜세요.</p>';
+      inner += '<div style="border-top:1.5px dashed #e5e7eb;padding-top:12px;margin-top:8px">' +
+        '<p class="text-xs font-black text-amber-700 mb-2">🧪 테스트 모드</p>' +
+        '<p class="text-xs text-gray-400 mb-2">봇 3명과 함께 즉시 게임을 시작하고, 날짜를 건너뛰며 일주일치 전체를 테스트할 수 있어요.</p>' +
+        '<button class="btn btn-green px-4 py-2 text-xs font-black" onclick="_stAdminTestStart()">🧪 테스트 시작</button>' +
+      '</div>';
+    } else if (id === 'roulette') {
       /* ── 룰렛 전용 ── */
       var rProb = s.probs || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
       var rWidth = s.widths || { miss: 38, x1: 30, x15: 20, x3: 10, x10: 2 };
@@ -549,6 +611,10 @@ async function saveMinigameSetting(gameId) {
   if (maintEl) updated.maintenance = maintEl.checked;
   const unlimEl = document.getElementById(`mg-${gameId}-unlimitedPlays`);
   if (unlimEl) updated.unlimitedPlays = unlimEl.checked;
+
+  // 다람쥐 도둑 전용: 낚시터 점검
+  const fishMaintEl = document.getElementById(`mg-${gameId}-fishingMaintenance`);
+  if (fishMaintEl) updated.fishingMaintenance = fishMaintEl.checked;
 
   // 룰렛 전용: 확률 + 칸 너비
   if (gameId === 'roulette') {

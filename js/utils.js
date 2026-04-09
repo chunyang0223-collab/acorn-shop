@@ -135,6 +135,97 @@ function playSound(name) {
       setTimeout(() => _playChord([784, 1047, 1319], 'sine', 0.18, 0.14), 400);
       setTimeout(() => _playTone(1568, 'sine', 0.35, 0.12), 600);
       break;
+
+    // ── 🐿️ 다람쥐 도둑 ──
+    case 'stCast':
+      // 낚싯대 던지기 — 줄이 날아가는 휘이잉 + 풍덩
+      _playTone(600, 'sine', 0.08, 0.10);
+      setTimeout(() => _playTone(400, 'sine', 0.06, 0.08), 60);
+      setTimeout(() => _playTone(250, 'triangle', 0.12, 0.12), 140);
+      break;
+    case 'stBite':
+      // 찌 반응 — 긴급 알림 딩딩딩
+      [0, 1, 2].forEach(i =>
+        setTimeout(() => _playTone(1200, 'sine', 0.06, 0.16), i * 90)
+      );
+      break;
+    case 'stCatch':
+      // 낚시 성공 — 통통 튀는 물고기 + 팡파레
+      _playTone(500, 'triangle', 0.06, 0.14);
+      setTimeout(() => _playTone(700, 'triangle', 0.06, 0.14), 80);
+      setTimeout(() => _playChord([784, 988, 1175], 'sine', 0.18, 0.12), 180);
+      break;
+    case 'stMiss':
+      // 낚시 실패 — 줄이 풀리는 느낌
+      _playTone(400, 'sine', 0.08, 0.10);
+      setTimeout(() => _playTone(300, 'sine', 0.10, 0.08), 80);
+      setTimeout(() => _playTone(200, 'sine', 0.14, 0.06), 170);
+      break;
+    case 'stBlockPlace':
+      // 블록 슬롯 배치 — 나무블록 딸깍
+      _playTone(800, 'triangle', 0.04, 0.14);
+      setTimeout(() => _playTone(1000, 'triangle', 0.03, 0.10), 40);
+      break;
+    case 'stBlockRemove':
+      // 블록 슬롯 제거 — 부드러운 빠짐
+      _playTone(600, 'triangle', 0.04, 0.08);
+      break;
+    case 'stWordSuccess':
+      // 단어 완성 — 밝은 상승 코드 + 별 반짝
+      _playChord([523, 659, 784], 'sine', 0.12, 0.12);
+      setTimeout(() => _playChord([659, 784, 1047], 'sine', 0.16, 0.13), 160);
+      setTimeout(() => _playTone(1319, 'sine', 0.22, 0.10), 340);
+      break;
+    case 'stWordFail':
+      // 단어 검증 실패 — 짧은 버저
+      _playTone(250, 'sawtooth', 0.12, 0.10);
+      setTimeout(() => _playTone(200, 'sawtooth', 0.14, 0.08), 100);
+      break;
+    case 'stDispatchStart':
+      // 다람쥐 출정 — 달려가는 느낌 상승음
+      [0, 1, 2, 3].forEach(i =>
+        setTimeout(() => _playTone(400 + i * 120, 'triangle', 0.06, 0.11), i * 70)
+      );
+      break;
+    case 'stStealSuccess':
+      // 도둑 성공 — 쓱 훔치는 느낌 + 짧은 축하
+      _playTone(600, 'triangle', 0.05, 0.12);
+      setTimeout(() => _playTone(900, 'triangle', 0.05, 0.12), 60);
+      setTimeout(() => _playChord([784, 988], 'sine', 0.12, 0.10), 140);
+      break;
+    case 'stStealFail':
+      // 도둑 실패 — 미끄러지는 하강음
+      _playTone(500, 'triangle', 0.06, 0.10);
+      setTimeout(() => _playTone(350, 'triangle', 0.08, 0.08), 70);
+      setTimeout(() => _playTone(250, 'triangle', 0.10, 0.06), 150);
+      break;
+    case 'stStealFound':
+      // 블록 발견 — 짧은 핑
+      _playTone(880, 'sine', 0.06, 0.10);
+      break;
+    case 'stStealNotFound':
+      // 블록 못 찾음 — 작은 실망음
+      _playTone(350, 'sine', 0.08, 0.07);
+      break;
+    case 'stPocketFull':
+      // 주머니 가득 참 — 묵직한 톤
+      _playTone(300, 'triangle', 0.10, 0.13);
+      setTimeout(() => _playTone(280, 'triangle', 0.12, 0.10), 100);
+      break;
+    case 'stPurchase':
+      // 상점 구매 — 동전 + 블록 획득
+      _playTone(1000, 'triangle', 0.05, 0.11);
+      setTimeout(() => _playTone(1200, 'triangle', 0.05, 0.11), 60);
+      setTimeout(() => _playChord([784, 988], 'sine', 0.10, 0.10), 140);
+      break;
+    case 'stRanking':
+      // 정산/순위 공개 — 두구두구 + 팡파레
+      [0, 1, 2, 3, 4, 5].forEach(i =>
+        setTimeout(() => _playTone(200 + i * 10, 'triangle', 0.05, 0.08 + i * 0.01), i * 80)
+      );
+      setTimeout(() => _playChord([523, 659, 784, 1047], 'sine', 0.25, 0.14), 550);
+      setTimeout(() => _playTone(1319, 'sine', 0.35, 0.12), 800);
+      break;
   }
 }
 
