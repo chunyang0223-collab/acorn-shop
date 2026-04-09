@@ -595,27 +595,28 @@
 
     <!-- 기존 대시보드 (현황 상세 — 그리드에서 "현황" 클릭 시) -->
     <div id="atab-dashboard" class="hidden">
-      <!-- 메인 메뉴 점검 -->
-      <p class="adm-section-label">🔧 메뉴 점검</p>
+      <!-- 일반 메뉴 점검 -->
+      <p class="adm-section-label">[일반 메뉴]</p>
       <div class="clay-card p-4 mb-4">
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🛍️ 상점</span><button id="maint-shop" onclick="toggleMaintenance('shop')" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎲 뽑기</span><button id="maint-gacha" onclick="toggleMaintenance('gacha')" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">📋 퀘스트</span><button id="maint-quest" onclick="toggleMaintenance('quest')" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">♻️ 재활용</span><button id="maint-recycle" onclick="toggleMaintenance('recycle')" class="maint-btn"></button></div>
-          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎮 미니게임</span><button id="maint-minigame" onclick="toggleMaintenance('minigame')" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🐉 레이드</span><button id="maint-bossraid" onclick="toggleMaintenance('bossraid')" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">👤 마이</span><button id="maint-mypage" onclick="toggleMaintenance('mypage')" class="maint-btn"></button></div>
         </div>
       </div>
       <!-- 미니게임 점검 -->
-      <p class="adm-section-label">🎮 미니게임 점검</p>
+      <p class="adm-section-label">[미니게임]</p>
       <div class="clay-card p-4 mb-2">
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700">🎮 미니게임 전체</span><button id="maint-minigame-all" onclick="toggleMinigameAll()" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">🧺 도토리캐치</span><button id="maint-mg_catch" onclick="toggleMgMaint('catch')" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">💀 2048</span><button id="maint-mg_2048" onclick="toggleMgMaint('2048')" class="maint-btn"></button></div>
           <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">🎡 룰렛</span><button id="maint-mg_roulette" onclick="toggleMgMaint('roulette')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">📝 단어게임</span><button id="maint-mg_crossword" onclick="toggleMgMaint('crossword')" class="maint-btn"></button></div>
+          <div class="flex items-center justify-between"><span class="text-sm font-black text-gray-700" style="padding-left:12px">🐿️ 다람쥐도둑</span><button id="maint-mg_squirrelThief" onclick="toggleMgMaint('squirrelThief')" class="maint-btn"></button></div>
         </div>
       </div>
       <div class="text-xs text-gray-400 font-bold mb-4" style="padding:0 4px">미니게임 전체 점검 시 하위 메뉴가 일괄 전환됩니다. 서브탭은 개별 점검도 가능해요.</div>
