@@ -41,6 +41,7 @@ function _rltGetWidths() {
 }
 
 function startRouletteGame() {
+  console.log('[ROULETTE] startRouletteGame 호출');
   var hub = document.getElementById('minigame-hub');
   var play = document.getElementById('minigame-play');
   hub.classList.add('hidden');
@@ -51,6 +52,7 @@ function startRouletteGame() {
   var rLimit = getRewardLimit('roulette');
   var played = _mgTodayPlays['roulette'] || 0;
   var rewarded = _mgTodayRewards['roulette'] || 0;
+  console.log(`[ROULETTE] baseFee=${baseFee}, pLimit=${pLimit}, rLimit=${rLimit}, played=${played}, rewarded=${rewarded}`);
 
   _roulette = { baseFee: baseFee, multiplier: 1, spinning: false, angle: 0 };
 
@@ -180,18 +182,22 @@ function _rltPickResult() {
   var probs = _rltGetProbs();
   var keys = ['miss','x1','x15','x3','x10'];
   var roll = Math.random() * 100;
+  console.log(`[ROULETTE] _rltPickResult: probs=`, JSON.stringify(probs), `roll=${roll.toFixed(2)}`);
   var cumul = 0;
   for (var i = 0; i < keys.length; i++) {
     cumul += (probs[keys[i]] || 0);
-    if (roll < cumul) return i;
+    if (roll < cumul) { console.log(`[ROULETTE] _rltPickResult → ${keys[i]}(idx=${i}), cumul=${cumul}`); return i; }
   }
+  console.log('[ROULETTE] _rltPickResult → fallback miss');
   return 0;
 }
 
 async function _rltSpin() {
-  if (!_roulette || _roulette.spinning) return;
+  console.log('[ROULETTE] _rltSpin 호출');
+  if (!_roulette || _roulette.spinning) { console.log('[ROULETTE] _rltSpin 무시: spinning=', _roulette?.spinning); return; }
 
   var totalFee = _roulette.baseFee * _roulette.multiplier;
+  console.log(`[ROULETTE] _rltSpin: totalFee=${totalFee}, multiplier=${_roulette.multiplier}, acorns=${myProfile?.acorns}`);
 
   if ((myProfile?.acorns || 0) < totalFee) {
     toast('❌', '도토리가 부족해요! (필요: 🌰' + totalFee + ', 보유: 🌰' + (myProfile?.acorns || 0) + ')');
@@ -200,6 +206,7 @@ async function _rltSpin() {
 
   var pLimit = getPlayLimit('roulette');
   var played = _mgTodayPlays['roulette'] || 0;
+  console.log(`[ROULETTE] _rltSpin: pLimit=${pLimit}, played=${played}`);
   if (played >= pLimit) {
     toast('⚠️', '오늘 도전 횟수를 모두 사용했어요!');
     return;
@@ -212,18 +219,21 @@ async function _rltSpin() {
 
   // 참가비 차감
   try {
+    console.log(`[ROULETTE] 참가비 차감 시도: -${totalFee}`);
     var res = await sb.rpc('adjust_acorns', {
       p_user_id: myProfile.id, p_amount: -totalFee,
       p_reason: '미니게임 [행운의 룰렛] 참가비 -' + totalFee + '🌰 (×' + _roulette.multiplier + ')'
     });
+    console.log('[ROULETTE] adjust_acorns 응답:', JSON.stringify(res.data));
     if (!res.data?.success) { toast('❌', '참가비 차감 실패!'); _roulette.spinning = false; _rltResetBtn(); return; }
     myProfile.acorns = res.data.balance;
     updateAcornDisplay();
-  } catch(e) { toast('❌', '참가비 차감 중 오류'); _roulette.spinning = false; _rltResetBtn(); return; }
+  } catch(e) { console.error('[ROULETTE] 참가비 차감 오류:', e); toast('❌', '참가비 차감 중 오류'); _roulette.spinning = false; _rltResetBtn(); return; }
 
   // 확률 기반 결과 결정
   var resultIdx = _rltPickResult();
   var resultSlice = _rltSlices[resultIdx];
+  console.log(`[ROULETTE] 결과: idx=${resultIdx}, key=${resultSlice.key}, label=${resultSlice.label}, mult=${resultSlice.mult}`);
 
   // 해당 칸의 중앙 각도 계산 (칸 너비 기반)
   // angles[i].start는 12시(-π/2)부터 시계방향으로 배치된 각 칸의 시작 각도(회전 전 기준)
@@ -273,14 +283,17 @@ async function _rltSpin() {
 
 async function _rltShowResult(slice, totalFee) {
   var reward = Math.floor(totalFee * slice.mult);
+  console.log(`[ROULETTE] _rltShowResult: slice=${slice.key}, mult=${slice.mult}, totalFee=${totalFee}, reward=${reward}`);
 
   var rLimit = getRewardLimit('roulette');
   var rUsed = _mgTodayRewards['roulette'] || 0;
   var canClaim = rUsed < rLimit && reward > 0;
+  console.log(`[ROULETTE] _rltShowResult: rLimit=${rLimit}, rUsed=${rUsed}, canClaim=${canClaim}`);
 
   await recordPlay('roulette', reward, canClaim && reward > 0);
 
   if (canClaim && reward > 0) {
+    console.log(`[ROULETTE] 보상 지급: ${reward}`);
     await _giveMinigameReward(reward, reward, 'roulette');
   }
 

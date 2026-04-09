@@ -59,22 +59,31 @@ let _mgBonusRewards = {};
 
 // ── 설정 로드 ──
 async function loadMinigameSettings() {
+  console.log('[MG] loadMinigameSettings 호출');
   try {
     const { data } = await sb.from('app_settings').select('value').eq('key', 'minigame_settings').maybeSingle();
     _mgSettings = _parseValue(data?.value) || {};
     _mgSettingsLoaded = true;
-  } catch(e) { _mgSettings = {}; }
+    console.log('[MG] loadMinigameSettings 완료:', JSON.stringify(_mgSettings).slice(0, 200));
+  } catch(e) { console.error('[MG] loadMinigameSettings 실패:', e); _mgSettings = {}; }
   return _mgSettings;
 }
 
 function getMgSetting(gameId, key) {
   // DB 설정 미로드 시 maintenance 강제 (안전장치)
-  if (!_mgSettingsLoaded && key === 'maintenance') return true;
+  if (!_mgSettingsLoaded && key === 'maintenance') {
+    console.log(`[MG] getMgSetting(${gameId}, ${key}) → DB 미로드, 강제 true`);
+    return true;
+  }
 
   if (key === 'playLimit' && _mgSettings?.[gameId]?.playLimit === undefined && _mgSettings?.[gameId]?.dailyLimit !== undefined) {
-    return _mgSettings[gameId].dailyLimit;
+    const val = _mgSettings[gameId].dailyLimit;
+    console.log(`[MG] getMgSetting(${gameId}, ${key}) → dailyLimit 폴백: ${val}`);
+    return val;
   }
-  return _mgSettings?.[gameId]?.[key] ?? MG_DEFAULTS[gameId]?.[key] ?? 0;
+  const result = _mgSettings?.[gameId]?.[key] ?? MG_DEFAULTS[gameId]?.[key] ?? 0;
+  console.log(`[MG] getMgSetting(${gameId}, ${key}) = ${result}`);
+  return result;
 }
 
 // ✅ value 컬럼이 문자열로 저장된 경우를 대비한 방어적 파싱
@@ -89,12 +98,14 @@ function _parseValue(val) {
 
 // ── 오늘 도전/보상 횟수 조회 ──
 async function loadTodayPlays() {
+  console.log('[MG] loadTodayPlays 호출, myProfile:', !!myProfile);
   if (!myProfile) return;
 
   // ✅ KST 기준 오늘 날짜
   const today = getToday();
   const fromUTC = today + 'T00:00:00+09:00';
   const toUTC   = today + 'T23:59:59+09:00';
+  console.log('[MG] loadTodayPlays 범위:', fromUTC, '~', toUTC);
 
   try {
     const { data } = await sb
@@ -110,12 +121,14 @@ async function loadTodayPlays() {
       _mgTodayPlays[r.game_id] = (_mgTodayPlays[r.game_id] || 0) + 1;
       if (r.rewarded) _mgTodayRewards[r.game_id] = (_mgTodayRewards[r.game_id] || 0) + 1;
     });
+    console.log('[MG] loadTodayPlays 결과 plays:', JSON.stringify(_mgTodayPlays), 'rewards:', JSON.stringify(_mgTodayRewards));
   } catch(e) { console.warn('[minigame] 횟수 조회 실패:', e); }
 
   await _loadBonusPlays();
 }
 
 async function _loadBonusPlays() {
+  console.log('[MG] _loadBonusPlays 호출');
   if (!myProfile) return;
   try {
     const { data } = await sb.from('app_settings')
@@ -126,7 +139,9 @@ async function _loadBonusPlays() {
     const bonus = _parseValue(data?.value);
     _mgBonusPlays   = bonus.plays   || {};
     _mgBonusRewards = bonus.rewards || {};
+    console.log('[MG] _loadBonusPlays 결과 plays:', JSON.stringify(_mgBonusPlays), 'rewards:', JSON.stringify(_mgBonusRewards));
   } catch(e) {
+    console.error('[MG] _loadBonusPlays 실패:', e);
     _mgBonusPlays   = {};
     _mgBonusRewards = {};
   }
@@ -141,21 +156,26 @@ function getRewardLimit(gameId) {
 
 // ── 플레이 기록 저장 ──
 async function recordPlay(gameId, score, rewarded, actualReward) {
-  if (!myProfile) return;
+  console.log(`[MG] recordPlay(${gameId}, score=${score}, rewarded=${rewarded}, actualReward=${actualReward})`);
+  if (!myProfile) { console.warn('[MG] recordPlay: myProfile 없음'); return; }
   const reward = !rewarded ? 0
     : actualReward != null ? actualReward
     : Math.min(getMgSetting(gameId, 'maxReward'), Math.max(score > 0 ? 1 : 0, Math.floor(score / getMgSetting(gameId, 'rewardRate'))));
+  console.log(`[MG] recordPlay 계산된 reward=${reward}`);
   try {
-    await sb.from('minigame_plays').insert({
+    const insertData = {
       user_id: myProfile.id,
       game_id: gameId,
       score: score,
       reward: reward,
       rewarded: rewarded,
       played_at: new Date().toISOString()
-    });
+    };
+    console.log('[MG] recordPlay insert:', JSON.stringify(insertData));
+    await sb.from('minigame_plays').insert(insertData);
     _mgTodayPlays[gameId] = (_mgTodayPlays[gameId] || 0) + 1;
     if (rewarded) _mgTodayRewards[gameId] = (_mgTodayRewards[gameId] || 0) + 1;
+    console.log('[MG] recordPlay 성공, todayPlays:', _mgTodayPlays[gameId], 'todayRewards:', _mgTodayRewards[gameId]);
   } catch(e) { console.warn('[minigame] 기록 실패:', e); }
   return reward;
 }
@@ -172,6 +192,7 @@ const MINIGAMES = [
 //  게임 허브
 // ──────────────────────────────────────────────
 async function renderMinigameHub() {
+  console.log('[MG] renderMinigameHub 호출');
   const hub = document.getElementById('minigame-hub');
   const play = document.getElementById('minigame-play');
   hub.classList.remove('hidden');
@@ -180,6 +201,7 @@ async function renderMinigameHub() {
 
   await loadMinigameSettings();
   await loadTodayPlays();
+  console.log('[MG] renderMinigameHub: 설정/횟수 로드 완료');
 
   const grid = document.getElementById('minigameGrid');
 
@@ -313,16 +335,21 @@ async function _renderRecentPlays() {
 }
 
 async function startMinigame(id) {
+  console.log(`[MG] startMinigame(${id}) 호출`);
   await loadMinigameSettings();
   await loadTodayPlays();
 
-  if (getMgSetting(id, 'maintenance') && !_isMaintBypassed()) {
+  const maintVal = getMgSetting(id, 'maintenance');
+  const bypassed = _isMaintBypassed();
+  console.log(`[MG] startMinigame(${id}): maintenance=${maintVal}, bypassed=${bypassed}`);
+  if (maintVal && !bypassed) {
     toast('🔧', '이 게임은 현재 점검중이에요!');
     return;
   }
 
   // 다람쥐 도둑은 자체 방 시스템 사용 — 참가비/횟수 체크 우회
   if (id === 'squirrelThief') {
+    console.log('[MG] startMinigame: squirrelThief 분기');
     startSquirrelThiefGame();
     return;
   }
@@ -330,6 +357,7 @@ async function startMinigame(id) {
   const pLimit = getPlayLimit(id);
   const played = _mgTodayPlays[id] || 0;
   const unlimited = getMgSetting(id, 'unlimitedPlays');
+  console.log(`[MG] startMinigame(${id}): pLimit=${pLimit}, played=${played}, unlimited=${unlimited}`);
   if (!unlimited && played >= pLimit) {
     toast('⚠️', `오늘 도전 횟수를 모두 사용했어요! (${pLimit}/${pLimit}회)`);
     renderMinigameHub();
@@ -340,6 +368,7 @@ async function startMinigame(id) {
   // 미니게임 참가비 이벤트 할인 적용
   const mgDiscount = (typeof getMinigameDiscount === 'function') ? getMinigameDiscount() : 0;
   if (mgDiscount > 0 && fee > 0) fee = Math.max(0, fee - mgDiscount);
+  console.log(`[MG] startMinigame(${id}): fee=${fee}, mgDiscount=${mgDiscount}`);
 
   // 룰렛은 배수 선택 화면으로 진입
   if (id === 'roulette') {
@@ -372,17 +401,21 @@ async function startMinigame(id) {
 }
 
 async function _confirmStartGame(id, fee) {
+  console.log(`[MG] _confirmStartGame(${id}, fee=${fee})`);
   if (fee > 0) {
     try {
+      console.log(`[MG] _confirmStartGame: 참가비 차감 시도 -${fee}`);
       const res = await sb.rpc('adjust_acorns', {
         p_user_id: myProfile.id, p_amount: -fee,
         p_reason: `미니게임 [${MG_DEFAULTS[id]?.name || id}] 참가비 -${fee}🌰`
       });
+      console.log('[MG] _confirmStartGame adjust_acorns 응답:', JSON.stringify(res.data));
       if (!res.data?.success) { toast('❌', '참가비 차감 실패!'); return; }
       myProfile.acorns = res.data.balance;
       updateAcornDisplay();
-    } catch(e) { toast('❌', '참가비 차감 중 오류'); return; }
+    } catch(e) { console.error('[MG] _confirmStartGame 참가비 차감 오류:', e); toast('❌', '참가비 차감 중 오류'); return; }
   }
+  console.log(`[MG] _confirmStartGame: 게임 시작 → ${id}`);
   if (id === 'catch') startCatchGame();
   else if (id === '2048') start2048Game();
   else if (id === 'roulette') startRouletteGame();
@@ -452,8 +485,10 @@ function _mgSwitchTab(gameId) {
 }
 
 async function renderMinigameAdmin() {
+  console.log('[MG-ADMIN] renderMinigameAdmin 호출');
   await loadMinigameSettings();
   const list  = document.getElementById('mgSettingsList');
+  console.log('[MG-ADMIN] renderMinigameAdmin: mgSettingsList 요소:', !!list);
   const games = ['catch', '2048', 'roulette', 'crossword', 'squirrelThief'];
 
   /* ── 탭 버튼 ── */
@@ -606,6 +641,7 @@ function _mgSep() {
 }
 
 async function saveMinigameSetting(gameId) {
+  console.log(`[MG-ADMIN] saveMinigameSetting(${gameId}) 호출`);
   const intKeys = ['playLimit', 'rewardLimit', 'entryFee', 'rewardRate', 'maxReward', 'duration', 'bombStartTurn', 'bombMaxChance', 'dropChance', 'dropMin', 'dropMax', 'itemDropAmount', 'dailyFishing', 'dailyDispatch', 'maxSteal', 'shopPrice'];
   const floatKeys = ['baseSpeed', 'maxSpeed', 'defuseBonus', 'comboBonus', 'itemDropChance'];
   const updated = {};
@@ -647,6 +683,7 @@ async function saveMinigameSetting(gameId) {
 
   _mgSettings[gameId] = { ...(_mgSettings[gameId] || {}), ...updated };
   delete _mgSettings[gameId].dailyLimit; // v1→v2 마이그레이션
+  console.log(`[MG-ADMIN] saveMinigameSetting(${gameId}) 저장 데이터:`, JSON.stringify(_mgSettings[gameId]));
 
   try {
     // ✅ upsert 사용 (check-then-insert/update 패턴 제거)
@@ -655,14 +692,16 @@ async function saveMinigameSetting(gameId) {
       { onConflict: 'key' }
     );
     if (error) throw new Error(error.message);
+    console.log(`[MG-ADMIN] saveMinigameSetting(${gameId}) DB 저장 성공`);
     toast('✅', `${MG_DEFAULTS[gameId]?.name || gameId} 설정이 저장되었습니다!`);
-  } catch(e) { toast('❌', '설정 저장 실패: ' + (e.message || e)); }
+  } catch(e) { console.error(`[MG-ADMIN] saveMinigameSetting(${gameId}) 실패:`, e); toast('❌', '설정 저장 실패: ' + (e.message || e)); }
 }
 
 // ── 관리자: 게임횟수 조정 모달 ──
 let _mgChargeState = {};
 
 async function showMgChargeModal(userId, userName) {
+  console.log(`[MG-ADMIN] showMgChargeModal(${userId}, ${userName})`);
   await loadMinigameSettings();
 
   const today   = getToday();
@@ -803,6 +842,7 @@ async function _doMgCharge() {
   const gameId     = s._gameId;
   const playDiff   = s._curPlayUsed   - s._origPlayUsed;
   const rewardDiff = s._curRewardUsed - s._origRewardUsed;
+  console.log(`[MG-ADMIN] _doMgCharge: gameId=${gameId}, playDiff=${playDiff}, rewardDiff=${rewardDiff}, userId=${s.userId}`);
   if (playDiff === 0 && rewardDiff === 0) { toast('⚠️', '변경사항이 없습니다'); return; }
 
   closeModal();
@@ -971,6 +1011,7 @@ function setRankPeriod(period, btn) {
 async function renderUserRanking() {
   const gameId = document.getElementById('rankGameFilter')?.value || 'catch';
   const range  = _getPeriodRange(_rankPeriod);
+  console.log(`[MG] renderUserRanking: gameId=${gameId}, period=${_rankPeriod}, range=`, JSON.stringify(range));
   const list   = document.getElementById('userRankingList');
   list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
 
@@ -1081,6 +1122,7 @@ function setAdminRankPeriod(period, btn) {
 async function renderAdminRanking() {
   const gameId = document.getElementById('adminRankGameFilter')?.value || 'catch';
   const range  = _getPeriodRange(_adminRankPeriod);
+  console.log(`[MG-ADMIN] renderAdminRanking: gameId=${gameId}, period=${_adminRankPeriod}, range=`, JSON.stringify(range));
   const list   = document.getElementById('adminRankingList');
   list.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">로딩 중...</p>';
 
@@ -1252,6 +1294,7 @@ function _getWeekRange(mondayStr) {
 
 // ── 보상 설정 로드 ──
 async function loadWeeklyRewardSettings() {
+  console.log('[MG-ADMIN] loadWeeklyRewardSettings 호출');
   try {
     const { data } = await sb.from('app_settings').select('value')
       .eq('key', 'weekly_reward_settings').maybeSingle();
@@ -1276,6 +1319,7 @@ async function loadWeeklyRewardSettings() {
 
 // ── 보상 설정 저장 (관리자) ──
 async function saveWeeklyRewardSettings() {
+  console.log('[MG-ADMIN] saveWeeklyRewardSettings 호출');
   const settings = {};
   for (const gameId of Object.keys(MG_DEFAULTS)) {
     if (gameId === 'roulette') continue;

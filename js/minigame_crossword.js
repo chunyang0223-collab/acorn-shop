@@ -20,10 +20,12 @@ let _cwWordBank = null;
 
 // ── 단어 뱅크 로드 ──
 async function _cwLoadWordBank() {
-  if (_cwWordBank) return _cwWordBank;
+  console.log('[CW] _cwLoadWordBank 호출');
+  if (_cwWordBank) { console.log('[CW] _cwLoadWordBank: 캐시 히트, 단어수:', Object.keys(_cwWordBank).length); return _cwWordBank; }
   try {
     const res  = await fetch('words.txt');
     const text = await res.text();
+    console.log(`[CW] _cwLoadWordBank: words.txt 로드 완료, 길이=${text.length}`);
     // "const vocaDB = { ... }" 형태 파싱
     const match = text.match(/const\s+vocaDB\s*=\s*(\{[\s\S]*\})/);
     if (match) {
@@ -176,6 +178,7 @@ function _cwBuildPrefilled(placed, grid, difficulty) {
 
 // ── 게임 시작 ──
 async function startCrosswordGame(difficulty) {
+  console.log(`[CW] startCrosswordGame(difficulty=${difficulty})`);
   _cwDifficulty = difficulty || 'easy';
 
   const hub  = document.getElementById('minigame-hub');
@@ -256,8 +259,10 @@ function _cwDiffColor(d) {
 
 // ── 게임판 초기화 ──
 function _cwInit(wordBank) {
+  console.log('[CW] _cwInit 호출, 단어수:', Object.keys(wordBank).length);
   const result = _cwGenerate(wordBank);
-  if (!result) { setTimeout(() => _cwInit(wordBank), 50); return; }
+  if (!result) { console.warn('[CW] _cwInit: 생성 실패, 재시도'); setTimeout(() => _cwInit(wordBank), 50); return; }
+  console.log('[CW] _cwInit: 생성 성공, 배치 단어수:', result.placed.length);
 
   const { grid, placed } = result;
 
@@ -526,7 +531,8 @@ function _cwShowTooltip(cellEl, hint, dir) {
 
 // ── 제출 ──
 async function cwSubmit() {
-  if (!_cwState || _cwState.submitted) return;
+  console.log('[CW] cwSubmit 호출');
+  if (!_cwState || _cwState.submitted) { console.log('[CW] cwSubmit 무시: state=', !!_cwState, 'submitted=', _cwState?.submitted); return; }
   _cwState.submitted = true;
   clearInterval(_cwState.timerInterval);
 
@@ -561,6 +567,7 @@ async function cwSubmit() {
   const rule      = CW_ACORN_RULES[_cwDifficulty];
   const allRight  = correctWords === placed.length;
   const acorns    = correctWords * rule.perWord + (allRight ? rule.bonus : 0);
+  console.log(`[CW] cwSubmit 결과: correctWords=${correctWords}/${placed.length}, allRight=${allRight}, acorns=${acorns}, difficulty=${_cwDifficulty}`);
 
   // 도토리 버튼 비활성화
   const btn = document.getElementById('cw-btn-submit');

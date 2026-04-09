@@ -31,11 +31,13 @@ function getCatchSpeed(key) {
 let _catch = null;
 
 function startCatchGame() {
+  console.log('[CATCH] startCatchGame 호출');
   const hub  = document.getElementById('minigame-hub');
   const play = document.getElementById('minigame-play');
   hub.classList.add('hidden');
   play.classList.remove('hidden');
   const gameDuration = getMgSetting('catch', 'duration');
+  console.log(`[CATCH] gameDuration=${gameDuration}`);
 
   play.innerHTML = `
     <div class="catch-container" id="catchContainer">
@@ -115,6 +117,7 @@ function _catchKeyHandler(e) {
 }
 
 function beginCatchGame() {
+  console.log('[CATCH] beginCatchGame 호출');
   document.getElementById('catchOverlay').classList.add('hidden');
   _catch.running = true;
   _catch.score   = 0; _catch.timeLeft = _catch.duration;
@@ -223,7 +226,8 @@ function _showCatchEffect(parent, x, y, text, color) {
 }
 
 function endCatchGame() {
-  if (!_catch) return;
+  console.log('[CATCH] endCatchGame 호출');
+  if (!_catch) { console.warn('[CATCH] endCatchGame: _catch null'); return; }
   _catch.running = false;
   clearInterval(_catch.timerId); clearTimeout(_catch.spawnId);
   cancelAnimationFrame(_catch.frameId);
@@ -238,6 +242,7 @@ function endCatchGame() {
   const rLimit     = getRewardLimit('catch');
   const rUsed      = _mgTodayRewards['catch'] || 0;
   const canClaim   = rUsed < rLimit && reward > 0;
+  console.log(`[CATCH] endCatchGame: score=${score}, maxCombo=${maxCombo}, caught=${caught}, reward=${reward}, rLimit=${rLimit}, rUsed=${rUsed}, canClaim=${canClaim}`);
 
   playSound('gachaResult');
 
@@ -285,16 +290,20 @@ function endCatchGame() {
 }
 
 async function _finishCatch(score, claimReward) {
+  console.log(`[CATCH] _finishCatch(score=${score}, claimReward=${claimReward})`);
   const rewardRate = getMgSetting('catch', 'rewardRate');
   const maxReward  = getMgSetting('catch', 'maxReward');
   const reward     = claimReward ? Math.min(maxReward, Math.max(score > 0 ? 1 : 0, Math.floor(score / rewardRate))) : 0;
+  console.log(`[CATCH] _finishCatch: rewardRate=${rewardRate}, maxReward=${maxReward}, 계산 reward=${reward}`);
 
   await recordPlay('catch', score, claimReward);
 
   if (claimReward && reward > 0) {
+    console.log(`[CATCH] _finishCatch: 보상 지급 ${reward}`);
     await _giveMinigameReward(reward, score, 'catch');
     toast('🌰', `+${reward} 도토리를 받았어요!`);
   } else {
+    console.log('[CATCH] _finishCatch: 보상 없이 기록만');
     toast('🎮', '기록이 저장되었습니다');
   }
 
@@ -312,13 +321,16 @@ async function _finishCatch(score, claimReward) {
 }
 
 async function _giveMinigameReward(reward, score, gameId) {
-  if (!myProfile || reward <= 0) return;
+  console.log(`[MG] _giveMinigameReward(reward=${reward}, score=${score}, gameId=${gameId})`);
+  if (!myProfile || reward <= 0) { console.warn('[MG] _giveMinigameReward: 조건 불충족, myProfile:', !!myProfile, 'reward:', reward); return; }
   try {
     const res = await sb.rpc('adjust_acorns', {
       p_user_id: myProfile.id, p_amount: reward,
       p_reason: `미니게임 [${MG_DEFAULTS[gameId]?.name || gameId}] 점수 ${score} — 보상 ${reward}🌰`
     });
+    console.log('[MG] _giveMinigameReward 응답:', JSON.stringify(res.data));
     if (res.data?.success) { myProfile.acorns = res.data.balance; updateAcornDisplay(); }
+    else { console.warn('[MG] _giveMinigameReward: success=false', res.data); }
   } catch(e) { console.warn('[minigame] 보상 지급 실패:', e); }
 }
 

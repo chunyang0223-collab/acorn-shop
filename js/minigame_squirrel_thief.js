@@ -167,6 +167,7 @@ function _stGetContainer() {
    게임 진입점
    ═══════════════════════════════════════ */
 async function startSquirrelThiefGame() {
+  console.log('[ST] startSquirrelThiefGame 호출');
   const hub = document.getElementById('minigame-hub');
   const play = document.getElementById('minigame-play');
   hub.classList.add('hidden');
@@ -177,6 +178,7 @@ async function startSquirrelThiefGame() {
   try {
     const weekStart = _stGetWeekMonday();
     const phase = _stGetCurrentPhase();
+    console.log(`[ST] weekStart=${weekStart}, phase=${phase}`);
 
     // 현재 주의 내 방 찾기
     const { data: myPlayers } = await sb.from('sq_thief_players')
@@ -216,7 +218,8 @@ async function startSquirrelThiefGame() {
    방 데이터 로드
    ═══════════════════════════════════════ */
 async function _stLoadRoomData() {
-  if (!_stRoom) return;
+  console.log('[ST] _stLoadRoomData 호출, room:', _stRoom?.id);
+  if (!_stRoom) { console.warn('[ST] _stLoadRoomData: _stRoom null'); return; }
 
   const [playersRes, blocksRes, wordsRes] = await Promise.all([
     sb.from('sq_thief_players').select('*').eq('room_id', _stRoom.id),
@@ -227,6 +230,7 @@ async function _stLoadRoomData() {
   _stPlayers = playersRes.data || [];
   _stBlocks = blocksRes.data || [];
   _stWords = wordsRes.data || [];
+  console.log(`[ST] _stLoadRoomData 완료: players=${_stPlayers.length}, blocks=${_stBlocks.length}, words=${_stWords.length}`);
 }
 
 
@@ -234,6 +238,7 @@ async function _stLoadRoomData() {
    로비 화면 (방 목록 / 방 생성)
    ═══════════════════════════════════════ */
 async function _stRenderLobby() {
+  console.log('[ST] _stRenderLobby 호출');
   const c = _stGetContainer();
   const weekStart = _stGetWeekMonday();
 
@@ -308,6 +313,7 @@ function _stRenderNoRoom(phase) {
    방 생성 / 참가
    ═══════════════════════════════════════ */
 async function _stCreateRoom() {
+  console.log('[ST] _stCreateRoom 호출');
   try {
     const weekStart = _stGetWeekMonday();
 
@@ -349,6 +355,7 @@ async function _stCreateRoom() {
 }
 
 async function _stJoinRoom(roomId) {
+  console.log('[ST] _stJoinRoom 호출, roomId:', roomId);
   try {
     const weekStart = _stGetWeekMonday();
 
@@ -395,6 +402,7 @@ async function _stJoinRoom(roomId) {
 
 // 화요일 전환 시 봇 채우기 (방의 첫 접속자가 트리거)
 async function _stFillBots() {
+  console.log('[ST] _stFillBots 호출');
   if (!_stRoom) return;
 
   const humanCount = _stPlayers.filter(p => !p.is_bot).length;
@@ -430,6 +438,7 @@ async function _stFillBots() {
 function _stRenderMain() {
   const c = _stGetContainer();
   const phase = _stGetCurrentPhase();
+  console.log('[ST] _stRenderMain 호출, 현재 페이즈:', phase);
 
   // 페이즈에 따라 방 상태 자동 업데이트 (필요시, 완료 후 리렌더)
   _stCheckPhaseTransition(phase).then(changed => {
@@ -483,6 +492,7 @@ function _stRenderMain() {
 }
 
 function _stSwitchTab(tabId, btn) {
+  console.log('[ST] _stSwitchTab 호출, tabId:', tabId);
   document.querySelectorAll('.st-tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
@@ -579,6 +589,7 @@ async function _stHideBlock(blockId) {
     toast('🔒', '블록을 숨겼어요!');
     _stRenderInventoryTab();
   } catch (e) {
+    console.error('[다람쥐도둑] 블록 숨기기 실패:', e);
     toast('❌', '숨기기 실패!');
   }
 }
@@ -591,6 +602,7 @@ async function _stUnhideBlock(blockId) {
     toast('🔓', '숨기기를 해제했어요!');
     _stRenderInventoryTab();
   } catch (e) {
+    console.error('[다람쥐도둑] 블록 숨기기 해제 실패:', e);
     toast('❌', '해제 실패!');
   }
 }
@@ -690,6 +702,7 @@ function _stRenderTodayFished(today) {
 let _stFishingState = null;
 
 async function _stStartFishing() {
+  console.log('[ST] _stStartFishing 호출');
   const btn = document.getElementById('st-fish-btn');
   if (!btn || _stFishingState) return;
 
@@ -753,6 +766,7 @@ function _stFishMissed() {
 }
 
 async function _stCatchFish() {
+  console.log('[ST] _stCatchFish 호출');
   if (_stFishingState?.phase !== 'biting') return;
 
   clearTimeout(_stFishingState.catchTimer);
@@ -943,6 +957,7 @@ function _stClearSlots() {
 }
 
 async function _stSubmitWord() {
+  console.log('[ST] _stSubmitWord 호출');
   // 슬롯에서 단어 조합
   const usedBlocks = _stWordSlots.filter(s => s !== null);
   if (usedBlocks.length < 3) {
@@ -1122,6 +1137,7 @@ function _stClearTargets() {
 }
 
 async function _stDispatchSquirrel() {
+  console.log('[ST] _stDispatchSquirrel 호출');
   const targets = _stDispatchTargets.filter(t => t !== null);
   if (targets.length === 0) {
     toast('⚠️', '최소 1개의 타겟을 지정해주세요!');
@@ -1365,6 +1381,7 @@ function _stShowPurchasePicker() {
 }
 
 async function _stPurchaseBlock(letter) {
+  console.log('[ST] _stPurchaseBlock 호출, letter:', letter);
   closeModal();
 
   const acornCost = getMgSetting('squirrelThief', 'shopPrice');
@@ -1426,6 +1443,7 @@ async function _stPurchaseBlock(letter) {
    페이즈 전환 처리
    ═══════════════════════════════════════ */
 async function _stCheckPhaseTransition(currentPhase) {
+  console.log('[ST] _stCheckPhaseTransition 호출, currentPhase:', currentPhase);
   if (!_stRoom) return false;
   if (_stTestMode) return false; // 테스트 모드에서는 수동 관리
 
@@ -1462,6 +1480,7 @@ async function _stCheckPhaseTransition(currentPhase) {
    순위 정산 + 보상
    ═══════════════════════════════════════ */
 async function _stCalculateRankings() {
+  console.log('[ST] _stCalculateRankings 호출');
   if (!_stRoom) return;
 
   // 전체 플레이어 데이터 로드
@@ -1620,6 +1639,7 @@ const BOT_WORD_LIST = [
 ];
 
 async function _stRunBotTurn(botPlayer) {
+  console.log('[ST] _stRunBotTurn 호출, bot ID/name:', botPlayer?.id, botPlayer?.id?.slice(0, 6));
   if (!botPlayer || !botPlayer.is_bot) return;
 
   // 봇의 블록 조회
@@ -1815,6 +1835,7 @@ async function _stRunBotStealing(botPlayer) {
 
 // 봇 턴 총괄 실행 (사용자 접속 시 트리거)
 async function _stProcessBotTurns() {
+  console.log('[ST] _stProcessBotTurns 호출');
   if (!_stRoom || !_stPlayers) return;
 
   const phase = _stGetCurrentPhase();
@@ -1883,6 +1904,7 @@ async function _stRenderScoringTab() {
 
 // 관리자 패널에서 호출: 테스트 게임 즉시 시작
 async function _stAdminTestStart() {
+  console.log('[ST] _stAdminTestStart 호출');
   try {
     _stTestMode = true;
     _stTestDay = 0;
@@ -2001,6 +2023,7 @@ function _stRenderTestBar() {
 
 // 다음 날로 이동
 async function _stTestNextDay() {
+  console.log('[ST] _stTestNextDay 호출');
   _stTestDay++;
 
   if (_stTestDay > 7) {
@@ -2048,6 +2071,7 @@ async function _stTestNextDay() {
 
 // 정산 실행
 async function _stTestScoring() {
+  console.log('[ST] _stTestScoring 호출');
   _stTestPhase = ST_PHASE.SCORING;
   _stTestDay = 7;
 

@@ -106,6 +106,7 @@ function _2048_updateBest() { const b = _2048_getBest(); if (_2048.score > b) _2
 //  START
 // ══════════════════════════════════════════════
 function start2048Game() {
+  console.log('[2048] start2048Game 호출');
   const hub = document.getElementById('minigame-hub');
   const play = document.getElementById('minigame-play');
   hub.classList.add('hidden'); play.classList.remove('hidden');
@@ -124,6 +125,7 @@ function start2048Game() {
   _2048.acornDropped = 0;
   _2048.itemDropped = 0;
   _2048.cfg = { bombStartTurn, bombMaxChance, defuseBonus, comboBonus, dropChance, dropMin, dropMax, itemDropChance, itemDropAmount };
+  console.log('[2048] cfg:', JSON.stringify(_2048.cfg), 'maxTime:', maxTime);
 
   play.innerHTML = `
     <style>
@@ -299,6 +301,7 @@ function _2048_unbindInput() { if (_2048._keyHandler) document.removeEventListen
 
 // ── Begin ──
 function _2048_begin() {
+  console.log('[2048] _2048_begin 호출');
   _2048_initAudio();
   _2048_bgmPlay();
   const S = _2048.SIZE;
@@ -311,6 +314,7 @@ function _2048_begin() {
   _2048_spawnTile(); _2048_spawnTile();
   _2048_renderInstant();
   _2048.running = true; _2048_startTimer();
+  console.log('[2048] _2048_begin 완료, running:', _2048.running);
   try { playSound('gacha'); } catch (e) {}
 }
 function _2048_spawnTile() {
@@ -371,7 +375,8 @@ function _2048_addTime(sec) {
 //  MOVE
 // ══════════════════════════════════════════════
 function _2048_move(dir) {
-  if (_2048.animating || !_2048.running) return;
+  if (_2048.animating || !_2048.running) { console.log(`[2048] _2048_move(${dir}) 무시: animating=${_2048.animating}, running=${_2048.running}`); return; }
+  console.log(`[2048] _2048_move(${dir}), score=${_2048.score}, timeLeft=${_2048.timeLeft?.toFixed(1)}`);
   _2048_initAudio();
   const S = _2048.SIZE, BOMB = _2048.BOMB;
   const prevGrid = _2048_clone(_2048.grid);
@@ -532,6 +537,7 @@ function _2048_defuseText(r, c) { const { left, top, size } = _2048_cellPos(r, c
 
 // ── State ──
 function _2048_isGameOver() {
+  console.log('[2048] _2048_isGameOver 체크');
   const S = _2048.SIZE, BOMB = _2048.BOMB;
   for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) {
     if (!_2048.grid[r][c]) return false;
@@ -547,10 +553,12 @@ function _2048_isGameOver() {
 //  END → 도토리 상점 보상 연동
 // ══════════════════════════════════════════════
 function _2048_endGame(title, msg) {
+  console.log(`[2048] _2048_endGame: title="${title}", msg="${msg}"`);
   _2048.running = false; clearInterval(_2048.timerInterval); _2048_bgmStop(); _2048_sfx.timeUp(); _2048_unbindInput();
   const score = _2048.score;
   const reward = _2048.acornDropped;
   const itemReward = _2048.itemDropped;
+  console.log(`[2048] _2048_endGame: score=${score}, acornDropped=${reward}, itemDropped=${itemReward}`);
   try { playSound('gachaResult'); } catch (e) {}
 
   document.getElementById('minigame-play').innerHTML = `
@@ -589,18 +597,22 @@ function _2048_endGame(title, msg) {
 }
 
 async function _2048_finish(score, reward, itemReward) {
+  console.log(`[2048] _2048_finish(score=${score}, reward=${reward}, itemReward=${itemReward})`);
   itemReward = itemReward || 0;
   await recordPlay('2048', score, reward > 0, reward);
 
   if (reward > 0) {
+    console.log(`[2048] _2048_finish: 도토리 보상 ${reward}`);
     await _giveMinigameReward(reward, score, '2048');
     toast('🌰', `+${reward} 도토리를 받았어요!`);
   }
 
   // 뽑기 티켓 지급
   if (itemReward > 0) {
+    console.log(`[2048] _2048_finish: 티켓 보상 ${itemReward}`);
     try {
       const { data: tRes, error: tErr } = await sb.rpc('adjust_gacha_tickets', { p_user_id: myProfile.id, p_amount: itemReward });
+      console.log('[2048] adjust_gacha_tickets 응답:', JSON.stringify(tRes), 'error:', tErr);
       if (tErr) console.warn('[2048 ticket]', tErr);
       else {
         window._gachaTicketCount = tRes?.count ?? ((window._gachaTicketCount || 0) + itemReward);
