@@ -469,7 +469,7 @@ var _mgActiveTab = 'catch';
 
 function _mgSwitchTab(gameId) {
   _mgActiveTab = gameId;
-  var games = ['catch', '2048', 'roulette'];
+  var games = ['catch', '2048', 'roulette', 'crossword', 'squirrelThief'];
   games.forEach(function(id) {
     var pane = document.getElementById('mgPane-' + id);
     var btn  = document.getElementById('mgTabBtn-' + id);
@@ -525,7 +525,13 @@ async function renderMinigameAdmin() {
 
     inner += '<div class="space-y-2">';
 
-    if (id === 'squirrelThief') {
+    if (id === 'crossword') {
+      /* ── 단어게임 전용 (자체 보상 시스템 CW_ACORN_RULES 사용) ── */
+      inner += _mgRow('🎮 1일 도전 횟수', '<input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-crossword-playLimit" value="' + val('playLimit') + '">');
+      inner += _mgRow('🌰 1일 보상 횟수', '<input class="field text-center" type="number" min="0" max="100" style="width:80px" id="mg-crossword-rewardLimit" value="' + val('rewardLimit') + '">');
+      inner += _mgRow('🌰 참가비', '<input class="field text-center" type="number" min="0" max="1000" style="width:80px" id="mg-crossword-entryFee" value="' + val('entryFee') + '">');
+      inner += '<p class="text-xs text-gray-400 mt-2">보상은 난이도별 고정 (Easy 2🌰/단어, Normal 3🌰+보너스2, Hard 3🌰+보너스7)</p>';
+    } else if (id === 'squirrelThief') {
       /* ── 다람쥐 도둑 전용 ── */
       inner += '<label class="flex items-center gap-2 cursor-pointer mb-3">' +
         '<span class="text-xs font-bold ' + (val('fishingMaintenance') ? 'text-orange-500' : 'text-gray-400') + '">🎣 낚시터 점검</span>' +

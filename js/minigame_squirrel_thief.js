@@ -668,6 +668,9 @@ function _stRenderFishingTab() {
         ${remaining > 0
           ? `<button id="st-fish-btn" class="btn btn-blue px-6 py-3 text-sm font-black" onclick="_stStartFishing()">
               🎣 낚싯대 던지기
+             </button>
+             <button id="st-auto-fish-btn" class="btn ${_stAutoFishing ? 'btn-red' : 'btn-gray'} px-4 py-3 text-xs font-black ml-2" onclick="_stToggleAutoFish()">
+              ${_stAutoFishing ? '⏹ 자동낚시 중지' : '🔄 자동낚시'}
              </button>`
           : '<p class="text-sm font-bold text-gray-400">오늘 낚시 횟수를 모두 사용했어요!</p>'}
       </div>
@@ -700,6 +703,7 @@ function _stRenderTodayFished(today) {
 
 /* ── 낚시 미니게임 로직 ── */
 let _stFishingState = null;
+let _stAutoFishing = false; // 자동낚시 모드
 
 async function _stStartFishing() {
   console.log('[ST] _stStartFishing 호출');
@@ -735,6 +739,11 @@ async function _stStartFishing() {
     btn.disabled = false;
     btn.onclick = () => _stCatchFish();
 
+    // 자동낚시 모드면 자동으로 잡아당기기
+    if (_stAutoFishing) {
+      setTimeout(() => _stAutoFishBite(), 300 + Math.random() * 400);
+    }
+
     // 타이밍 윈도우 (1.5초 내 클릭해야 함)
     _stFishingState.catchTimer = setTimeout(() => {
       if (_stFishingState?.phase === 'biting') {
@@ -756,6 +765,10 @@ function _stFishTooEarly() {
   playSound('stMiss');
   toast('💨', '너무 빨라요! 물고기가 도망갔어요...');
   _stRenderFishingTab();
+  // 자동낚시 모드면 다음 낚시 진행 (패널티 없으므로 계속)
+  if (_stAutoFishing) {
+    setTimeout(() => _stAutoFishNext(), 1000);
+  }
 }
 
 function _stFishMissed() {
@@ -763,6 +776,10 @@ function _stFishMissed() {
   playSound('stMiss');
   toast('💨', '놓쳤어요! 물고기가 도망갔어요...');
   _stRenderFishingTab();
+  // 자동낚시 모드면 다음 낚시 진행 (패널티 없으므로 계속)
+  if (_stAutoFishing) {
+    setTimeout(() => _stAutoFishNext(), 1000);
+  }
 }
 
 async function _stCatchFish() {
@@ -831,6 +848,10 @@ async function _stCatchFish() {
   setTimeout(() => {
     _stResetFishing();
     _stRenderFishingTab();
+    // 자동낚시 모드면 다음 낚시 진행
+    if (_stAutoFishing) {
+      setTimeout(() => _stAutoFishNext(), 500);
+    }
   }, 2000);
 }
 
@@ -838,6 +859,54 @@ function _stResetFishing() {
   if (_stFishingState?.timer) clearTimeout(_stFishingState.timer);
   if (_stFishingState?.catchTimer) clearTimeout(_stFishingState.catchTimer);
   _stFishingState = null;
+}
+
+/* ── 자동낚시 ── */
+function _stToggleAutoFish() {
+  _stAutoFishing = !_stAutoFishing;
+  console.log('[ST] 자동낚시 토글:', _stAutoFishing);
+  const btn = document.getElementById('st-auto-fish-btn');
+  if (btn) {
+    btn.textContent = _stAutoFishing ? '⏹ 자동낚시 중지' : '🔄 자동낚시';
+    btn.className = `btn ${_stAutoFishing ? 'btn-red' : 'btn-gray'} px-4 py-3 text-xs font-black ml-2`;
+  }
+  if (_stAutoFishing) {
+    toast('🔄', '자동낚시 시작! 남은 횟수만큼 자동으로 낚시합니다.');
+    _stAutoFishNext();
+  } else {
+    toast('⏹', '자동낚시를 중지했어요.');
+  }
+}
+
+function _stAutoFishNext() {
+  if (!_stAutoFishing) return;
+  // 남은 횟수 체크
+  const today = _stGetTodayKST();
+  const todayFished = _stBlocks.filter(b =>
+    b.obtained_method === 'fished' &&
+    b.obtained_at?.slice(0, 10) === today
+  ).length;
+  const maxDaily = getMgSetting('squirrelThief', 'dailyFishing');
+  if (todayFished >= maxDaily) {
+    _stAutoFishing = false;
+    console.log('[ST] 자동낚시 완료: 횟수 소진');
+    toast('✅', '자동낚시 완료! 오늘 낚시 횟수를 모두 사용했어요.');
+    _stRenderFishingTab();
+    return;
+  }
+  // 낚시 진행 중이 아니면 시작
+  if (!_stFishingState) {
+    _stStartFishing();
+  }
+}
+
+// 자동낚시 시 찌 반응을 자동으로 잡아당기기 (biting 단계 진입 시)
+function _stAutoFishBite() {
+  if (!_stAutoFishing) return;
+  if (_stFishingState?.phase === 'biting') {
+    console.log('[ST] 자동낚시: 자동 잡아당기기');
+    _stCatchFish();
+  }
 }
 
 
@@ -976,13 +1045,28 @@ async function _stSubmitWord() {
     return;
   }
 
+  // 기본 검증: 영문자만, 최소 3글자
+  if (!/^[A-Z]{3,}$/.test(word)) {
+    playSound('stWordFail');
+    toast('❌', `"${word}"은(는) 유효한 단어가 아니에요!`);
+    return;
+  }
+
   // API 유효성 검사
   toast('🔍', '단어 확인 중...');
 
   try {
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+    let isValid = false;
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+      isValid = response.ok;
+    } catch (fetchErr) {
+      console.warn('[ST] 사전 API 호출 실패, 네트워크 오류:', fetchErr);
+      toast('⚠️', '사전 서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.');
+      return;
+    }
 
-    if (!response.ok) {
+    if (!isValid) {
       playSound('stWordFail');
       toast('❌', `"${word}"은(는) 유효한 단어가 아니에요!`);
       return;
@@ -1971,6 +2055,11 @@ async function _stAdminTestStart() {
 
     _stRenderMain();
     _stRenderTestBar();
+
+    // 테스트 화면이 상단에서 시작되므로 즉시 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const playEl = document.getElementById('minigame-play');
+    if (playEl) playEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     // 봇 낚시 실행
     await _stProcessBotTurns();
