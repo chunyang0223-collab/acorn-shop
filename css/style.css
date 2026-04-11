@@ -6,13 +6,13 @@
   --bg-body-2: #ffefba;
   --bg-body-3: #c3e8ff;
   --bg-body-4: #fce4ff;
-  --bg-surface: rgba(255,255,255,0.78);
-  --bg-card: rgba(255,255,255,0.78);
-  --bg-elevated: rgba(255,255,255,0.92);
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
   --bg-overlay: rgba(80,40,120,0.4);
-  --bg-input: rgba(255,255,255,0.7);
-  --bg-modal: rgba(255,255,255,0.92);
-  --bg-login-card: rgba(255,255,255,0.82);
+  --bg-input: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-login-card: #ffffff;
 
   /* === 텍스트 색상 === */
   --text-primary: #111827;
