@@ -2603,17 +2603,15 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .rc-scope-btn { background: var(--rc-scope-btn-bg); border-color: var(--rc-scope-btn-border); color: var(--rc-scope-btn-text); }
 [data-theme="dark"] .rc-scope-btn.active { background: var(--rc-scope-btn-active-bg); border-color: transparent; color: var(--rc-scope-btn-active-text); }
 .recycle-badge-inactive { background: var(--badge-legend-bg); color: var(--red-700); font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
-/* 다크모드: 불투명 토큰이므로 ::before 레이어 제거, background 직접 적용 */
-[data-theme="dark"] .recycle-hero { background: none; }
-[data-theme="dark"] .recycle-hero::before { background: var(--recycle-hero-bg); }
+/* 다크모드: 불투명 토큰이므로 ::before 레이어 완전 제거 */
+[data-theme="dark"] .recycle-hero { background: var(--recycle-hero-bg); }
+[data-theme="dark"] .recycle-hero::before { display: none; }
 [data-theme="dark"] .recycle-item-card { background: var(--recycle-item-card-bg); border-color: var(--recycle-item-card-border); }
-[data-theme="dark"] .recycle-item-card::before { background: none; }
+[data-theme="dark"] .recycle-item-card::before { display: none; }
 [data-theme="dark"] .recycle-item-card.selected { background: var(--recycle-item-card-selected-bg); }
-[data-theme="dark"] .recycle-item-card.selected::before { background: none; }
 [data-theme="dark"] .recycle-inv-card { background: var(--recycle-inv-card-bg); }
-[data-theme="dark"] .recycle-inv-card::before { background: none; }
+[data-theme="dark"] .recycle-inv-card::before { display: none; }
 [data-theme="dark"] .recycle-inv-card.selected { background: var(--recycle-inv-card-selected-bg); }
-[data-theme="dark"] .recycle-inv-card.selected::before { background: none; }
 
 /* ── 요일 선택 버튼 (label+checkbox 방식) ── */
 .evt-day-btn { cursor: pointer; }
