@@ -109,24 +109,24 @@
   --p-earth-700: #a08050;
   --p-earth-800: #78450e;
 
-  /* ── Dark Base (다크모드 전용 기반색) ── */
-  --p-dark-900: #0a0e18;
-  --p-dark-800: #0d1220;
-  --p-dark-700: #111828;
-  --p-dark-600: #151d2a;
-  --p-dark-500: #1a2535;
-  --p-dark-400: #1e2d40;
-  --p-dark-300: #222c3a;
-  --p-dark-200: #2a3a4a;
-  --p-dark-100: #344a5e;
+  /* ── Dark Base (다크모드 전용 기반색 — 모카/초콜릿 톤) ── */
+  --p-dark-900: #120e0a;
+  --p-dark-800: #1a1410;
+  --p-dark-700: #211a14;
+  --p-dark-600: #2a2018;
+  --p-dark-500: #33281e;
+  --p-dark-400: #3d3028;
+  --p-dark-300: #4a3a30;
+  --p-dark-200: #5a4838;
+  --p-dark-100: #6a5848;
 
-  /* ── Dark Tinted (다크모드 틴트 배경) ── */
+  /* ── Dark Tinted (다크모드 틴트 배경 — 각 계열별 따뜻한 톤) ── */
   --p-dark-amber:  #2a2010;
-  --p-dark-green:  #0e2a1e;
-  --p-dark-purple: #1a1040;
-  --p-dark-pink:   #2a1525;
-  --p-dark-red:    #3a1a1a;
-  --p-dark-blue:   #1a2a50;
+  --p-dark-green:  #162218;
+  --p-dark-purple: #201820;
+  --p-dark-pink:   #251818;
+  --p-dark-red:    #2a1616;
+  --p-dark-blue:   #181e28;
 }
 
 /* ── Layer 2: Semantic Tokens — Light Mode ── */
@@ -141,10 +141,10 @@
   --bg-body-4: #fce4ff;
 
   /* -- 표면 계층 (불투명 필수) -- */
-  --bg-base:     var(--p-white);
-  --bg-surface:  var(--p-white);
-  --bg-elevated: var(--p-white);
-  --bg-sunken:   var(--p-gray-50);
+  --bg-base:     #faf8f5;
+  --bg-surface:  #fefcfa;
+  --bg-elevated: #ffffff;
+  --bg-sunken:   #f5f0ea;
   --bg-overlay:  rgba(80,40,120,0.4);
   /* -- 오버레이 (불투명 기준층 위에서만 사용) -- */
   --bg-overlay-light:   rgba(255,255,255,0.25);
@@ -1088,11 +1088,11 @@
 [data-theme="dark"] {
   /* ══════════ BACKGROUNDS ══════════ */
 
-  /* -- body gradient stops -- */
-  --bg-body-1: #0d0b1e;
-  --bg-body-2: #1a1035;
-  --bg-body-3: #0b1528;
-  --bg-body-4: #1e1040;
+  /* -- body gradient stops (모카/초콜릿 톤) -- */
+  --bg-body-1: #1a1410;
+  --bg-body-2: #201812;
+  --bg-body-3: #181210;
+  --bg-body-4: #1e1614;
 
   /* -- 표면 계층 (불투명 필수) -- */
   --bg-base:     var(--p-dark-800);
@@ -1104,26 +1104,26 @@
   --bg-overlay-light:   rgba(255,255,255,0.2);
   --bg-overlay-medium:  rgba(0,0,0,0.25);
 
-  /* -- 상태별 배경 (다크 틴트, 불투명) -- */
-  --bg-amber-subtle:  #1e1a10;
-  --bg-pink-subtle:   #1e1218;
-  --bg-green-subtle:  #0e1e16;
-  --bg-red-subtle:    #1e1212;
-  --bg-blue-subtle:   #101a2a;
-  --bg-purple-subtle: #161020;
-  --bg-orange-subtle: #1e1610;
+  /* -- 상태별 배경 (다크 틴트, 불투명, 따뜻한 톤) -- */
+  --bg-amber-subtle:  #2a2214;
+  --bg-pink-subtle:   #2a1c1c;
+  --bg-green-subtle:  #1c2a1e;
+  --bg-red-subtle:    #2a1a1a;
+  --bg-blue-subtle:   #1c222e;
+  --bg-purple-subtle: #221c2a;
+  --bg-orange-subtle: #2a2014;
 
-  --bg-amber-muted:   #2e2410;
-  --bg-pink-muted:    #2a1525;
-  --bg-green-muted:   #1a3028;
-  --bg-red-muted:     #2e1818;
-  --bg-blue-muted:    #1a2a4a;
-  --bg-purple-muted:  #201530;
+  --bg-amber-muted:   #3a3018;
+  --bg-pink-muted:    #352028;
+  --bg-green-muted:   #223a28;
+  --bg-red-muted:     #382020;
+  --bg-blue-muted:    #202a3a;
+  --bg-purple-muted:  #2a2035;
 
   /* ══════════ TEXT ══════════ */
-  --text-primary:    #e2e8f0;
-  --text-secondary:  #cbd5e1;
-  --text-tertiary:   #94a3b8;
+  --text-primary:    #f0e8e0;
+  --text-secondary:  #d4c4b4;
+  --text-tertiary:   #a89888;
   --text-muted:      #64748b;
   --text-inverse:    var(--p-gray-800);
   --text-link:       #93c5fd;
@@ -1139,9 +1139,9 @@
   --text-disabled:   #475569;
 
   /* ══════════ BORDERS (불투명 hex) ══════════ */
-  --border-default:  #2a3a4a;
-  --border-light:    #1e2d40;
-  --border-strong:   #3a4a5a;
+  --border-default:  #3d3028;
+  --border-light:    #332820;
+  --border-strong:   #4a3a30;
   --border-input:    #2a3a4a;
   --border-focus:    #a855f7;
 
@@ -1301,15 +1301,15 @@
   --exp-card-selected-border: #60a5fa;
   --exp-card-deselected-border: transparent;
   /* clay-card 다크 오버라이드 */
-  --clay-card-bg: #161e2a;
-  --clay-card-border: rgba(255,255,255,0.04);
+  --clay-card-bg: var(--p-dark-600);
+  --clay-card-border: rgba(255,255,255,0.06);
   --clay-card-shadow:
     0 6px 24px rgba(0,0,0,0.45),
     0 2px 6px rgba(0,0,0,0.25),
     inset 0 1px 0 rgba(255,255,255,0.05),
     inset 0 -1.5px 4px rgba(0,0,0,0.2);
   /* sqCard (다람쥐 카드) 다크 오버라이드 */
-  --sqcard-bg: #1a2535;
+  --sqcard-bg: var(--p-dark-500);
   --sqcard-shadow: none;
   /* body 다크 배경 */
   --body-bg: linear-gradient(-45deg, #0d0b1e, #1a1035, #0b1528, #1e1040, #0a1020, #160d30);
@@ -2224,15 +2224,15 @@
   --rc-scope-btn-text: #fb923c;
   --rc-scope-btn-active-bg: linear-gradient(135deg,#7c3aed,#4f46e5);
   --rc-scope-btn-active-text: #fff;
-  --recycle-hero-base: #0a1e16;
+  --recycle-hero-base: #1a2a20;
   --recycle-hero-layer: linear-gradient(135deg, rgba(16,80,50,0.7), rgba(20,100,60,0.5));
   --recycle-hero-border: #1a4a35;
-  --recycle-item-card-base: #0e2a1e;
+  --recycle-item-card-base: #1c2e22;
   --recycle-item-card-layer: rgba(20,80,50,0.4);
   --recycle-item-card-border: #1a4a35;
   --recycle-item-card-selected-layer: rgba(30,120,70,0.5);
   --recycle-item-card-selected-border: #2a7a50;
-  --recycle-inv-card-base: #0c2518;
+  --recycle-inv-card-base: #1a2a1e;
   --recycle-inv-card-layer: rgba(20,80,50,0.35);
   --recycle-inv-card-border: #1a4a35;
   --recycle-inv-card-selected-layer: rgba(30,120,70,0.5);
