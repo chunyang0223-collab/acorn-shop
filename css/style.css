@@ -110,23 +110,23 @@
   --p-earth-800: #78450e;
 
   /* ── Dark Base (다크모드 전용 기반색 — 모카/초콜릿 톤) ── */
-  --p-dark-900: #120e0a;
-  --p-dark-800: #1a1410;
-  --p-dark-700: #211a14;
-  --p-dark-600: #2a2018;
-  --p-dark-500: #33281e;
-  --p-dark-400: #3d3028;
-  --p-dark-300: #4a3a30;
-  --p-dark-200: #5a4838;
-  --p-dark-100: #6a5848;
+  --p-dark-900: #0e0c14;
+  --p-dark-800: #14121a;
+  --p-dark-700: #1a1820;
+  --p-dark-600: #201e26;
+  --p-dark-500: #26242c;
+  --p-dark-400: #2e2c34;
+  --p-dark-300: #36343c;
+  --p-dark-200: #403e48;
+  --p-dark-100: #4a4854;
 
   /* ── Dark Tinted (다크모드 틴트 배경 — 각 계열별 따뜻한 톤) ── */
-  --p-dark-amber:  #2a2010;
-  --p-dark-green:  #162218;
-  --p-dark-purple: #201820;
-  --p-dark-pink:   #251818;
-  --p-dark-red:    #2a1616;
-  --p-dark-blue:   #181e28;
+  --p-dark-amber:  #22201a;
+  --p-dark-green:  #161e1a;
+  --p-dark-purple: #1e1a24;
+  --p-dark-pink:   #221a1e;
+  --p-dark-red:    #241818;
+  --p-dark-blue:   #181c24;
 }
 
 /* ── Layer 2: Semantic Tokens — Light Mode ── */
@@ -1088,11 +1088,11 @@
 [data-theme="dark"] {
   /* ══════════ BACKGROUNDS ══════════ */
 
-  /* -- body gradient stops (모카/초콜릿 톤) -- */
-  --bg-body-1: #1a1410;
-  --bg-body-2: #201812;
-  --bg-body-3: #181210;
-  --bg-body-4: #1e1614;
+  /* -- body gradient stops (회보라/밤하늘 톤) -- */
+  --bg-body-1: #0d0b1e;
+  --bg-body-2: #1a1035;
+  --bg-body-3: #0b1528;
+  --bg-body-4: #1e1040;
 
   /* -- 표면 계층 (불투명 필수) -- */
   --bg-base:     var(--p-dark-800);
@@ -1104,26 +1104,26 @@
   --bg-overlay-light:   rgba(255,255,255,0.2);
   --bg-overlay-medium:  rgba(0,0,0,0.25);
 
-  /* -- 상태별 배경 (다크 틴트, 불투명, 따뜻한 톤) -- */
-  --bg-amber-subtle:  #2a2214;
-  --bg-pink-subtle:   #2a1c1c;
-  --bg-green-subtle:  #1c2a1e;
-  --bg-red-subtle:    #2a1a1a;
-  --bg-blue-subtle:   #1c222e;
-  --bg-purple-subtle: #221c2a;
-  --bg-orange-subtle: #2a2014;
+  /* -- 상태별 배경 (다크 틴트, 불투명, 회보라 톤) -- */
+  --bg-amber-subtle:  #24221a;
+  --bg-pink-subtle:   #241c22;
+  --bg-green-subtle:  #1a241e;
+  --bg-red-subtle:    #241a1a;
+  --bg-blue-subtle:   #1a2028;
+  --bg-purple-subtle: #201c28;
+  --bg-orange-subtle: #242018;
 
-  --bg-amber-muted:   #3a3018;
-  --bg-pink-muted:    #352028;
-  --bg-green-muted:   #223a28;
-  --bg-red-muted:     #382020;
-  --bg-blue-muted:    #202a3a;
-  --bg-purple-muted:  #2a2035;
+  --bg-amber-muted:   #302e1e;
+  --bg-pink-muted:    #30222a;
+  --bg-green-muted:   #203028;
+  --bg-red-muted:     #302020;
+  --bg-blue-muted:    #202836;
+  --bg-purple-muted:  #282232;
 
   /* ══════════ TEXT ══════════ */
-  --text-primary:    #f0e8e0;
-  --text-secondary:  #d4c4b4;
-  --text-tertiary:   #a89888;
+  --text-primary:    #e8e6f0;
+  --text-secondary:  #cccad6;
+  --text-tertiary:   #a09eac;
   --text-muted:      #64748b;
   --text-inverse:    var(--p-gray-800);
   --text-link:       #93c5fd;
@@ -1139,10 +1139,10 @@
   --text-disabled:   #475569;
 
   /* ══════════ BORDERS (불투명 hex) ══════════ */
-  --border-default:  #3d3028;
-  --border-light:    #332820;
-  --border-strong:   #4a3a30;
-  --border-input:    #2a3a4a;
+  --border-default:  #2e2c36;
+  --border-light:    #26242e;
+  --border-strong:   #38363e;
+  --border-input:    #2a2838;
   --border-focus:    #a855f7;
 
   --border-amber:    #5a4218;
@@ -1161,20 +1161,20 @@
   --shadow-xl:  0 16px 40px rgba(0,0,0,0.4);
 
   --shadow-clay:
-    0 6px 24px rgba(0,0,0,0.35),
-    0 2px 6px rgba(0,0,0,0.2),
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    inset 0 -1.5px 4px rgba(0,0,0,0.15);
+    inset 0 1px 0 rgba(255,255,255,0.09),
+    inset 0 0 0 1px rgba(255,255,255,0.025),
+    0 7px 0 #0e0c14,
+    0 10px 24px rgba(0,0,0,0.55);
   --shadow-clay-hover:
-    0 10px 36px rgba(0,0,0,0.4),
-    0 3px 10px rgba(0,0,0,0.25),
-    inset 0 1.5px 0 rgba(255,255,255,0.08),
-    inset 0 -2px 6px rgba(0,0,0,0.18);
+    inset 0 1.5px 0 rgba(255,255,255,0.12),
+    inset 0 0 0 1px rgba(255,255,255,0.04),
+    0 9px 0 #0e0c14,
+    0 13px 30px rgba(0,0,0,0.6);
   --shadow-clay-active:
-    0 3px 12px rgba(0,0,0,0.3),
-    0 1px 3px rgba(0,0,0,0.2),
-    inset 0 2px 6px rgba(0,0,0,0.2),
-    inset 0 0.5px 0 rgba(255,255,255,0.04);
+    inset 0 1px 4px rgba(0,0,0,0.5),
+    inset 0 0 0 1px rgba(255,255,255,0.02),
+    0 3px 0 #0e0c14,
+    0 5px 12px rgba(0,0,0,0.4);
   --shadow-clay-btn:
     0 4px 16px rgba(0,0,0,0.35),
     inset 0 1px 0 rgba(255,255,255,0.12),
@@ -1220,10 +1220,10 @@
   --btn-ghost-border:   var(--p-dark-200);
 
   /* -- Tab -- */
-  --tab-inactive-text:  #9490b8;
-  --tab-active-bg:      linear-gradient(135deg, #b05878, #8050b8);
-  --tab-active-text:    var(--p-white);
-  --tab-active-shadow:  0 4px 16px rgba(160,80,160,0.25), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 4px rgba(0,0,0,0.15);
+  --tab-inactive-text:  #9c9aa4;
+  --tab-active-bg:      rgba(24,22,30,0.8);
+  --tab-active-text:    #e4e2ec;
+  --tab-active-shadow:  inset 0 1px 4px rgba(0,0,0,0.5);
 
   /* ══════════ BADGE / GRADE ══════════ */
   --badge-common-bg:    #201530;
@@ -1257,9 +1257,9 @@
 
   /* ══════════ Admin 색상 - 다크 모드 ══════════ */
   --adm-pending-highlight-border: rgba(236,72,153,0.4);
-  --adm-pending-highlight-bg: rgba(58,42,64,0.8);
-  --adm-log-tab-inactive-bg: rgba(22,30,42,0.7);
-  --adm-log-tab-inactive-border: rgba(42,58,74,0.5);
+  --adm-pending-highlight-bg: rgba(42,36,50,0.8);
+  --adm-log-tab-inactive-bg: rgba(26,24,32,0.7);
+  --adm-log-tab-inactive-border: rgba(46,44,54,0.5);
   --adm-log-tab-inactive-text: #a889d4;
   --adm-log-tab-active-bg: linear-gradient(135deg, #7c3aed, #a855f7);
   --adm-log-tab-active-border: transparent;
@@ -1270,18 +1270,18 @@
   --price-unaffordable-text: #f87171;
 
   /* ══════════ Squirrel Filter 색상 - 다크 모드 ══════════ */
-  --sq-filter-btn-active-bg: #3a3a20;
+  --sq-filter-btn-active-bg: #2e2c1e;
   --sq-filter-btn-active-border: #d4a060;
   --sq-filter-btn-active-text: #fbbf24;
-  --sq-filter-btn-inactive-bg: #1e2d40;
-  --sq-filter-btn-inactive-border: #3d5068;
-  --sq-filter-btn-inactive-text: #e2e8f0;
+  --sq-filter-btn-inactive-bg: #201e26;
+  --sq-filter-btn-inactive-border: #2e2c36;
+  --sq-filter-btn-inactive-text: #cccad6;
 
   /* ══════════ Fusion 슬롯 색상 - 다크 모드 ══════════ */
   --fuse-slot-empty-border: 3px dashed #2a3a4a;
-  --fuse-slot-empty-bg: #151d2a;
+  --fuse-slot-empty-bg: #1a1820;
   --fuse-slot-picking-border: 3px solid #d4a060;
-  --fuse-slot-picking-bg: #3a3a20;
+  --fuse-slot-picking-bg: #2e2c1e;
   --fuse-slot-picking-icon: #fbbf24;
   --fuse-slot-empty-icon: #64748b;
   --fuse-slot-common-border: 3px solid #a855f7;
@@ -1300,39 +1300,39 @@
   /* ══════════ Expedition 카드 선택 색상 - 다크 모드 ══════════ */
   --exp-card-selected-border: #60a5fa;
   --exp-card-deselected-border: transparent;
-  /* clay-card 다크 오버라이드 */
-  --clay-card-bg: var(--p-dark-600);
-  --clay-card-border: rgba(255,255,255,0.06);
+  /* clay-card 다크 오버라이드 — 젖은 돌 */
+  --clay-card-bg: linear-gradient(180deg, #26242c 0%, #201e26 40%, #1a1820 100%);
+  --clay-card-border: rgba(255,255,255,0.025);
   --clay-card-shadow:
-    0 6px 24px rgba(0,0,0,0.45),
-    0 2px 6px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.05),
-    inset 0 -1.5px 4px rgba(0,0,0,0.2);
+    inset 0 1px 0 rgba(255,255,255,0.09),
+    inset 0 0 0 1px rgba(255,255,255,0.025),
+    0 7px 0 #0e0c14,
+    0 10px 24px rgba(0,0,0,0.55);
   /* sqCard (다람쥐 카드) 다크 오버라이드 */
-  --sqcard-bg: var(--p-dark-500);
-  --sqcard-shadow: none;
+  --sqcard-bg: var(--p-dark-600);
+  --sqcard-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 3px 0 #0e0c14, 0 5px 12px rgba(0,0,0,0.4);
   /* body 다크 배경 */
   --body-bg: linear-gradient(-45deg, #0d0b1e, #1a1035, #0b1528, #1e1040, #0a1020, #160d30);
   --body-bg-size: 400% 400%;
   /* tab-bar-wrap 다크 오버라이드 */
-  --tab-bar-fade: linear-gradient(90deg, transparent, rgba(38,36,58,0.9) 40%);
-  --tab-bar-fade-color: #a78bfa;
+  --tab-bar-fade: linear-gradient(90deg, transparent, rgba(42,40,46,0.95) 40%);
+  --tab-bar-fade-color: #9c9aa4;
   /* catch-hud-danger 다크 오버라이드 */
-  --catch-hud-danger-bg: rgba(127,29,29,0.4);
+  --catch-hud-danger-bg: rgba(127,29,29,0.35);
   /* rank-row-me 다크 오버라이드 */
-  --rank-row-me-bg: rgba(192,132,252,0.08);
-  --rank-row-me-border: rgba(192,132,252,0.15);
+  --rank-row-me-bg: rgba(168,133,212,0.1);
+  --rank-row-me-border: rgba(168,133,212,0.18);
   /* vol-control / vol-slider 다크 오버라이드 */
-  --vol-control-bg: #151c28;
-  --vol-control-border: #2a3545;
-  --vol-slider-bg: #1a2535;
+  --vol-control-bg: #1a1820;
+  --vol-control-border: #2e2c36;
+  --vol-slider-bg: #201e26;
   --vol-slider-thumb: linear-gradient(135deg, #b05878, #8050b8);
   /* modal-box input 다크 오버라이드 */
-  --modal-input-bg: #151d2a;
-  --modal-input-border: #2a3a4a;
-  --modal-input-color: #fbbf24;
+  --modal-input-bg: #1a1820;
+  --modal-input-border: #2e2c36;
+  --modal-input-color: #fcd34d;
   /* expcard 다크 오버라이드 */
-  --expcard-bg: #1a2030;
+  --expcard-bg: #201e26;
   --expcard-shadow: 0 2px 12px rgba(0,0,0,.4);
   /* inv-chip2 다크 오버라이드 */
   --inv-chip2-bg: #1e2838;
@@ -1663,9 +1663,9 @@
   --icon-text-amber-600: #fcd34d;
   --icon-text-red-600: #f87171;
 
-  --surface-white: #1e2a3a;
-  --surface-50: #222e40;
-  --surface-gray: #1e2838;
+  --surface-white: #201e26;
+  --surface-50: #26242c;
+  --surface-gray: #1e1c24;
   --badge-error-bg: #5a1a1a;
   --badge-error-text: #f87171;
   --badge-error-text-dark: #fc8181;
@@ -1750,8 +1750,8 @@
   --row-item-bg: rgba(255,255,255,0.05);
 
   /* === stat card === */
-  --stat-card-bg: rgba(30,30,46,0.92);
-  --stat-card-border: rgba(255,255,255,0.08);
+  --stat-card-bg: #201e26;
+  --stat-card-border: #2e2c36;
 
   /* === Farm Field (Dark) === */
   --farm-field-bg: #342818;
@@ -2064,10 +2064,10 @@
   --util-text-orange-700: #fb923c;
   --util-text-orange-500: #fdba74;
   /* -- 배경 -- */
-  --util-bg-white: #1e2a3a;
-  --util-bg-gray-50: #242e3e;
-  --util-bg-gray-100: #242e3e;
-  --util-bg-gray-200: #2a3445;
+  --util-bg-white: #201e26;
+  --util-bg-gray-50: #26242c;
+  --util-bg-gray-100: #26242c;
+  --util-bg-gray-200: #2e2c34;
   --util-bg-amber-50: #382e18;
   --util-bg-amber-100: #3a2a10;
   --util-bg-pink-50: #381a2a;
@@ -2082,19 +2082,19 @@
   --util-bg-red-100: #4e2020;
   --util-bg-blue-100: #1e3565;
   /* -- 보더 -- */
-  --util-border-gray-100: #344a5e;
-  --util-border-gray-200: #344a5e;
+  --util-border-gray-100: #2e2c36;
+  --util-border-gray-200: #2e2c36;
   --util-border-yellow-200: #6a5020;
   --util-border-green-200: #2a6a40;
   --util-border-purple-200: #4a3070;
   --util-border-amber-100: #5a4018;
-  --util-border-b-2: #344a5e;
-  --util-divide-gray-50: #2a3545;
+  --util-border-b-2: #2e2c36;
+  --util-divide-gray-50: #26242e;
   /* -- 기타 컴포넌트 -- */
-  --util-select-bg: #1e1e2e;
-  --util-select-text: #e2e8f0;
-  --util-login-card-bg: #141420;
-  --util-h-px-bg: #2a3a4a;
+  --util-select-bg: #201e26;
+  --util-select-text: #e8e6f0;
+  --util-login-card-bg: #14121a;
+  --util-h-px-bg: #2e2c36;
   /* -- 소스 태그 -- */
   --it-store-dark: #fbbf24;
   --it-gacha-dark: #a889d4;
@@ -2213,8 +2213,8 @@
   --field-placeholder-dk: #d97706;
 
   /* === 탭 버튼 다크 토큰 === */
-  --tab-btn-dk-text: #d4a060;
-  --tab-btn-dk-active-text: #fff;
+  --tab-btn-dk-text: #9c9aa4;
+  --tab-btn-dk-active-text: #e4e2ec;
 
   /* === 리사이클 다크 토큰 === */
   --rt-coupon-bg: #3a2a10;
@@ -3116,6 +3116,16 @@ input[type="checkbox"]:active,
   background: var(--clay-card-bg);
   border: 1px solid var(--clay-card-border);
   box-shadow: var(--clay-card-shadow);
+}
+/* 탭바 clay-card: 클래식 매끈 조약돌 (A안 1번) */
+[data-theme="dark"] #userTabBar.clay-card,
+[data-theme="dark"] #adminTabBar.clay-card {
+  background: linear-gradient(180deg, #403e48 0%, #36343c 35%, #2e2c34 70%, #2a282e 100%);
+  border: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 6px 0 #1c1a22,
+    0 9px 20px rgba(0,0,0,0.55);
 }
 /* 다크모드 버튼: 채도·밝기 낮춰 형광 제거 */
 [data-theme="dark"] .btn-primary {
