@@ -721,10 +721,10 @@ async function renderTxLog() {
   window._logUsers = users;
   btnList.innerHTML = users.map(u => `
     <button id="logBtn-${u.id}" onclick="selectLogUser('${u.id}')"
-      style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;border:1.5px solid rgba(200,180,240,0.3);background:rgba(255,255,255,0.7);font-family:'Jua',sans-serif;font-size:13px;color:#4b3060;cursor:pointer;transition:all .15s;flex-shrink:0;white-space:nowrap">
+      style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;border:1.5px solid var(--border-focus);background:var(--bg-surface);font-family:'Jua',sans-serif;font-size:13px;color:var(--text-primary);cursor:pointer;transition:all .15s;flex-shrink:0;white-space:nowrap">
       ${_avatarHtml(u, '1.4rem')}
       <span>${u.display_name}</span>
-      <span style="font-size:11px;color:#a78bfa">🌰${u.acorns||0}</span>
+      <span style="font-size:11px;color:var(--p-purple-400)">🌰${u.acorns||0}</span>
     </button>`).join('');
   // 드래그 스크롤 + 스크롤 힌트 초기화
   if (typeof initTabBarDragScroll === 'function') initTabBarDragScroll(btnList);
@@ -806,7 +806,7 @@ async function renderUserStatusCard(u, card) {
   <div class="sc-body">`;
 
   if (dates.length === 0) {
-    html += `<p style="font-size:11px;color:#d1d5db;font-weight:700;text-align:center;padding:16px 0">활동 내역 없음</p>`;
+    html += `<p style="font-size:11px;color:var(--text-disabled);font-weight:700;text-align:center;padding:16px 0">활동 내역 없음</p>`;
   } else {
     const curDate = dates[curIdx];
     const events  = eventsByDate[curDate];
@@ -1543,7 +1543,7 @@ function _itemCard(item) {
   const inactiveBadge = !item.active ? '<span class="badge-soldout-sm">비활성</span>' : '';
   const actionBtn = item.active
     ? `<button class="btn btn-red px-2 py-1 text-xs" onclick="deleteRegistryItem('${item.id}')">비활성화</button>`
-    : `<button class="btn px-2 py-1 text-xs" style="background:#d1fae5;color:#065f46" onclick="reactivateRegistryItem('${item.id}')">재활성화</button>`;
+    : `<button class="btn px-2 py-1 text-xs" style="background:var(--bg-green-muted);color:var(--p-green-800)" onclick="reactivateRegistryItem('${item.id}')">재활성화</button>`;
   return `<div class="product-card p-3 rounded-xl bg-white border border-gray-100 shadow-sm${!item.active ? ' opacity-50' : ''}">
     <div class="flex items-center gap-2">
       <div class="text-xl">${item.icon || '📦'}</div>

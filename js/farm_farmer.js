@@ -13,8 +13,8 @@ async function farmStartApprentice(squirrelId) {
   showModal(`
     <div style="text-align:center;padding:8px 0">
       <div style="font-size:40px;margin-bottom:8px">🌾</div>
-      <div style="font-size:16px;font-weight:900;color:#1f2937;margin-bottom:8px">수습 농부 보내기</div>
-      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:8px">수습 농부 보내기</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
         <strong>${sq.name}</strong>을(를) 수습 농부로 보낼까요?<br>
         ${_farmSettings.apprentice_hours || 4}시간 후 결과를 확인할 수 있어요.
       </div>
@@ -49,8 +49,8 @@ async function farmRevealResult() {
   showModal(`
     <div id="farmRevealAnim" style="text-align:center;padding:20px 0">
       <div id="farmRevealIcon" style="font-size:56px;animation:sqCardShake 0.5s ease infinite">🌾</div>
-      <div style="font-size:16px;font-weight:900;color:#78350f;margin-top:16px">결과 확인 중...</div>
-      <div style="font-size:12px;color:#9ca3af;margin-top:4px">두근두근</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text-brand);margin-top:16px">결과 확인 중...</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">두근두근</div>
     </div>
   `);
 
@@ -106,18 +106,18 @@ async function farmRevealResult() {
       showModal(`
         <div style="text-align:center;padding:8px 0">
           <div style="font-size:48px;margin-bottom:12px">${success ? '🎉' : '😅'}</div>
-          <div style="font-size:18px;font-weight:900;color:${success ? '#16a34a' : '#9ca3af'};margin-bottom:8px">
+          <div class="${success ? 'farm-result-success' : 'farm-result-fail'}">
             ${success ? '농부 전직 성공!' : '아쉽지만 실패...'}
           </div>
-          <div style="display:inline-block;border-radius:16px;border:3px solid ${success ? '#22c55e' : '#d1d5db'};padding:3px;background:${success ? '#f0fdf4' : 'var(--surface-50)'};margin:8px 0">
+          <div class="${success ? 'farm-result-frame-success' : 'farm-result-frame-empty'}">
             <img src="images/squirrels/${spriteFile}.png" style="width:64px;height:64px;object-fit:contain;border-radius:12px;display:block" onerror="this.outerHTML='<div style=\\'font-size:48px;line-height:64px\\'>🐱</div>'">
           </div>
-          <div style="font-size:14px;font-weight:900;color:#1f2937;margin-bottom:4px">${sqName}</div>
+          <div style="font-size:14px;font-weight:900;color:var(--text-primary);margin-bottom:4px">${sqName}</div>
           ${success ? `
-            <div style="font-size:13px;color:#16a34a;margin-bottom:16px">훌륭한 농부가 되었어요! 🌾</div>
+            <div style="font-size:13px;color:var(--p-green-600);margin-bottom:16px">훌륭한 농부가 되었어요! 🌾</div>
           ` : `
-            <div style="font-size:13px;color:#6b7280;margin-bottom:8px">농사가 아직 어려웠나봐요...</div>
-            <div style="font-size:12px;color:#f59e0b;font-weight:700;margin-bottom:16px">🌰 보상으로 도토리 ${result?.reward_acorns || 5}개를 가져왔어요!</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">농사가 아직 어려웠나봐요...</div>
+            <div style="font-size:12px;color:var(--p-amber-500);font-weight:700;margin-bottom:16px">🌰 보상으로 도토리 ${result?.reward_acorns || 5}개를 가져왔어요!</div>
           `}
           <button onclick="closeModal();farmAfterReveal(${success})" class="btn btn-primary w-full">
             ${success ? '확인' : '다시 도전하기'}
@@ -149,11 +149,11 @@ function farmShowChangeFarmer() {
   const canUnequip = _farmData?.active_farmer_id && !hasGrowingCrop;
   showModal(`
     <div style="padding:4px 0">
-      <div style="font-size:15px;font-weight:900;color:#1f2937;margin-bottom:12px;text-align:center">🌾 농부 교체/해제</div>
+      <div style="font-size:15px;font-weight:900;color:var(--text-primary);margin-bottom:12px;text-align:center">🌾 농부 교체/해제</div>
       ${_farmRenderFarmerList()}
       ${_farmData?.active_farmer_id ? (canUnequip
-        ? `<button onclick="farmUnequipFarmer()" class="btn w-full mt-3" style="background:#fef2f2;color:#ef4444;font-weight:800;font-size:11px">농부 해제하기</button>`
-        : `<div class="w-full mt-3 text-center" style="font-size:10px;color:#9ca3af;font-weight:700;padding:8px 0">🌱 작물이 자라는 중에는 해제할 수 없어요</div>`
+        ? `<button onclick="farmUnequipFarmer()" class="btn w-full mt-3" style="background:var(--bg-red-subtle);color:var(--p-red-500);font-weight:800;font-size:11px">농부 해제하기</button>`
+        : `<div class="w-full mt-3 text-center" style="font-size:10px;color:var(--text-muted);font-weight:700;padding:8px 0">🌱 작물이 자라는 중에는 해제할 수 없어요</div>`
       ) : ''}
       <button onclick="closeModal()" class="btn w-full mt-2" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:13px;font-weight:800;padding:12px;border-radius:14px;border:1.5px solid var(--btn-cancel-border)">닫기</button>
     </div>
@@ -173,15 +173,15 @@ function _farmRenderFarmerList() {
     const spriteFile = sq.sprite || 'sq_acorn';
     const isActive = _farmData?.active_farmer_id === sq.id;
     return `
-      <div onclick="${isActive ? '' : `farmEquipFarmer('${sq.id}')`}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:${isActive ? '#f0fdf4' : 'var(--list-item-bg)'};border:2px solid ${isActive ? '#22c55e' : 'var(--list-item-border)'};cursor:${isActive ? 'default' : 'pointer'}">
+      <div onclick="${isActive ? '' : `farmEquipFarmer('${sq.id}')`}" class="farm-farmer-card ${isActive ? 'farm-farmer-active' : 'farm-farmer-inactive'}">
         <div style="border-radius:8px;${gs.border};padding:2px;background:${gs.bg};flex-shrink:0">
           <img src="images/squirrels/${spriteFile}.png" style="width:30px;height:30px;object-fit:contain;border-radius:6px;display:block" onerror="this.outerHTML='<div style=\\'font-size:22px;line-height:30px;text-align:center\\'>🐱</div>'">
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:11px;font-weight:900;color:#1f2937">${sq.name}</div>
+          <div style="font-size:11px;font-weight:900;color:var(--text-primary)">${sq.name}</div>
           <div style="font-size:9px;font-weight:700;color:${gs.color}">${gs.label}</div>
         </div>
-        <div style="font-size:10px;font-weight:800;color:${isActive ? '#16a34a' : '#f59e0b'}">${isActive ? '장착 중' : '장착'}</div>
+        <div class="${isActive ? 'farm-farmer-label-active' : 'farm-farmer-label-inactive'}">${isActive ? '장착 중' : '장착'}</div>
       </div>`;
   }).join('')}</div>`;
 }

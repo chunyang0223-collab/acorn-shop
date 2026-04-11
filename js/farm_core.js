@@ -297,7 +297,7 @@ function farmRenderMain() {
   html += farmRenderFarmerSlot();
   html += `<div class="farm-right-col">`;
   html += farmRenderDepositBadge();
-  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><span class="farm-shop-lbl" style="font-size:11px;font-weight:800;color:#fff">상점</span></div>`;
+  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><span class="farm-shop-lbl" style="font-size:11px;font-weight:800;color:var(--bg-surface)">상점</span></div>`;
   html += `</div>`;
   html += `</div>`;
 
@@ -396,7 +396,7 @@ function farmRenderFieldGrid() {
             <div class="farm-cell-emoji">${crop?.emoji || '🌱'}</div>
             <div id="farm-cell-label-${i}" class="farm-cell-label ${ready ? 'farm-txt-gold' : 'farm-txt-green'}">${ready ? '수확!' : (crop?.name || '')}</div>
             <div id="farm-cell-timer-${i}" class="farm-cell-timer">${!ready && remainStr ? remainStr : ''}</div>
-            ${myProfile?.is_admin ? `<div id="farm-cell-skip-${i}" onclick="event.stopPropagation();farmAdminSkipGrow(${i})" style="position:absolute;top:1px;right:1px;font-size:7px;background:#ef4444;color:white;border-radius:4px;padding:1px 3px;cursor:pointer;font-weight:800;opacity:0.8;display:${ready ? 'none' : 'block'}">⏩</div>` : ''}
+            ${myProfile?.is_admin ? `<div id="farm-cell-skip-${i}" onclick="event.stopPropagation();farmAdminSkipGrow(${i})" style="position:absolute;top:1px;right:1px;font-size:7px;background:var(--p-red-500);color:white;border-radius:4px;padding:1px 3px;cursor:pointer;font-weight:800;opacity:0.8;display:${ready ? 'none' : 'block'}">⏩</div>` : ''}
           </div>`;
       } else {
         gridHtml += `

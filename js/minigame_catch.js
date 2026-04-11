@@ -61,8 +61,8 @@ function startCatchGame() {
       <div class="catch-overlay" id="catchOverlay">
         <div class="catch-overlay-content">
           <div style="font-size:4rem;margin-bottom:12px">🌰</div>
-          <h2 class="font-black text-xl mb-2" style="color:#78350f">도토리 캐치</h2>
-          <p class="text-sm mb-1" style="color:#92400e;font-weight:700">바구니를 움직여 도토리를 받으세요!</p>
+          <h2 class="font-black text-xl mb-2" style="color:var(--text-brand)">도토리 캐치</h2>
+          <p class="text-sm mb-1" style="color:var(--p-amber-700);font-weight:700">바구니를 움직여 도토리를 받으세요!</p>
           <div class="catch-legend">
             <span>🌰 +1~2점</span><span>✨ +5점</span><span>🍄 +10점</span><span>💣 -8점</span>
           </div>
@@ -250,27 +250,27 @@ function endCatchGame() {
     <div class="catch-result-screen">
       <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
         <div style="font-size:4rem;margin-bottom:8px">🎉</div>
-        <h2 class="font-black text-xl mb-4" style="color:#78350f">게임 종료!</h2>
+        <h2 class="font-black text-xl mb-4" style="color:var(--text-brand)">게임 종료!</h2>
         <div class="catch-result-stats">
           <div class="catch-result-stat">
-            <span class="catch-result-num" style="color:#d97706">${score}</span>
+            <span class="catch-result-num" style="color:var(--p-amber-600)">${score}</span>
             <span class="catch-result-label">최종 점수</span>
           </div>
           <div class="catch-result-stat">
-            <span class="catch-result-num" style="color:#dc2626">${maxCombo}</span>
+            <span class="catch-result-num" style="color:var(--p-red-600)">${maxCombo}</span>
             <span class="catch-result-label">최대 콤보</span>
           </div>
           <div class="catch-result-stat">
-            <span class="catch-result-num" style="color:#059669">${caught}</span>
+            <span class="catch-result-num" style="color:var(--p-green-600)">${caught}</span>
             <span class="catch-result-label">캐치 성공</span>
           </div>
         </div>
         <div class="catch-reward-box">
           <span style="font-size:1.8rem">🌰</span>
           <div>
-            <p class="font-black" style="color:#78350f;font-size:18px">${reward} 도토리 획득 가능</p>
-            <p class="text-xs" style="color:#b45309;font-weight:700">${rewardRate}점당 1도토리 (최대 ${maxReward})</p>
-            ${canClaim ? `<p class="text-xs mt-1" style="color:#7c3aed;font-weight:700">보상 수령 남은 횟수: ${rLimit - rUsed}/${rLimit}회</p>` : ''}
+            <p class="font-black" style="color:var(--text-brand);font-size:18px">${reward} 도토리 획득 가능</p>
+            <p class="text-xs" style="color:var(--p-amber-600);font-weight:700">${rewardRate}점당 1도토리 (최대 ${maxReward})</p>
+            ${canClaim ? `<p class="text-xs mt-1" style="color:var(--p-purple-700);font-weight:700">보상 수령 남은 횟수: ${rLimit - rUsed}/${rLimit}회</p>` : ''}
           </div>
         </div>
         ${canClaim ? `
@@ -311,7 +311,7 @@ async function _finishCatch(score, claimReward) {
     <div class="catch-result-screen">
       <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
         <div style="font-size:3rem;margin-bottom:8px">${claimReward ? '🌰' : '✅'}</div>
-        <h2 class="font-black text-lg mb-2" style="color:#78350f">${claimReward ? `+${reward} 도토리 획득!` : '기록 저장 완료'}</h2>
+        <h2 class="font-black text-lg mb-2" style="color:var(--text-brand)">${claimReward ? `+${reward} 도토리 획득!` : '기록 저장 완료'}</h2>
         <div class="flex gap-2 mt-4">
           <button class="btn btn-gray flex-1 py-3" onclick="exitMinigame()">돌아가기</button>
           <button class="btn btn-primary flex-1 py-3" onclick="startMinigame('catch')">다시하기</button>

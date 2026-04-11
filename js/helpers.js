@@ -367,9 +367,9 @@ async function checkAdminNotice() {
     showModal(`
       <div style="text-align:center;padding:8px 0">
         <div style="font-size:36px;margin-bottom:8px">📢</div>
-        <div style="font-size:16px;font-weight:900;color:#1f2937;margin-bottom:12px">공지사항</div>
+        <div style="font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:12px">공지사항</div>
         <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;text-align:left;background:var(--surface-50);border-radius:12px;padding:14px;margin-bottom:16px">${notice.message.replace(/</g,'&lt;')}</div>
-        <div style="font-size:10px;color:#9ca3af;margin-bottom:12px">${notice.date || ''}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px">${notice.date || ''}</div>
         <button class="btn btn-primary w-full" onclick="markNoticeRead('${noticeId}')">확인</button>
       </div>
     `);
@@ -423,15 +423,15 @@ async function adminLoadCurrentNotice() {
   try {
     const { data } = await sb.from('app_settings').select('value').eq('key', 'admin_notice').maybeSingle();
     if (!data?.value?.message) {
-      el.innerHTML = '<div style="font-size:12px;color:#9ca3af;padding:8px 0">등록된 공지가 없습니다.</div>';
+      el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">등록된 공지가 없습니다.</div>';
       return;
     }
     const n = data.value;
     el.innerHTML = `
-      <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:12px;margin-top:8px">
-        <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:4px">📌 현재 공지</div>
-        <div style="font-size:13px;color:#78350f;white-space:pre-wrap;line-height:1.6">${n.message.replace(/</g,'&lt;')}</div>
-        <div style="font-size:10px;color:#b45309;margin-top:6px">${n.date || ''}</div>
+      <div style="background:var(--bg-amber-subtle);border:1.5px solid var(--border-amber);border-radius:12px;padding:12px;margin-top:8px">
+        <div style="font-size:11px;font-weight:800;color:var(--p-amber-700);margin-bottom:4px">📌 현재 공지</div>
+        <div style="font-size:13px;color:var(--text-brand);white-space:pre-wrap;line-height:1.6">${n.message.replace(/</g,'&lt;')}</div>
+        <div style="font-size:10px;color:var(--p-amber-600);margin-top:6px">${n.date || ''}</div>
       </div>`;
   } catch (e) { el.innerHTML = ''; }
 }
@@ -457,5 +457,52 @@ function sendBrowserNotif(title, body) {
     }
   }
 }
+
+// ══════════════════════════════════════════════
+//  CSS 토큰 색상 헬퍼 (Phase 4 리팩토링)
+//  JS 인라인 스타일에서 하드코딩 색상 대신 사용
+// ══════════════════════════════════════════════
+
+/**
+ * CSS 커스텀 프로퍼티(토큰) 값을 런타임에 읽어옴
+ * @param {string} name  예: '--text-primary'
+ * @returns {string}
+ */
+function getCssToken(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// ── 자주 쓰이는 색상 상수 (CSS 토큰 기반) ──
+// 주의: 페이지 로드 후 DOM이 준비된 시점부터 유효
+const C = {
+  get textPrimary()   { return getCssToken('--text-primary'); },
+  get textSecondary() { return getCssToken('--text-secondary'); },
+  get textMuted()     { return getCssToken('--text-muted'); },
+  get textInverse()   { return getCssToken('--text-inverse'); },
+  get textBrand()     { return getCssToken('--text-brand'); },
+  get textAccent()    { return getCssToken('--text-accent'); },
+  get textSuccess()   { return getCssToken('--text-success'); },
+  get textWarning()   { return getCssToken('--text-warning'); },
+  get textDanger()    { return getCssToken('--text-danger'); },
+  get textInfo()      { return getCssToken('--text-info'); },
+  get textAmber()     { return getCssToken('--text-amber'); },
+  get textPink()      { return getCssToken('--text-pink'); },
+  get textDisabled()  { return getCssToken('--text-disabled'); },
+
+  get bgSurface()     { return getCssToken('--bg-surface'); },
+  get bgSunken()      { return getCssToken('--bg-sunken'); },
+  get bgElevated()    { return getCssToken('--bg-elevated'); },
+  get bgAmberMuted()  { return getCssToken('--bg-amber-muted'); },
+  get bgGreenMuted()  { return getCssToken('--bg-green-muted'); },
+  get bgRedMuted()    { return getCssToken('--bg-red-muted'); },
+  get bgPurpleMuted() { return getCssToken('--bg-purple-muted'); },
+  get bgPinkMuted()   { return getCssToken('--bg-pink-muted'); },
+
+  get borderDefault() { return getCssToken('--border-default'); },
+  get borderInput()   { return getCssToken('--border-input'); },
+  get borderGreen()   { return getCssToken('--border-green'); },
+  get borderAmber()   { return getCssToken('--border-amber'); },
+  get borderRed()     { return getCssToken('--border-red'); },
+};
 
 // ──────────────────────────────────────────────

@@ -187,64 +187,64 @@ async function startCrosswordGame(difficulty) {
   play.classList.remove('hidden');
 
   play.innerHTML = `
-    <div id="cw-wrap" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 16px;min-height:100%;background:var(--bg,#f0eeff);font-family:'Segoe UI',system-ui,sans-serif;">
+    <div id="cw-wrap" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 16px;min-height:100%;background:var(--bg,var(--bg-purple-subtle,#f0eeff));font-family:'Segoe UI',system-ui,sans-serif;">
       <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:420px;">
-        <button onclick="exitMinigame()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#8b87a8;padding:4px 8px;">✕</button>
+        <button onclick="exitMinigame()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px 8px;">✕</button>
         <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:20px;background:${_cwDiffColor(_cwDifficulty)};color:#fff;">${_cwDiffLabel(_cwDifficulty)}</span>
+          <span style="font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:20px;background:${_cwDiffColor(_cwDifficulty)};color:var(--bg-surface);">${_cwDiffLabel(_cwDifficulty)}</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;width:100%;max-width:420px;background:#fff;border-radius:16px;padding:12px 18px;box-shadow:0 2px 8px rgba(124,111,247,.10);border:1.5px solid #e2deff;">
+      <div style="display:flex;align-items:center;gap:12px;width:100%;max-width:420px;background:var(--bg-surface);border-radius:16px;padding:12px 18px;box-shadow:0 2px 8px rgba(124,111,247,.10);border:1.5px solid var(--border-focus);">
         <div style="display:flex;flex-direction:column;align-items:center;flex:1">
-          <span style="font-size:1.2rem;font-weight:800;color:#7c6ff7" id="cw-stat-words">0</span>
-          <span style="font-size:0.65rem;color:#8b87a8;text-transform:uppercase;letter-spacing:.5px">단어</span>
+          <span style="font-size:1.2rem;font-weight:800;color:var(--p-purple-500)" id="cw-stat-words">0</span>
+          <span style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">단어</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;flex:1">
-          <span style="font-size:1.2rem;font-weight:800;color:#7c6ff7" id="cw-stat-filled">0</span>
-          <span style="font-size:0.65rem;color:#8b87a8;text-transform:uppercase;letter-spacing:.5px">입력</span>
+          <span style="font-size:1.2rem;font-weight:800;color:var(--p-purple-500)" id="cw-stat-filled">0</span>
+          <span style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">입력</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;flex:1">
-          <span style="font-size:1.2rem;font-weight:800;color:#7c6ff7" id="cw-stat-timer">0:00</span>
-          <span style="font-size:0.65rem;color:#8b87a8;text-transform:uppercase;letter-spacing:.5px">시간</span>
+          <span style="font-size:1.2rem;font-weight:800;color:var(--p-purple-500)" id="cw-stat-timer">0:00</span>
+          <span style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">시간</span>
         </div>
         <button id="cw-btn-submit" onclick="cwSubmit()"
-          style="padding:10px 20px;border-radius:12px;font-size:0.875rem;font-weight:800;font-family:inherit;cursor:pointer;border:none;background:#7c6ff7;color:#fff;box-shadow:0 4px 0 #5a52c7;transition:transform .1s,box-shadow .1s;white-space:nowrap;">
+          style="padding:10px 20px;border-radius:12px;font-size:0.875rem;font-weight:800;font-family:inherit;cursor:pointer;border:none;background:var(--p-purple-500);color:var(--bg-surface);box-shadow:0 4px 0 var(--p-purple-700);transition:transform .1s,box-shadow .1s;white-space:nowrap;">
           제출
         </button>
       </div>
-      <div style="background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 20px rgba(124,111,247,.15);border:1.5px solid #e2deff;">
+      <div style="background:var(--bg-surface);border-radius:20px;padding:20px;box-shadow:0 4px 20px rgba(124,111,247,.15);border:1.5px solid var(--border-focus);">
         <div id="cw-board-container">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px;color:#8b87a8;font-size:.9rem;">
-            <div style="width:36px;height:36px;border:3px solid #e2deff;border-top-color:#7c6ff7;border-radius:50%;animation:cw-spin .7s linear infinite;"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px;color:var(--text-muted);font-size:.9rem;">
+            <div style="width:36px;height:36px;border:3px solid var(--border-focus);border-top-color:var(--p-purple-500);border-radius:50%;animation:cw-spin .7s linear infinite;"></div>
             게임판 생성 중…
           </div>
         </div>
       </div>
-      <div id="cw-hint-tooltip" style="position:fixed;z-index:200;background:#2d2a3e;color:#fff;font-size:.78rem;line-height:1.45;padding:8px 12px;border-radius:12px;max-width:220px;box-shadow:0 4px 20px rgba(124,111,247,.15);pointer-events:auto;cursor:pointer;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;">
-        <div id="cw-tt-dir" style="font-size:.65rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#f7a1c4;margin-bottom:3px;"></div>
+      <div id="cw-hint-tooltip" style="position:fixed;z-index:200;background:var(--text-primary);color:var(--bg-surface);font-size:.78rem;line-height:1.45;padding:8px 12px;border-radius:12px;max-width:220px;box-shadow:0 4px 20px rgba(124,111,247,.15);pointer-events:auto;cursor:pointer;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;">
+        <div id="cw-tt-dir" style="font-size:.65rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--p-pink-300);margin-bottom:3px;"></div>
         <div id="cw-tt-text"></div>
       </div>
     </div>
     <style>
       @keyframes cw-spin { to { transform:rotate(360deg); } }
       .cw-cell { width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:700;position:relative;transition:background .15s,box-shadow .15s;cursor:default;user-select:none; }
-      .cw-cell.empty { background:#f0eeff;opacity:.25; }
-      .cw-cell.filled { background:#fff;border:1.5px solid #e2deff;box-shadow:3px 3px 0 rgba(124,111,247,.15);cursor:pointer; }
+      .cw-cell.empty { background:var(--bg-purple-subtle,#f0eeff);opacity:.25; }
+      .cw-cell.filled { background:var(--bg-surface);border:1.5px solid var(--border-focus);box-shadow:3px 3px 0 rgba(124,111,247,.15);cursor:pointer; }
       .cw-cell.prefilled { background:#ede9ff; }
-      .cw-cell.prefilled input { color:#7c6ff7;font-weight:800; }
-      .cw-cell.active { background:#ede9ff!important;border-color:#7c6ff7!important;box-shadow:0 0 0 2px #7c6ff7!important; }
+      .cw-cell.prefilled input { color:var(--p-purple-500);font-weight:800; }
+      .cw-cell.active { background:#ede9ff!important;border-color:var(--p-purple-500)!important;box-shadow:0 0 0 2px #7c6ff7!important; }
       .cw-cell.highlight { background:#f0edff;border-color:#c4b9ff; }
       .cw-cell.correct { background:#d4f4e4;border-color:#7dd3aa; }
-      .cw-cell.wrong { background:#fde8e8;border-color:#f5a7a7; }
-      .cw-cell input { width:100%;height:100%;border:none;background:transparent;text-align:center;font-size:.95rem;font-weight:700;font-family:inherit;color:#2d2a3e;text-transform:uppercase;cursor:pointer;outline:none;caret-color:transparent; }
-      .cw-num { position:absolute;top:2px;left:3px;font-size:.5rem;font-weight:700;color:#7c6ff7;line-height:1; }
+      .cw-cell.wrong { background:#fde8e8;border-color:var(--p-red-300); }
+      .cw-cell input { width:100%;height:100%;border:none;background:transparent;text-align:center;font-size:.95rem;font-weight:700;font-family:inherit;color:var(--text-primary);text-transform:uppercase;cursor:pointer;outline:none;caret-color:transparent; }
+      .cw-num { position:absolute;top:2px;left:3px;font-size:.5rem;font-weight:700;color:var(--p-purple-500);line-height:1; }
       #cw-hint-tooltip.show { opacity:1;transform:translateY(0); }
     </style>`;
 
   // 단어뱅크 로드 후 게임판 생성
   const wordBank = await _cwLoadWordBank();
   if (!wordBank || Object.keys(wordBank).length === 0) {
-    document.getElementById('cw-board-container').innerHTML = '<p style="color:#f5a7a7;padding:20px;text-align:center;">단어 파일을 불러올 수 없어요.</p>';
+    document.getElementById('cw-board-container').innerHTML = '<p style="color:var(--p-red-300);padding:20px;text-align:center;">단어 파일을 불러올 수 없어요.</p>';
     return;
   }
   _cwInit(wordBank);
@@ -598,21 +598,21 @@ async function cwSubmit() {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(45,42,62,.35);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:300;';
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:24px;padding:36px 40px;text-align:center;box-shadow:0 4px 20px rgba(124,111,247,.2);border:1.5px solid #e2deff;max-width:300px;width:90%;display:flex;flex-direction:column;align-items:center;gap:16px;">
+    <div style="background:var(--bg-surface);border-radius:24px;padding:36px 40px;text-align:center;box-shadow:0 4px 20px rgba(124,111,247,.2);border:1.5px solid var(--border-focus);max-width:300px;width:90%;display:flex;flex-direction:column;align-items:center;gap:16px;">
       <div style="font-size:3rem;line-height:1;">${emoji}</div>
-      <h2 style="font-size:1.4rem;font-weight:800;color:#7c6ff7;margin:0;">${title}</h2>
-      <div style="width:100%;background:#f7f5ff;border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+      <h2 style="font-size:1.4rem;font-weight:800;color:var(--p-purple-500);margin:0;">${title}</h2>
+      <div style="width:100%;background:var(--bg-sunken);border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:.85rem;color:#8b87a8;">맞춘 단어</span>
-          <span style="font-size:1rem;font-weight:800;color:#2d2a3e;">${correctWords} / ${placed.length}</span>
+          <span style="font-size:.85rem;color:var(--text-muted);">맞춘 단어</span>
+          <span style="font-size:1rem;font-weight:800;color:var(--text-primary);">${correctWords} / ${placed.length}</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:.85rem;color:#8b87a8;">획득 도토리</span>
-          <span style="font-size:1rem;font-weight:800;color:#c97c2a;">🌰 ${acorns}</span>
+          <span style="font-size:.85rem;color:var(--text-muted);">획득 도토리</span>
+          <span style="font-size:1rem;font-weight:800;color:var(--text-brand);">🌰 ${acorns}</span>
         </div>
       </div>
-      ${bonusNote ? `<p style="font-size:.82rem;color:#8b87a8;margin:0;">${bonusNote}</p>` : ''}
-      <button onclick="exitMinigame()" style="padding:12px 32px;border-radius:12px;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;border:none;background:#7c6ff7;color:#fff;box-shadow:0 4px 0 #5a52c7;width:100%;">확인</button>
+      ${bonusNote ? `<p style="font-size:.82rem;color:var(--text-muted);margin:0;">${bonusNote}</p>` : ''}
+      <button onclick="exitMinigame()" style="padding:12px 32px;border-radius:12px;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;border:none;background:var(--p-purple-500);color:var(--bg-surface);box-shadow:0 4px 0 var(--p-purple-700);width:100%;">확인</button>
     </div>`;
   document.body.appendChild(overlay);
 }

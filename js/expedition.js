@@ -31,7 +31,7 @@ async function sqLoadActiveExpedition() {
     const exp = data?.[0];
     if (area && exp) {
       area.innerHTML = `
-        <div class="clay-card p-4 mb-4" style="background:#eff6ff;border-left:4px solid #3b82f6">
+        <div class="clay-card p-4 mb-4" style="background:var(--bg-blue-muted);border-left:4px solid var(--p-blue-500)">
           <div class="flex items-center gap-3">
             <div class="text-3xl">🗺️</div>
             <div>
@@ -340,7 +340,7 @@ function _expRenderItemChips(wrapId, selectedItems) {
   });
 
   if (unique.length === 0) {
-    wrap.innerHTML = '<div style="font-size:12px;color:#9ca3af;padding:8px">등록된 상품이 없어요</div>';
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px">등록된 상품이 없어요</div>';
     return;
   }
 
@@ -384,7 +384,7 @@ function _expRenderMonsterList(containerId, list, isBoss) {
   var wrap = document.getElementById(containerId);
   if (!wrap) return;
   if (!list || list.length === 0) {
-    wrap.innerHTML = '<div style="font-size:12px;color:#9ca3af;padding:8px;text-align:center">등록된 ' + (isBoss ? '보스' : '몬스터') + '가 없어요</div>';
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px;text-align:center">등록된 ' + (isBoss ? '보스' : '몬스터') + '가 없어요</div>';
     return;
   }
   wrap.innerHTML = list.map(function(m, i) {
@@ -394,12 +394,12 @@ function _expRenderMonsterList(containerId, list, isBoss) {
       '<span style="font-size:22px">' + m.emoji + '</span>' +
       '<div style="flex:1;min-width:0">' +
         '<div style="font-size:12px;font-weight:900;color:var(--text-primary,#374151)">' + m.name + '</div>' +
-        '<div style="font-size:10px;color:#9ca3af">Lv.' + m.lvMin + '~' + m.lvMax +
+        '<div style="font-size:10px;color:var(--text-muted)">Lv.' + m.lvMin + '~' + m.lvMax +
           ' | HP ' + preview.hp + '~' + previewMax.hp +
           ' 공 ' + preview.atk + '~' + previewMax.atk +
           ' 방 ' + preview.def + '~' + previewMax.def + '</div>' +
       '</div>' +
-      '<button onclick="_expRemoveMonster(\'' + containerId + '\',' + i + ',' + isBoss + ')" style="width:24px;height:24px;border-radius:6px;border:none;background:#fee2e2;color:#dc2626;font-size:12px;cursor:pointer;font-family:inherit">✕</button>' +
+      '<button onclick="_expRemoveMonster(\'' + containerId + '\',' + i + ',' + isBoss + ')" style="width:24px;height:24px;border-radius:6px;border:none;background:var(--bg-red-muted);color:var(--p-red-600);font-size:12px;cursor:pointer;font-family:inherit">✕</button>' +
     '</div>';
   }).join('');
 }
@@ -816,7 +816,7 @@ function _expShowOverlay(emoji, title, body, btn1Text, btn1Fn, btn2Text, btn2Fn)
   overlay.id = 'expOverlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);animation:expFadeIn .25s ease';
 
-  var btn1Style = 'flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);box-shadow:0 3px 0 #b45309';
+  var btn1Style = 'flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#d97706);color:var(--bg-surface);text-shadow:0 1px 2px rgba(0,0,0,.3);box-shadow:0 3px 0 #b45309';
   var btn2Style = 'flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;background:transparent;color:#a5b4fc';
 
   overlay.innerHTML =
@@ -1264,7 +1264,7 @@ function _btlAction(type) {
       '💨',
       '정말 포기하시겠어요?',
       '도망에 성공해도 전리품의 50%만 가지고<br>돌아갈 수 있어요.' +
-      (halfPreview > 0 ? '<br><span style="color:#fbbf24;font-weight:800">🌰 ' + halfPreview + '개 획득 예상</span>' : ''),
+      (halfPreview > 0 ? '<br><span style="color:var(--p-amber-400);font-weight:800">🌰 ' + halfPreview + '개 획득 예상</span>' : ''),
       '도망친다!', function() { _btlDoEscape(); },
       '포기한다', null
     );
@@ -1298,7 +1298,7 @@ function _btlAction(type) {
       dmg = Math.floor(b.attacker.atk * (_expConfig.skill_multiplier || 1.65) + (Math.random() * swing * 2 - swing));
       _btlSound('skill');
       _btlFlash('rgba(255,220,50,.5)');
-      _btlLog('✨ <b>' + b.attacker.name + '</b>의 필살기! <b style="color:#f0c030">' + dmg + ' 데미지!</b>', 'skill');
+      _btlLog('✨ <b>' + b.attacker.name + '</b>의 필살기! <b class="br-log-skill">' + dmg + ' 데미지!</b>', 'skill');
     } else {
       var aSwing = _expConfig.atk_swing || 3;
       dmg = Math.max(1, b.attacker.atk - Math.floor(b.mon.def * ((_expConfig.mon_def_effect || 38) / 100)) + Math.round(Math.random() * aSwing * 2 - aSwing));
@@ -1307,8 +1307,8 @@ function _btlAction(type) {
       _btlSound(isBigHit ? 'bigHit' : 'attack');
       _btlFlash(isBigHit ? 'rgba(255,200,50,.45)' : 'rgba(255,255,255,.38)');
       _btlLog(isBigHit
-        ? '💥 <b>' + b.attacker.name + '</b>의 강타! <b style="color:#fbbf24">' + dmg + ' 데미지!</b>'
-        : '⚔️ <b>' + b.attacker.name + '</b>의 공격! <b style="color:#68c568">' + dmg + ' 데미지!</b>', 'atk');
+        ? '💥 <b>' + b.attacker.name + '</b>의 강타! <b style="color:var(--p-amber-400)">' + dmg + ' 데미지!</b>'
+        : '⚔️ <b>' + b.attacker.name + '</b>의 공격! <b class="br-log-atk">' + dmg + ' 데미지!</b>', 'atk');
     }
 
     setTimeout(function() {
@@ -1348,7 +1348,7 @@ function _btlAction(type) {
         _btlFlash('rgba(255,60,60,.28)');
         _btlPopNum('-' + eDmg, 'btlPc' + tIdx, '#ff5050');
         target.hp = Math.max(0, target.hp - eDmg);
-        _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + target.name + '</b>에게 <b style="color:#de5e4e">' + eDmg + ' 데미지!</b>', 'em');
+        _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + target.name + '</b>에게 <b class="br-log-em">' + eDmg + ' 데미지!</b>', 'em');
 
         b.attacker = null;
         _btlRender();
@@ -1389,7 +1389,7 @@ function _btlAction(type) {
     _btlSound('heal');
     _btlFlash('rgba(60,220,120,.28)');
     _btlPopNum('+' + heal, 'btlPc' + tIdx, '#38dd88');
-    _btlLog('🌰 도토리 1개로 회복! <b>' + target.name + '</b> <b style="color:#48cc88">+' + heal + ' HP</b>', 'heal');
+    _btlLog('🌰 도토리 1개로 회복! <b>' + target.name + '</b> <b class="br-log-heal">+' + heal + ' HP</b>', 'heal');
 
     setTimeout(function() {
       var aliveNow = b.party.filter(function(p) { return p.hp > 0; });
@@ -1403,7 +1403,7 @@ function _btlAction(type) {
       _btlFlash('rgba(255,60,60,.22)');
       _btlPopNum('-' + eDmg, 'btlPc' + rIdx, '#ff5050');
       rTarget.hp = Math.max(0, rTarget.hp - eDmg);
-      _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + rTarget.name + '</b>에게 <b style="color:#de5e4e">' + eDmg + ' 데미지!</b>', 'em');
+      _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + rTarget.name + '</b>에게 <b class="br-log-em">' + eDmg + ' 데미지!</b>', 'em');
 
       b.attacker = null;
       _btlRender();
@@ -1635,7 +1635,7 @@ function _btlDoEscape() {
       _btlFlash('rgba(255,60,60,.22)');
       _btlPopNum('-' + eDmg, 'btlPc' + rIdx, '#ff5050');
       rTarget.hp = Math.max(0, rTarget.hp - eDmg);
-      _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + rTarget.name + '</b>에게 <b style="color:#de5e4e">' + eDmg + ' 데미지!</b>', 'em');
+      _btlLog('🐺 <b>' + b.mon.name + '</b>의 반격! <b>' + rTarget.name + '</b>에게 <b class="br-log-em">' + eDmg + ' 데미지!</b>', 'em');
 
       _btlRender();
 
@@ -1744,11 +1744,11 @@ function _expShowSummary(finishStatus) {
   var itemsHTML = '';
   if (allItems.length > 0) {
     itemsHTML = '<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px">' +
-      '<div style="font-size:11px;font-weight:800;color:#86efac;margin-bottom:8px;text-align:center">🎁 획득 아이템</div>' +
+      '<div style="font-size:11px;font-weight:800;color:var(--p-green-300);margin-bottom:8px;text-align:center">🎁 획득 아이템</div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">' +
       allItems.map(function(item) {
         var label = (typeof item === 'object' && item.name) ? (item.icon + ' ' + item.name) : item;
-        return '<div style="background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#e5e7eb">' + label + '</div>';
+        return '<div style="background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:10px;font-size:12px;font-weight:700;color:var(--border-default)">' + label + '</div>';
       }).join('') +
       '</div></div>';
   }
@@ -1807,11 +1807,11 @@ function _expShowSummary(finishStatus) {
         '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-top:4px">' +
           '<div style="font-size:44px">' + (isDefeat ? '💀' : '🎉') + '</div>' +
           '<div style="flex:1">' +
-            '<div style="font-size:20px;font-weight:900;color:' + (isDefeat ? '#ef4444' : '#fbbf24') + '">' + (isDefeat ? '탐험 실패...' : '탐험 완료!') + '</div>' +
+            '<div style="font-size:20px;font-weight:900;color:' + (isDefeat ? 'var(--text-danger)' : 'var(--p-amber-400)') + '">' + (isDefeat ? '탐험 실패...' : '탐험 완료!') + '</div>' +
             '<div style="font-size:11px;color:#8a7a60">' + (isDefeat ? '전리품 50%만 획득' : '모든 구간 돌파!') + '</div>' +
           '</div>' +
           '<div style="text-align:right">' +
-            '<div style="font-size:28px;font-weight:900;color:#fbbf24">🌰 ' + totalAcorns + '</div>' +
+            '<div style="font-size:28px;font-weight:900;color:var(--p-amber-400)">🌰 ' + totalAcorns + '</div>' +
             '<div style="font-size:10px;color:#b89e78">도토리 획득</div>' +
           '</div>' +
         '</div>' +
@@ -1823,11 +1823,11 @@ function _expShowSummary(finishStatus) {
         // 아이템
         (allItems.length > 0 ?
           '<div style="border-top:1px solid rgba(184,158,120,.12);padding:10px 0;margin-bottom:10px">' +
-            '<div style="font-size:10px;font-weight:800;color:#86efac;margin-bottom:6px">🎁 획득 아이템</div>' +
+            '<div style="font-size:10px;font-weight:800;color:var(--p-green-300);margin-bottom:6px">🎁 획득 아이템</div>' +
             '<div style="display:flex;flex-wrap:wrap;gap:4px">' +
             allItems.map(function(item) {
               var label = (typeof item === 'object' && item.name) ? (item.icon + ' ' + item.name) : item;
-              return '<div style="background:rgba(255,255,255,.06);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;color:#e5e7eb">' + label + '</div>';
+              return '<div style="background:rgba(255,255,255,.06);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;color:var(--border-default)">' + label + '</div>';
             }).join('') +
             '</div></div>' : '') +
         // 구분선
@@ -1836,7 +1836,7 @@ function _expShowSummary(finishStatus) {
         '<div style="font-size:11px;font-weight:900;color:#b89e78;margin-bottom:8px;letter-spacing:1px">🐿️ 파티</div>' +
         '<div style="display:flex;gap:8px;margin-bottom:16px">' + partyCardsHTML + '</div>' +
         // 귀환 버튼
-        '<button onclick="_expFinish(\'' + status + '\')" style="width:100%;padding:13px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,' + (isDefeat ? '#ef4444,#dc2626' : '#22c55e,#16a34a') + ');color:white;box-shadow:0 3px 0 ' + (isDefeat ? '#991b1b' : '#15803d') + ',0 4px 16px ' + (isDefeat ? 'rgba(239,68,68,.25)' : 'rgba(34,197,94,.25)') + '">🏠 마을로 귀환하기</button>' +
+        '<button onclick="_expFinish(\'' + status + '\')" style="width:100%;padding:13px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,' + (isDefeat ? 'var(--p-red-500),var(--p-red-600)' : 'var(--p-green-500),var(--p-green-700)') + ');color:var(--text-inverse);box-shadow:0 3px 0 ' + (isDefeat ? 'var(--p-red-700)' : 'var(--p-green-700)') + ',0 4px 16px ' + (isDefeat ? 'rgba(239,68,68,.25)' : 'rgba(34,197,94,.25)') + '">🏠 마을로 귀환하기</button>' +
         '<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent 5%,#c9a44a 30%,#e8c87a 50%,#c9a44a 70%,transparent 95%)"></div>' +
       '</div>' +
     '</div>';
@@ -1876,7 +1876,7 @@ function _expRetreat() {
   _expShowOverlay(
     '🏳️',
     '정말 귀환하시겠어요?',
-    '지금 돌아가면 전리품의 50%만 가져갈 수 있어요.<br><span style="color:#fbbf24;font-weight:800">🌰 ' + halfAcorns + '개 획득 예상</span>',
+    '지금 돌아가면 전리품의 50%만 가져갈 수 있어요.<br><span style="color:var(--p-amber-400);font-weight:800">🌰 ' + halfAcorns + '개 획득 예상</span>',
     '귀환한다', function() {
       s.loot = [{ type: 'penalty', acorns: halfAcorns, items: keptItems }];
       _expShowSummary('retreated');

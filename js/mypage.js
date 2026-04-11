@@ -41,8 +41,8 @@ function _renderGlogPage() {
                 <span>${item.item_icon}</span>
                 <span class="text-gray-700">${item.item_name}</span>
                 ${item.reward_type==='AUTO_ACORN' ? `<span class="text-amber-600">+${item.acorn_amt}🌰</span>` : ''}
-                ${item.reward_type==='MANUAL_ITEM' ? '<span style="color:#7c3aed">📦</span>' : ''}
-                ${item.reward_type==='COUPON' ? '<span style="color:#d97706">🎟️</span>' : ''}
+                ${item.reward_type==='MANUAL_ITEM' ? '<span style="color:var(--p-purple-700)">📦</span>' : ''}
+                ${item.reward_type==='COUPON' ? '<span style="color:var(--p-amber-600)">🎟️</span>' : ''}
               </div>`).join('')}
           </div>
         </div>`).join('')
@@ -358,23 +358,23 @@ function openInvDetail(inventoryId) {
   // 출처 태그
   const sourceLabel = isGiftTicket || isGiftAcorn ? '🎁 선물'
     : item.from_gacha ? '🎲 뽑기' : '🛍️ 구매';
-  const sourceCls = isGiftTicket || isGiftAcorn ? 'background:rgba(52,211,153,0.15);color:#065f46'
-    : item.from_gacha ? 'background:rgba(139,92,246,0.15);color:#6d28d9' : 'background:rgba(245,158,11,0.15);color:#92400e';
+  const sourceCls = isGiftTicket || isGiftAcorn ? 'background:rgba(52,211,153,0.15);color:var(--p-green-800)'
+    : item.from_gacha ? 'background:rgba(139,92,246,0.15);color:var(--p-purple-700)' : 'background:rgba(245,158,11,0.15);color:var(--p-amber-700)';
   if (!isExamMaterial) badges += `<span class="inv-detail-badge" style="${sourceCls}">${sourceLabel}</span>`;
 
   // 타입별 뱃지
-  if (isCoupon) badges += `<span class="inv-detail-badge" style="background:rgba(253,224,71,0.25);color:#854d0e">🎟️ ${p.discount_pct||0}% 할인</span>`;
-  if (isAcornTicket) badges += `<span class="inv-detail-badge" style="background:rgba(52,211,153,0.15);color:#065f46">🌰 ${p.acorn_amt||0} 도토리</span>`;
-  if (isGachaTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:#6d28d9">🎫 뽑기권</span>`;
-  if (isGiftTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:#6d28d9">🎫 티켓 ${p.gift_qty||1}장</span>`;
-  if (isGiftAcorn) badges += `<span class="inv-detail-badge" style="background:rgba(52,211,153,0.15);color:#065f46">🌰 도토리 ${p.gift_qty||0}개</span>`;
-  if (isRewardBox) badges += `<span class="inv-detail-badge" style="background:rgba(251,191,36,0.2);color:#92400e">🏆 주간 랭킹 보상</span>`;
-  if (qty > 1) badges += `<span class="inv-detail-badge" style="background:rgba(99,102,241,0.15);color:#4338ca">x${qty}</span>`;
+  if (isCoupon) badges += `<span class="inv-detail-badge myp-badge-coupon">🎟️ ${p.discount_pct||0}% 할인</span>`;
+  if (isAcornTicket) badges += `<span class="inv-detail-badge" style="background:rgba(52,211,153,0.15);color:var(--p-green-800)">🌰 ${p.acorn_amt||0} 도토리</span>`;
+  if (isGachaTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:var(--p-purple-700)">🎫 뽑기권</span>`;
+  if (isGiftTicket) badges += `<span class="inv-detail-badge" style="background:rgba(139,92,246,0.15);color:var(--p-purple-700)">🎫 티켓 ${p.gift_qty||1}장</span>`;
+  if (isGiftAcorn) badges += `<span class="inv-detail-badge" style="background:rgba(52,211,153,0.15);color:var(--p-green-800)">🌰 도토리 ${p.gift_qty||0}개</span>`;
+  if (isRewardBox) badges += `<span class="inv-detail-badge" style="background:rgba(251,191,36,0.2);color:var(--p-amber-700)">🏆 주간 랭킹 보상</span>`;
+  if (qty > 1) badges += `<span class="inv-detail-badge myp-badge-multi">x${qty}</span>`;
 
   // 액션 버튼
   let actionsHtml = '';
   if (isPending) {
-    actionsHtml = `<button class="btn w-full py-2 text-sm" disabled style="background:#fef3c7;color:#92400e;border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`;
+    actionsHtml = `<button class="btn w-full py-2 text-sm" disabled style="background:var(--bg-amber-muted);color:var(--p-amber-700);border:1.5px solid rgba(245,158,11,0.3);cursor:not-allowed">⏳ 승인 대기중</button>`;
   } else if (isExamMaterial) {
     // 등급심사 재료: 사용 버튼 없음
   } else if (isRewardBox) {
@@ -447,10 +447,10 @@ async function useInventoryItem(inventoryId) {
 
     let previewHtml = '';
     if (contents.acorns > 0) {
-      previewHtml += `<div class="flex items-center justify-center gap-1 text-sm font-bold" style="color:#065f46">🌰 도토리 ${contents.acorns}개</div>`;
+      previewHtml += `<div class="flex items-center justify-center gap-1 text-sm font-bold" style="color:var(--p-green-800)">🌰 도토리 ${contents.acorns}개</div>`;
     }
     for (const it of (contents.items || [])) {
-      previewHtml += `<div class="flex items-center justify-center gap-1 text-sm font-bold" style="color:#4338ca">${it.icon || '🎁'} ${it.name} x${it.qty || 1}</div>`;
+      previewHtml += `<div class="myp-result-item">${it.icon || '🎁'} ${it.name} x${it.qty || 1}</div>`;
     }
     if (!previewHtml) previewHtml = '<p class="text-sm text-gray-400">내용물 없음</p>';
 
@@ -509,20 +509,20 @@ async function useInventoryItem(inventoryId) {
         <span style="position:absolute;top:18px;left:-6px;font-size:10px;animation:sparkle 2s ease-in-out infinite;animation-delay:.6s">⭐</span>
         <span style="font-size:3rem;display:block;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 6px 12px rgba(52,211,153,0.25))">🎁</span>
       </div>
-      <h2 style="font-family:'Jua',sans-serif;font-size:1.1rem;color:#374151;margin:8px 0 4px">도토리 선물</h2>
-      <div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid rgba(52,211,153,0.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#065f46;margin-bottom:14px">
-        <span style="width:6px;height:6px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0"></span>
+      <h2 style="font-family:'Jua',sans-serif;font-size:1.1rem;color:var(--text-primary);margin:8px 0 4px">도토리 선물</h2>
+      <div class="myp-gift-panel">
+        <span class="myp-gift-dot"></span>
         관리자가 보낸 선물
       </div>
-      <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid rgba(52,211,153,0.25);border-radius:20px;padding:14px 20px;margin-bottom:14px">
-        <div style="font-family:'Jua',sans-serif;font-size:2rem;color:#065f46;line-height:1;display:flex;align-items:center;justify-content:center;gap:6px">
-          <span style="font-size:1.1rem;color:#34d399">+</span>🌰 ${giftQty}
+      <div class="myp-gift-box">
+        <div style="font-family:'Jua',sans-serif;font-size:2rem;color:var(--p-green-800);line-height:1;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span class="myp-gift-plus">+</span>🌰 ${giftQty}
         </div>
-        <div style="font-size:11px;color:#6ee7b7;margin-top:3px;font-weight:700">즉시 지급</div>
+        <div class="myp-gift-notice">즉시 지급</div>
       </div>
       ${memo ? `<div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;background:rgba(249,250,251,0.8);border:1.5px solid rgba(210,180,240,0.3);border-radius:14px;padding:10px 14px;margin-bottom:18px">
         <span style="font-size:15px;line-height:1;flex-shrink:0">💬</span>
-        <span style="font-size:12px;font-weight:700;color:#6b7280;line-height:1">${memo}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--text-secondary);line-height:1">${memo}</span>
       </div>` : '<div style="margin-bottom:18px"></div>'}
       <div style="display:flex;gap:8px">
         <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
@@ -713,11 +713,11 @@ async function _confirmUseItemInner(inventoryId) {
     resultHtml += '<div style="background:rgba(52,211,153,0.08);border:1.5px solid rgba(52,211,153,0.2);border-radius:14px;padding:14px;margin-bottom:16px">';
 
     if (acorns > 0) {
-      resultHtml += `<div class="flex items-center justify-center gap-2 text-base font-black" style="color:#065f46;margin-bottom:${grantedItems.length ? '8px' : '0'}">🌰 도토리 +${acorns}</div>`;
+      resultHtml += `<div class="flex items-center justify-center gap-2 text-base font-black" style="color:var(--p-green-800);margin-bottom:${grantedItems.length ? '8px' : '0'}">🌰 도토리 +${acorns}</div>`;
     }
     for (const gi of grantedItems) {
       const methodLabel = gi.method === 'ticket' ? '(티켓 합산)' : gi.method === 'acorn' ? '(즉시 지급)' : '(인벤토리)';
-      resultHtml += `<div class="flex items-center justify-center gap-2 text-sm font-bold" style="color:#4338ca">${gi.icon} ${gi.name} x${gi.qty} <span class="text-xs text-gray-400">${methodLabel}</span></div>`;
+      resultHtml += `<div class="myp-result-item">${gi.icon} ${gi.name} x${gi.qty} <span class="text-xs text-gray-400">${methodLabel}</span></div>`;
     }
     if (acorns <= 0 && grantedItems.length === 0) {
       resultHtml += '<p class="text-sm text-gray-400">내용물이 비어있었어요</p>';

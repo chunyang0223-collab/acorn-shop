@@ -117,9 +117,9 @@ function _sqShowSummonEffect() {
           '<span style="font-size:48px">🐿️</span>' +
         '</div>' +
       '</div>' +
-      '<div style="font-size:11px;letter-spacing:3px;color:#fbbf24;margin-bottom:6px">✦ NEW SQUIRREL ✦</div>' +
+      '<div style="font-size:11px;letter-spacing:3px;color:var(--p-amber-400);margin-bottom:6px">✦ NEW SQUIRREL ✦</div>' +
       '<div style="font-size:22px;font-weight:900;color:white;text-shadow:0 0 20px rgba(251,191,36,.4)">아기 다람쥐 등장!</div>' +
-      '<div style="font-size:12px;color:#a5b4fc;margin-top:6px;line-height:1.5">도토리를 먹여서 어떤 다람쥐로<br>성장할지 확인해보세요</div>' +
+      '<div style="font-size:12px;color:var(--p-purple-400);margin-top:6px;line-height:1.5">도토리를 먹여서 어떤 다람쥐로<br>성장할지 확인해보세요</div>' +
     '</div>';
   overlay.onclick = function() { overlay.remove(); };
   document.body.appendChild(overlay);

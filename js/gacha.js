@@ -715,14 +715,14 @@ async function runGachaSimulator() {
       <div class="flex items-center gap-2 mb-1">
         <span class="text-xs text-gray-400 w-16 shrink-0">설계</span>
         <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-          <div class="h-full rounded-full" style="width:${designedW}%;background:#93c5fd"></div>
+          <div class="h-full rounded-full" style="width:${designedW}%;background:var(--p-blue-300)"></div>
         </div>
         <span class="text-xs font-black text-blue-600 w-14 text-right">${designed.toFixed(2)}%</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="text-xs text-gray-400 w-16 shrink-0">실제</span>
         <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-          <div class="h-full rounded-full" style="width:${actualW}%;background:#86efac"></div>
+          <div class="h-full rounded-full" style="width:${actualW}%;background:var(--p-green-300)"></div>
         </div>
         <span class="text-xs font-black w-14 text-right" style="color:${diffColor}">${actual.toFixed(2)}% <span style="font-size:10px">(${diffSign}${diff.toFixed(2)}%)</span></span>
       </div>

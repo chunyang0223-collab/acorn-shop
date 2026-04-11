@@ -12,7 +12,7 @@ async function openProfile(userId) {
   showModal(`
     <div class="text-center py-6">
       <div class="spinner-sm"></div>
-      <p class="text-xs mt-2" style="color:#fbbf24">프로필 불러오는 중...</p>
+      <p class="text-xs mt-2" style="color:var(--p-amber-400)">프로필 불러오는 중...</p>
     </div>`);
 
   try {
@@ -100,7 +100,7 @@ async function openProfile(userId) {
       if (friendship) {
         html += `
           <div class="pf-privacy-btn-wrap">
-            <button class="btn px-4 py-2 text-xs" style="background:#fee2e2;color:#dc2626;font-weight:800" onclick="removeFriend('${friendship.friendshipId}')">친구 삭제</button>
+            <button class="btn px-4 py-2 text-xs" style="background:var(--bg-red-muted);color:var(--p-red-600);font-weight:800" onclick="removeFriend('${friendship.friendshipId}')">친구 삭제</button>
           </div>`;
       }
     }
@@ -174,7 +174,7 @@ function _buildSquirrelGrid(squirrels) {
 
   return `
     <div class="pf-section">
-      <p class="pf-section-title">🐿️ 다람쥐 컬렉션 <span style="color:#86efac">${squirrels.length}/${maxSlots}</span></p>
+      <p class="pf-section-title">🐿️ 다람쥐 컬렉션 <span style="color:var(--p-green-300)">${squirrels.length}/${maxSlots}</span></p>
       <div class="pf-sq-grid">${gridHtml}</div>
     </div>`;
 }
@@ -286,7 +286,7 @@ function _buildFarmStats(farmData, plots, crops) {
 
   return `
     <div class="pf-section">
-      <p class="pf-section-title">🌾 농장 <span style="color:#86efac">${activePlots.length}/${totalSlots} 칸 사용 중</span></p>
+      <p class="pf-section-title">🌾 농장 <span style="color:var(--p-green-300)">${activePlots.length}/${totalSlots} 칸 사용 중</span></p>
       ${plotsHtml}
     </div>`;
 }
@@ -311,7 +311,7 @@ async function openPrivacySettings() {
   showModal(`
     <div class="pf-privacy-modal">
       <h2 class="text-lg font-black mb-3 fr-text">🔒 프로필 공개 설정</h2>
-      <p class="text-xs mb-4" style="color:#fbbf24">친구에게 어떤 정보를 보여줄지 선택하세요</p>
+      <p class="text-xs mb-4" style="color:var(--p-amber-400)">친구에게 어떤 정보를 보여줄지 선택하세요</p>
       <div class="space-y-3">
         ${fields.map(f => `
           <label class="pf-privacy-row">

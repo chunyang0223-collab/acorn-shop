@@ -624,16 +624,16 @@ function sqCardHTML(sq) {
   const borderColor = sq.type === 'explorer' ? '#3b82f6'
                     : sq.type === 'pet' ? '#ec4899'
                     : sq.type === 'baby' ? '#fbbf24' : '#a3a3a3';
-  const badgeStyle  = sq.type === 'explorer' ? 'background:#3b82f6;color:#ffffff'
+  const badgeStyle  = sq.type === 'explorer' ? 'background:var(--p-blue-500);color:var(--bg-surface)'
                     : sq.type === 'pet' ? 'background:#fce7f3;color:#9d174d'
-                    : 'background:#fef3c7;color:#92400e';
+                    : 'background:var(--bg-amber-muted);color:var(--p-amber-700)';
   const badgeLabel  = sq.type === 'explorer' ? '탐험형' : sq.type === 'pet' ? '애완형' : '아기';
 
   // 상태 텍스트 (이름 아래 표시)
   const getStatusText = () => {
     if (sq.type === 'baby') return '';
-    if (sq.status === 'idle') return sq.type === 'explorer' ? '<span style="color:#22c55e">🟢 대기 중</span>' : '<span style="color:#ec4899">🏡 편안하게 쉬는 중</span>';
-    if (sq.status === 'exploring') return '<span style="color:#3b82f6">⚔️ 탐험 중</span>';
+    if (sq.status === 'idle') return sq.type === 'explorer' ? '<span style="color:var(--p-green-500)">🟢 대기 중</span>' : '<span style="color:var(--p-pink-500)">🏡 편안하게 쉬는 중</span>';
+    if (sq.status === 'exploring') return '<span style="color:var(--p-blue-500)">⚔️ 탐험 중</span>';
     if (sq.status === 'recovering') return '';
     return '';
   };
@@ -646,7 +646,7 @@ function sqCardHTML(sq) {
 
   let imgHTML;
   if (sq.type === 'baby') {
-    imgHTML = `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:#fff8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`;
+    imgHTML = `<img src="images/baby-squirrel.png" style="width:56px;height:56px;object-fit:contain;border-radius:16px;background:var(--bg-surface)8f0;padding:4px;flex-shrink:0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;font-size:44px;line-height:1;flex-shrink:0">🐿️</div>`;
   } else {
     imgHTML = `<div style="border-radius:18px;${gs.border};box-shadow:${gs.shadow};padding:2px;flex-shrink:0;background:${gs.bg}">` +
       `<img src="images/squirrels/${spriteFile}.png" style="width:52px;height:52px;object-fit:contain;border-radius:14px;display:block" onerror="this.outerHTML='<div style=\\'font-size:40px;line-height:52px;text-align:center\\'>🦔</div>'">` +
@@ -661,34 +661,34 @@ function sqCardHTML(sq) {
     let feedAreaHTML = '';
     if (sq.grows_at) {
       // 타이머 진행 중
-      feedAreaHTML = `<div style="background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
-        <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
-        <div id="sqTimer-${sq.id}" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
-        <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
+      feedAreaHTML = `<div style="background:var(--bg-green-subtle);border-radius:14px;padding:12px 16px;text-align:center">
+        <div style="font-size:11px;font-weight:800;color:var(--p-green-600);margin-bottom:4px">🌱 성장 준비 중...</div>
+        <div id="sqTimer-${sq.id}" style="font-size:22px;font-weight:900;color:var(--p-green-700);font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
+        <div style="font-size:10px;color:var(--p-green-300);margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
       </div>`;
     } else if (isReadyToGrow) {
       // 성장 준비 완료 → 결과 확인 버튼
-      feedAreaHTML = `<div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:16px;text-align:center;border:2px solid rgba(251,191,36,.3)">
+      feedAreaHTML = `<div class="sq-panel-amber">
         <div style="font-size:28px;margin-bottom:6px;animation:sqReadyBounce 1s ease-in-out infinite">🎁</div>
-        <div style="font-size:14px;font-weight:900;color:#78350f;margin-bottom:4px">성장 완료!</div>
-        <div style="font-size:11px;color:#92400e;margin-bottom:10px">어떤 다람쥐가 되었을까요?</div>
-        <button onclick="sqRevealGrowth('${sq.id}')" style="width:100%;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #b45309,0 6px 16px rgba(217,119,6,.3);font-family:inherit;transition:transform .1s,box-shadow .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #b45309'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #b45309,0 6px 16px rgba(217,119,6,.3)'">✨ 결과 확인하기!</button>
+        <div style="font-size:14px;font-weight:900;color:var(--text-brand);margin-bottom:4px">성장 완료!</div>
+        <div style="font-size:11px;color:var(--p-amber-700);margin-bottom:10px">어떤 다람쥐가 되었을까요?</div>
+        <button onclick="sqRevealGrowth('${sq.id}')" class="sq-btn-amber">✨ 결과 확인하기!</button>
       </div>`;
     } else {
       // 일반 먹이주기 UI
       feedAreaHTML = `<div style="display:flex;align-items:center;gap:8px">
         <button onclick="sqAdjFeed('${sq.id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
-        <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
+        <span id="sqFeedCnt-${sq.id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:var(--text-brand)">5</span>
         <button onclick="sqAdjFeed('${sq.id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
-        <button onclick="sqFeedSquirrel('${sq.id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
+        <button onclick="sqFeedSquirrel('${sq.id}')" class="sq-btn-amber-sm">🌰 도토리 주기</button>
       </div>`;
     }
 
     babyHTML = `
       <div style="margin-top:12px">
-        <div style="font-size:11px;font-weight:800;color:#9ca3af;margin-bottom:6px">🌰 성장 게이지</div>
+        <div style="font-size:11px;font-weight:800;color:var(--text-muted);margin-bottom:6px">🌰 성장 게이지</div>
         <div style="height:12px;border-radius:99px;background:var(--progress-track-bg);overflow:hidden;margin-bottom:12px">
-          <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#10b981);width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
+          <div id="sqGauge-${sq.id}" style="height:100%;border-radius:99px;background:linear-gradient(90deg,var(--p-amber-400),var(--p-amber-500),var(--p-green-600));width:${pct}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1),background 0.4s ease"></div>
         </div>
         <div id="sqFeedArea-${sq.id}">${feedAreaHTML}</div>
       </div>`;
@@ -699,16 +699,16 @@ function sqCardHTML(sq) {
     statsHTML = `
       <div style="display:flex;gap:8px;margin-top:12px">
         <div style="flex:1;background:var(--surface-50);border-radius:12px;padding:8px 4px;text-align:center">
-          <div style="font-size:10px;color:#9ca3af;font-weight:800">❤️ HP</div>
-          <div style="font-size:16px;font-weight:900;color:#ef4444;margin-top:1px">${sq.hp_current}<span style="font-size:10px;color:#d1d5db">/${sq.stats?.hp||100}</span></div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:800">❤️ HP</div>
+          <div style="font-size:16px;font-weight:900;color:var(--p-red-500);margin-top:1px">${sq.hp_current}<span style="font-size:10px;color:var(--text-disabled)">/${sq.stats?.hp||100}</span></div>
         </div>
         <div style="flex:1;background:var(--surface-50);border-radius:12px;padding:8px 4px;text-align:center">
-          <div style="font-size:10px;color:#9ca3af;font-weight:800">⚔️ 공격</div>
-          <div style="font-size:16px;font-weight:900;color:#f97316;margin-top:1px">${sq.stats?.atk||10}</div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:800">⚔️ 공격</div>
+          <div style="font-size:16px;font-weight:900;color:var(--p-orange-500);margin-top:1px">${sq.stats?.atk||10}</div>
         </div>
         <div style="flex:1;background:var(--surface-50);border-radius:12px;padding:8px 4px;text-align:center">
-          <div style="font-size:10px;color:#9ca3af;font-weight:800">🛡️ 방어</div>
-          <div style="font-size:16px;font-weight:900;color:#3b82f6;margin-top:1px">${sq.stats?.def||5}</div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:800">🛡️ 방어</div>
+          <div style="font-size:16px;font-weight:900;color:var(--p-blue-500);margin-top:1px">${sq.stats?.def||5}</div>
         </div>
       </div>`;
   }
@@ -768,14 +768,14 @@ function sqCardHTML(sq) {
     const remaining = until - Date.now();
     if (remaining <= 0) {
       apprenticeHTML = `
-        <div onclick="farmRevealResult()" style="margin-top:10px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;padding:10px 14px;text-align:center;border:2px solid rgba(251,191,36,.3);cursor:pointer">
-          <div style="font-size:14px;font-weight:900;color:#78350f">🎁 수습 완료! <span style="font-size:11px;color:#92400e">결과 확인 →</span></div>
+        <div onclick="farmRevealResult()" class="sq-panel-amber-link">
+          <div style="font-size:14px;font-weight:900;color:var(--text-brand)">🎁 수습 완료! <span style="font-size:11px;color:var(--p-amber-700)">결과 확인 →</span></div>
         </div>`;
     } else {
       apprenticeHTML = `
         <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
-          <div style="font-size:11px;font-weight:800;color:#15803d">🌾 수습 알바 중</div>
-          <div id="sqApprenticeTimer-${sq.id}" style="font-size:13px;font-weight:900;color:#16a34a;font-variant-numeric:tabular-nums;letter-spacing:1px">${_farmFmtTime(remaining)}</div>
+          <div style="font-size:11px;font-weight:800;color:var(--p-green-700)">🌾 수습 알바 중</div>
+          <div id="sqApprenticeTimer-${sq.id}" style="font-size:13px;font-weight:900;color:var(--p-green-600);font-variant-numeric:tabular-nums;letter-spacing:1px">${_farmFmtTime(remaining)}</div>
         </div>`;
     }
   }
@@ -785,9 +785,9 @@ function sqCardHTML(sq) {
   let roleTag = '';
   if (sq.type !== 'baby') {
     if (_isActiveFarmer) {
-      roleTag = '<span style="font-size:10px;font-weight:800;color:#15803d;background:#dcfce7;padding:2px 6px;border-radius:6px;margin-left:4px">🌾 농부</span>';
+      roleTag = '<span style="font-size:10px;font-weight:800;color:var(--p-green-700);background:var(--bg-green-muted);padding:2px 6px;border-radius:6px;margin-left:4px">🌾 농부</span>';
     } else if (typeof _farmFarmers !== 'undefined' && _farmFarmers.some(f => f.squirrel_id === sq.id)) {
-      roleTag = '<span style="font-size:10px;font-weight:800;color:#15803d;background:#ecfdf5;padding:2px 6px;border-radius:6px;margin-left:4px">농부</span>';
+      roleTag = '<span style="font-size:10px;font-weight:800;color:var(--p-green-700);background:var(--bg-green-subtle);padding:2px 6px;border-radius:6px;margin-left:4px">농부</span>';
     }
   }
 
@@ -797,9 +797,9 @@ function sqCardHTML(sq) {
   const _hasCooldown = sq.type !== 'baby' && sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
   let badgeHTML = '';
   if (_hasTraining) {
-    badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">💪</div>`;
+    badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--p-blue-500);display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">💪</div>`;
   } else if (_hasCooldown) {
-    badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-size:9px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">⏳</div>`;
+    badgeHTML = `<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--p-red-600);display:flex;align-items:center;justify-content:center;font-size:9px;box-shadow:0 1px 4px rgba(0,0,0,0.15)">⏳</div>`;
   }
   const clickableImg = (sq.type !== 'baby')
     ? `<div onclick="sqShowActionModal('${sq.id}')" style="cursor:pointer;position:relative" title="탭하여 관리">${imgHTML}${badgeHTML}</div>`
@@ -811,7 +811,7 @@ function sqCardHTML(sq) {
         ${clickableImg}
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-            <span style="font-size:16px;font-weight:900;color:#1f2937">${sq.name}</span>
+            <span style="font-size:16px;font-weight:900;color:var(--text-primary)">${sq.name}</span>
             <span onclick="sqEditName('${sq.id}')" style="font-size:12px;cursor:pointer;padding:1px 4px;display:inline-flex;align-items:center" title="클릭하여 이름 변경">✏️</span>
             ${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}
             ${roleTag}
@@ -833,9 +833,9 @@ function _sqShowFeedButtons(id) {
   area.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px">
       <button onclick="sqAdjFeed('${id}',-1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">−</button>
-      <span id="sqFeedCnt-${id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:#78350f">5</span>
+      <span id="sqFeedCnt-${id}" style="min-width:36px;text-align:center;font-size:18px;font-weight:900;color:var(--text-brand)">5</span>
       <button onclick="sqAdjFeed('${id}',1)" style="width:34px;height:34px;border-radius:10px;border:2px solid var(--feed-btn-border);background:var(--feed-btn-bg);color:var(--feed-btn-text);font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit">＋</button>
-      <button onclick="sqFeedSquirrel('${id}')" style="flex:1;height:34px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.3);font-family:inherit">🌰 도토리 주기</button>
+      <button onclick="sqFeedSquirrel('${id}')" class="sq-btn-amber-sm">🌰 도토리 주기</button>
     </div>`;
 }
 
@@ -843,10 +843,10 @@ function _sqShowTimerUI(id) {
   const area = document.getElementById('sqFeedArea-' + id);
   if (!area) return;
   area.innerHTML = `
-    <div style="background:#f0fdf4;border-radius:14px;padding:12px 16px;text-align:center">
-      <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:4px">🌱 성장 준비 중...</div>
-      <div id="sqTimer-${id}" style="font-size:22px;font-weight:900;color:#15803d;font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
-      <div style="font-size:10px;color:#86efac;margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
+    <div style="background:var(--bg-green-subtle);border-radius:14px;padding:12px 16px;text-align:center">
+      <div style="font-size:11px;font-weight:800;color:var(--p-green-600);margin-bottom:4px">🌱 성장 준비 중...</div>
+      <div id="sqTimer-${id}" style="font-size:22px;font-weight:900;color:var(--p-green-700);font-variant-numeric:tabular-nums;letter-spacing:2px">--:--:--</div>
+      <div style="font-size:10px;color:var(--p-green-300);margin-top:2px">타이머가 끝나면 다시 먹일 수 있어요</div>
     </div>`;
 }
 
@@ -1025,27 +1025,27 @@ function sqShowActionModal(id) {
       <div style="border-radius:18px;${gs.border};box-shadow:${gs.shadow};padding:2px;display:inline-block;background:${gs.bg};margin-bottom:10px">
         <img src="images/squirrels/${spriteFile}.png" style="width:64px;height:64px;object-fit:contain;border-radius:14px;display:block" onerror="this.outerHTML='<div style=\\'font-size:48px;line-height:64px;text-align:center\\'>🦔</div>'">
       </div>
-      <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:2px">${sq.name}</div>
+      <div style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:2px">${sq.name}</div>
       <div style="font-size:12px;font-weight:700;margin-bottom:4px">${statusLabel}</div>
       <div style="display:flex;justify-content:center;gap:4px;margin-bottom:14px">
         <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 8px;border-radius:8px">${gs.label}</span>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px">
         <div style="text-align:center">
-          <div style="font-size:10px;color:#9ca3af;font-weight:800">❤️ HP</div>
-          <div style="font-size:15px;font-weight:900;color:#ef4444">${sq.stats?.hp||60}<span style="font-size:9px;color:#d1d5db">/${hpMax}</span></div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:800">❤️ HP</div>
+          <div style="font-size:15px;font-weight:900;color:var(--p-red-500)">${sq.stats?.hp||60}<span style="font-size:9px;color:var(--text-disabled)">/${hpMax}</span></div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:10px;color:#9ca3af;font-weight:800">⚔️ 공격</div>
-          <div style="font-size:15px;font-weight:900;color:#f97316">${sq.stats?.atk||10}</div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:800">⚔️ 공격</div>
+          <div style="font-size:15px;font-weight:900;color:var(--p-orange-500)">${sq.stats?.atk||10}</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:10px;color:#9ca3af;font-weight:800">🛡️ 방어</div>
-          <div style="font-size:15px;font-weight:900;color:#3b82f6">${sq.stats?.def||5}</div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:800">🛡️ 방어</div>
+          <div style="font-size:15px;font-weight:900;color:var(--p-blue-500)">${sq.stats?.def||5}</div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        ${btnHTML || '<div style="font-size:12px;color:#9ca3af;padding:8px">현재 가능한 액션이 없어요</div>'}
+        ${btnHTML || '<div style="font-size:12px;color:var(--text-muted);padding:8px">현재 가능한 액션이 없어요</div>'}
       </div>
       <button onclick="closeModal()" style="margin-top:12px;width:100%;height:36px;border-radius:10px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
     </div>`);
@@ -1569,7 +1569,7 @@ function sqShowTrainingModal(id) {
       <div style="background:var(--modal-infobox-bg);border-radius:14px;padding:14px;margin-bottom:16px;text-align:left">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;color:var(--modal-infobox-text)">현재 HP</span>
-          <span style="font-size:12px;font-weight:900;color:#ef4444">${sq.stats?.hp || 60} / ${_sqSettings.stat_hp_max || 150}</span>
+          <span style="font-size:12px;font-weight:900;color:var(--p-red-500)">${sq.stats?.hp || 60} / ${_sqSettings.stat_hp_max || 150}</span>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;color:var(--modal-infobox-text)">현재 등급</span>
@@ -1577,11 +1577,11 @@ function sqShowTrainingModal(id) {
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;color:var(--modal-infobox-text)">남은 훈련 횟수</span>
-          <span style="font-size:12px;font-weight:900;color:#0284c7">${tRemain}회</span>
+          <span style="font-size:12px;font-weight:900;color:var(--p-blue-600)">${tRemain}회</span>
         </div>
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="sqExecuteTraining('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #0369a1,0 6px 16px rgba(2,132,199,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #0369a1'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #0369a1,0 6px 16px rgba(2,132,199,.3)'">💪 훈련하기!</button>
+        <button onclick="sqExecuteTraining('${sq.id}')" class="sq-btn-blue">💪 훈련하기!</button>
         <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
       </div>
     </div>`);
@@ -1610,7 +1610,7 @@ async function sqExecuteTraining(id) {
   playSound('trainStart');
 
   const dotHtml = result.dotResults.map((_, i) =>
-    `<span id="trainDot${i}" style="display:inline-block;width:34px;height:34px;border-radius:50%;background:#555;margin:0 6px;transition:all 0.3s"></span>`
+    `<span id="trainDot${i}" class="sq-train-dot"></span>`
   ).join('');
 
   showModal(`
@@ -1670,27 +1670,27 @@ async function sqExecuteTraining(id) {
         <div style="position:relative;display:inline-block">
           <div style="font-size:52px;animation:trainPump 0.6s ease-in-out">💪</div>
         </div>
-        <div style="font-size:22px;font-weight:900;color:#059669;margin:8px 0 2px;animation:trainFadeUp 0.4s ease-out">훈련 성공!</div>
-        <div style="font-size:13px;color:#6b7280;margin-bottom:16px;animation:trainFadeUp 0.4s 0.1s ease-out both">체력이 강화되었어요!</div>
+        <div style="font-size:22px;font-weight:900;color:var(--p-green-600);margin:8px 0 2px;animation:trainFadeUp 0.4s ease-out">훈련 성공!</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;animation:trainFadeUp 0.4s 0.1s ease-out both">체력이 강화되었어요!</div>
 
-        <div style="background:#f0fdf4;border-radius:14px;padding:16px;margin-bottom:10px;animation:trainFadeUp 0.4s 0.2s ease-out both">
-          <div style="font-size:28px;font-weight:900;color:#15803d;margin-bottom:8px;animation:trainCountPop 0.5s 0.5s ease-out both">HP +${result.hpGain}</div>
-          <div style="font-size:18px;font-weight:900;color:#ef4444;margin-bottom:10px">${result.currentHp} → ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
-          <div style="background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden;position:relative">
-            <div style="--hp-from:${hpPctFrom}%;--hp-to:${hpPctTo}%;height:100%;border-radius:8px;background:linear-gradient(90deg,#22c55e,#16a34a);animation:trainHpFill 0.8s 0.4s ease-out both"></div>
+        <div style="background:var(--bg-green-subtle);border-radius:14px;padding:16px;margin-bottom:10px;animation:trainFadeUp 0.4s 0.2s ease-out both">
+          <div style="font-size:28px;font-weight:900;color:var(--p-green-700);margin-bottom:8px;animation:trainCountPop 0.5s 0.5s ease-out both">HP +${result.hpGain}</div>
+          <div style="font-size:18px;font-weight:900;color:var(--p-red-500);margin-bottom:10px">${result.currentHp} → ${result.newHp}<span style="font-size:12px;color:var(--text-disabled)"> / ${result.hpMax}</span></div>
+          <div style="background:var(--border-default);border-radius:8px;height:12px;overflow:hidden;position:relative">
+            <div style="--hp-from:${hpPctFrom}%;--hp-to:${hpPctTo}%;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--p-green-500),var(--p-green-700));animation:trainHpFill 0.8s 0.4s ease-out both"></div>
           </div>
         </div>
 
         ${result.gradeUp ? `
-          <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px;margin-bottom:10px;border:2px solid rgba(251,191,36,.3);animation:trainFadeUp 0.4s 0.6s ease-out both">
+          <div class="sq-panel-amber-sm">
             <div style="font-size:28px;margin-bottom:4px">🎉</div>
-            <div style="font-size:16px;font-weight:900;color:#78350f">등급 승급!</div>
+            <div style="font-size:16px;font-weight:900;color:var(--text-brand)">등급 승급!</div>
             <div style="font-size:14px;font-weight:800;color:${gs.color};margin-top:4px">${gs.label} 등급 달성!</div>
           </div>` : ''}
 
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:14px">남은 훈련 횟수: ${result.remain}회</div>
+        <div class="sq-train-remain">남은 훈련 횟수: ${result.remain}회</div>
         <div style="display:flex;gap:8px">
-          ${result.remain > 0 && result.newHp < result.hpMax ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 #0369a1">계속 훈련</button>` : ''}
+          ${result.remain > 0 && result.newHp < result.hpMax ? `<button onclick="sqShowTrainingModal('${id}')" class="sq-btn-blue-sm">계속 훈련</button>` : ''}
           <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
         </div>
       </div>`);
@@ -1703,20 +1703,20 @@ async function sqExecuteTraining(id) {
     showModal(`
       <div style="text-align:center">
         <div style="font-size:52px;animation:trainShake 0.5s ease-in-out">😓</div>
-        <div style="font-size:22px;font-weight:900;color:#dc2626;margin:8px 0 2px;animation:trainFadeUp 0.4s ease-out">훈련 실패...</div>
-        <div style="font-size:13px;color:#6b7280;margin-bottom:16px;animation:trainFadeUp 0.4s 0.1s ease-out both">이번에는 성과가 없었어요</div>
+        <div style="font-size:22px;font-weight:900;color:var(--p-red-600);margin:8px 0 2px;animation:trainFadeUp 0.4s ease-out">훈련 실패...</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;animation:trainFadeUp 0.4s 0.1s ease-out both">이번에는 성과가 없었어요</div>
 
-        <div style="background:#fef2f2;border-radius:14px;padding:16px;margin-bottom:10px;animation:trainFadeUp 0.4s 0.2s ease-out both">
-          <div style="font-size:14px;font-weight:800;color:#dc2626;margin-bottom:6px">HP 변동 없음</div>
-          <div style="font-size:18px;font-weight:900;color:#ef4444;margin-bottom:10px">❤️ ${result.newHp}<span style="font-size:12px;color:#d1d5db"> / ${result.hpMax}</span></div>
-          <div style="background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden">
-            <div style="width:${hpPctTo}%;height:100%;border-radius:8px;background:linear-gradient(90deg,#ef4444,#dc2626)"></div>
+        <div style="background:var(--bg-red-subtle);border-radius:14px;padding:16px;margin-bottom:10px;animation:trainFadeUp 0.4s 0.2s ease-out both">
+          <div style="font-size:14px;font-weight:800;color:var(--p-red-600);margin-bottom:6px">HP 변동 없음</div>
+          <div style="font-size:18px;font-weight:900;color:var(--p-red-500);margin-bottom:10px">❤️ ${result.newHp}<span style="font-size:12px;color:var(--text-disabled)"> / ${result.hpMax}</span></div>
+          <div style="background:var(--border-default);border-radius:8px;height:12px;overflow:hidden">
+            <div style="width:${hpPctTo}%;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--p-red-500),var(--p-red-600))"></div>
           </div>
         </div>
 
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:14px">남은 훈련 횟수: ${result.remain}회</div>
+        <div class="sq-train-remain">남은 훈련 횟수: ${result.remain}회</div>
         <div style="display:flex;gap:8px">
-          ${result.remain > 0 ? `<button onclick="sqShowTrainingModal('${id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:white;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 #0369a1">다시 훈련</button>` : ''}
+          ${result.remain > 0 ? `<button onclick="sqShowTrainingModal('${id}')" class="sq-btn-blue-sm">다시 훈련</button>` : ''}
           <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:14px;font-weight:900;cursor:pointer;font-family:inherit">닫기</button>
         </div>
       </div>`);
@@ -1861,17 +1861,17 @@ async function sqShowExamModal(id) {
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;color:var(--modal-infobox-text)">심사 비용</span>
-          <span style="font-size:12px;font-weight:900;color:#d97706">🌰 ${cost} 도토리</span>
+          <span style="font-size:12px;font-weight:900;color:var(--p-amber-600)">🌰 ${cost} 도토리</span>
         </div>
         <div style="display:flex;justify-content:space-between">
           <span style="font-size:12px;color:var(--modal-infobox-text)">기본 합격률</span>
-          <span style="font-size:12px;font-weight:900;color:#059669">${baseRate}%</span>
+          <span style="font-size:12px;font-weight:900;color:var(--p-green-600)">${baseRate}%</span>
         </div>
       </div>
       ${usableItems > 0 ? `
         <div style="background:var(--modal-itembox-bg);border-radius:14px;padding:14px;margin-bottom:12px">
           <div style="font-size:12px;font-weight:800;color:var(--modal-itembox-text);margin-bottom:8px">✨ 반짝이는 무언가 (보유: ${ownedItems}개)</div>
-          <div style="font-size:11px;color:#ef4444;margin-bottom:8px">심사관에게 건네면 좋은 일이 생길지도...?</div>
+          <div style="font-size:11px;color:var(--p-red-500);margin-bottom:8px">심사관에게 건네면 좋은 일이 생길지도...?</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:10px">
             <button onclick="_sqExamItemAdj(-1)" style="width:32px;height:32px;border-radius:10px;border:2px solid var(--modal-itembox-border);background:var(--modal-itembox-bg);color:var(--modal-itembox-text);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">−</button>
             <span id="sqExamItemCount" style="min-width:32px;text-align:center;font-size:20px;font-weight:900;color:var(--modal-itembox-text)">0</span>
@@ -1882,7 +1882,7 @@ async function sqShowExamModal(id) {
           <div style="font-size:11px;color:var(--modal-hintbox-text)">심사관에게 뇌물을 주면 합격률을 올릴 수 있다는데... ✨</div>
         </div>`}
       <div style="display:flex;gap:8px">
-        <button onclick="sqExecuteExam('${sq.id}')" style="flex:1;height:42px;border-radius:12px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3);font-family:inherit;transition:transform .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #5b21b6'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #5b21b6,0 6px 16px rgba(124,58,237,.3)'">📋 심사 받기!</button>
+        <button onclick="sqExecuteExam('${sq.id}')" class="sq-btn-purple">📋 심사 받기!</button>
         <button onclick="closeModal()" style="flex:1;height:42px;border-radius:12px;border:none;background:var(--btn-cancel-bg);color:var(--btn-cancel-text);font-size:15px;font-weight:900;cursor:pointer;font-family:inherit">취소</button>
       </div>
     </div>`);
@@ -2163,7 +2163,7 @@ async function sqExecuteExam(id) {
     if (result.passed) {
       if (stampArea) {
         stampArea.innerHTML = `
-          <div id="examStamp" style="font-size:48px;font-weight:900;color:#16a34a;opacity:0;transform:scale(4) rotate(-15deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 4px 16px rgba(5,150,105,0.5));pointer-events:none">
+          <div id="examStamp" style="font-size:48px;font-weight:900;color:var(--p-green-600);opacity:0;transform:scale(4) rotate(-15deg);transition:all 0.35s cubic-bezier(0.17,0.67,0.21,1.3);filter:drop-shadow(0 4px 16px rgba(5,150,105,0.5));pointer-events:none">
             <div style="border:4px solid #22c55e;border-radius:12px;padding:6px 20px;background:rgba(34,197,94,0.15)">합격</div>
           </div>`;
       }
@@ -2184,7 +2184,7 @@ async function sqExecuteExam(id) {
       if (infoEl) {
         infoEl.innerHTML = `
           <div style="background:rgba(34,197,94,0.15);border-radius:12px;padding:10px 14px;border:1px solid rgba(34,197,94,0.3);text-align:center">
-            <div style="font-size:14px;font-weight:900;color:#4ade80">🏋️ 추가 훈련 +${result.bonus}회</div>
+            <div style="font-size:14px;font-weight:900;color:var(--p-green-400)">🏋️ 추가 훈련 +${result.bonus}회</div>
           </div>`;
       }
       if (bottomArea) { bottomArea.style.display = 'block'; _sqExamAnimateBtn(bottomArea); }
@@ -2214,7 +2214,7 @@ async function sqExecuteExam(id) {
       if (infoEl) {
         infoEl.innerHTML = `
           <div style="background:rgba(239,68,68,0.12);border-radius:12px;padding:10px 14px;border:1px solid rgba(239,68,68,0.3);text-align:center">
-            <div style="font-size:14px;font-weight:900;color:#fca5a5">⏳ ${result.cooldownHours}시간 재심사 대기</div>
+            <div style="font-size:14px;font-weight:900;color:var(--p-red-400)">⏳ ${result.cooldownHours}시간 재심사 대기</div>
           </div>`;
       }
       if (bottomArea) { bottomArea.style.display = 'block'; _sqExamAnimateBtn(bottomArea); }
@@ -2560,12 +2560,12 @@ async function sqAdminLoadList() {
 
   el.innerHTML = Object.entries(groups).map(([uid, g]) => {
     const cooldownCount = g.squirrels.filter(s => s.exam_cooldown_until && new Date(s.exam_cooldown_until) > new Date()).length;
-    const cooldownBadge = cooldownCount > 0 ? `<span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:900;padding:1px 6px;border-radius:6px;margin-left:6px">⏳${cooldownCount}</span>` : '';
+    const cooldownBadge = cooldownCount > 0 ? `<span style="background:var(--bg-red-muted);color:var(--p-red-600);font-size:9px;font-weight:900;padding:1px 6px;border-radius:6px;margin-left:6px">⏳${cooldownCount}</span>` : '';
 
     const rows = g.squirrels.map(sq => {
       const hasCooldown = sq.exam_cooldown_until && new Date(sq.exam_cooldown_until) > new Date();
       const cooldownBtn = hasCooldown
-        ? `<button onclick="sqAdminResetCooldownAny('${sq.id}','${sq.name.replace(/'/g,"\\'")}');event.stopPropagation()" style="flex-shrink:0;padding:4px 10px;border-radius:8px;border:none;background:#fef3c7;color:#92400e;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit">⏩ 해제</button>`
+        ? `<button onclick="sqAdminResetCooldownAny('${sq.id}','${sq.name.replace(/'/g,"\\'")}');event.stopPropagation()" style="flex-shrink:0;padding:4px 10px;border-radius:8px;border:none;background:var(--bg-amber-muted);color:var(--p-amber-700);font-size:10px;font-weight:900;cursor:pointer;font-family:inherit">⏩ 해제</button>`
         : '';
       const statusIcon = sq.type==='baby'?'🐿️':sq.type==='pet'?'🐱':sq.status==='recovering'?'😴':'🦔';
       const statLine = sq.type==='baby'
@@ -2575,8 +2575,8 @@ async function sqAdminLoadList() {
         <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.04)">
           <div style="font-size:20px;flex-shrink:0">${statusIcon}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:900;color:#1f2937">${sq.name} <span style="font-size:9px;font-weight:700;color:#9ca3af">${sq.status}</span></div>
-            <div style="font-size:10px;color:#9ca3af">${statLine}${hasCooldown?' · <span style="color:#ef4444">⏳쿨타임</span>':''}</div>
+            <div style="font-size:12px;font-weight:900;color:var(--text-primary)">${sq.name} <span style="font-size:9px;font-weight:700;color:var(--text-muted)">${sq.status}</span></div>
+            <div style="font-size:10px;color:var(--text-muted)">${statLine}${hasCooldown?' · <span style="color:var(--p-red-500)">⏳쿨타임</span>':''}</div>
           </div>
           ${cooldownBtn}
         </div>`;

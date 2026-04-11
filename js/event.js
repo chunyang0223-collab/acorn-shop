@@ -270,8 +270,8 @@ function renderScheduleList() {
     const isNowOn = r.active && r.weekDays.includes(dow) && hhmm >= r.startTime && hhmm <= r.endTime
       && (!r.validFrom||ds>=r.validFrom) && (!r.validUntil||ds<=r.validUntil);
     const badge = isNowOn
-      ? 'background:#dcfce7;color:#166534'
-      : r.active ? 'background:#fef9c3;color:#854d0e' : 'background:#fee2e2;color:#b91c1c';
+      ? 'background:var(--bg-green-muted);color:#166534'
+      : r.active ? 'background:#fef9c3;color:#854d0e' : 'background:var(--bg-red-muted);color:var(--p-red-700)';
     const badgeTxt = isNowOn ? '✅ 지금 활성' : r.active ? '📆 대기 중' : '⏸ 일시중지';
     return `<div class="p-3 rounded-2xl row-item-bg flex items-start gap-3">
       <div class="flex-1 min-w-0">

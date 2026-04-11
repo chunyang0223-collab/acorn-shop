@@ -102,7 +102,7 @@ function _renderFriendTab() {
               ${_avatarHtml(r.requester, '1.8rem')}
               <div class="min-w-0">
                 <p class="text-sm font-black truncate fr-text">${_escHtml(r.requester?.display_name || '???')}</p>
-                <p class="text-xs" style="color:#fbbf24">${fmtTs(r.created_at)}</p>
+                <p class="text-xs" style="color:var(--p-amber-400)">${fmtTs(r.created_at)}</p>
               </div>
             </div>
             <div class="flex gap-1 shrink-0">
@@ -132,10 +132,10 @@ function _renderFriendTab() {
     <!-- 친구 목록 -->
     <div class="clay-card p-4">
       <div class="flex items-center justify-between mb-3">
-        <p class="text-sm font-black fr-text">👥 친구 목록 <span style="color:#fbbf24">(${_friendList.length}명)</span></p>
+        <p class="text-sm font-black fr-text">👥 친구 목록 <span style="color:var(--p-amber-400)">(${_friendList.length}명)</span></p>
       </div>
       ${_friendList.length === 0
-        ? '<p class="text-sm text-center py-6" style="color:#fbbf24">아직 친구가 없어요. 위에서 검색해서 추가해보세요!</p>'
+        ? '<p class="text-sm text-center py-6" style="color:var(--p-amber-400)">아직 친구가 없어요. 위에서 검색해서 추가해보세요!</p>'
         : `<div class="space-y-2">
             ${_friendList.map(f => `
               <div class="fr-friend-row" onclick="openProfile('${f.id}')">
@@ -145,7 +145,7 @@ function _renderFriendTab() {
                     <p class="text-sm font-black truncate fr-text">${_escHtml(f.display_name || '???')}</p>
                   </div>
                 </div>
-                <span class="text-xs" style="color:#fbbf24">프로필 →</span>
+                <span class="text-xs" style="color:var(--p-amber-400)">프로필 →</span>
               </div>`).join('')}
           </div>`}
     </div>`;
@@ -167,7 +167,7 @@ async function searchFriend() {
   const query = input.value.trim();
   if (!query) { resultEl.innerHTML = ''; return; }
 
-  resultEl.innerHTML = '<p class="text-xs" style="color:#fbbf24">검색 중...</p>';
+  resultEl.innerHTML = '<p class="text-xs" style="color:var(--p-amber-400)">검색 중...</p>';
 
   const { data } = await sb.from('users')
     .select('id, display_name, avatar_emoji, profile_icon')
@@ -176,7 +176,7 @@ async function searchFriend() {
     .limit(10);
 
   if (!data || data.length === 0) {
-    resultEl.innerHTML = '<p class="text-xs" style="color:#fbbf24">검색 결과가 없어요</p>';
+    resultEl.innerHTML = '<p class="text-xs" style="color:var(--p-amber-400)">검색 결과가 없어요</p>';
     return;
   }
 
@@ -191,11 +191,11 @@ async function searchFriend() {
     const isRecv = recvIds.has(u.id);
     let actionBtn = '';
     if (isFriend) {
-      actionBtn = `<span class="text-xs font-bold" style="color:#4ade80">✓ 친구</span>`;
+      actionBtn = `<span class="text-xs font-bold" style="color:var(--p-green-400)">✓ 친구</span>`;
     } else if (isSent) {
-      actionBtn = `<span class="text-xs font-bold" style="color:#fbbf24">요청 중</span>`;
+      actionBtn = `<span class="text-xs font-bold" style="color:var(--p-amber-400)">요청 중</span>`;
     } else if (isRecv) {
-      actionBtn = `<span class="text-xs font-bold" style="color:#fbbf24">요청 받음</span>`;
+      actionBtn = `<span class="text-xs font-bold" style="color:var(--p-amber-400)">요청 받음</span>`;
     } else {
       actionBtn = `<button class="fr-add-btn" onclick="sendFriendReq('${u.id}',this)">친구 추가</button>`;
     }
@@ -268,7 +268,7 @@ async function removeFriend(friendshipId) {
       <div style="font-size:2.5rem;margin-bottom:8px">😢</div>
       <p class="text-sm font-black mb-3 fr-text">정말 친구를 삭제할까요?</p>
       <div class="flex gap-2 mt-3">
-        <button class="btn flex-1" style="background:#fee2e2;color:#dc2626;font-weight:800" onclick="confirmRemoveFriend('${friendshipId}')">삭제</button>
+        <button class="btn flex-1" style="background:var(--bg-red-muted);color:var(--p-red-600);font-weight:800" onclick="confirmRemoveFriend('${friendshipId}')">삭제</button>
         <button class="btn flex-1" onclick="closeModal()">취소</button>
       </div>
     </div>`);

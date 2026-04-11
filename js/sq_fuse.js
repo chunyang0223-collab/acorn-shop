@@ -31,13 +31,13 @@ function sqFuseRenderSlots() {
       const spriteFile = sq.sprite || 'sq_acorn';
       slot.innerHTML = `
         <div style="text-align:center;position:relative;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
-          <div style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:14px;color:#9ca3af;z-index:1" onclick="event.stopPropagation();sqFuseClearSlot(${i})">✕</div>
+          <div style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:14px;color:var(--text-muted);z-index:1" onclick="event.stopPropagation();sqFuseClearSlot(${i})">✕</div>
           <div style="border-radius:14px;${gs.border};box-shadow:${gs.shadow};padding:2px;background:${gs.bg}">
             <img src="images/squirrels/${spriteFile}.png" style="width:48px;height:48px;object-fit:contain;border-radius:10px;display:block" onerror="this.outerHTML='<div style=\\'font-size:36px;line-height:48px;text-align:center\\'>🦔</div>'">
           </div>
           <div style="font-size:11px;font-weight:900;color:var(--fuse-slot-name);margin-top:4px">${sq.name}</div>
           <div style="font-size:10px;font-weight:800;color:${gs.color}">${gs.label}</div>
-          <div style="font-size:9px;font-weight:700;color:${sq.type==='explorer'?'#059669':'#7c3aed'};margin-top:1px">${sq.type==='explorer'?'탐험형':'애완형'}</div>
+          <div style="font-size:9px;font-weight:700;color:${sq.type==='explorer'?'var(--p-green-600)':'var(--p-purple-700)'};margin-top:1px">${sq.type==='explorer'?'탐험형':'애완형'}</div>
         </div>`;
       slot.style.border = '3px solid ' + gs.color;
       slot.style.background = gs.bg;
@@ -57,10 +57,10 @@ function sqFuseRenderSlots() {
     const sq2 = _sqSquirrels.find(s => s.id === _sqFuseSelected[1]);
     const g1 = _sqCalcGrade(sq1), g2 = _sqCalcGrade(sq2);
     if (g1 !== g2) {
-      info.innerHTML = `<div style="color:#dc2626;font-size:13px;font-weight:800">⚠️ 같은 등급끼리만 합성할 수 있어요</div>`;
+      info.innerHTML = `<div style="color:var(--p-red-600);font-size:13px;font-weight:800">⚠️ 같은 등급끼리만 합성할 수 있어요</div>`;
       btn.style.display = 'none';
     } else if (sq1.type !== sq2.type) {
-      info.innerHTML = `<div style="color:#dc2626;font-size:13px;font-weight:800">⚠️ 같은 타입끼리만 합성할 수 있어요 (탐험+탐험 or 애완+애완)</div>`;
+      info.innerHTML = `<div style="color:var(--p-red-600);font-size:13px;font-weight:800">⚠️ 같은 타입끼리만 합성할 수 있어요 (탐험+탐험 or 애완+애완)</div>`;
       btn.style.display = 'none';
     } else {
       const gs = _sqGradeStyle(g1);
@@ -69,13 +69,13 @@ function sqFuseRenderSlots() {
       const nextLabel = gi < 4 ? _sqGradeLabel[_sqGradeOrder[gi+1]] : null;
       info.innerHTML = `<div style="font-size:13px;font-weight:800;color:${gs.color}">
         ${gs.label} + ${gs.label} 합성
-        ${nextLabel ? `<span style="color:#6b7280;font-weight:600"> · 승급 확률 ${upgradeChance}%</span>` : ''}
+        ${nextLabel ? `<span style="color:var(--text-secondary);font-weight:600"> · 승급 확률 ${upgradeChance}%</span>` : ''}
       </div>`;
       btn.style.display = '';
     }
   } else {
     info.innerHTML = _sqFuseSlotPicking
-      ? `<div style="color:#f59e0b;font-size:13px;font-weight:700">아래에서 다람쥐를 선택해주세요</div>`
+      ? `<div style="color:var(--p-amber-500);font-size:13px;font-weight:700">아래에서 다람쥐를 선택해주세요</div>`
       : '';
     btn.style.display = 'none';
   }
@@ -129,10 +129,10 @@ function sqFuseRenderGrid() {
           <div style="border-radius:10px;${gs.border};padding:1px;background:${gs.bg}">
             <img src="images/squirrels/${spriteFile}.png" style="width:40px;height:40px;object-fit:contain;border-radius:8px;display:block" onerror="this.outerHTML='<div style=\\'font-size:28px;line-height:40px\\'>🦔</div>'">
           </div>
-          <div style="font-size:10px;font-weight:900;color:#1f2937;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px">${sq.name}</div>
-          <div style="font-size:9px;font-weight:700;color:${sq.type==='explorer'?'#059669':'#7c3aed'}">${sq.type==='explorer'?'탐험형':'애완형'}</div>
-          <div style="font-size:8px;color:#9ca3af;margin-top:1px;white-space:nowrap">❤${sq.hp_current||0} ⚔${sq.stats?.atk||0} 🛡${sq.stats?.def||0}</div>
-          ${isSelected ? '<div style="font-size:10px;color:#f59e0b;font-weight:800">선택됨</div>' : ''}
+          <div style="font-size:10px;font-weight:900;color:var(--text-primary);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px">${sq.name}</div>
+          <div style="font-size:9px;font-weight:700;color:${sq.type==='explorer'?'var(--p-green-600)':'var(--p-purple-700)'}">${sq.type==='explorer'?'탐험형':'애완형'}</div>
+          <div style="font-size:8px;color:var(--text-muted);margin-top:1px;white-space:nowrap">❤${sq.hp_current||0} ⚔${sq.stats?.atk||0} 🛡${sq.stats?.def||0}</div>
+          ${isSelected ? '<div style="font-size:10px;color:var(--p-amber-500);font-weight:800">선택됨</div>' : ''}
         </div>`;
     });
     html += '</div>';
@@ -209,12 +209,12 @@ async function sqFuseExecute() {
   showModal(`
     <div style="text-align:center">
       <div style="font-size:48px;margin-bottom:8px">🧬</div>
-      <h2 style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:8px">다람쥐 합성</h2>
-      <p style="font-size:14px;color:#6b7280;margin-bottom:4px"><strong>${sq1.name}</strong> + <strong>${sq2.name}</strong></p>
+      <h2 style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:8px">다람쥐 합성</h2>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:4px"><strong>${sq1.name}</strong> + <strong>${sq2.name}</strong></p>
       <p style="font-size:13px;color:${gs.color};font-weight:800;margin-bottom:4px">${gs.label} 등급 합성</p>
-      ${nextLabel ? `<p style="font-size:12px;color:#9ca3af">승급 확률: ${upgradeChance}% → ${nextLabel}</p>` : ''}
-      <p style="font-size:13px;color:#b45309;font-weight:700;margin:12px 0">🌰 ${cost} 도토리 소모</p>
-      <p style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:16px">⚠️ 재료 다람쥐 두 마리는 사라집니다!</p>
+      ${nextLabel ? `<p style="font-size:12px;color:var(--text-muted)">승급 확률: ${upgradeChance}% → ${nextLabel}</p>` : ''}
+      <p style="font-size:13px;color:var(--p-amber-600);font-weight:700;margin:12px 0">🌰 ${cost} 도토리 소모</p>
+      <p style="font-size:12px;color:var(--p-red-600);font-weight:600;margin-bottom:16px">⚠️ 재료 다람쥐 두 마리는 사라집니다!</p>
       <div style="display:flex;gap:8px">
         <button onclick="closeModal()" class="btn flex-1" style="background:var(--btn-cancel-bg);color:var(--btn-cancel-text)">취소</button>
         <button onclick="closeModal();sqFuseConfirm()" class="btn btn-primary flex-1">합성하기!</button>
@@ -324,8 +324,8 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
   showModal(`
     <div id="sqFuseAnim" style="text-align:center;padding:20px 0">
       <div id="sqFuseAnimIcon" style="font-size:56px;animation:sqCardShake 0.5s ease infinite">🧬</div>
-      <div style="font-size:16px;font-weight:900;color:#78350f;margin-top:16px">합성 중...</div>
-      <div style="font-size:12px;color:#9ca3af;margin-top:4px">두근두근</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text-brand);margin-top:16px">합성 중...</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">두근두근</div>
     </div>
   `);
 
@@ -370,22 +370,22 @@ function _sqFuseShowResult(newSq, upgraded, oldGrade, newGrade) {
     setTimeout(() => {
       showModal(`
         <div style="text-align:center">
-          <div style="font-size:14px;color:#9ca3af;font-weight:700;margin-bottom:12px">합성 결과</div>
+          <div style="font-size:14px;color:var(--text-muted);font-weight:700;margin-bottom:12px">합성 결과</div>
           ${upgraded ? `
             <div style="font-size:28px;margin-bottom:8px;animation:sqReadyBounce 0.8s ease-in-out infinite">⬆️</div>
-            <div style="font-size:16px;font-weight:900;color:#f59e0b;margin-bottom:12px">🎉 등급 승급!</div>
+            <div style="font-size:16px;font-weight:900;color:var(--p-amber-500);margin-bottom:12px">🎉 등급 승급!</div>
           ` : ''}
           <div id="sqFuseResultImg" style="display:inline-block;border-radius:20px;${gs.border};box-shadow:${gs.shadow};padding:4px;background:${gs.bg};margin-bottom:12px;opacity:0;transform:scale(0.5);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.34,1.56,0.64,1)">
             <img src="images/squirrels/${spriteFile}.png" style="width:80px;height:80px;object-fit:contain;border-radius:16px;display:block" onerror="this.outerHTML='<div style=\\'font-size:60px;line-height:80px\\'>🦔</div>'">
           </div>
-          <div style="font-size:18px;font-weight:900;color:#1f2937;margin-bottom:4px">${newSq.name}</div>
+          <div style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:4px">${newSq.name}</div>
           <div style="font-size:14px;font-weight:800;color:${gs.color};margin-bottom:4px">${gs.label} · ${typeLabel}</div>
           <div style="display:flex;gap:12px;justify-content:center;margin:12px 0">
-            <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">❤️ HP</div><div style="font-size:16px;font-weight:900;color:#ef4444">${newSq.stats.hp}</div></div>
-            <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">⚔️ ATK</div><div style="font-size:16px;font-weight:900;color:#f97316">${newSq.stats.atk}</div></div>
-            <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">🛡️ DEF</div><div style="font-size:16px;font-weight:900;color:#3b82f6">${newSq.stats.def}</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">❤️ HP</div><div style="font-size:16px;font-weight:900;color:var(--p-red-500)">${newSq.stats.hp}</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">⚔️ ATK</div><div style="font-size:16px;font-weight:900;color:var(--p-orange-500)">${newSq.stats.atk}</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">🛡️ DEF</div><div style="font-size:16px;font-weight:900;color:var(--p-blue-500)">${newSq.stats.def}</div></div>
           </div>
-          ${upgraded ? `<div style="font-size:12px;color:#6b7280;margin-bottom:12px">${_sqGradeLabel[oldGrade]} → <strong style="color:${gs.color}">${gs.label}</strong></div>` : ''}
+          ${upgraded ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">${_sqGradeLabel[oldGrade]} → <strong style="color:${gs.color}">${gs.label}</strong></div>` : ''}
           <button onclick="closeModal();sqFuseInit();sqRenderGrid();" class="btn btn-primary w-full">확인</button>
         </div>
       `);

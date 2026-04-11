@@ -156,7 +156,7 @@
       </div>
     </div>
     <!-- 배포 시각 (관리자 전용) -->
-    <div id="deployInfo" style="display:none;text-align:right;font-size:9px;font-weight:700;color:var(--text-muted,#9ca3af);line-height:1.2;margin-top:4px;cursor:pointer" title="클릭하면 새로고침" onclick="location.reload()"></div>
+    <div id="deployInfo" style="display:none;text-align:right;font-size:9px;font-weight:700;color:var(--text-muted);line-height:1.2;margin-top:4px;cursor:pointer" title="클릭하면 새로고침" onclick="location.reload()"></div>
     <!-- 메인 헤더: 도토리 이모지 + 닉네임 | 스탯 + 알림 -->
     <div class="flex items-center justify-between mt-1">
       <!-- 좌측: 도토리 이모지(테마토글) + 닉네임 -->
@@ -203,7 +203,7 @@
         <div class="text-6xl mb-3" id="gachaIcon">🎁</div>
         <h2 class="text-xl font-black text-gray-800 mb-1">도토리 뽑기</h2>
         <p class="text-sm text-gray-400 font-semibold mb-4">1회 = <span class="text-amber-600 font-black">🌰 10</span> &nbsp;|&nbsp; 5회 = <span class="text-amber-600 font-black">🌰 50</span></p>
-        <div id="freeGachaNotice" class="hidden text-xs font-bold rounded-2xl px-3 py-2 mb-3" style="background:rgba(220,252,231,0.8);color:#166534;border:1.5px solid rgba(34,197,94,0.3)"></div>
+        <div id="freeGachaNotice" class="hidden text-xs font-bold rounded-2xl px-3 py-2 mb-3" style="background:var(--bg-green-muted);color:var(--p-green-800);border:1.5px solid var(--border-green)"></div>
         <div class="flex justify-center gap-3">
           <button class="btn btn-primary px-8 py-3 text-base" id="btn-gacha1" onclick="doGacha(1)">1회 뽑기</button>
           <button class="btn btn-purple px-8 py-3 text-base" id="btn-gacha5" onclick="doGacha(5)">5회 뽑기</button>
@@ -431,7 +431,7 @@
           <div class="title-font text-lg text-amber-800 mb-1">아기 다람쥐 분양</div>
           <div class="text-xs text-gray-500 mb-4">도토리를 먹여서 키워보세요!</div>
           <div class="flex gap-2 justify-center">
-            <button class="btn btn-primary" onclick="sqBuySquirrel('shop')" style="width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:900;box-shadow:0 4px 0 #b45309,0 6px 20px rgba(245,158,11,.2)">🌰 30 도토리로 분양받기</button>
+            <button class="btn btn-primary" onclick="sqBuySquirrel('shop')" style="width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:900;box-shadow:0 4px 0 var(--p-amber-600),0 6px 20px rgba(245,158,11,.2)">🌰 30 도토리로 분양받기</button>
           </div>
         </div>
       </div>
@@ -469,12 +469,12 @@
           <div class="text-xs text-gray-400 mt-1">🌰 합성 비용: <strong id="sqFuseCostDisplay">10</strong> 도토리</div>
         </div>
         <div id="sqFuseSlots" style="display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:20px">
-          <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
-            <span style="font-size:32px;color:#d1d5db">＋</span>
+          <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed var(--border-default);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg-sunken);transition:all .2s">
+            <span style="font-size:32px;color:var(--text-disabled)">＋</span>
           </div>
-          <div style="font-size:28px;font-weight:900;color:#d1d5db">＋</div>
-          <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
-            <span style="font-size:32px;color:#d1d5db">＋</span>
+          <div style="font-size:28px;font-weight:900;color:var(--text-disabled)">＋</div>
+          <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed var(--border-default);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg-sunken);transition:all .2s">
+            <span style="font-size:32px;color:var(--text-disabled)">＋</span>
           </div>
         </div>
         <div id="sqFuseInfo" style="text-align:center;margin-bottom:16px"></div>
@@ -582,7 +582,7 @@
         <textarea id="adminNoticeText" class="field" rows="3" placeholder="사용자에게 보여줄 공지 내용을 입력하세요..." style="resize:vertical;font-size:13px"></textarea>
         <div class="flex gap-2 mt-2">
           <button class="btn btn-primary flex-1" onclick="adminSaveNotice()">📢 공지 등록</button>
-          <button class="btn flex-1" style="background:#fee2e2;color:#dc2626;font-weight:800" onclick="adminClearNotice()">🗑️ 공지 삭제</button>
+          <button class="btn flex-1" style="background:var(--bg-red-muted);color:var(--text-danger);font-weight:800" onclick="adminClearNotice()">🗑️ 공지 삭제</button>
         </div>
         <div class="text-xs text-gray-400 mt-2">등록하면 모든 사용자에게 접속 시 팝업으로 표시됩니다. 확인 버튼을 누르면 다시 뜨지 않아요.</div>
         <div id="adminCurrentNotice"></div>
@@ -744,17 +744,17 @@
 
         <!-- 액션 바: N개 선택됨 + 목적지 버튼 -->
         <div id="up-actionBar" class="hidden mt-2 p-3 rounded-xl" style="background:rgba(124,58,237,0.06);border:1.5px solid rgba(124,58,237,0.15)">
-          <p class="text-xs font-black mb-2" id="up-countLabel" style="color:#7c3aed"></p>
+          <p class="text-xs font-black mb-2" id="up-countLabel" style="color:var(--p-purple-700)"></p>
           <div class="flex gap-2">
-            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2);color:#3b82f6" onclick="_upOpenConfig('store')">🛍️ 상점에 추가</button>
-            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2);color:#a855f7" onclick="_upOpenConfig('gacha')">🎲 뽑기에 추가</button>
+            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:var(--bg-blue-muted);border-color:var(--p-blue-300);color:var(--p-blue-500)" onclick="_upOpenConfig('store')">🛍️ 상점에 추가</button>
+            <button class="flex-1 py-2 rounded-lg text-xs font-black border transition-all" style="background:var(--bg-purple-subtle);border-color:var(--p-purple-400);color:var(--p-purple-500)" onclick="_upOpenConfig('gacha')">🎲 뽑기에 추가</button>
           </div>
         </div>
 
         <!-- 설정 패널 (목적지 선택 후 표시) -->
         <div id="up-configPanel" class="hidden mt-2 rounded-xl overflow-hidden" style="border:1.5px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.04)">
           <div class="flex items-center justify-between px-3 py-2" style="border-bottom:1px solid rgba(124,58,237,0.1)">
-            <span class="text-xs font-black" id="up-configLabel" style="color:#7c3aed"></span>
+            <span class="text-xs font-black" id="up-configLabel" style="color:var(--p-purple-700)"></span>
             <span class="text-xs font-bold text-gray-400 cursor-pointer" onclick="_upCloseConfig()">← 돌아가기</span>
           </div>
           <div id="up-configItems" class="px-3 py-2 space-y-2"></div>
@@ -889,7 +889,7 @@
           <div class="mb-4 p-4 rounded-2xl" style="background:rgba(254,215,170,0.3);border:1.5px solid rgba(251,146,60,0.25)">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2"><span class="text-xl">🛍️</span><p class="font-black text-gray-800 text-sm">상점 할인</p></div>
-              <div id="storeEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+              <div id="storeEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--bg-red-muted);color:var(--p-red-700)">비활성</div>
             </div>
             <div class="space-y-2">
               <div class="flex gap-2 items-center">
@@ -920,7 +920,7 @@
           <div class="p-4 rounded-2xl" style="background:rgba(196,181,253,0.25);border:1.5px solid rgba(139,92,246,0.2)">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2"><span class="text-xl">🎲</span><p class="font-black text-gray-800 text-sm">뽑기 할인</p></div>
-              <div id="gachaEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+              <div id="gachaEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--bg-red-muted);color:var(--p-red-700)">비활성</div>
             </div>
             <div class="space-y-2">
               <div class="flex gap-2 items-center">
@@ -953,7 +953,7 @@
           <div class="mt-4 mb-4 p-4 rounded-2xl" style="background:rgba(167,243,208,0.25);border:1.5px solid rgba(16,185,129,0.25)">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2"><span class="text-xl">💊</span><p class="font-black text-gray-800 text-sm">회복속도 부스트</p></div>
-              <div id="recoveryEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+              <div id="recoveryEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--bg-red-muted);color:var(--p-red-700)">비활성</div>
             </div>
             <div class="space-y-2">
               <div class="flex gap-2 items-center">
@@ -981,7 +981,7 @@
           <div class="mb-4 p-4 rounded-2xl" style="background:rgba(253,186,116,0.2);border:1.5px solid rgba(251,146,60,0.25)">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2"><span class="text-xl">🎮</span><p class="font-black text-gray-800 text-sm">미니게임 참가비 할인</p></div>
-              <div id="minigameEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+              <div id="minigameEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--bg-red-muted);color:var(--p-red-700)">비활성</div>
             </div>
             <div class="space-y-2">
               <div class="flex gap-2 items-center">
@@ -1009,7 +1009,7 @@
           <div class="p-4 rounded-2xl" style="background:rgba(187,247,208,0.25);border:1.5px solid rgba(74,222,128,0.25)">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2"><span class="text-xl">🌾</span><p class="font-black text-gray-800 text-sm">농장 성장속도 부스트</p></div>
-              <div id="farm_growthEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#fee2e2;color:#b91c1c">비활성</div>
+              <div id="farm_growthEventStatus" class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--bg-red-muted);color:var(--p-red-700)">비활성</div>
             </div>
             <div class="space-y-2">
               <div class="flex gap-2 items-center">
@@ -1433,7 +1433,7 @@
           <div class="title-font text-lg text-amber-800 mb-1">아기 다람쥐 분양</div>
           <div class="text-xs text-gray-500 mb-4">도토리를 먹여서 키워보세요!</div>
           <div class="flex gap-2 justify-center">
-            <button class="btn btn-primary" onclick="sqBuySquirrel('shop')" style="width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:900;box-shadow:0 4px 0 #b45309,0 6px 20px rgba(245,158,11,.2)">🌰 30 도토리로 분양받기</button>
+            <button class="btn btn-primary" onclick="sqBuySquirrel('shop')" style="width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:900;box-shadow:0 4px 0 var(--p-amber-600),0 6px 20px rgba(245,158,11,.2)">🌰 30 도토리로 분양받기</button>
           </div>
         </div>
       </div>
@@ -1494,12 +1494,12 @@
           <div class="text-xs text-gray-400 mt-1">🌰 합성 비용: <strong id="sqFuseCostDisplay">10</strong> 도토리</div>
         </div>
         <div id="sqFuseSlots" style="display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:20px">
-          <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
-            <span style="font-size:32px;color:#d1d5db">＋</span>
+          <div id="sqFuseSlot1" onclick="sqFusePickSlot(1)" style="width:100px;height:120px;border-radius:16px;border:3px dashed var(--border-default);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg-sunken);transition:all .2s">
+            <span style="font-size:32px;color:var(--text-disabled)">＋</span>
           </div>
-          <div style="font-size:28px;font-weight:900;color:#d1d5db">＋</div>
-          <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;transition:all .2s">
-            <span style="font-size:32px;color:#d1d5db">＋</span>
+          <div style="font-size:28px;font-weight:900;color:var(--text-disabled)">＋</div>
+          <div id="sqFuseSlot2" onclick="sqFusePickSlot(2)" style="width:100px;height:120px;border-radius:16px;border:3px dashed var(--border-default);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg-sunken);transition:all .2s">
+            <span style="font-size:32px;color:var(--text-disabled)">＋</span>
           </div>
         </div>
         <div id="sqFuseInfo" style="text-align:center;margin-bottom:16px"></div>
@@ -2097,10 +2097,10 @@
               <div class="fc-desc">각 수치는 기본 확률 대비 증감률(%)입니다. 예: 풍작+35 → 기본 풍작 확률의 35% 증가</div>
               <div class="fc-grade-table">
                 <div class="fc-gt-header"><div></div><div>풍작 증가(%)</div><div>흉작 감소(%)</div><div>성장 감소(%)</div></div>
-                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#16a34a">🍀 레어</div><input type="number" id="farmSet_gradeRareBumper" value="0"><input type="number" id="farmSet_gradeRarePoor" value="12"><input type="number" id="farmSet_gradeRareGrow" value="0"></div>
-                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#2563eb">💎 희귀</div><input type="number" id="farmSet_gradeEpicBumper" value="10"><input type="number" id="farmSet_gradeEpicPoor" value="20"><input type="number" id="farmSet_gradeEpicGrow" value="5"></div>
-                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#ca8a04">⚡ 유일</div><input type="number" id="farmSet_gradeUniqueBumper" value="20"><input type="number" id="farmSet_gradeUniquePoor" value="28"><input type="number" id="farmSet_gradeUniqueGrow" value="8"></div>
-                <div class="fc-gt-row"><div class="fc-gt-label" style="color:#dc2626">🔥 레전드</div><input type="number" id="farmSet_gradeLegendBumper" value="35"><input type="number" id="farmSet_gradeLegendPoor" value="40"><input type="number" id="farmSet_gradeLegendGrow" value="12"></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:var(--text-success)">🍀 레어</div><input type="number" id="farmSet_gradeRareBumper" value="0"><input type="number" id="farmSet_gradeRarePoor" value="12"><input type="number" id="farmSet_gradeRareGrow" value="0"></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:var(--p-blue-600)">💎 희귀</div><input type="number" id="farmSet_gradeEpicBumper" value="10"><input type="number" id="farmSet_gradeEpicPoor" value="20"><input type="number" id="farmSet_gradeEpicGrow" value="5"></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:var(--text-warning)">⚡ 유일</div><input type="number" id="farmSet_gradeUniqueBumper" value="20"><input type="number" id="farmSet_gradeUniquePoor" value="28"><input type="number" id="farmSet_gradeUniqueGrow" value="8"></div>
+                <div class="fc-gt-row"><div class="fc-gt-label" style="color:var(--text-danger)">🔥 레전드</div><input type="number" id="farmSet_gradeLegendBumper" value="35"><input type="number" id="farmSet_gradeLegendPoor" value="40"><input type="number" id="farmSet_gradeLegendGrow" value="12"></div>
               </div>
               <div class="fc-divider"></div>
               <div class="fc-sub-title">📊 DB 실제 연산 결과 (실시간 미리보기)</div>
@@ -2108,13 +2108,13 @@
               <div class="fc-preview-box" style="font-size:12px;line-height:1.8;padding:8px 10px;border-radius:8px;background:var(--cfg-input-bg);border:1px solid var(--cfg-input-border);color:var(--cfg-row-label-color)">
                 <div><strong>🌰 기본 (등급 없음)</strong></div>
                 <div id="farmPreview_Base" style="padding-left:8px">저장 후 표시됩니다</div>
-                <div style="margin-top:6px"><strong style="color:#16a34a">🍀 레어</strong></div>
+                <div style="margin-top:6px"><strong style="color:var(--text-success)">🍀 레어</strong></div>
                 <div id="farmPreview_Rare" style="padding-left:8px">저장 후 표시됩니다</div>
-                <div style="margin-top:6px"><strong style="color:#2563eb">💎 희귀</strong></div>
+                <div style="margin-top:6px"><strong style="color:var(--p-blue-600)">💎 희귀</strong></div>
                 <div id="farmPreview_Epic" style="padding-left:8px">저장 후 표시됩니다</div>
-                <div style="margin-top:6px"><strong style="color:#ca8a04">⚡ 유일</strong></div>
+                <div style="margin-top:6px"><strong style="color:var(--text-warning)">⚡ 유일</strong></div>
                 <div id="farmPreview_Unique" style="padding-left:8px">저장 후 표시됩니다</div>
-                <div style="margin-top:6px"><strong style="color:#dc2626">🔥 레전드</strong></div>
+                <div style="margin-top:6px"><strong style="color:var(--text-danger)">🔥 레전드</strong></div>
                 <div id="farmPreview_Legend" style="padding-left:8px">저장 후 표시됩니다</div>
               </div>
             </div>
@@ -2203,7 +2203,7 @@
     <!-- 🐿️ 다람쥐 설정 관리 (간소화 - 설정은 각 서브탭 안으로 이동됨) -->
     <div id="atab-squirrelSettings" class="hidden">
       <button class="adm-back-btn" onclick="aTabGrid('home')">← 홈으로</button>
-      <div class="clay-card p-4 mb-4" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid rgba(245,158,11,0.3)">
+      <div class="clay-card p-4 mb-4" style="background:linear-gradient(135deg,var(--bg-amber-subtle),var(--bg-amber-muted));border:2px solid var(--border-amber)">
         <div class="flex items-center justify-between">
           <div>
             <div class="title-font text-base text-amber-800">🐿️ 다람쥐 마을 입장</div>

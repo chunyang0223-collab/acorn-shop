@@ -81,10 +81,10 @@ function _renderNoticeInNotif() {
   const notice = typeof _cachedNotice !== 'undefined' ? _cachedNotice : null;
   if (!notice?.message) { area.innerHTML = ''; return; }
   area.innerHTML = `
-    <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:900;color:#92400e;margin-bottom:6px">📢 공지사항</div>
-      <div style="font-size:13px;color:#78350f;white-space:pre-wrap;line-height:1.6">${notice.message.replace(/</g,'&lt;')}</div>
-      <div style="font-size:10px;color:#b45309;margin-top:6px">${notice.date || ''}</div>
+    <div style="background:var(--bg-amber-subtle);border:1.5px solid var(--border-amber);border-radius:14px;padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:900;color:var(--p-amber-700);margin-bottom:6px">📢 공지사항</div>
+      <div style="font-size:13px;color:var(--text-brand);white-space:pre-wrap;line-height:1.6">${notice.message.replace(/</g,'&lt;')}</div>
+      <div style="font-size:10px;color:var(--p-amber-600);margin-top:6px">${notice.date || ''}</div>
     </div>`;
 }
 

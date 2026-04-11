@@ -29,17 +29,17 @@ function farmShowPlantModal(slot) {
       <div onclick="farmDoPlant(${slot},'${inv.crop_id}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--list-item-bg);border:1.5px solid var(--list-item-border);cursor:pointer;transition:all .15s">
         <div style="font-size:28px;flex-shrink:0">${crop.emoji}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:900;color:#1f2937">${crop.name} 씨앗 <span style="font-size:10px;color:#6b7280">×${inv.quantity}</span></div>
-          <div style="font-size:9px;color:#6b7280">재배 ${crop.grow_min_hours}~${crop.grow_max_hours}시간</div>
+          <div style="font-size:12px;font-weight:900;color:var(--text-primary)">${crop.name} 씨앗 <span style="font-size:10px;color:var(--text-secondary)">×${inv.quantity}</span></div>
+          <div style="font-size:9px;color:var(--text-secondary)">재배 ${crop.grow_min_hours}~${crop.grow_max_hours}시간</div>
         </div>
-        <div style="font-size:10px;color:#16a34a;font-weight:800">심기 →</div>
+        <div style="font-size:10px;color:var(--p-green-600);font-weight:800">심기 →</div>
       </div>`;
   });
 
   showModal(`
     <div style="padding:4px 0">
-      <div style="font-size:14px;font-weight:900;color:#1f2937;text-align:center;margin-bottom:4px">🌱 씨앗 심기</div>
-      <div style="font-size:10px;color:#6b7280;text-align:center;margin-bottom:12px">${slot}번 밭에 심을 씨앗을 선택하세요</div>
+      <div style="font-size:14px;font-weight:900;color:var(--text-primary);text-align:center;margin-bottom:4px">🌱 씨앗 심기</div>
+      <div style="font-size:10px;color:var(--text-secondary);text-align:center;margin-bottom:12px">${slot}번 밭에 심을 씨앗을 선택하세요</div>
       <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
         ${listHtml}
       </div>
@@ -124,7 +124,7 @@ async function farmHarvest(slot) {
   showModal(`
     <div id="farmHarvestAnim" style="text-align:center;padding:20px 0">
       <div style="font-size:48px;animation:sqCardShake 0.5s ease infinite">${crop?.emoji || '🌾'}</div>
-      <div style="font-size:14px;font-weight:900;color:#78350f;margin-top:12px">수확 중...</div>
+      <div style="font-size:14px;font-weight:900;color:var(--text-brand);margin-top:12px">수확 중...</div>
     </div>
   `);
 
@@ -182,7 +182,7 @@ async function farmHarvest(slot) {
         <div style="text-align:center;padding:12px 0">
           <div style="font-size:52px;margin-bottom:8px">${icon}</div>
           <div style="font-size:18px;font-weight:900;color:${color};margin-bottom:6px">${title}</div>
-          <div style="font-size:13px;color:#6b7280;margin-bottom:16px">${desc}</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">${desc}</div>
           <button onclick="closeModal()" class="btn btn-primary w-full">확인</button>
         </div>
       `);

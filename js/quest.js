@@ -201,7 +201,7 @@ async function renderQuests(force = false) {
         iconBg = 'bg-amber-100'; iconEmoji = '🎁';
         cardStyle = 'border:2px solid #f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.15)';
         nameClass = 'text-gray-800';
-        statusEl = `<button class="btn btn-primary px-3 py-1.5 text-xs font-black" style="background:linear-gradient(135deg,#f59e0b,#ef4444);border:none" onclick="claimQuestReward('${q.id}')">🎁 보상 받기</button>`;
+        statusEl = `<button class="btn btn-primary px-3 py-1.5 text-xs font-black" style="background:linear-gradient(135deg,var(--p-amber-500),var(--p-red-500));border:none" onclick="claimQuestReward('${q.id}')">🎁 보상 받기</button>`;
       } else {
         iconBg = 'bg-amber-50'; iconEmoji = '⚡';
         cardStyle = '';
@@ -223,7 +223,7 @@ async function renderQuests(force = false) {
           <p class="text-xs text-gray-400 font-semibold">${q.description}</p>
           ${target2 > 1 ? `<div class="mt-1.5">
             <div style="background:var(--progress-track-bg);border-radius:999px;height:6px;overflow:hidden">
-              <div style="background:${claimable?'#f59e0b':claimed?'#22c55e':'#f59e0b'};height:100%;width:${claimed||claimable?100:Math.min(100,Math.round((displayCount/target2)*100))}%;transition:width .3s;border-radius:999px"></div>
+              <div style="background:${claimable?'var(--p-amber-500)':claimed?'var(--p-green-500)':'var(--p-amber-500)'};height:100%;width:${claimed||claimable?100:Math.min(100,Math.round((displayCount/target2)*100))}%;transition:width .3s;border-radius:999px"></div>
             </div>
             <p class="text-xs text-gray-400 mt-0.5 font-bold">${claimed||claimable?target2:displayCount} / ${target2}회</p>
           </div>` : ''}

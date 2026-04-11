@@ -295,7 +295,7 @@ async function renderRecycleAdminList() {
       <div class="flex gap-2">
         <button class="btn btn-primary flex-1 py-1 text-xs" onclick="editRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')},${sample.recycle_price})">✏️ 가격 수정</button>
         <button class="btn btn-gray flex-1 py-1 text-xs" onclick="toggleRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')},${allActive})">${allActive ? '⏹ 비활성화' : '✅ 활성화'}</button>
-        <button class="btn py-1 px-3 text-xs" style="background:#fee2e2;color:#b91c1c" onclick="deleteRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')})">🗑️</button>
+        <button class="btn py-1 px-3 text-xs" style="background:var(--bg-red-muted);color:var(--p-red-700)" onclick="deleteRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')})">🗑️</button>
       </div>
     </div>`;
   }).join('');
@@ -387,7 +387,7 @@ async function deleteRecycleGroup(ids) {
     <p class="text-sm text-gray-500 mb-4">삭제하면 사용자가 해당 아이템을 재활용센터에서 판매할 수 없어요.</p>
     <div class="flex gap-2">
       <button class="btn btn-gray flex-1 py-2" onclick="closeModal()">취소</button>
-      <button class="btn flex-1 py-2 font-black" style="background:#fee2e2;color:#b91c1c" onclick="confirmDeleteRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')})">삭제</button>
+      <button class="btn flex-1 py-2 font-black" style="background:var(--bg-red-muted);color:var(--p-red-700)" onclick="confirmDeleteRecycleGroup(${JSON.stringify(ids).replace(/"/g,'&quot;')})">삭제</button>
     </div>
   </div>`);
 }

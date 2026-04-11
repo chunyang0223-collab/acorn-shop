@@ -723,10 +723,13 @@ async function _stStartFishing() {
 
   _stFishingState = { phase: 'waiting', timer: null };
 
-  // 랜덤 시간 후 찌 반응 (수동: 3~12초, 자동: 1~4초)
-  const waitTime = _stAutoFishing
-    ? (1000 + Math.random() * 3000)
-    : (3000 + Math.random() * 9000);
+  // 랜덤 시간 후 찌 반응 (수동: 3~12초, 자동일반: 1~4초, 자동관리자: 0.3~1.3초)
+  const _autoAdmin = _stAutoFishing && myProfile?.is_admin;
+  const waitTime = _autoAdmin
+    ? (300 + Math.random() * 1000)
+    : _stAutoFishing
+      ? (1000 + Math.random() * 3000)
+      : (3000 + Math.random() * 9000);
 
   _stFishingState.timer = setTimeout(() => {
     if (!_stFishingState) return;
@@ -741,9 +744,10 @@ async function _stStartFishing() {
     btn.disabled = false;
     btn.onclick = () => _stCatchFish();
 
-    // 자동낚시 모드면 자동으로 잡아당기기 (즉시 반응)
+    // 자동낚시 모드면 자동으로 잡아당기기
     if (_stAutoFishing) {
-      setTimeout(() => _stAutoFishBite(), 100 + Math.random() * 150);
+      const biteDelay = _autoAdmin ? (30 + Math.random() * 50) : (100 + Math.random() * 150);
+      setTimeout(() => _stAutoFishBite(), biteDelay);
     }
 
     // 타이밍 윈도우 (1.5초 내 클릭해야 함)
@@ -767,9 +771,8 @@ function _stFishTooEarly() {
   playSound('stMiss');
   toast('💨', '너무 빨라요! 물고기가 도망갔어요...');
   _stRenderFishingTab();
-  // 자동낚시 모드면 다음 낚시 진행 (패널티 없으므로 계속)
   if (_stAutoFishing) {
-    setTimeout(() => _stAutoFishNext(), 300);
+    setTimeout(() => _stAutoFishNext(), myProfile?.is_admin ? 100 : 300);
   }
 }
 
@@ -778,9 +781,8 @@ function _stFishMissed() {
   playSound('stMiss');
   toast('💨', '놓쳤어요! 물고기가 도망갔어요...');
   _stRenderFishingTab();
-  // 자동낚시 모드면 다음 낚시 진행 (패널티 없으므로 계속)
   if (_stAutoFishing) {
-    setTimeout(() => _stAutoFishNext(), 300);
+    setTimeout(() => _stAutoFishNext(), myProfile?.is_admin ? 100 : 300);
   }
 }
 
@@ -846,15 +848,16 @@ async function _stCatchFish() {
     console.error('[다람쥐도둑] 낚시 저장 실패:', e);
   }
 
-  // 리셋 (자동: 0.7초, 수동: 2초)
+  // 리셋 (관리자자동: 0.2초, 자동: 0.7초, 수동: 2초)
+  const _catchAdmin = _stAutoFishing && myProfile?.is_admin;
   setTimeout(() => {
     _stResetFishing();
     _stRenderFishingTab();
     // 자동낚시 모드면 다음 낚시 진행
     if (_stAutoFishing) {
-      setTimeout(() => _stAutoFishNext(), 200);
+      setTimeout(() => _stAutoFishNext(), _catchAdmin ? 50 : 200);
     }
-  }, _stAutoFishing ? 700 : 2000);
+  }, _catchAdmin ? 200 : _stAutoFishing ? 700 : 2000);
 }
 
 function _stResetFishing() {
@@ -1439,7 +1442,7 @@ function _stRenderShopTab() {
     <div class="clay-card p-4 mb-3" style="animation:clayPop .3s var(--ease-bounce)">
       <p class="text-sm font-black text-gray-700 mb-3">🏪 낚시 상점</p>
 
-      <div class="clay-card p-4 text-center" style="background:linear-gradient(135deg,#fef3c7,#fed7aa)">
+      <div class="clay-card p-4 text-center" style="background:linear-gradient(135deg,var(--bg-amber-subtle),var(--bg-amber-muted))">
         <div class="text-3xl mb-2">📦</div>
         <h3 class="font-black text-gray-800 mb-1">스펠링 블록 구매</h3>
         <p class="text-xs text-gray-500 mb-2">원하는 스펠링 블록 1개를 구매할 수 있어요.</p>
@@ -1799,13 +1802,19 @@ async function _stRunBotTurn(botPlayer) {
     }
   }
 
-  // 통계 업데이트
+  // 통계 업데이트 — DB에서 실제 locked 블록 수 조회 (로컬 배열은 이번 턴 inventory만 포함하므로 부정확)
   const allBotWords = [...(existingWords || []), { word: chosenWord }];
-  const allLockedBlocks = botBlocks.filter(b => b.status === 'locked');
+  const { data: allLocked } = await sb.from('sq_thief_blocks')
+    .select('id, stolen_from_id')
+    .eq('room_id', _stRoom.id)
+    .eq('owner_id', botPlayer.id)
+    .eq('status', 'locked');
+  const totalLocked = allLocked?.length || 0;
+  const totalStolenUsed = allLocked?.filter(b => b.stolen_from_id).length || 0;
   await sb.from('sq_thief_players').update({
     words_completed: allBotWords.length,
-    letters_used: allLockedBlocks.length, // 이미 위 루프에서 lock 처리됨, 중복 합산 금지
-    stolen_letters_used: (botPlayer.stolen_letters_used || 0) + stolenUsed
+    letters_used: totalLocked,
+    stolen_letters_used: totalStolenUsed
   }).eq('id', botPlayer.id);
 
   console.log(`[다람쥐도둑] 봇 ${botPlayer.id.slice(0, 6)} 단어 제출: ${chosenWord}`);

@@ -85,7 +85,7 @@ function requestProduct(id) {
 
   const myAcorns = myProfile.acorns || 0;
   const canAffordNow = myAcorns >= evtDiscountedPrice;
-  const acornStatusHtml = `<p class="text-xs font-bold mt-2" style="color:${canAffordNow ? '#6b7280' : '#dc2626'}">
+  const acornStatusHtml = `<p class="text-xs font-bold mt-2" style="color:${canAffordNow ? 'var(--text-muted)' : 'var(--text-danger)'}">
     보유 도토리: 🌰 ${myAcorns}${!canAffordNow ? ' (쿠폰 할인 후 구매 가능할 수 있어요)' : ''}
   </p>`;
 
@@ -97,9 +97,9 @@ function requestProduct(id) {
       ${evtNotice}
       <div class="modal-notice-box">
         <p class="modal-notice-text">🌰 원가: ${p.price}
-          ${evtDiscount > 0 ? `→ <span style="color:#16a34a;font-weight:900">${evtDiscountedPrice}</span> (이벤트 ${evtDiscount}% 할인)` : ''}
+          ${evtDiscount > 0 ? `→ <span style="color:var(--p-green-600);font-weight:900">${evtDiscountedPrice}</span> (이벤트 ${evtDiscount}% 할인)` : ''}
         </p>
-        <p class="text-xs font-bold mt-1" id="finalPriceLabel" style="color:#059669">최종 결제: 🌰 ${evtDiscountedPrice}</p>
+        <p class="text-xs font-bold mt-1" id="finalPriceLabel" style="color:var(--p-green-600)">최종 결제: 🌰 ${evtDiscountedPrice}</p>
         ${acornStatusHtml}
         ${p.reward_type==='AUTO_ACORN'?`<p class="modal-notice-sub">✨ 즉시 +${p.acorn_amt} 도토리!</p>`:''}
       </div>

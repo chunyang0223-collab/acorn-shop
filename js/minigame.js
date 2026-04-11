@@ -240,9 +240,9 @@ async function renderMinigameHub() {
 
     // overlay for blocked states
     let overlayHtml = '';
-    if (!g.ready) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:13px;font-weight:800;color:#fff;background:rgba(0,0,0,.5);padding:6px 16px;border-radius:10px;letter-spacing:1px">COMING SOON</span></div>';
-    else if (maint) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:14px;font-weight:800;color:#fff;background:rgba(0,0,0,.5);padding:8px 18px;border-radius:10px">🔧 점검중</span></div>';
-    else if (exhausted) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:10px">오늘 도전 횟수 소진</span></div>';
+    if (!g.ready) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:13px;font-weight:800;color:var(--bg-surface);background:rgba(0,0,0,.5);padding:6px 16px;border-radius:10px;letter-spacing:1px">COMING SOON</span></div>';
+    else if (maint) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:14px;font-weight:800;color:var(--bg-surface);background:rgba(0,0,0,.5);padding:8px 18px;border-radius:10px">🔧 점검중</span></div>';
+    else if (exhausted) overlayHtml = '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:2"><span style="font-size:12px;font-weight:700;color:var(--bg-surface);background:rgba(0,0,0,.5);padding:6px 14px;border-radius:10px">오늘 도전 횟수 소진</span></div>';
 
     // tags — 상단: 게임 정보, 하단: 횟수
     let infoTags = [];
@@ -318,8 +318,8 @@ async function _renderRecentPlays() {
       const gameIcon = MG_DEFAULTS[r.game_id]?.icon || '🎮';
       const gameName = MG_DEFAULTS[r.game_id]?.name || r.game_id;
       const rewardStr = r.rewarded
-        ? `<span style="color:#059669;font-weight:800">+${r.reward}🌰</span>`
-        : '<span style="color:#9ca3af">—</span>';
+        ? `<span style="color:var(--p-green-600);font-weight:800">+${r.reward}🌰</span>`
+        : '<span style="color:var(--text-muted)">—</span>';
 
       return `<div class="mg-recent-row">
         <span class="mg-recent-game">${gameIcon}</span>
@@ -427,26 +427,26 @@ function _showCrosswordDifficultyModal() {
   showModal(`
     <div style="text-align:center;">
       <div style="font-size:2.5rem;margin-bottom:8px;">✏️</div>
-      <h2 style="font-size:1.1rem;font-weight:800;color:#2d2a3e;margin-bottom:4px;">난이도를 선택하세요</h2>
-      <p style="font-size:.82rem;color:#8b87a8;margin-bottom:16px;">게임 도중 변경할 수 없어요</p>
+      <h2 style="font-size:1.1rem;font-weight:800;color:var(--text-primary);margin-bottom:4px;">난이도를 선택하세요</h2>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:16px;">게임 도중 변경할 수 없어요</p>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button onclick="closeModal();startCrosswordGame('easy')"
-          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:#e8faf3;color:#065f46;box-shadow:0 3px 0 #b0dfc8;text-align:left;">
+          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:var(--bg-green-subtle);color:var(--p-green-800);box-shadow:0 3px 0 var(--border-green);text-align:left;">
           😊 Easy
-          <span style="display:block;font-size:.75rem;font-weight:500;color:#047857;margin-top:2px;">단어 힌트 50% 공개 · 맞춘 단어당 🌰2 · 최대 🌰12</span>
+          <span style="display:block;font-size:.75rem;font-weight:500;color:var(--text-success);margin-top:2px;">단어 힌트 50% 공개 · 맞춘 단어당 🌰2 · 최대 🌰12</span>
         </button>
         <button onclick="closeModal();startCrosswordGame('normal')"
-          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:#ede9ff;color:#4c1d95;box-shadow:0 3px 0 #c4b5fd;text-align:left;">
+          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:var(--bg-purple-subtle, #ede9ff);color:var(--p-purple-700);box-shadow:0 3px 0 var(--p-purple-400);text-align:left;">
           🧠 Normal
-          <span style="display:block;font-size:.75rem;font-weight:500;color:#6d28d9;margin-top:2px;">단어 힌트 25% 공개 · 맞춘 단어당 🌰3 · 전부 맞추면 최대 🌰20</span>
+          <span style="display:block;font-size:.75rem;font-weight:500;color:var(--p-purple-700);margin-top:2px;">단어 힌트 25% 공개 · 맞춘 단어당 🌰3 · 전부 맞추면 최대 🌰20</span>
         </button>
         <button onclick="closeModal();startCrosswordGame('hard')"
-          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:#fff0f3;color:#9b1c1c;box-shadow:0 3px 0 #fca5a5;text-align:left;">
+          style="padding:14px;border-radius:14px;border:none;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;background:var(--bg-red-subtle);color:var(--p-red-700);box-shadow:0 3px 0 var(--p-red-400);text-align:left;">
           🔥 Hard
-          <span style="display:block;font-size:.75rem;font-weight:500;color:#dc2626;margin-top:2px;">교차점만 공개 · 맞춘 단어당 🌰3 · 전부 맞추면 최대 🌰25</span>
+          <span style="display:block;font-size:.75rem;font-weight:500;color:var(--p-red-600);margin-top:2px;">교차점만 공개 · 맞춘 단어당 🌰3 · 전부 맞추면 최대 🌰25</span>
         </button>
       </div>
-      <button onclick="closeModal()" style="margin-top:14px;padding:10px 24px;border-radius:10px;border:1.5px solid #e2deff;background:#fff;color:#8b87a8;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;">취소</button>
+      <button onclick="closeModal()" style="margin-top:14px;padding:10px 24px;border-radius:10px;border:1.5px solid var(--border-focus);background:var(--bg-surface);color:var(--text-muted);font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;">취소</button>
     </div>`);
 }
 
@@ -519,7 +519,7 @@ async function renderMinigameAdmin() {
       '<h3 class="font-black text-gray-800 text-base">' + def.icon + ' ' + def.name + '</h3>' +
       '<label class="flex items-center gap-2 cursor-pointer">' +
         '<span class="text-xs font-bold ' + (val('maintenance') ? 'text-red-500' : 'text-gray-400') + '">🔧 점검</span>' +
-        '<input type="checkbox" id="mg-' + id + '-maintenance" ' + (val('maintenance') ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:#ef4444">' +
+        '<input type="checkbox" id="mg-' + id + '-maintenance" ' + (val('maintenance') ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--p-red-500)">' +
       '</label>' +
     '</div>';
 
@@ -535,7 +535,7 @@ async function renderMinigameAdmin() {
       /* ── 다람쥐 도둑 전용 ── */
       inner += '<label class="flex items-center gap-2 cursor-pointer mb-3">' +
         '<span class="text-xs font-bold ' + (val('fishingMaintenance') ? 'text-orange-500' : 'text-gray-400') + '">🎣 낚시터 점검</span>' +
-        '<input type="checkbox" id="mg-squirrelThief-fishingMaintenance" ' + (val('fishingMaintenance') ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:#f97316">' +
+        '<input type="checkbox" id="mg-squirrelThief-fishingMaintenance" ' + (val('fishingMaintenance') ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--p-orange-500)">' +
       '</label>';
       inner += '<p class="text-xs text-gray-400 mb-3">게임 전체 점검은 위의 🔧 점검 토글, 낚시터만 닫으려면 🎣 낚시터 점검을 켜세요.</p>';
       inner += _mgSep();
@@ -544,7 +544,7 @@ async function renderMinigameAdmin() {
       inner += _mgRow('🐿️ 1일 출정 횟수', '<input class="field text-center" type="number" min="1" max="10" style="width:80px" id="mg-squirrelThief-dailyDispatch" value="' + val('dailyDispatch') + '">');
       inner += _mgRow('🎒 출정당 최대 도둑 수', '<input class="field text-center" type="number" min="1" max="5" style="width:80px" id="mg-squirrelThief-maxSteal" value="' + val('maxSteal') + '">');
       inner += _mgRow('🏪 상점 블록 가격', '<input class="field text-center" type="number" min="1" max="100" style="width:80px" id="mg-squirrelThief-shopPrice" value="' + val('shopPrice') + '">');
-      inner += '<div style="border-top:1.5px dashed #e5e7eb;padding-top:12px;margin-top:12px">' +
+      inner += '<div style="border-top:1.5px dashed var(--border-default);padding-top:12px;margin-top:12px">' +
         '<p class="text-xs font-black text-amber-700 mb-2">🧪 테스트 모드</p>' +
         '<p class="text-xs text-gray-400 mb-2">봇 3명과 함께 즉시 게임을 시작하고, 날짜를 건너뛰며 일주일치 전체를 테스트할 수 있어요.</p>' +
         '<button class="btn btn-green px-4 py-2 text-xs font-black" onclick="_stAdminTestStart()">🧪 테스트 시작</button>' +
@@ -764,14 +764,14 @@ function _renderMgChargeModal(gameId) {
         <span class="mgc-slash">/</span>
         <div class="mgc-stat"><span class="mgc-stat-num">${pLimit}</span><span class="mgc-stat-label">도전 한도</span></div>
         <span class="mgc-slash">→</span>
-        <div class="mgc-stat"><span class="mgc-stat-num" style="color:#059669">${pLeft}</span><span class="mgc-stat-label">남은 횟수</span></div>
+        <div class="mgc-stat"><span class="mgc-stat-num" style="color:var(--p-green-600)">${pLeft}</span><span class="mgc-stat-label">남은 횟수</span></div>
       </div>
       <div class="mgc-status-row" style="margin-top:4px">
         <div class="mgc-stat"><span class="mgc-stat-num mgc-reward">${rUsed}</span><span class="mgc-stat-label">보상 사용</span></div>
         <span class="mgc-slash">/</span>
         <div class="mgc-stat"><span class="mgc-stat-num">${rLimit}</span><span class="mgc-stat-label">보상 한도</span></div>
         <span class="mgc-slash">→</span>
-        <div class="mgc-stat"><span class="mgc-stat-num" style="color:#059669">${rLeft}</span><span class="mgc-stat-label">남은 횟수</span></div>
+        <div class="mgc-stat"><span class="mgc-stat-num" style="color:var(--p-green-600)">${rLeft}</span><span class="mgc-stat-label">남은 횟수</span></div>
       </div>
     </div>
 
@@ -1110,10 +1110,10 @@ async function _renderMyStats(gameId) {
     const avgScore    = Math.round(data.reduce((s, r) => s + r.score, 0) / totalPlays);
 
     area.innerHTML = `<div class="flex gap-3 justify-center flex-wrap">
-      <div class="rank-my-stat"><span class="rank-my-num" style="color:#d97706">${totalPlays}</span><span class="rank-my-label">총 플레이</span></div>
-      <div class="rank-my-stat"><span class="rank-my-num" style="color:#dc2626">${bestScore}</span><span class="rank-my-label">최고 점수</span></div>
-      <div class="rank-my-stat"><span class="rank-my-num" style="color:#059669">${avgScore}</span><span class="rank-my-label">평균 점수</span></div>
-      <div class="rank-my-stat"><span class="rank-my-num" style="color:#7c3aed">${totalReward}</span><span class="rank-my-label">총 보상 🌰</span></div>
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:var(--p-amber-600)">${totalPlays}</span><span class="rank-my-label">총 플레이</span></div>
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:var(--p-red-600)">${bestScore}</span><span class="rank-my-label">최고 점수</span></div>
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:var(--p-green-600)">${avgScore}</span><span class="rank-my-label">평균 점수</span></div>
+      <div class="rank-my-stat"><span class="rank-my-num" style="color:var(--p-purple-700)">${totalReward}</span><span class="rank-my-label">총 보상 🌰</span></div>
     </div>`;
   } catch(e) { area.innerHTML = '<p class="text-sm text-gray-400">기록 조회 실패</p>'; }
 }
@@ -1226,8 +1226,8 @@ function _renderLogRows(data, nameMap) {
     const timeStr   = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
     const gameName  = MG_DEFAULTS[r.game_id]?.icon || '🎮';
     const rewardStr = r.rewarded
-      ? `<span style="color:#059669">+${r.reward}🌰</span>`
-      : '<span style="color:#9ca3af">넘김</span>';
+      ? `<span style="color:var(--p-green-600)">+${r.reward}🌰</span>`
+      : '<span style="color:var(--text-muted)">넘김</span>';
     return `<div class="mg-log-row">
       <span class="mg-log-game">${gameName}</span>
       <span class="mg-log-user">${nameMap[r.user_id] || '—'}</span>
@@ -1529,7 +1529,7 @@ async function renderWeeklyRewardSettings() {
         const hasItem = !!item.name;
         const label = hasItem ? (item.icon || '🎁') + ' ' + item.name : '비어 있음';
         html += `<div class="wr-box-row">
-            <span class="wr-box-row-label" id="wr_${gameId}_${rank}_item${si}_label" style="cursor:pointer;${hasItem ? '' : 'color:#9ca3af'}" onclick="openWrItemPicker('${gameId}',${rank},${si})">${label}</span>
+            <span class="wr-box-row-label" id="wr_${gameId}_${rank}_item${si}_label" style="cursor:pointer;${hasItem ? '' : 'color:var(--text-muted)'}" onclick="openWrItemPicker('${gameId}',${rank},${si})">${label}</span>
             <input type="hidden" id="wr_${gameId}_${rank}_item${si}_name" value="${(item.name || '').replace(/"/g, '&quot;')}">
             <input type="hidden" id="wr_${gameId}_${rank}_item${si}_icon" value="${(item.icon || '').replace(/"/g, '&quot;')}">
             <input type="hidden" id="wr_${gameId}_${rank}_item${si}_rtype" value="${(item.reward_type || '').replace(/"/g, '&quot;')}">

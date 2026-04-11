@@ -131,25 +131,25 @@ function start2048Game() {
     <style>
       .mg2048-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
       .mg2048-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 2px}
-      .mg2048-title{font-size:1.5rem;font-weight:900;color:#78350f;display:flex;align-items:baseline;gap:8px}
-      .mg2048-badge{font-size:.5rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:3px 8px;border-radius:6px;animation:mg2048-pulse 1.5s ease infinite;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+      .mg2048-title{font-size:1.5rem;font-weight:900;color:var(--text-brand);display:flex;align-items:baseline;gap:8px}
+      .mg2048-badge{font-size:.5rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,#f59e0b,#ef4444);color:var(--bg-surface);padding:3px 8px;border-radius:6px;animation:mg2048-pulse 1.5s ease infinite;box-shadow:0 2px 8px rgba(245,158,11,.3)}
       @keyframes mg2048-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.85;transform:scale(1.04)}}
-      .mg2048-exit-top{width:32px;height:32px;border-radius:50%;border:none;background:rgba(120,53,15,.08);color:#92400e;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+      .mg2048-exit-top{width:32px;height:32px;border-radius:50%;border:none;background:rgba(120,53,15,.08);color:var(--p-amber-700);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
       .mg2048-exit-top:hover{background:rgba(120,53,15,.15)}
       .mg2048-scores{display:flex;gap:6px;margin-bottom:14px}
       .mg2048-sbox{flex:1;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:12px;padding:8px 10px;text-align:center;border:1.5px solid rgba(180,100,0,.1);box-shadow:0 2px 8px rgba(180,100,0,.06)}
-      .mg2048-sbox-label{font-size:.5rem;text-transform:uppercase;letter-spacing:1px;color:#b45309;opacity:.6;font-weight:700}
-      .mg2048-sbox-val{font-size:1.1rem;font-weight:900;color:#d97706;margin-top:2px}
+      .mg2048-sbox-label{font-size:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--p-amber-600);opacity:.6;font-weight:700}
+      .mg2048-sbox-val{font-size:1.1rem;font-weight:900;color:var(--p-amber-600);margin-top:2px}
       .mg2048-sbox.drop{background:linear-gradient(135deg,#fffbeb,#fef9e7);border-color:rgba(251,191,36,.2)}
       .mg2048-sbox.combo{background:linear-gradient(135deg,#faf5ff,#f3e8ff);border-color:rgba(168,85,247,.12)}
-      .mg2048-sbox.combo .mg2048-sbox-label{color:#7c3aed;opacity:.6}
-      .mg2048-sbox.combo .mg2048-sbox-val{color:#7c3aed}
+      .mg2048-sbox.combo .mg2048-sbox-label{color:var(--p-purple-700);opacity:.6}
+      .mg2048-sbox.combo .mg2048-sbox-val{color:var(--p-purple-700)}
       .mg2048-timer-wrap{position:relative;height:8px;background:rgba(180,100,0,.08);border-radius:6px;margin-bottom:14px;overflow:hidden;border:1px solid rgba(180,100,0,.06)}
       .mg2048-timer-bar{height:100%;border-radius:6px;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);transition:width .1s linear}
       .mg2048-timer-bar.danger{background:linear-gradient(90deg,#ef4444,#dc2626);animation:mg2048-tflash .3s ease infinite}
       @keyframes mg2048-tflash{0%,100%{opacity:1}50%{opacity:.5}}
-      .mg2048-timer-text{position:absolute;right:6px;top:-18px;font-size:.72rem;font-weight:800;color:#dc2626;font-variant-numeric:tabular-nums}
-      .mg2048-time-bonus{position:absolute;right:6px;top:-35px;font-size:.78rem;font-weight:800;color:#059669;pointer-events:none;animation:mg2048-floatUp 650ms ease forwards}
+      .mg2048-timer-text{position:absolute;right:6px;top:-18px;font-size:.72rem;font-weight:800;color:var(--p-red-600);font-variant-numeric:tabular-nums}
+      .mg2048-time-bonus{position:absolute;right:6px;top:-35px;font-size:.78rem;font-weight:800;color:var(--p-green-600);pointer-events:none;animation:mg2048-floatUp 650ms ease forwards}
       @keyframes mg2048-floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-20px)}}
       .mg2048-board{width:100%;aspect-ratio:1;background:linear-gradient(145deg,#fef3c7,#fde68a);border-radius:16px;padding:10px;display:grid;grid-template:repeat(4,1fr)/repeat(4,1fr);gap:10px;position:relative;border:2px solid rgba(180,100,0,.12);box-shadow:0 4px 20px rgba(180,100,0,.1),inset 0 2px 0 rgba(255,255,255,.6);touch-action:none;transition:box-shadow .3s}
       .mg2048-board.danger-glow{box-shadow:0 0 24px rgba(239,68,68,.2),0 4px 20px rgba(180,100,0,.1),inset 0 2px 0 rgba(255,255,255,.6)}
@@ -162,26 +162,26 @@ function start2048Game() {
       @keyframes mg2048-spawn{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
       @keyframes mg2048-merge{0%{transform:scale(1)}35%{transform:scale(1.3)}70%{transform:scale(.94)}100%{transform:scale(1)}}
       @keyframes mg2048-bombDrop{0%{transform:scale(1.8) rotate(20deg);opacity:0}50%{transform:scale(.9) rotate(-5deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
-      .mg2048-v2{background:#fff7ed;color:#c2410c;font-weight:800}
+      .mg2048-v2{background:var(--bg-surface)7ed;color:#c2410c;font-weight:800}
       .mg2048-v4{background:#ffedd5;color:#c2410c}
-      .mg2048-v8{background:#f59e0b;color:#fff;box-shadow:0 3px 0 #d97706,0 2px 8px rgba(245,158,11,.2)}
-      .mg2048-v16{background:#f97316;color:#fff;box-shadow:0 3px 0 #ea580c,0 2px 8px rgba(249,115,22,.2)}
-      .mg2048-v32{background:#ef4444;color:#fff;box-shadow:0 3px 0 #dc2626,0 2px 8px rgba(239,68,68,.2)}
-      .mg2048-v64{background:#dc2626;color:#fff;box-shadow:0 3px 0 #b91c1c,0 2px 8px rgba(220,38,38,.25)}
-      .mg2048-v128{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#78350f;box-shadow:0 3px 0 #d97706,0 4px 12px rgba(245,158,11,.3)}
-      .mg2048-v256{background:linear-gradient(135deg,#f59e0b,#ea580c);color:#fff;box-shadow:0 3px 0 #c2410c,0 4px 12px rgba(234,88,12,.3)}
-      .mg2048-v512{background:linear-gradient(135deg,#ea580c,#dc2626);color:#fff;box-shadow:0 3px 0 #b91c1c,0 4px 12px rgba(220,38,38,.3)}
-      .mg2048-v1024{background:linear-gradient(135deg,#dc2626,#9333ea);color:#fff;box-shadow:0 3px 0 #7e22ce,0 4px 14px rgba(147,51,234,.3)}
-      .mg2048-v2048{background:linear-gradient(135deg,#f59e0b,#ef4444,#9333ea);color:#fff;box-shadow:0 3px 0 #7e22ce,0 0 20px rgba(245,158,11,.3),0 0 40px rgba(239,68,68,.15);animation:mg2048-glow 2s ease infinite}
+      .mg2048-v8{background:var(--p-amber-500);color:var(--bg-surface);box-shadow:0 3px 0 #d97706,0 2px 8px rgba(245,158,11,.2)}
+      .mg2048-v16{background:var(--p-orange-500);color:var(--bg-surface);box-shadow:0 3px 0 #ea580c,0 2px 8px rgba(249,115,22,.2)}
+      .mg2048-v32{background:var(--p-red-500);color:var(--bg-surface);box-shadow:0 3px 0 #dc2626,0 2px 8px rgba(239,68,68,.2)}
+      .mg2048-v64{background:var(--p-red-600);color:var(--bg-surface);box-shadow:0 3px 0 #b91c1c,0 2px 8px rgba(220,38,38,.25)}
+      .mg2048-v128{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:var(--text-brand);box-shadow:0 3px 0 #d97706,0 4px 12px rgba(245,158,11,.3)}
+      .mg2048-v256{background:linear-gradient(135deg,#f59e0b,#ea580c);color:var(--bg-surface);box-shadow:0 3px 0 #c2410c,0 4px 12px rgba(234,88,12,.3)}
+      .mg2048-v512{background:linear-gradient(135deg,#ea580c,#dc2626);color:var(--bg-surface);box-shadow:0 3px 0 #b91c1c,0 4px 12px rgba(220,38,38,.3)}
+      .mg2048-v1024{background:linear-gradient(135deg,#dc2626,#9333ea);color:var(--bg-surface);box-shadow:0 3px 0 #7e22ce,0 4px 14px rgba(147,51,234,.3)}
+      .mg2048-v2048{background:linear-gradient(135deg,#f59e0b,#ef4444,#9333ea);color:var(--bg-surface);box-shadow:0 3px 0 #7e22ce,0 0 20px rgba(245,158,11,.3),0 0 40px rgba(239,68,68,.15);animation:mg2048-glow 2s ease infinite}
       @keyframes mg2048-glow{0%,100%{box-shadow:0 3px 0 #7e22ce,0 0 20px rgba(245,158,11,.3)}50%{box-shadow:0 3px 0 #7e22ce,0 0 28px rgba(245,158,11,.4),0 0 50px rgba(239,68,68,.2)}}
-      .mg2048-vsuper{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;box-shadow:0 3px 0 #7e22ce,0 0 16px rgba(139,92,246,.3)}
+      .mg2048-vsuper{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:var(--bg-surface);box-shadow:0 3px 0 #7e22ce,0 0 16px rgba(139,92,246,.3)}
       .mg2048-bomb{background:radial-gradient(circle at 40% 35%,#6b7280,#374151);color:#fca5a5;border:2px solid rgba(252,165,165,.3);box-shadow:0 3px 0 #1f2937,0 0 12px rgba(239,68,68,.15);font-size:1.4rem!important}
       .mg2048-particle{position:absolute;border-radius:50%;pointer-events:none;z-index:5;animation:mg2048-pfly var(--dur,450ms) ease-out forwards}
       @keyframes mg2048-pfly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)}}
-      .mg2048-float{position:absolute;font-weight:900;color:#dc2626;pointer-events:none;z-index:20;font-size:.95rem;text-shadow:0 1px 2px rgba(0,0,0,.1);animation:mg2048-floatUp 600ms ease forwards}
-      .mg2048-acorn-drop{position:absolute;font-weight:900;color:#d97706;pointer-events:none;z-index:21;font-size:.9rem;text-shadow:0 1px 4px rgba(217,119,6,.3);animation:mg2048-acornDrop 800ms ease forwards}
+      .mg2048-float{position:absolute;font-weight:900;color:var(--p-red-600);pointer-events:none;z-index:20;font-size:.95rem;text-shadow:0 1px 2px rgba(0,0,0,.1);animation:mg2048-floatUp 600ms ease forwards}
+      .mg2048-acorn-drop{position:absolute;font-weight:900;color:var(--p-amber-600);pointer-events:none;z-index:21;font-size:.9rem;text-shadow:0 1px 4px rgba(217,119,6,.3);animation:mg2048-acornDrop 800ms ease forwards}
       @keyframes mg2048-acornDrop{0%{opacity:0;transform:scale(.5) translateY(5px)}20%{opacity:1;transform:scale(1.2) translateY(-8px)}100%{opacity:0;transform:scale(1) translateY(-28px)}}
-      .mg2048-combo{position:absolute;font-weight:900;color:#b45309;pointer-events:none;z-index:20;font-size:1.3rem;text-shadow:0 2px 8px rgba(180,83,9,.3);animation:mg2048-comboAnim 800ms ease forwards}
+      .mg2048-combo{position:absolute;font-weight:900;color:var(--p-amber-600);pointer-events:none;z-index:20;font-size:1.3rem;text-shadow:0 2px 8px rgba(180,83,9,.3);animation:mg2048-comboAnim 800ms ease forwards}
       @keyframes mg2048-comboAnim{0%{opacity:0;transform:scale(.5) translateY(10px)}30%{opacity:1;transform:scale(1.2) translateY(-5px)}100%{opacity:0;transform:scale(1) translateY(-35px)}}
       .mg2048-defuse{position:absolute;font-weight:900;color:#0891b2;pointer-events:none;z-index:20;font-size:1.15rem;text-shadow:0 2px 8px rgba(8,145,178,.3);animation:mg2048-comboAnim 900ms ease forwards}
       .mg2048-ring{position:absolute;border-radius:50%;border:3px solid rgba(245,158,11,.6);pointer-events:none;z-index:6;animation:mg2048-ring 500ms ease-out forwards}
@@ -193,9 +193,9 @@ function start2048Game() {
       .mg2048-overlay{position:absolute;inset:0;background:rgba(254,243,199,.94);backdrop-filter:blur(8px);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .3s}
       [data-theme="dark"] .mg2048-overlay{background:rgba(30,30,40,.92)}
       .mg2048-overlay.hidden{opacity:0;pointer-events:none}
-      .mg2048-overlay h3{font-size:1.4rem;font-weight:900;margin-bottom:6px;color:#78350f}
-      .mg2048-overlay .rules{font-size:.75rem;color:#92400e;opacity:.7;text-align:center;line-height:1.8;margin-bottom:16px;padding:0 18px}
-      .mg2048-overlay .rules b{color:#dc2626;font-weight:800;opacity:1}
+      .mg2048-overlay h3{font-size:1.4rem;font-weight:900;margin-bottom:6px;color:var(--text-brand)}
+      .mg2048-overlay .rules{font-size:.75rem;color:var(--p-amber-700);opacity:.7;text-align:center;line-height:1.8;margin-bottom:16px;padding:0 18px}
+      .mg2048-overlay .rules b{color:var(--p-red-600);font-weight:800;opacity:1}
       .mg2048-overlay .rules .cyan{color:#0891b2;font-weight:800;opacity:1}
       [data-theme="dark"] .mg2048-overlay h3{color:#e8e8f0}
       [data-theme="dark"] .mg2048-overlay .rules{color:#ccc}
@@ -210,7 +210,7 @@ function start2048Game() {
         <div class="mg2048-sbox"><div class="mg2048-sbox-label">Score</div><div class="mg2048-sbox-val" id="mg2048Score">0</div></div>
         <div class="mg2048-sbox"><div class="mg2048-sbox-label">Best</div><div class="mg2048-sbox-val" id="mg2048Best">${_2048_getBest()}</div></div>
         <div class="mg2048-sbox drop"><div class="mg2048-sbox-label">Drop</div><div class="mg2048-sbox-val" id="mg2048AcornCount">🌰 0</div></div>
-        ${itemDropChance > 0 ? `<div class="mg2048-sbox" style="background:linear-gradient(135deg,#ede9fe,#f3e8ff);border-color:rgba(139,92,246,.2)"><div class="mg2048-sbox-label">Item</div><div class="mg2048-sbox-val" id="mg2048ItemCount">🎫 0</div></div>` : ''}
+        ${itemDropChance > 0 ? `<div class="mg2048-sbox" style="background:var(--bg-purple-subtle,#ede9fe);border-color:rgba(139,92,246,.2)"><div class="mg2048-sbox-label">Item</div><div class="mg2048-sbox-val" id="mg2048ItemCount">🎫 0</div></div>` : ''}
         <div class="mg2048-sbox combo"><div class="mg2048-sbox-label">Combo</div><div class="mg2048-sbox-val" id="mg2048ComboCount">-</div></div>
       </div>
       <div class="mg2048-timer-wrap" id="mg2048TimerWrap">
@@ -565,28 +565,28 @@ function _2048_endGame(title, msg) {
     <div class="catch-result-screen">
       <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
         <div style="font-size:4rem;margin-bottom:8px">${title.includes('OVER') ? '💀' : '⏰'}</div>
-        <h2 class="font-black text-xl mb-2" style="color:#78350f">${title}</h2>
+        <h2 class="font-black text-xl mb-2" style="color:var(--text-brand)">${title}</h2>
         <p class="text-sm text-gray-400 font-semibold mb-4">${msg}</p>
         <div class="catch-result-stats">
-          <div class="catch-result-stat"><span class="catch-result-num" style="color:#d97706">${score}</span><span class="catch-result-label">최종 점수</span></div>
-          <div class="catch-result-stat"><span class="catch-result-num" style="color:#059669">${Math.max(score, _2048_getBest())}</span><span class="catch-result-label">최고 기록</span></div>
-          <div class="catch-result-stat"><span class="catch-result-num" style="color:#b45309">${reward}</span><span class="catch-result-label">🌰 획득</span></div>
-          ${itemReward > 0 ? `<div class="catch-result-stat"><span class="catch-result-num" style="color:#7c3aed">${itemReward}</span><span class="catch-result-label">🎫 티켓</span></div>` : ''}
+          <div class="catch-result-stat"><span class="catch-result-num" style="color:var(--p-amber-600)">${score}</span><span class="catch-result-label">최종 점수</span></div>
+          <div class="catch-result-stat"><span class="catch-result-num" style="color:var(--p-green-600)">${Math.max(score, _2048_getBest())}</span><span class="catch-result-label">최고 기록</span></div>
+          <div class="catch-result-stat"><span class="catch-result-num" style="color:var(--p-amber-600)">${reward}</span><span class="catch-result-label">🌰 획득</span></div>
+          ${itemReward > 0 ? `<div class="catch-result-stat"><span class="catch-result-num" style="color:var(--p-purple-700)">${itemReward}</span><span class="catch-result-label">🎫 티켓</span></div>` : ''}
         </div>
         ${reward > 0 ? `
         <div class="catch-reward-box">
           <span style="font-size:1.8rem">🌰</span>
           <div>
-            <p class="font-black" style="color:#78350f;font-size:18px">${reward} 도토리 획득!</p>
-            <p class="text-xs" style="color:#b45309;font-weight:700">블록 합칠 때마다 확률적으로 드롭</p>
+            <p class="font-black" style="color:var(--text-brand);font-size:18px">${reward} 도토리 획득!</p>
+            <p class="text-xs" style="color:var(--p-amber-600);font-weight:700">블록 합칠 때마다 확률적으로 드롭</p>
           </div>
         </div>` : ''}
         ${itemReward > 0 ? `
         <div class="catch-reward-box" style="border-color:rgba(139,92,246,.3)">
           <span style="font-size:1.8rem">🎫</span>
           <div>
-            <p class="font-black" style="color:#5b21b6;font-size:18px">${itemReward} 뽑기 티켓 획득!</p>
-            <p class="text-xs" style="color:#7c3aed;font-weight:700">블록 합치기에서 드롭!</p>
+            <p class="font-black" style="color:var(--p-purple-700);font-size:18px">${itemReward} 뽑기 티켓 획득!</p>
+            <p class="text-xs" style="color:var(--p-purple-700);font-weight:700">블록 합치기에서 드롭!</p>
           </div>
         </div>` : ''}
         <div class="mt-4">
@@ -632,7 +632,7 @@ async function _2048_finish(score, reward, itemReward) {
     <div class="catch-result-screen">
       <div class="clay-card p-6 text-center" style="max-width:360px;margin:0 auto">
         <div style="font-size:3rem;margin-bottom:8px">${resultIcon}</div>
-        <h2 class="font-black text-lg mb-2" style="color:#78350f">${resultText}</h2>
+        <h2 class="font-black text-lg mb-2" style="color:var(--text-brand)">${resultText}</h2>
         <div class="flex gap-2 mt-4">
           <button class="btn btn-gray flex-1 py-3" onclick="exitMinigame()">돌아가기</button>
           <button class="btn btn-primary flex-1 py-3" onclick="startMinigame('2048')">다시하기</button>

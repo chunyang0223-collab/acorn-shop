@@ -217,7 +217,7 @@ async function renderBossRaid() {
       <div class="text-5xl mb-3">🐉</div>
       <h2 class="text-xl font-black text-gray-800 mb-1">협동 보스레이드</h2>
       <p class="text-sm text-gray-400 font-semibold mb-1">친구와 함께 강력한 보스에 도전하세요!</p>
-      <p class="text-xs font-bold mb-4" style="color:${remaining > 0 ? '#22c55e' : '#ef4444'}">
+      <p class="text-xs font-bold mb-4 ${remaining > 0 ? 'br-status-ok' : 'br-status-err'}">
         이번 주 남은 횟수: <span class="text-base">${_isAdminUser ? '∞' : remaining}</span> / ${_brConfig.weekly_limit}${_isAdminUser ? ' (관리자 무제한)' : ''}
       </p>
       <button class="btn btn-primary px-8 py-3 text-base" onclick="_brCreateRoom()" ${remaining <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
@@ -225,11 +225,11 @@ async function renderBossRaid() {
       </button>
       ${myProfile?.is_admin ? `
         <div style="margin-top:12px;padding-top:12px;border-top:1px dashed rgba(128,128,128,0.2)">
-          <p style="font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:8px">🤖 관리자 테스트 (봇과 함께)</p>
+          <p style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px">🤖 관리자 테스트 (봇과 함께)</p>
           <div style="display:flex;gap:6px;justify-content:center">
             ${_brBotPresets.map((bp, i) => `
-              <button onclick="_brCreateBotRoom(${i})" style="padding:6px 12px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6">
-                ${bp.emoji} ${bp.label}<br><span style="font-size:9px;color:#9ca3af">${bp.desc}</span>
+              <button onclick="_brCreateBotRoom(${i})" style="padding:6px 12px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:var(--p-purple-500)">
+                ${bp.emoji} ${bp.label}<br><span style="font-size:9px;color:var(--text-muted)">${bp.desc}</span>
               </button>
             `).join('')}
           </div>
@@ -250,7 +250,7 @@ async function renderBossRaid() {
                   <p class="text-sm font-black text-gray-800">${_escHtml(host.display_name || '???')}</p>
                   <p class="text-xs text-gray-400">대기 중...</p>
                 </div>
-                <span class="text-xs font-bold px-3 py-1 rounded-lg" style="background:rgba(34,197,94,0.1);color:#22c55e">참가</span>
+                <span class="text-xs font-bold px-3 py-1 rounded-lg" style="background:rgba(34,197,94,0.1);color:var(--p-green-500)">참가</span>
               </div>`;
           }).join('')}
         </div>
@@ -504,7 +504,7 @@ async function _brRenderLobby(container, raid) {
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-black text-gray-800">🐉 보스레이드 로비</h2>
         ${raid.status === 'waiting' || (raid.status === 'selecting' && !myReady) ? `
-          <button class="text-xs font-bold px-3 py-1 rounded-lg" style="background:rgba(239,68,68,0.1);color:#ef4444" onclick="_brLeaveRoom()">나가기</button>
+          <button class="text-xs font-bold px-3 py-1 rounded-lg" style="background:rgba(239,68,68,0.1);color:var(--p-red-500)" onclick="_brLeaveRoom()">나가기</button>
         ` : ''}
       </div>
 
@@ -548,9 +548,9 @@ async function _brRenderLobby(container, raid) {
                 '<img src="images/squirrels/' + (sq.sprite || 'sq_acorn') + '.png" class="br-sq-img" onerror="this.outerHTML=\'<div class=\\\'text-2xl\\\'>🐿️</div>\'">' +
                 '<p class="text-xs font-black mt-1" style="color:' + gs.color + '">' + _escHtml(sq.name) + '</p>' +
                 '<div style="display:flex;gap:3px;justify-content:center;margin-top:2px;flex-wrap:wrap">' +
-                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:#ef4444;color:#fff;padding:1px 3px;border-radius:3px;font-weight:700">HP</span><span style="color:#9ca3af">' + (sq.stats?.hp || 0) + '</span></span>' +
-                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:#f59e0b;color:#fff;padding:1px 3px;border-radius:3px;font-weight:700">공</span><span style="color:#9ca3af">' + (sq.stats?.atk || 0) + '</span></span>' +
-                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:#3b82f6;color:#fff;padding:1px 3px;border-radius:3px;font-weight:700">방</span><span style="color:#9ca3af">' + (sq.stats?.def || 0) + '</span></span>' +
+                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:var(--p-red-500);color:var(--bg-surface);padding:1px 3px;border-radius:3px;font-weight:700">HP</span><span style="color:var(--text-muted)">' + (sq.stats?.hp || 0) + '</span></span>' +
+                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:var(--p-amber-500);color:var(--bg-surface);padding:1px 3px;border-radius:3px;font-weight:700">공</span><span style="color:var(--text-muted)">' + (sq.stats?.atk || 0) + '</span></span>' +
+                  '<span style="font-size:10px;line-height:1;display:inline-flex;align-items:center;gap:2px"><span style="background:var(--p-blue-500);color:var(--bg-surface);padding:1px 3px;border-radius:3px;font-weight:700">방</span><span style="color:var(--text-muted)">' + (sq.stats?.def || 0) + '</span></span>' +
                 '</div>' +
               '</div>';
             } catch(e) {
@@ -933,7 +933,7 @@ function _brRenderBattle(container, raid) {
       <div class="br-party-grid">
         ${party.map((sq, i) => `
           <div class="br-pc-card" id="brPc${i}">
-            <div class="br-pc-owner" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">${_escHtml(sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'))}</div>
+            <div class="br-pc-owner ${sq.owner === 'host' ? 'br-owner-host' : 'br-owner-guest'}">${_escHtml(sq.ownerName || (sq.owner === 'host' ? '호스트' : '게스트'))}</div>
             <div class="br-pc-sprite-wrap">
               <img src="images/squirrels/${sq.sprite}.png" class="br-pc-img" onerror="this.outerHTML='<div style=\\'font-size:22px\\'>🐿️</div>'">
               <div class="br-action-badge" id="brBadge${i}"></div>
@@ -956,7 +956,7 @@ function _brRenderBattle(container, raid) {
         ${party.map(sq => `
           <div class="br-dmg-row" id="brDmgRow_${sq.id}">
             <div class="br-dmg-label">
-              <span class="br-dmg-owner" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">${_escHtml(sq.ownerName || '')}</span>
+              <span class="br-dmg-owner ${sq.owner === 'host' ? 'br-owner-host' : 'br-owner-guest'}">${_escHtml(sq.ownerName || '')}</span>
               <span class="br-dmg-name" style="color:${sq.gradeColor || '#e2e8f0'}">${sq.name}</span>
             </div>
             <div class="br-dmg-bar-track" id="brDmgBar_${sq.id}" title="">
@@ -965,7 +965,7 @@ function _brRenderBattle(container, raid) {
               <div class="br-dmg-seg br-dmg-seg-ulti" id="brDmgSeg_ulti_${sq.id}" style="width:0%"></div>
               <span class="br-dmg-val" id="brDmgVal_${sq.id}" style="display:none">0</span>
             </div>
-            <div class="br-dmg-pct" id="brDmgPct_${sq.id}" style="color:${sq.owner === 'host' ? '#86efac' : '#93c5fd'}">0%</div>
+            <div class="br-dmg-pct ${sq.owner === 'host' ? 'br-owner-host' : 'br-owner-guest'}" id="brDmgPct_${sq.id}">0%</div>
           </div>
         `).join('')}
       </div>
@@ -1015,7 +1015,7 @@ function _brStartReplay(log, partyInit) {
           partyGrid.innerHTML = `
             <div class="br-end-card">
               <div style="font-size:3rem;margin-bottom:4px">${isVictory ? '🎉' : '💀'}</div>
-              <p style="font-size:22px;font-weight:900;color:${isVictory ? '#4ade80' : '#f87171'};margin-bottom:2px">${isVictory ? '보스 격파!' : '패배...'}</p>
+              <p style="font-size:22px;font-weight:900;margin-bottom:2px" class="${isVictory ? 'br-status-ok' : 'br-status-err'}">${isVictory ? '보스 격파!' : '패배...'}</p>
               <div style="height:10px"></div>
               <button class="btn btn-primary px-8 py-3 text-sm font-black" onclick="_brGoToResult()" style="animation:br-badge-pop .4s ease">${isVictory ? '보상 받기' : '결과 확인'}</button>
             </div>
@@ -1351,7 +1351,7 @@ async function _brRenderResult(container, raid) {
     container.innerHTML = `
       <div class="clay-card p-6 text-center">
         <div class="text-5xl mb-3">${isVictory ? '🎉' : '💀'}</div>
-        <h2 class="text-xl font-black mb-2" style="color:${isVictory ? '#22c55e' : '#ef4444'}">${isVictory ? '보스 격파!' : '패배...'}</h2>
+        <h2 class="text-xl font-black mb-2 ${isVictory ? 'br-status-ok' : 'br-status-err'}">${isVictory ? '보스 격파!' : '패배...'}</h2>
         <p class="text-sm text-gray-400 font-semibold mb-4">보상을 이미 수령했어요.</p>
         <button class="btn btn-primary px-8 py-3" onclick="_brFinish()">돌아가기</button>
       </div>`;
@@ -1371,7 +1371,7 @@ async function _brRenderResult(container, raid) {
       container.innerHTML = `
         <div class="clay-card p-6 text-center">
           <div class="text-5xl mb-3">💀</div>
-          <h2 class="text-xl font-black mb-2" style="color:#ef4444">패배...</h2>
+          <h2 class="text-xl font-black mb-2" style="color:var(--p-red-500)">패배...</h2>
           <p class="text-sm text-gray-400 font-semibold mb-2">보스에게 패배했어요. 다음에 다시 도전하세요!</p>
           <button class="btn btn-primary px-8 py-3 mt-4" onclick="_brFinish()">돌아가기</button>
         </div>`;
@@ -1439,7 +1439,7 @@ async function _brRenderResult(container, raid) {
               <div class="br-card-back">🎀</div>
               <div class="br-card-front br-grade-null">
                 ${c.item ? `<p style="font-size:12px;font-weight:700;margin:2px 0">${c.item.icon} ${c.item.name}</p>` : ''}
-                <p style="font-size:14px;font-weight:800;color:#f59e0b;margin:2px 0">🌰 ${c.acorns}</p>
+                <p style="font-size:14px;font-weight:800;color:var(--p-amber-500);margin:2px 0">🌰 ${c.acorns}</p>
               </div>
             </div>
           `).join('')}
@@ -1562,7 +1562,7 @@ async function _brSelectCard(idx) {
     resultEl.classList.remove('hidden');
     const gradeText = chosen.grade ? `${chosen.grade}등급 획득!` : '위로 보상!';
     resultEl.innerHTML = `
-      <p class="text-lg font-black mb-2" style="color:#fbbf24">${gradeText}</p>
+      <p class="text-lg font-black mb-2" style="color:var(--p-amber-400)">${gradeText}</p>
       <p class="text-sm font-bold">${chosen.item ? chosen.item.icon + ' ' + chosen.item.name + ' + ' : ''}🌰 ${chosen.acorns}개</p>
       <button class="btn btn-primary px-10 py-4 mt-4 text-base font-black" onclick="_brClaimReward(${idx})">보상 수령</button>
     `;
@@ -1732,7 +1732,7 @@ function _brRenderItemChips(wrapId, selectedItems) {
     if (!seen[p.name]) { seen[p.name] = true; unique.push(p); }
   });
   if (unique.length === 0) {
-    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;padding:6px">등록된 상품이 없어요</div>';
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--text-muted);padding:6px">등록된 상품이 없어요</div>';
     return;
   }
   var selectedNames = new Set((selectedItems || []).map(function(s) {
@@ -1767,7 +1767,7 @@ function _brRenderBossList() {
   if (!wrap) return;
   var bosses = _brConfig.bosses || [];
   if (bosses.length === 0) {
-    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;padding:8px;text-align:center">등록된 보스가 없어요</div>';
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--text-muted);padding:8px;text-align:center">등록된 보스가 없어요</div>';
     return;
   }
   wrap.innerHTML = bosses.map(function(b, i) {
@@ -1775,8 +1775,8 @@ function _brRenderBossList() {
     var preview = _brCalcStats(b.lvMin, true);
     var previewMax = _brCalcStats(b.lvMax, true);
     return '<div style="display:flex;align-items:center;gap:6px;padding:8px;border-radius:10px;background:var(--bg-surface);border:1px solid var(--border-default,rgba(0,0,0,0.06));margin-bottom:4px;opacity:' + (active ? '1' : '0.45') + '">' +
-      '<div onclick="_brAdmToggleBoss(' + i + ')" style="width:22px;height:22px;border-radius:6px;border:2px solid ' + (active ? '#22c55e' : 'var(--text-muted)') + ';background:' + (active ? '#22c55e' : 'transparent') + ';cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
-        (active ? '<span style="color:#fff;font-size:12px;line-height:1">✓</span>' : '') +
+      '<div onclick="_brAdmToggleBoss(' + i + ')" class="' + (active ? 'br-check-active' : 'br-check-inactive') + '">' +
+        (active ? '<span style="color:var(--bg-surface);font-size:12px;line-height:1">✓</span>' : '') +
       '</div>' +
       '<span style="font-size:18px;flex-shrink:0">' + b.emoji + '</span>' +
       '<div style="flex:1;min-width:0">' +
@@ -1784,7 +1784,7 @@ function _brRenderBossList() {
         '<div style="font-size:10px;color:var(--text-muted)">Lv.' + b.lvMin + '~' + b.lvMax +
           ' | HP ' + preview.hp + '~' + previewMax.hp +
           ' 공 ' + preview.atk + '~' + previewMax.atk +
-          (b.reward_weights ? ' | <span style="color:#f59e0b;font-weight:700">★</span>' : '') + '</div>' +
+          (b.reward_weights ? ' | <span style="color:var(--p-amber-500);font-weight:700">★</span>' : '') + '</div>' +
       '</div>' +
       '<button onclick="_brAdmEditBoss(' + i + ')" class="br-btn-add" style="width:22px;height:22px;padding:0;font-size:10px">✎</button>' +
     '</div>';
@@ -1805,7 +1805,7 @@ function _brAdmEditBoss(idx) {
   if (!editArea) return;
   editArea.innerHTML =
     '<div class="br-card" style="border-color:rgba(59,130,246,0.2)">' +
-      '<p style="font-size:11px;font-weight:900;color:#3b82f6;margin-bottom:6px">보스 편집 #' + (idx + 1) + '</p>' +
+      '<p style="font-size:11px;font-weight:900;color:var(--p-blue-500);margin-bottom:6px">보스 편집 #' + (idx + 1) + '</p>' +
       '<div style="display:grid;grid-template-columns:40px 1fr;gap:6px;margin-bottom:6px">' +
         '<input type="text" id="brBE_emoji" value="' + b.emoji + '" class="br-input" style="text-align:center;font-size:16px;padding:4px">' +
         '<input type="text" id="brBE_name" value="' + b.name + '" class="br-input" style="text-align:left;padding:4px 8px">' +
@@ -1823,7 +1823,7 @@ function _brAdmEditBoss(idx) {
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:6px">' +
-        '<button onclick="_brAdmSaveBossEdit(' + idx + ')" style="flex:1;padding:6px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-size:11px;font-weight:700;cursor:pointer">적용</button>' +
+        '<button onclick="_brAdmSaveBossEdit(' + idx + ')" style="flex:1;padding:6px;border-radius:8px;border:none;background:var(--p-blue-500);color:var(--bg-surface);font-size:11px;font-weight:700;cursor:pointer">적용</button>' +
         '<button onclick="document.getElementById(\'brAdmBossEdit\').innerHTML=\'\'" style="flex:1;padding:6px;border-radius:8px;border:none;background:var(--bg-surface);color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border-default,rgba(0,0,0,0.06))">취소</button>' +
       '</div>' +
     '</div>';
@@ -1872,14 +1872,14 @@ async function brAdminRenderBotTest() {
       '<div class="text-4xl mb-2">🤖</div>' +
       '<h2 class="text-lg font-black text-gray-800 mb-1">레이드 봇전 테스트</h2>' +
       '<p class="text-xs text-gray-400 font-semibold mb-3">봇 다람쥐와 함께 레이드를 테스트합니다</p>' +
-      '<p class="text-xs font-bold mb-4" style="color:#22c55e">' +
+      '<p class="text-xs font-bold mb-4" style="color:var(--p-green-500)">' +
         '이번 주 남은 횟수: <span class="text-base">∞</span> / ' + _brConfig.weekly_limit + ' (관리자 무제한)' +
       '</p>' +
       (!_brConfig.enabled ? '<p class="text-xs text-red-400 font-bold mb-3">⚠️ 레이드가 현재 비활성 상태입니다 (봇전은 가능)</p>' : '') +
       '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
         _brBotPresets.map(function(bp, i) {
-          return '<button onclick="_brCreateBotRoom(' + i + ')" class="btn" style="padding:10px 18px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:#8b5cf6;border:1px solid rgba(139,92,246,0.15)">' +
-            bp.emoji + ' ' + bp.label + '<br><span style="font-size:10px;color:#9ca3af">' + bp.desc + '</span>' +
+          return '<button onclick="_brCreateBotRoom(' + i + ')" class="btn" style="padding:10px 18px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.1);color:var(--p-purple-500);border:1px solid rgba(139,92,246,0.15)">' +
+            bp.emoji + ' ' + bp.label + '<br><span style="font-size:10px;color:var(--text-muted)">' + bp.desc + '</span>' +
           '</button>';
         }).join('') +
       '</div>' +
@@ -2073,7 +2073,7 @@ async function brAdminOpenSettings() {
 
       <!-- 횟수 리셋 -->
       <div class="br-card-danger">
-        <p style="font-size:11px;font-weight:900;color:#ef4444;margin-bottom:6px">🔄 주간 참여횟수 리셋</p>
+        <p style="font-size:11px;font-weight:900;color:var(--p-red-500);margin-bottom:6px">🔄 주간 참여횟수 리셋</p>
         <div style="display:flex;gap:6px">
           <button onclick="_brAdmResetWeeklyAll()" class="br-btn-danger">전체 리셋</button>
           <button onclick="_brAdmResetWeeklySelf()" class="br-btn-danger-outline">내 횟수만 리셋</button>
