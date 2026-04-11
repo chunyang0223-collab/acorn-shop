@@ -2050,8 +2050,6 @@ body {
 /* ── 글라스 카드 ── */
 .clay-card {
   background: var(--card-bg);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   border-radius: 24px;
   border: 1.5px solid var(--card-border);
   box-shadow: var(--shadow-card);
