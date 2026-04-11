@@ -687,6 +687,21 @@
 
   /* === 분양 카드 === */
   --adopt-card-bg: linear-gradient(135deg,#fffbeb,#fef3c7);
+
+  /* === 재활용센터 토큰 (라이트) === */
+  --recycle-hero-base: #fff;
+  --recycle-hero-layer: linear-gradient(135deg, rgba(209,250,229,0.9), rgba(167,243,208,0.7));
+  --recycle-hero-border: #b6e8d0;
+  --recycle-item-card-base: #fff;
+  --recycle-item-card-layer: rgba(240,253,244,0.8);
+  --recycle-item-card-border: #c8edd8;
+  --recycle-item-card-selected-layer: rgba(209,250,229,0.95);
+  --recycle-item-card-selected-border: #30b880;
+  --recycle-inv-card-base: #fff;
+  --recycle-inv-card-layer: rgba(240,253,244,0.7);
+  --recycle-inv-card-border: #c8edda;
+  --recycle-inv-card-selected-layer: rgba(209,250,229,0.95);
+  --recycle-inv-card-selected-border: #28a872;
 }
 
 /* ── 디자인 토큰 (Design Tokens - Dark Mode) ── */
@@ -1860,12 +1875,19 @@
   --rc-scope-btn-text: #fb923c;
   --rc-scope-btn-active-bg: linear-gradient(135deg,#7c3aed,#4f46e5);
   --rc-scope-btn-active-text: #fff;
-  --recycle-hero-bg: linear-gradient(135deg,#0a2e20,#0d3828);
-  --recycle-item-card-bg: #0e2a1e;
+  --recycle-hero-base: #0a1e16;
+  --recycle-hero-layer: linear-gradient(135deg, rgba(16,80,50,0.7), rgba(20,100,60,0.5));
+  --recycle-hero-border: #1a4a35;
+  --recycle-item-card-base: #0e2a1e;
+  --recycle-item-card-layer: rgba(20,80,50,0.4);
   --recycle-item-card-border: #1a4a35;
-  --recycle-item-card-selected-bg: #153a28;
-  --recycle-inv-card-bg: #0c2518;
-  --recycle-inv-card-selected-bg: #153a28;
+  --recycle-item-card-selected-layer: rgba(30,120,70,0.5);
+  --recycle-item-card-selected-border: #2a7a50;
+  --recycle-inv-card-base: #0c2518;
+  --recycle-inv-card-layer: rgba(20,80,50,0.35);
+  --recycle-inv-card-border: #1a4a35;
+  --recycle-inv-card-selected-layer: rgba(30,120,70,0.5);
+  --recycle-inv-card-selected-border: #2a7a50;
 
   /* === 이벤트 요일 버튼 다크 토큰 === */
   --evt-day-btn-bg: #1e2838;
@@ -2492,16 +2514,16 @@ input[type="checkbox"]:active,
 .rt-coupon { background: rgba(251,191,36,0.18); color: #92400e; border-radius: 8px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
 [data-theme="dark"] .rt-coupon { background: var(--rt-coupon-bg); color: var(--rt-coupon-text); }
 /* ── 재활용센터 ── */
-/* 흰색 기준층 위에 rgba 레이어를 얹어 배경 비침 방지 */
+/* 구조: 불투명 기준층(background) + ::before rgba 레이어. 라이트/다크 공통. */
 .recycle-hero {
-  background: #fff;
-  border: 2px solid #b6e8d0;
+  background: var(--recycle-hero-base);
+  border: 2px solid var(--recycle-hero-border);
   position: relative;
 }
 .recycle-hero::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(209,250,229,0.9), rgba(167,243,208,0.7));
+  background: var(--recycle-hero-layer);
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
@@ -2515,8 +2537,8 @@ input[type="checkbox"]:active,
 .recycle-item-card {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 16px; border-radius: 18px;
-  background: #fff;
-  border: 2px solid #c8edd8;
+  background: var(--recycle-item-card-base);
+  border: 2px solid var(--recycle-item-card-border);
   cursor: pointer; transition: all .18s;
   user-select: none; -webkit-user-select: none;
   position: relative; overflow: hidden;
@@ -2524,7 +2546,7 @@ input[type="checkbox"]:active,
 .recycle-item-card::before {
   content: '';
   position: absolute; inset: 0;
-  background: rgba(240,253,244,0.8);
+  background: var(--recycle-item-card-layer);
   border-radius: inherit;
   pointer-events: none;
   transition: background .18s;
@@ -2532,18 +2554,17 @@ input[type="checkbox"]:active,
 .recycle-item-card > * { position: relative; z-index: 1; }
 .recycle-item-card:active { transform: scale(0.97); }
 .recycle-item-card.selected {
-  background: #fff;
-  border-color: #30b880;
+  border-color: var(--recycle-item-card-selected-border);
   box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 .recycle-item-card.selected::before {
-  background: rgba(209,250,229,0.95);
+  background: var(--recycle-item-card-selected-layer);
 }
 .recycle-inv-card {
   display: flex; flex-direction: column; align-items: center;
   gap: 6px; padding: 12px 8px; border-radius: 18px;
-  border: 2.5px solid #c8edda;
-  background: #fff;
+  background: var(--recycle-inv-card-base);
+  border: 2.5px solid var(--recycle-inv-card-border);
   cursor: pointer; transition: all .18s;
   user-select: none; -webkit-user-select: none;
   position: relative; overflow: hidden;
@@ -2551,7 +2572,7 @@ input[type="checkbox"]:active,
 .recycle-inv-card::before {
   content: '';
   position: absolute; inset: 0;
-  background: rgba(240,253,244,0.7);
+  background: var(--recycle-inv-card-layer);
   border-radius: inherit;
   pointer-events: none;
   transition: background .18s;
@@ -2559,12 +2580,11 @@ input[type="checkbox"]:active,
 .recycle-inv-card > * { position: relative; z-index: 1; }
 .recycle-inv-card:active { transform: scale(0.95); }
 .recycle-inv-card.selected {
-  border-color: #28a872;
-  background: #fff;
+  border-color: var(--recycle-inv-card-selected-border);
   box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
 }
 .recycle-inv-card.selected::before {
-  background: rgba(209,250,229,0.95);
+  background: var(--recycle-inv-card-selected-layer);
 }
 .recycle-inv-card .check-badge {
   position: absolute; top: -6px; right: -6px;
@@ -2596,22 +2616,11 @@ input[type="checkbox"]:active,
 }
 .recycle-sell-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.35); }
 .recycle-badge-active { background: var(--green-100); color: var(--green-800); font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
-.rc-scope-btn { background: #fff; border: 2px solid #e0d8f0; color: #9c87b8; cursor: pointer; transition: all .15s; font-family: 'Jua',sans-serif; position: relative; overflow: hidden; }
-.rc-scope-btn::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.5); border-radius:inherit; pointer-events:none; }
-.rc-scope-btn > * { position: relative; z-index: 1; }
+.rc-scope-btn { background: #fff; border: 2px solid #e0d8f0; color: #9c87b8; cursor: pointer; transition: all .15s; font-family: 'Jua',sans-serif; }
 .rc-scope-btn.active { background: linear-gradient(135deg,#c084fc,#818cf8); border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(192,132,252,.35); }
 [data-theme="dark"] .rc-scope-btn { background: var(--rc-scope-btn-bg); border-color: var(--rc-scope-btn-border); color: var(--rc-scope-btn-text); }
 [data-theme="dark"] .rc-scope-btn.active { background: var(--rc-scope-btn-active-bg); border-color: transparent; color: var(--rc-scope-btn-active-text); }
 .recycle-badge-inactive { background: var(--badge-legend-bg); color: var(--red-700); font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 20px; display: inline-block; }
-/* 다크모드: 불투명 토큰이므로 ::before 레이어 완전 제거 */
-[data-theme="dark"] .recycle-hero { background: var(--recycle-hero-bg); }
-[data-theme="dark"] .recycle-hero::before { display: none; }
-[data-theme="dark"] .recycle-item-card { background: var(--recycle-item-card-bg); border-color: var(--recycle-item-card-border); }
-[data-theme="dark"] .recycle-item-card::before { display: none; }
-[data-theme="dark"] .recycle-item-card.selected { background: var(--recycle-item-card-selected-bg); }
-[data-theme="dark"] .recycle-inv-card { background: var(--recycle-inv-card-bg); }
-[data-theme="dark"] .recycle-inv-card::before { display: none; }
-[data-theme="dark"] .recycle-inv-card.selected { background: var(--recycle-inv-card-selected-bg); }
 
 /* ── 요일 선택 버튼 (label+checkbox 방식) ── */
 .evt-day-btn { cursor: pointer; }
