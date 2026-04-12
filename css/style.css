@@ -5399,7 +5399,7 @@ input[type="checkbox"]:active,
 .farm-btn-green { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border-color: #86efac; color: #166534; }
 
 /* ── 상단 바 ── */
-.farm-topbar { display: flex; gap: 8px; margin-bottom: 10px; }
+.farm-topbar { display: flex; gap: 8px; margin-bottom: 16px; }
 
 /* ── 농부 카드 (4존 그리드) ── */
 .fc-card {
