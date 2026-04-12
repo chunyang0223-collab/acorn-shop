@@ -1560,8 +1560,9 @@
   --farm-cell-label-gold-color: #e0b050;
   --farm-cell-label-green-color: #86ceac;
   /* farm-inv text 다크 오버라이드 */
-  --farm-inv-name-color: #86ceac;
-  --farm-inv-harvest-name-color: #e0b850;
+  --farm-inv-name-color: #88f098;
+  --farm-inv-harvest-name-color: #fcd860;
+  --farm-inv-harvest-qty-bg: #4a3008;
   /* farm-shop 다크 오버라이드 */
   --farm-shop-tabs-bg: #1a1608;
   --farm-shop-tab-color: #fbbf24;
@@ -1815,30 +1816,36 @@
   --farm-cell-item-btn-used-bg: #d1d5db;
   --farm-cell-item-btn-used-text: white;
 
-  /* === Farm Inventory Wrap (Dark) === */
-  --farm-inv-wrap-bg: #1a1628;
-  --farm-inv-wrap-border: 1.5px solid #302848;
-  --farm-inv-header-right-color: #d4a060;
+  /* === Farm Inventory Wrap (Dark) — B 적갈색 가죽 === */
+  --farm-inv-wrap-bg: linear-gradient(180deg, #3c2018 0%, #341a10 40%, #2c1408 100%);
+  --farm-inv-wrap-border: 3px solid #7a3a20;
+  --farm-inv-wrap-shadow: inset 0 8px 20px rgba(0,0,0,0.55), inset 0 2px 0 rgba(0,0,0,0.35), inset 0 -2px 0 #4a2818, 0 1px 3px rgba(0,0,0,0.25);
+  --farm-inv-header-right-color: #c0885a;
 
-  /* === Farm Inventory Slots (Dark) === */
-  --farm-inv-slot-seed-bg: #2a3820;
-  --farm-inv-slot-seed-border: #3a5028;
-  --farm-inv-slot-harvest-bg: #3a2e10;
-  --farm-inv-slot-harvest-border: #6a5018;
-  --farm-inv-slot-empty-bg: #18142a;
-  --farm-inv-slot-empty-border: 1.5px dashed #302848;
+  /* === Farm Inventory Slots (Dark) — 화사한 불투명 === */
+  --farm-inv-slot-seed-bg: linear-gradient(180deg, #2a5830 0%, #1e4a25 100%);
+  --farm-inv-slot-seed-border: #48a050;
+  --farm-inv-slot-seed-shadow: inset 0 1px 0 #388840, 0 3px 0 #0c1808, 0 4px 8px rgba(0,0,0,0.3);
+  --farm-inv-slot-harvest-bg: linear-gradient(180deg, #5a4010 0%, #4a3408 100%);
+  --farm-inv-slot-harvest-border: #c89030;
+  --farm-inv-slot-harvest-shadow: inset 0 1px 0 #8a6820, 0 3px 0 #1a0e02, 0 4px 8px rgba(0,0,0,0.3);
+  --farm-inv-slot-empty-bg: #2a1808;
+  --farm-inv-slot-empty-border: #4a2810;
+  --farm-inv-slot-expand-border: #5a3818;
 
   /* === Farm Inventory - Qty Badge (Dark) === */
-  --farm-inv-qty-bg: #3a7a30;
-  --farm-inv-qty-border: #1a1628;
-  --farm-inv-qty-text: #fff;
-  --farm-inv-qty-harvest-bg: #b87010;
+  --farm-inv-qty-bg: #1a4020;
+  --farm-inv-qty-border: #388838;
+  --farm-inv-qty-text: #a8f0b0;
+  --farm-inv-qty-harvest-bg: #4a3008;
+  --farm-inv-qty-harvest-border: #a07020;
+  --farm-inv-qty-harvest-text: #ffe070;
 
   /* === Farm Inventory - Name & Count (Dark) === */
-  --farm-inv-name-seed: #86ceac;
-  --farm-inv-name-harvest: #e0b850;
-  --farm-inv-count-color: #d4a060;
-  --farm-inv-title-color: #e2e8f0;
+  --farm-inv-name-seed: #88f098;
+  --farm-inv-name-harvest: #fcd860;
+  --farm-inv-count-color: #c0885a;
+  --farm-inv-title-color: #e8a060;
 
   /* === Farm Custom Tags (Dark) === */
   --farm-csm-acc-bg: #2a1848;
@@ -5829,15 +5836,82 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .farm-cell-growing.crop-olive { background: var(--farm-crop-olive-bg); border-color: var(--farm-crop-olive-border); box-shadow: var(--farm-crop-olive-shadow); }
 [data-theme="dark"] .farm-cell-growing.crop-teal  { background: var(--farm-crop-teal-bg); border-color: var(--farm-crop-teal-border); box-shadow: var(--farm-crop-teal-shadow); }
 
-/* ── 다크: 인벤토리 ── */
-[data-theme="dark"] .farm-inv-wrap { background: var(--farm-inv-wrap-bg); border: var(--farm-inv-wrap-border); }
+/* ── 다크: 인벤토리 — B 적갈색 가죽 + X스티치 ── */
+[data-theme="dark"] .farm-inv-wrap {
+  background: var(--farm-inv-wrap-bg);
+  border: var(--farm-inv-wrap-border);
+  box-shadow: var(--farm-inv-wrap-shadow);
+  padding: 14px 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+/* 가죽결 — 미세 사선 */
+[data-theme="dark"] .farm-inv-wrap::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 13px;
+  background: repeating-linear-gradient(165deg,
+    transparent 0px, transparent 4px,
+    #422418 4px, #422418 5px,
+    transparent 5px, transparent 10px,
+    #3e2014 10px, #3e2014 11px
+  );
+  opacity: 0.35;
+  pointer-events: none;
+}
+/* X자 스티치 */
+[data-theme="dark"] .farm-inv-wrap::after {
+  content: '';
+  position: absolute;
+  top: 7px; left: 7px; right: 7px; bottom: 7px;
+  border-radius: 9px;
+  border: 2px solid #5a3018;
+  background:
+    repeating-linear-gradient(45deg,
+      transparent 0px, transparent 8px,
+      #4a2814 8px, #4a2814 9.5px,
+      transparent 9.5px, transparent 16px
+    ),
+    repeating-linear-gradient(-45deg,
+      transparent 0px, transparent 8px,
+      #4a2814 8px, #4a2814 9.5px,
+      transparent 9.5px, transparent 16px
+    );
+  opacity: 0.25;
+  pointer-events: none;
+}
+[data-theme="dark"] .farm-inv-header { position: relative; z-index: 1; }
+[data-theme="dark"] .farm-inv-grid { position: relative; z-index: 1; }
 [data-theme="dark"] .farm-inv-header-right { color: var(--farm-inv-header-right-color); }
-[data-theme="dark"] .farm-inv-slot-seed { background: var(--farm-inv-slot-seed-bg); border-color: var(--farm-inv-slot-seed-border); }
-[data-theme="dark"] .farm-inv-slot-harvest { background: var(--farm-inv-slot-harvest-bg); border-color: var(--farm-inv-slot-harvest-border); }
-[data-theme="dark"] .farm-inv-slot-empty { background: var(--farm-inv-slot-empty-bg); border: var(--farm-inv-slot-empty-border); }
-[data-theme="dark"] .farm-inv-slot-expand { background: var(--farm-inv-slot-empty-bg); border: var(--farm-inv-slot-empty-border); }
-[data-theme="dark"] .farm-inv-qty { border-color: var(--farm-inv-qty-border); background: var(--farm-inv-qty-bg); }
-[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-qty { background: var(--farm-inv-harvest-qty-bg); }
+[data-theme="dark"] .farm-inv-slot-seed {
+  background: var(--farm-inv-slot-seed-bg);
+  border: 1.5px solid var(--farm-inv-slot-seed-border);
+  box-shadow: var(--farm-inv-slot-seed-shadow);
+}
+[data-theme="dark"] .farm-inv-slot-harvest {
+  background: var(--farm-inv-slot-harvest-bg);
+  border: 1.5px solid var(--farm-inv-slot-harvest-border);
+  box-shadow: var(--farm-inv-slot-harvest-shadow);
+}
+[data-theme="dark"] .farm-inv-slot-empty {
+  background: var(--farm-inv-slot-empty-bg);
+  border: 1.5px dashed var(--farm-inv-slot-empty-border);
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .farm-inv-slot-expand {
+  background: var(--farm-inv-slot-empty-bg);
+  border: 1.5px dashed var(--farm-inv-slot-expand-border);
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .farm-inv-qty {
+  background: var(--farm-inv-qty-bg);
+  border: 1.5px solid var(--farm-inv-qty-border);
+  color: var(--farm-inv-qty-text);
+}
+[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-qty {
+  background: var(--farm-inv-qty-harvest-bg);
+  border-color: var(--farm-inv-qty-harvest-border);
+  color: var(--farm-inv-qty-harvest-text);
+}
 
 [data-theme="dark"] .farm-csm-acc { background: var(--farm-csm-acc-bg); color: var(--farm-csm-acc-color); border-color: var(--farm-csm-acc-border); }
 [data-theme="dark"] .farm-csm-nut { background: var(--farm-csm-nut-bg); color: var(--farm-csm-nut-color); border-color: var(--farm-csm-nut-border); }
@@ -5859,8 +5933,8 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .farm-cell-label.farm-txt-green { color: var(--farm-cell-label-green-color); }
 
 /* ── 다크: 인벤 텍스트 ── */
-[data-theme="dark"] .farm-inv-name { color: var(--farm-inv-name-color); }
-[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-name { color: var(--farm-inv-harvest-name-color); }
+[data-theme="dark"] .farm-inv-name { color: var(--farm-inv-name-seed); }
+[data-theme="dark"] .farm-inv-slot-harvest .farm-inv-name { color: var(--farm-inv-name-harvest); }
 [data-theme="dark"] .farm-inv-count { color: var(--farm-inv-count-color); }
 [data-theme="dark"] .farm-inv-title { color: var(--farm-inv-title-color); }
 
