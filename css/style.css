@@ -5524,7 +5524,7 @@ input[type="checkbox"]:active,
 
 /* ── 상점 버튼 ── */
 .farm-shop-btn {
-  padding: 6px; border-radius: 8px; text-align: center; font-size: 14px;
+  width: 100%; padding: 6px; border-radius: 8px; text-align: center; font-size: 14px;
   cursor: pointer; transition: transform 0.15s;
   background: var(--farm-shop-btn-bg); border: none; color: var(--farm-shop-btn-text);
   display: flex; align-items: center; justify-content: center; gap: 4px;
