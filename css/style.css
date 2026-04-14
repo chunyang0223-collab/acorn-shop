@@ -509,33 +509,33 @@
   --stat-card-border: rgba(200,190,210,0.3);
 
   /* === Farm Field === */
-  --farm-field-bg: linear-gradient(180deg, #78c868 0%, #68b858 40%, #5cac50 70%, #50a048 100%);
-  --farm-field-border: #50a048;
-  --farm-field-shadow-inner: inset 0 6px 16px rgba(20,60,10,0.3), inset 0 2px 0 rgba(20,60,10,0.15);
-  --farm-field-shadow-outer: inset 0 -2px 0 #88d878, 0 1px 3px rgba(0,0,0,0.15);
-  --farm-field-label-color: #1a4a10;
-  --farm-field-label-line: #60a850;
+  --farm-field-bg: linear-gradient(180deg, #5a9c48 0%, #4a8c3c 40%, #408034 70%, #38742e 100%);
+  --farm-field-border: #38742e;
+  --farm-field-shadow-inner: inset 0 6px 16px rgba(20,60,10,0.35), inset 0 2px 0 rgba(20,60,10,0.2);
+  --farm-field-shadow-outer: inset 0 -2px 0 #6ab460, 0 1px 3px rgba(0,0,0,0.18);
+  --farm-field-label-color: #e8f8e0;
+  --farm-field-label-line: #4a8c3c;
 
   /* === Farm Cell - Growing (볼록 3D) === */
   --farm-cell-growing-bg: linear-gradient(180deg, #90d878 0%, #70c060 100%);
-  --farm-cell-growing-border: #88d070;
+  --farm-cell-growing-border: #3a8828;
   --farm-cell-growing-shadow: inset 0 1px 0 #a8e890, 0 5px 0 #2a6820, 0 7px 10px rgba(20,60,10,0.3);
 
   /* === Farm Cell - Crop Colors (Growing) === */
   --farm-cell-crop-green-bg: #80d068;
-  --farm-cell-crop-green-border: #68b858;
+  --farm-cell-crop-green-border: #3a8828;
   --farm-cell-crop-green-shadow: inset 0 1px 0 #a0e888, 0 5px 0 #286020, 0 7px 10px rgba(20,60,10,0.25);
   --farm-cell-crop-lime-bg: #b8e868;
-  --farm-cell-crop-lime-border: #98d048;
+  --farm-cell-crop-lime-border: #6ca028;
   --farm-cell-crop-lime-shadow: inset 0 1px 0 #d0f888, 0 5px 0 #4a7818, 0 7px 10px rgba(40,60,10,0.25);
   --farm-cell-crop-deep-bg: #58c070;
-  --farm-cell-crop-deep-border: #40a858;
+  --farm-cell-crop-deep-border: #1e7838;
   --farm-cell-crop-deep-shadow: inset 0 1px 0 #78d890, 0 5px 0 #1a5028, 0 7px 10px rgba(10,50,20,0.25);
   --farm-cell-crop-olive-bg: #c0d870;
-  --farm-cell-crop-olive-border: #a0c048;
+  --farm-cell-crop-olive-border: #789828;
   --farm-cell-crop-olive-shadow: inset 0 1px 0 #d8e890, 0 5px 0 #506818, 0 7px 10px rgba(40,50,10,0.25);
   --farm-cell-crop-teal-bg: #68d0b8;
-  --farm-cell-crop-teal-border: #48b8a0;
+  --farm-cell-crop-teal-border: #288878;
   --farm-cell-crop-teal-shadow: inset 0 1px 0 #88e8d0, 0 5px 0 #1a5848, 0 7px 10px rgba(10,40,30,0.25);
 
   /* === Farm Cell - Ready (볼록 황금) === */
