@@ -5556,7 +5556,7 @@ input[type="checkbox"]:active,
 .fc-empty-label { font-size: 12px; font-weight: 700; color: var(--farm-fc-empty-label-color); }
 
 /* ── 우측 컬럼 ── */
-.farm-right-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; width: 90px; }
+.farm-right-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; width: 90px; padding-bottom: 4px; }
 
 /* ── 예치금 뱃지 ── */
 .farm-deposit-badge {
@@ -5874,8 +5874,7 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .fc-empty-label { color: var(--fc-empty-label-color); }
 [data-theme="dark"] .farm-right-col .farm-deposit-badge { background: var(--farm-deposit-bg); border-color: var(--farm-deposit-border); }
 /* farm-dep-num/sub — 베이스 규칙이 var(--farm-dep-*-color) 사용, 다크 토큰에서 값 제공. 중복 제거 */
-[data-theme="dark"] .farm-shop-btn { background: var(--farm-shop-btn-bg); color: var(--farm-shop-btn-color); }
-[data-theme="dark"] .farm-shop-lbl { color: var(--farm-shop-lbl-color); }
+/* 상점 버튼: 3D 다크 그라디언트는 라이트/다크 공용 — 별도 오버라이드 불필요 */
 
 /* ── 다크: 밭 (봄 초록 + 깊은 오목 + 점선 테두리) ── */
 [data-theme="dark"] .farm-field-wrap {
@@ -8015,14 +8014,7 @@ input[type="checkbox"]:active,
    JS innerHTML 인라인 스타일 대체용
    ══════════════════════════════════════════════ */
 
-/* ── 상점 버튼 ── */
-.farm-shop-btn {
-  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--p-amber-400), var(--p-amber-500));
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 20px;
-  box-shadow: 0 3px 10px rgba(245,158,11,.3);
-}
+/* ── 상점 버튼 — 3D 다크 스타일은 5570줄에 통합, 이 블록 제거 ── */
 
 /* ── 밭 셀 공통 ── */
 .farm-cell {
