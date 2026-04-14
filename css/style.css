@@ -141,10 +141,10 @@
   --bg-body-4: #fce4ff;
 
   /* -- 표면 계층 (불투명 필수) -- */
-  --bg-base:     #faf8f5;
-  --bg-surface:  #fefcfa;
+  --bg-base:     #e6dced;
+  --bg-surface:  #eee6f4;
   --bg-elevated: #ffffff;
-  --bg-sunken:   #f5f0ea;
+  --bg-sunken:   #e0d6e8;
   --bg-overlay:  rgba(80,40,120,0.4);
   /* -- 오버레이 (불투명 기준층 위에서만 사용) -- */
   --bg-overlay-light:   rgba(255,255,255,0.25);
@@ -209,22 +209,16 @@
   --shadow-lg:  0 10px 15px rgba(0,0,0,0.1);
   --shadow-xl:  0 16px 40px rgba(0,0,0,0.12);
 
-  /* -- 클레이모피즘 그림자 -- */
+  /* -- 네오모피즘 양각 그림자 -- */
   --shadow-clay:
-    0 8px 32px rgba(180,140,200,0.18),
-    0 2px 8px rgba(180,140,200,0.12),
-    inset 0 1.5px 0 rgba(255,255,255,0.7),
-    inset 0 -2px 4px rgba(180,140,200,0.1);
+    5px 5px 12px rgba(100,70,140,0.12),
+    -5px -5px 12px rgba(255,255,255,0.7);
   --shadow-clay-hover:
-    0 14px 44px rgba(180,140,200,0.28),
-    0 4px 12px rgba(180,140,200,0.15),
-    inset 0 2px 0 rgba(255,255,255,0.8),
-    inset 0 -2px 6px rgba(180,140,200,0.12);
+    7px 7px 16px rgba(100,70,140,0.16),
+    -7px -7px 16px rgba(255,255,255,0.8);
   --shadow-clay-active:
-    0 4px 16px rgba(180,140,200,0.12),
-    0 1px 4px rgba(180,140,200,0.08),
-    inset 0 2px 6px rgba(180,140,200,0.15),
-    inset 0 1px 0 rgba(255,255,255,0.3);
+    3px 3px 8px rgba(100,70,140,0.1),
+    -3px -3px 8px rgba(255,255,255,0.6);
   --shadow-clay-btn:
     0 4px 18px rgba(255,107,157,0.38),
     inset 0 1.5px 0 rgba(255,255,255,0.45),
@@ -271,9 +265,9 @@
 
   /* -- Tab -- */
   --tab-inactive-text:  #7c6f8e;
-  --tab-active-bg:      linear-gradient(135deg, #ff8fab, #c084fc);
-  --tab-active-text:    var(--p-white);
-  --tab-active-shadow:  0 4px 16px rgba(192,132,252,0.35);
+  --tab-active-bg:      transparent;
+  --tab-active-text:    #6b4fa8;
+  --tab-active-shadow:  none;
 
   /* ══════════ BADGE / GRADE ══════════ */
   --badge-common-bg:    var(--bg-purple-muted);
@@ -2412,7 +2406,7 @@ body {
 .clay-card {
   background: var(--card-bg);
   border-radius: 24px;
-  border: 1.5px solid var(--card-border);
+  border: none;
   box-shadow: var(--shadow-card);
   transition:
     transform var(--duration-normal) var(--ease-bounce),
@@ -2522,6 +2516,7 @@ body {
   color: var(--tab-inactive-text);
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
 .tab-btn:active {
   transform: scale(0.93);
@@ -2530,7 +2525,16 @@ body {
 .tab-btn.active {
   background: var(--tab-active-bg);
   color: var(--tab-active-text);
-  box-shadow: var(--tab-active-shadow), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -2px 4px rgba(0,0,0,0.08);
+  box-shadow: none;
+  position: relative;
+}
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 20%; right: 20%;
+  height: 3.5px; border-radius: 2px;
+  background: #a78bfa;
+  box-shadow: 0 0 8px rgba(167,139,250,0.3);
 }
 
 /* ── 인풋 필드 ── */
@@ -3592,8 +3596,11 @@ input[type="checkbox"]:active,
 .adm-tabbar-wrap { padding: 8px 8px 4px; }
 .adm-tabbar {
   display: flex; flex-wrap: wrap; gap: 4px; padding: 5px;
-  background: var(--bg-sunken); border-radius: 16px;
-  border: 1.5px solid var(--border-input);
+  background: var(--bg-surface); border-radius: 16px;
+  border: none;
+  box-shadow:
+    5px 5px 12px rgba(100,70,140,0.12),
+    -5px -5px 12px rgba(255,255,255,0.7);
 }
 .adm-tab-btn {
   font-family: 'Jua', sans-serif; font-size: 11px; padding: 7px 10px;
@@ -3609,16 +3616,28 @@ input[type="checkbox"]:active,
 }
 .adm-tab-btn:hover { background: var(--bg-surface); }
 .adm-tab-btn.active {
-  background: linear-gradient(135deg, var(--pink-400), var(--purple-400)); color: var(--text-inverse);
-  box-shadow: 0 2px 8px var(--shadow-purple-glow);
+  background: transparent; color: #6b4fa8;
+  box-shadow: none;
+  position: relative;
+}
+.adm-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 20%; right: 20%;
+  height: 3px; border-radius: 2px;
+  background: #a78bfa;
+  box-shadow: 0 0 8px rgba(167,139,250,0.3);
 }
 
 /* 하위호환: 기존 adm-pin 클래스 유지 */
 .adm-pin-bar-wrap { padding: 8px; }
 .adm-pin-bar {
   display: flex; gap: 3px; padding: 5px;
-  background: var(--bg-sunken); border-radius: 18px;
-  border: 1.5px solid var(--border-input);
+  background: var(--bg-surface); border-radius: 18px;
+  border: none;
+  box-shadow:
+    5px 5px 12px rgba(100,70,140,0.12),
+    -5px -5px 12px rgba(255,255,255,0.7);
 }
 .adm-pin-tab {
   font-family: 'Jua', sans-serif; font-size: 13px; padding: 11px 0;
@@ -3626,8 +3645,17 @@ input[type="checkbox"]:active,
   cursor: pointer; flex: 1; text-align: center; transition: all 0.15s;
 }
 .adm-pin-tab.active {
-  background: linear-gradient(135deg, var(--pink-400), var(--purple-400)); color: var(--text-inverse);
-  box-shadow: 0 3px 10px var(--shadow-purple-glow);
+  background: transparent; color: #6b4fa8;
+  box-shadow: none;
+  position: relative;
+}
+.adm-pin-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 20%; right: 20%;
+  height: 3px; border-radius: 2px;
+  background: #a78bfa;
+  box-shadow: 0 0 8px rgba(167,139,250,0.3);
 }
 
 /* 축소 통계 */
@@ -3719,7 +3747,11 @@ input[type="checkbox"]:active,
 .adm-subtab-bar {
   display: flex; align-items: center; gap: 4px;
   padding: 6px 8px; margin-bottom: 12px;
-  background: var(--bg-sunken); border-radius: 14px;
+  background: var(--bg-surface); border-radius: 14px;
+  border: none;
+  box-shadow:
+    4px 4px 10px rgba(100,70,140,0.1),
+    -4px -4px 10px rgba(255,255,255,0.65);
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -3742,9 +3774,18 @@ input[type="checkbox"]:active,
 }
 .adm-subtab:hover { background: var(--bg-surface); }
 .adm-subtab.active {
-  background: var(--bg-surface); color: var(--text-accent);
-  border-color: var(--border-purple);
-  box-shadow: 0 2px 8px var(--shadow-purple-glow);
+  background: transparent; color: #6b4fa8;
+  border-color: transparent;
+  box-shadow: none;
+  position: relative;
+}
+.adm-subtab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 20%; right: 20%;
+  height: 3px; border-radius: 2px;
+  background: #a78bfa;
+  box-shadow: 0 0 8px rgba(167,139,250,0.3);
 }
 
 /* 서브탭 다크모드 */
