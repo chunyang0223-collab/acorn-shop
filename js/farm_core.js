@@ -297,7 +297,7 @@ function farmRenderMain() {
   html += farmRenderFarmerSlot();
   html += `<div class="farm-right-col">`;
   html += farmRenderDepositBadge();
-  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><span class="farm-shop-lbl" style="font-size:11px;font-weight:800;color:var(--bg-surface)">상점</span></div>`;
+  html += `<div class="farm-shop-btn" onclick="farmShowShop()"><div class="farm-shop-btn-face"><span>🛒</span><span class="farm-shop-btn-label">상점</span></div></div>`;
   html += `</div>`;
   html += `</div>`;
 
@@ -347,11 +347,15 @@ function farmRenderMain() {
 function farmRenderDepositBadge() {
   const acorns = _farmData?.deposit_acorns || 0;
   const crumbs = _farmData?.deposit_crumbs || 0;
+  const sign = (acorns > 0 || crumbs > 0) ? '+' : '';
+  const display = `${sign}${acorns}.${String(crumbs).padStart(2, '0')}`;
   return `
-    <div class="farm-deposit-badge" onclick="farmShowDeposit()">
-      <div style="font-size:14px">🌰</div>
-      <div class="farm-dep-num" style="font-size:18px;font-weight:900;line-height:1;font-family:'Pretendard',sans-serif">${acorns}</div>
-      <div class="farm-dep-sub" style="font-size:10px;font-weight:700;font-family:'Pretendard',sans-serif">+${crumbs}부스러기</div>
+    <div onclick="farmShowDeposit()" style="cursor:pointer;flex-shrink:0">
+      <div class="farm-deposit-outer">
+        <div class="farm-deposit-inner">
+          <div class="farm-deposit-acorns">${display}</div>
+        </div>
+      </div>
     </div>`;
 }
 
