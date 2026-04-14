@@ -509,57 +509,57 @@
   --stat-card-border: rgba(200,190,210,0.3);
 
   /* === Farm Field === */
-  --farm-field-bg: #e8d5b0;
-  --farm-field-border: #b8944e;
-  --farm-field-shadow-inner: inset 0 1px 0 #d4bc8a;
-  --farm-field-shadow-outer: 0 0 0 1.5px #c4a870, 0 0 0 5px #dcc8a0;
-  --farm-field-label-color: #78450e;
-  --farm-field-label-line: #c4a068;
+  --farm-field-bg: linear-gradient(180deg, #78c868 0%, #68b858 40%, #5cac50 70%, #50a048 100%);
+  --farm-field-border: #50a048;
+  --farm-field-shadow-inner: inset 0 6px 16px rgba(20,60,10,0.3), inset 0 2px 0 rgba(20,60,10,0.15);
+  --farm-field-shadow-outer: inset 0 -2px 0 #88d878, 0 1px 3px rgba(0,0,0,0.15);
+  --farm-field-label-color: #1a4a10;
+  --farm-field-label-line: #60a850;
 
-  /* === Farm Cell - Growing === */
-  --farm-cell-growing-bg: #b8e0a0;
-  --farm-cell-growing-border: #7cb868;
-  --farm-cell-growing-shadow: inset 0 -3px 0 #98c880;
+  /* === Farm Cell - Growing (볼록 3D) === */
+  --farm-cell-growing-bg: linear-gradient(180deg, #90d878 0%, #70c060 100%);
+  --farm-cell-growing-border: #88d070;
+  --farm-cell-growing-shadow: inset 0 1px 0 #a8e890, 0 5px 0 #2a6820, 0 7px 10px rgba(20,60,10,0.3);
 
   /* === Farm Cell - Crop Colors (Growing) === */
-  --farm-cell-crop-green-bg: #b8e0a0;
-  --farm-cell-crop-green-border: #7cb868;
-  --farm-cell-crop-green-shadow: inset 0 -3px 0 #98c880;
-  --farm-cell-crop-lime-bg: #d0e888;
-  --farm-cell-crop-lime-border: #a8c860;
-  --farm-cell-crop-lime-shadow: inset 0 -3px 0 #b8d870;
-  --farm-cell-crop-deep-bg: #88c890;
-  --farm-cell-crop-deep-border: #5ca868;
-  --farm-cell-crop-deep-shadow: inset 0 -3px 0 #70b078;
-  --farm-cell-crop-olive-bg: #d8e498;
-  --farm-cell-crop-olive-border: #b0c060;
-  --farm-cell-crop-olive-shadow: inset 0 -3px 0 #c0d080;
-  --farm-cell-crop-teal-bg: #98d8c8;
-  --farm-cell-crop-teal-border: #60b8a0;
-  --farm-cell-crop-teal-shadow: inset 0 -3px 0 #78c8b0;
+  --farm-cell-crop-green-bg: #80d068;
+  --farm-cell-crop-green-border: #68b858;
+  --farm-cell-crop-green-shadow: inset 0 1px 0 #a0e888, 0 5px 0 #286020, 0 7px 10px rgba(20,60,10,0.25);
+  --farm-cell-crop-lime-bg: #b8e868;
+  --farm-cell-crop-lime-border: #98d048;
+  --farm-cell-crop-lime-shadow: inset 0 1px 0 #d0f888, 0 5px 0 #4a7818, 0 7px 10px rgba(40,60,10,0.25);
+  --farm-cell-crop-deep-bg: #58c070;
+  --farm-cell-crop-deep-border: #40a858;
+  --farm-cell-crop-deep-shadow: inset 0 1px 0 #78d890, 0 5px 0 #1a5028, 0 7px 10px rgba(10,50,20,0.25);
+  --farm-cell-crop-olive-bg: #c0d870;
+  --farm-cell-crop-olive-border: #a0c048;
+  --farm-cell-crop-olive-shadow: inset 0 1px 0 #d8e890, 0 5px 0 #506818, 0 7px 10px rgba(40,50,10,0.25);
+  --farm-cell-crop-teal-bg: #68d0b8;
+  --farm-cell-crop-teal-border: #48b8a0;
+  --farm-cell-crop-teal-shadow: inset 0 1px 0 #88e8d0, 0 5px 0 #1a5848, 0 7px 10px rgba(10,40,30,0.25);
 
-  /* === Farm Cell - Ready === */
-  --farm-cell-ready-bg: #f5d868;
-  --farm-cell-ready-border: #d4a020;
-  --farm-cell-ready-shadow: inset 0 -3px 0 #e0c040, 0 0 10px #e8c83080;
-  --farm-cell-ready-label: #6a4a00;
-  --farm-cell-ready-timer: #6a5a2a;
+  /* === Farm Cell - Ready (볼록 황금) === */
+  --farm-cell-ready-bg: linear-gradient(180deg, #f0d858 0%, #e0c840 100%);
+  --farm-cell-ready-border: #e8c840;
+  --farm-cell-ready-shadow: inset 0 1px 0 #f8e880, 0 5px 0 #8a6810, 0 7px 10px rgba(80,50,0,0.3);
+  --farm-cell-ready-label: #5a3e00;
+  --farm-cell-ready-timer: #786020;
 
   /* === Farm Cell - Empty === */
-  --farm-cell-empty-bg: #dcc8a0;
-  --farm-cell-empty-border: #b8a070;
+  --farm-cell-empty-bg: #3a7030;
+  --farm-cell-empty-border: #508840;
 
   /* === Farm Cell - Locked === */
-  --farm-cell-locked-bg: #d4c098;
-  --farm-cell-locked-border: #b8a068;
+  --farm-cell-locked-bg: #2e6028;
+  --farm-cell-locked-border: #407838;
 
   /* === Farm Cell - Expand === */
-  --farm-cell-expand-bg: #dcc8a0;
-  --farm-cell-expand-border: #a08050;
+  --farm-cell-expand-bg: #3a7030;
+  --farm-cell-expand-border: #60a050;
 
   /* === Farm Cell - Label & Timer === */
-  --farm-cell-label-color: #1e3a14;
-  --farm-cell-timer-color: #3a6030;
+  --farm-cell-label-color: #0e3008;
+  --farm-cell-timer-color: #1a4a10;
 
   /* === Farm Cell - Item Buttons === */
   --farm-cell-item-btn-acc-bg: #8b5cf6;
@@ -569,30 +569,34 @@
   --farm-cell-item-btn-used-bg: #d1d5db;
   --farm-cell-item-btn-used-text: white;
 
-  /* === Farm Inventory Wrap === */
-  --farm-inv-wrap-bg: #dce8d4;
-  --farm-inv-wrap-border: #a8c098;
-  --farm-inv-header-right-color: #374151;
+  /* === Farm Inventory Wrap (밝은 가죽) === */
+  --farm-inv-wrap-bg: linear-gradient(180deg, #c8885a 0%, #b87848 40%, #a86838 100%);
+  --farm-inv-wrap-border: #d89060;
+  --farm-inv-header-right-color: #4a2008;
 
-  /* === Farm Inventory Slots === */
-  --farm-inv-slot-seed-bg: #e8f0d8;
-  --farm-inv-slot-seed-border: #a0c080;
-  --farm-inv-slot-harvest-bg: #fdf0c0;
-  --farm-inv-slot-harvest-border: #d4a040;
-  --farm-inv-slot-empty-bg: #f5f0f8;
-  --farm-inv-slot-empty-border: #c8c0d0;
+  /* === Farm Inventory Slots (볼록 3D) === */
+  --farm-inv-slot-seed-bg: linear-gradient(180deg, #90d878 0%, #70c060 100%);
+  --farm-inv-slot-seed-border: #80c868;
+  --farm-inv-slot-seed-shadow: inset 0 1px 0 #a8e890, 0 3px 0 #2a6820, 0 4px 6px rgba(20,60,10,0.25);
+  --farm-inv-slot-harvest-bg: linear-gradient(180deg, #e8c040 0%, #d8b030 100%);
+  --farm-inv-slot-harvest-border: #d0a828;
+  --farm-inv-slot-harvest-shadow: inset 0 1px 0 #f0d860, 0 3px 0 #7a5810, 0 4px 6px rgba(60,40,0,0.25);
+  --farm-inv-slot-empty-bg: #7a4828;
+  --farm-inv-slot-empty-border: #986038;
 
   /* === Farm Inventory - Qty Badge === */
-  --farm-inv-qty-bg: #4a8a38;
-  --farm-inv-qty-border: #fff;
-  --farm-inv-qty-text: #fff;
-  --farm-inv-qty-harvest-bg: #c47a10;
+  --farm-inv-qty-bg: #2a5820;
+  --farm-inv-qty-border: #48a040;
+  --farm-inv-qty-text: #c8f8c0;
+  --farm-inv-qty-harvest-bg: #6a4808;
+  --farm-inv-qty-harvest-border: #c09030;
+  --farm-inv-qty-harvest-text: #fff8d0;
 
   /* === Farm Inventory - Name & Count === */
-  --farm-inv-name-seed: #3a6020;
-  --farm-inv-name-harvest: #8a5a08;
-  --farm-inv-count-color: #78450e;
-  --farm-inv-title-color: #2a1e14;
+  --farm-inv-name-seed: #0e3008;
+  --farm-inv-name-harvest: #5a3800;
+  --farm-inv-count-color: #3a1a04;
+  --farm-inv-title-color: #2a1208;
 
   /* === Farm Custom Tags === */
   --farm-csm-acc-bg: #ede0f8;
@@ -5406,7 +5410,7 @@ input[type="checkbox"]:active,
 .farm-btn-green { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border-color: #86efac; color: #166534; }
 
 /* ── 상단 바 ── */
-.farm-topbar { display: flex; gap: 8px; margin-bottom: 16px; }
+.farm-topbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: stretch; }
 
 /* ── 농부 카드 (4존 그리드) — 금속 질감 ── */
 .fc-card {
@@ -5555,8 +5559,8 @@ input[type="checkbox"]:active,
 .fc-empty-emoji { font-size: 24px; opacity: 0.5; }
 .fc-empty-label { font-size: 12px; font-weight: 700; color: var(--farm-fc-empty-label-color); }
 
-/* ── 우측 컬럼 ── */
-.farm-right-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; width: 90px; padding-bottom: 4px; }
+/* ── 우측 컬럼 — 농부카드와 높이 일치 ── */
+.farm-right-col { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; width: 90px; padding-bottom: 4px; align-self: stretch; }
 
 /* ── 예치금 뱃지 ── */
 .farm-deposit-badge {
@@ -5566,34 +5570,35 @@ input[type="checkbox"]:active,
 }
 .farm-deposit-badge:active { transform: scale(0.95); }
 
-/* ── 상점 버튼 — 3D + 뽀송뽀송 (세련된 다크) ── */
+/* ── 상점 버튼 — 3D + 뽀송뽀송 ── */
 .farm-shop-btn {
   width: 100%; cursor: pointer;
   -webkit-tap-highlight-color: transparent; user-select: none;
 }
+/* 라이트: 도토리 주황 3D 버튼 */
 .farm-shop-btn-face {
   position: relative;
   border-radius: 10px; padding: 5px 0; text-align: center;
-  background: linear-gradient(160deg, #6e6a66, #4a4642 30%, #3a3836 60%, #2a2826);
-  color: #e8e4e0; font-size: 13px; font-weight: 900;
-  box-shadow: 0 4px 0 #1a1816, 0 6px 8px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
+  background: linear-gradient(160deg, #f0a040, #d88020 30%, #c87018 60%, #b06010);
+  color: #fff8e8; font-size: 13px; font-weight: 900;
+  box-shadow: 0 4px 0 #8a4808, 0 6px 8px rgba(120,50,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(100,40,0,0.2);
   transition: transform 0.08s, box-shadow 0.08s;
   overflow: hidden;
   display: flex; align-items: center; justify-content: center; gap: 3px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,220,160,0.3);
 }
 /* 뽀송뽀송 보풀 */
 .farm-shop-btn-face::before {
   content: '';
   position: absolute; inset: 0; border-radius: inherit;
   background-image:
-    radial-gradient(ellipse 3px 2px at 20% 30%, rgba(255,255,255,0.18) 0%, transparent 100%),
-    radial-gradient(ellipse 2px 3px at 60% 20%, rgba(255,255,255,0.14) 0%, transparent 100%),
-    radial-gradient(ellipse 3px 2px at 80% 60%, rgba(255,255,255,0.16) 0%, transparent 100%),
-    radial-gradient(ellipse 2px 3px at 40% 70%, rgba(255,255,255,0.12) 0%, transparent 100%),
-    radial-gradient(ellipse 3px 2px at 15% 80%, rgba(255,255,255,0.14) 0%, transparent 100%),
-    radial-gradient(ellipse 2px 2px at 70% 40%, rgba(255,255,255,0.18) 0%, transparent 100%);
+    radial-gradient(ellipse 3px 2px at 20% 30%, rgba(255,255,255,0.22) 0%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 60% 20%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 3px 2px at 80% 60%, rgba(255,255,255,0.20) 0%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 40% 70%, rgba(255,255,255,0.16) 0%, transparent 100%),
+    radial-gradient(ellipse 3px 2px at 15% 80%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 2px 2px at 70% 40%, rgba(255,255,255,0.22) 0%, transparent 100%);
   pointer-events: none; opacity: 0.9;
 }
 /* 보풀 노이즈 */
@@ -5606,50 +5611,85 @@ input[type="checkbox"]:active,
 }
 .farm-shop-btn-face span {
   position: relative; z-index: 1;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 2px rgba(100,40,0,0.4);
 }
 .farm-shop-btn-label {
-  font-size: 10px; font-weight: 800; color: #d0ccc8;
+  font-size: 10px; font-weight: 800; color: #fff0d0;
   position: relative; z-index: 1;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 2px rgba(100,40,0,0.4);
 }
 .farm-shop-btn:active .farm-shop-btn-face {
   transform: translateY(3px);
+  box-shadow: 0 1px 0 #8a4808, 0 2px 4px rgba(120,50,0,0.25),
+    inset 0 2px 4px rgba(100,40,0,0.3), inset 0 -1px 0 rgba(255,255,255,0.08);
+}
+/* 다크: 세련된 차콜-블랙 3D 버튼 */
+[data-theme="dark"] .farm-shop-btn-face {
+  background: linear-gradient(160deg, #6e6a66, #4a4642 30%, #3a3836 60%, #2a2826);
+  color: #e8e4e0;
+  box-shadow: 0 4px 0 #1a1816, 0 6px 8px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .farm-shop-btn-face span {
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+[data-theme="dark"] .farm-shop-btn-label {
+  color: #d0ccc8;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+[data-theme="dark"] .farm-shop-btn:active .farm-shop-btn-face {
   box-shadow: 0 1px 0 #1a1816, 0 2px 4px rgba(0,0,0,0.3),
     inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 0 rgba(255,255,255,0.05);
 }
 .farm-shop-lbl { font-size: 11px; font-weight: 800; color: var(--text-inverse); }
 
-/* ── 밭 감싸기 — 흙/땅 바탕 + 울타리 ── */
+/* ── 밭 감싸기 — 봄 초록 + 깊은 오목 ── */
 .farm-field-wrap {
-  border-radius: 14px; padding: 18px; margin-bottom: 10px;
-  position: relative;
+  border-radius: 14px; padding: 16px 20px 32px 20px; margin-bottom: 10px;
+  position: relative; overflow: hidden;
   background: var(--farm-field-bg);
-  border: 3.5px solid var(--farm-field-border);
+  border: 2.5px dashed var(--farm-field-border);
   box-shadow: var(--farm-field-shadow-inner), var(--farm-field-shadow-outer);
+}
+/* 라이트: 잔디결 텍스처 */
+.farm-field-wrap::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 14px;
+  background:
+    repeating-linear-gradient(180deg,
+      transparent 0px, transparent 4px,
+      #50a048 4px, #50a048 5px,
+      transparent 5px, transparent 10px,
+      #48984040 10px, #48984040 11px
+    );
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 /* ── 밭 라벨 ── */
 .farm-field-label {
   display: flex; align-items: center; gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   font-size: 12px; font-weight: 800; color: var(--farm-field-label-color);
+  position: relative; z-index: 1;
 }
 .farm-field-label::after {
   content: ''; flex: 1; height: 1px;
   background: var(--farm-field-label-line);
 }
 
-/* ── 밭 그리드 — 셀 고정 92px, 중앙 정렬 ── */
+/* ── 밭 그리드 — 셀 고정 60px, 중앙 정렬 ── */
 .farm-field-grid {
-  display: grid; grid-template-columns: repeat(3, 92px);
+  display: grid; grid-template-columns: repeat(3, 60px);
   justify-content: center;
-  gap: 14px;
+  gap: 18px;
+  position: relative; z-index: 1;
 }
 
 /* ── 밭 셀 ── */
 .farm-cell {
-  width: 92px; height: 92px; border-radius: 12px;
+  width: 60px; height: 60px; border-radius: 12px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   position: relative; transition: transform 0.12s;
 }
@@ -5677,9 +5717,9 @@ input[type="checkbox"]:active,
 }
 
 /* ── 밭 셀 내부 ── */
-.farm-cell-emoji { font-size: 28px; line-height: 1; }
-.farm-cell-label { font-size: 11px; font-weight: 700; margin-top: 3px; color: var(--farm-cell-label-color); font-family: 'Pretendard', sans-serif; }
-.farm-cell-timer { font-size: 10px; font-weight: 600; margin-top: 1px; color: var(--farm-cell-timer-color); font-family: 'Pretendard', sans-serif; }
+.farm-cell-emoji { font-size: 22px; line-height: 1; }
+.farm-cell-label { font-size: 9px; font-weight: 700; margin-top: 3px; color: var(--farm-cell-label-color); font-family: 'Pretendard', sans-serif; }
+.farm-cell-timer { font-size: 8px; font-weight: 600; margin-top: 1px; color: var(--farm-cell-timer-color); font-family: 'Pretendard', sans-serif; }
 .farm-cell-ready .farm-cell-label { color: var(--farm-cell-ready-label); }
 
 /* 기존 인라인 버튼 (하위호환) — 팝업 전환 후 미사용 */
@@ -5751,23 +5791,59 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .farm-crop-popup-btn-used { background: var(--fcp-btn-used-bg); color: var(--fcp-btn-used-color); opacity: .4; }
 [data-theme="dark"] .farm-crop-popup-close { background: var(--fcp-close-bg); color: var(--fcp-close-color); border: var(--fcp-close-border); }
 
-/* ── 인벤토리 ── */
+/* ── 인벤토리 — 가죽 텍스처 ── */
 .farm-inv-wrap {
-  padding: 12px 14px; border-radius: 14px;
-  background: var(--farm-inv-wrap-bg); border: 1.5px solid var(--farm-inv-wrap-border);
+  padding: 14px 16px 18px; border-radius: 14px;
+  background: var(--farm-inv-wrap-bg); border: 3px solid var(--farm-inv-wrap-border);
+  box-shadow: inset 0 6px 16px rgba(60,20,0,0.35), inset 0 2px 0 rgba(60,20,0,0.2), inset 0 -2px 0 #d8a070, 0 1px 3px rgba(0,0,0,0.15);
+  position: relative; overflow: hidden;
 }
-.farm-inv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+/* 라이트: 가죽결 — 미세 사선 */
+.farm-inv-wrap::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 13px;
+  background: repeating-linear-gradient(165deg,
+    transparent 0px, transparent 4px,
+    #a06030 4px, #a06030 5px,
+    transparent 5px, transparent 10px,
+    #985828 10px, #985828 11px
+  );
+  opacity: 0.3;
+  pointer-events: none;
+}
+/* 라이트: X자 스티치 */
+.farm-inv-wrap::after {
+  content: '';
+  position: absolute;
+  top: 7px; left: 7px; right: 7px; bottom: 7px;
+  border-radius: 9px;
+  border: 2px solid #c08050;
+  background:
+    repeating-linear-gradient(45deg,
+      transparent 0px, transparent 8px,
+      #b07040 8px, #b07040 9.5px,
+      transparent 9.5px, transparent 16px
+    ),
+    repeating-linear-gradient(-45deg,
+      transparent 0px, transparent 8px,
+      #b07040 8px, #b07040 9.5px,
+      transparent 9.5px, transparent 16px
+    );
+  opacity: 0.2;
+  pointer-events: none;
+}
+.farm-inv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; position: relative; z-index: 1; }
 .farm-inv-header-right { font-size: 12px; font-weight: 700; color: var(--farm-inv-header-right-color); font-family: 'Pretendard', sans-serif; display: flex; align-items: center; gap: 4px; }
-.farm-inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.farm-inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; position: relative; z-index: 1; }
 .farm-inv-slot {
   aspect-ratio: 1; border-radius: 10px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   position: relative; min-height: 0;
 }
-.farm-inv-slot-seed { background: var(--farm-inv-slot-seed-bg); border: 1.5px solid var(--farm-inv-slot-seed-border); }
-.farm-inv-slot-harvest { background: var(--farm-inv-slot-harvest-bg); border: 1.5px solid var(--farm-inv-slot-harvest-border); }
-.farm-inv-slot-empty { background: var(--farm-inv-slot-empty-bg); border: 1.5px dashed var(--farm-inv-slot-empty-border); }
-.farm-inv-slot-expand { background: var(--farm-inv-slot-empty-bg); border: 1.5px dashed var(--farm-inv-slot-empty-border); cursor: pointer; }
+.farm-inv-slot-seed { background: var(--farm-inv-slot-seed-bg); border: 1.5px solid var(--farm-inv-slot-seed-border); box-shadow: var(--farm-inv-slot-seed-shadow); }
+.farm-inv-slot-harvest { background: var(--farm-inv-slot-harvest-bg); border: 1.5px solid var(--farm-inv-slot-harvest-border); box-shadow: var(--farm-inv-slot-harvest-shadow); }
+.farm-inv-slot-empty { background: var(--farm-inv-slot-empty-bg); border: 1.5px dashed var(--farm-inv-slot-empty-border); box-shadow: inset 0 3px 6px rgba(40,10,0,0.3); }
+.farm-inv-slot-expand { background: var(--farm-inv-slot-empty-bg); border: 1.5px dashed var(--farm-inv-slot-empty-border); cursor: pointer; box-shadow: inset 0 3px 6px rgba(40,10,0,0.25); }
 .farm-inv-slot-expand:active { transform: scale(0.92); }
 
 .farm-inv-qty {
@@ -5778,7 +5854,7 @@ input[type="checkbox"]:active,
   padding: 0 4px; font-family: 'Pretendard', sans-serif;
   background: var(--farm-inv-qty-bg); border: 1.5px solid var(--farm-inv-qty-border);
 }
-.farm-inv-slot-harvest .farm-inv-qty { background: var(--farm-inv-qty-harvest-bg); }
+.farm-inv-slot-harvest .farm-inv-qty { background: var(--farm-inv-qty-harvest-bg); border-color: var(--farm-inv-qty-harvest-border); color: var(--farm-inv-qty-harvest-text); }
 
 /* ── 인벤 아이템 텍스트 ── */
 .farm-inv-name {
@@ -8080,12 +8156,13 @@ input[type="checkbox"]:active,
 .farm-inv-badge-crop { background: var(--p-amber-700); }
 
 /* ── 예치금 배지 — 금고(Vault) 컨셉 / 음각 ── */
+/* 라이트: 도토리 주황 금고 */
 .farm-deposit-outer {
   border-radius: 10px;
   padding: 2px;
-  background: linear-gradient(160deg, #5a5048, #3e362e 40%, #4a4238 70%, #342c24);
-  box-shadow: 0 2px 6px rgba(40,30,20,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
-  border: 2px solid #6a5c48;
+  background: linear-gradient(160deg, #e8a040, #d48a28 40%, #e09438 70%, #c87820);
+  box-shadow: 0 2px 6px rgba(160,80,10,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+  border: 2px solid #f0b050;
   position: relative;
 }
 /* 금고 도어 장식선 */
@@ -8093,15 +8170,15 @@ input[type="checkbox"]:active,
   content: '';
   position: absolute;
   top: 50%; left: 4px; right: 4px; height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(180,160,120,0.2) 20%, rgba(180,160,120,0.3) 50%, rgba(180,160,120,0.2) 80%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,220,160,0.3) 20%, rgba(255,220,160,0.4) 50%, rgba(255,220,160,0.3) 80%, transparent 100%);
   pointer-events: none; z-index: 2;
 }
 .farm-deposit-inner {
   border-radius: 8px;
   padding: 8px 10px;
-  background: linear-gradient(180deg, #2e2822, #382e26 50%, #302820);
-  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(200,180,140,0.06);
-  border: 1px solid #1e1810;
+  background: linear-gradient(180deg, #c47010, #b86008 50%, #a85808);
+  box-shadow: inset 0 3px 8px rgba(100,40,0,0.45), inset 0 1px 3px rgba(100,40,0,0.3), inset 0 -1px 0 rgba(255,200,100,0.12);
+  border: 1px solid #8a4800;
   display: flex; align-items: center; justify-content: center;
   position: relative;
   text-align: center;
@@ -8116,10 +8193,28 @@ input[type="checkbox"]:active,
 }
 .farm-deposit-acorns {
   font-size: 14px; font-weight: 900;
-  color: #d4b878;
+  color: #fff8e0;
   line-height: 1.1;
-  text-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 -1px 0 rgba(220,200,140,0.1);
+  text-shadow: 0 1px 2px rgba(100,40,0,0.5), 0 -1px 0 rgba(255,220,140,0.15);
   position: relative; z-index: 1;
+}
+/* 다크: 금고 — 어두운 금속 원래 스타일 복원 */
+[data-theme="dark"] .farm-deposit-outer {
+  background: linear-gradient(160deg, #5a5048, #3e362e 40%, #4a4238 70%, #342c24);
+  box-shadow: 0 2px 6px rgba(40,30,20,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  border-color: #6a5c48;
+}
+[data-theme="dark"] .farm-deposit-outer::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(180,160,120,0.2) 20%, rgba(180,160,120,0.3) 50%, rgba(180,160,120,0.2) 80%, transparent 100%);
+}
+[data-theme="dark"] .farm-deposit-inner {
+  background: linear-gradient(180deg, #2e2822, #382e26 50%, #302820);
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(200,180,140,0.06);
+  border-color: #1e1810;
+}
+[data-theme="dark"] .farm-deposit-acorns {
+  color: #d4b878;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 -1px 0 rgba(220,200,140,0.1);
 }
 
 /* ── 농부 슬롯 ── */
