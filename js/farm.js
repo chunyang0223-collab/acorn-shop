@@ -82,7 +82,7 @@ function farmRenderMain() {
   // ── 상단 바: 상점 아이콘 + 농부 다람쥐 슬롯 + 예치금 ──
   html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">`;
   // 상점 버튼
-  html += `<div onclick="farmShowShop()" class="farm-shop-btn">🛒</div>`;
+  html += `<div onclick="farmShowShop()" class="farm-shop-btn"><div class="farm-shop-btn-face"><span>🛒</span><span class="farm-shop-btn-label">상점</span></div></div>`;
   // 농부 다람쥐 슬롯 (상점 아이콘 오른쪽)
   html += farmRenderFarmerSlot();
   // 여백
@@ -142,17 +142,13 @@ function farmRenderMain() {
 function farmRenderDepositBadge() {
   const acorns = _farmData?.deposit_acorns || 0;
   const crumbs = _farmData?.deposit_crumbs || 0;
+  const sign = (acorns > 0 || crumbs > 0) ? '+' : '';
+  const display = `${sign}${acorns}.${String(crumbs).padStart(2, '0')}`;
   return `
     <div onclick="farmShowDeposit()" style="margin-left:auto;cursor:pointer;flex-shrink:0">
       <div class="farm-deposit-outer">
         <div class="farm-deposit-inner">
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:14px">🌰</span>
-            <div>
-              <div class="farm-deposit-acorns">${acorns}</div>
-              <div class="farm-deposit-crumbs">${crumbs} 부스러기</div>
-            </div>
-          </div>
+          <div class="farm-deposit-acorns">${display}</div>
         </div>
       </div>
     </div>`;
