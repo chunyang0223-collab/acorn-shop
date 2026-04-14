@@ -8092,34 +8092,8 @@ input[type="checkbox"]:active,
 
 /* ── 상점 버튼 — 3D 다크 스타일은 5570줄에 통합, 이 블록 제거 ── */
 
-/* ── 밭 셀 공통 ── */
-.farm-cell {
-  aspect-ratio: 1; border-radius: 16px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  transition: background .3s, border .3s; position: relative;
-}
-.farm-cell-ready {
-  background: linear-gradient(135deg, var(--bg-amber-subtle), var(--bg-amber-muted));
-  border: 2px solid var(--p-amber-400); cursor: pointer;
-}
-.farm-cell-growing {
-  background: linear-gradient(135deg, var(--bg-green-subtle), var(--bg-green-muted));
-  border: 2px solid var(--p-green-400); cursor: default;
-}
-.farm-cell-empty {
-  background: linear-gradient(135deg, var(--p-amber-50), var(--bg-amber-subtle));
-  border: 2px dashed var(--border-amber);
-}
-.farm-cell-locked {
-  background: var(--bg-sunken); border: 2px solid var(--border-default); opacity: 0.3;
-}
-.farm-cell-expand {
-  background: var(--bg-sunken); border: 2px dashed var(--border-default);
-  cursor: pointer; transition: all .15s;
-}
-.farm-cell-label-ready  { font-size: 9px; font-weight: 700; color: var(--p-amber-800); margin-top: 2px; }
-.farm-cell-label-growing { font-size: 9px; font-weight: 700; color: var(--p-green-600); margin-top: 2px; }
-.farm-cell-timer { font-size: 7px; color: var(--text-secondary); font-weight: 600; margin-top: 1px; }
+/* ── 밭 셀 공통 — 중복 제거됨. 메인 정의는 5690줄 블록 참조 ── */
+/* farm-skip-btn만 유지 (인라인 스타일 대체) */
 .farm-skip-btn {
   position: absolute; top: 3px; right: 3px; font-size: 7px;
   background: var(--btn-danger-bg); color: var(--text-inverse);
