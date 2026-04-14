@@ -1472,30 +1472,30 @@
   --fc-unique-shadow: 0 2px 18px rgba(234,179,8,.45), 0 0 24px rgba(234,179,8,.15);
   --fc-legend-border: #e05050;
   --fc-legend-shadow: 0 2px 22px rgba(239,68,68,.5), 0 0 34px rgba(239,68,68,.2);
-  /* fc zone1 */
-  --fc-normal-z1: linear-gradient(160deg, #263822, #20301c);
-  --fc-rare-z1: linear-gradient(160deg, #1a3822, #14301a);
-  --fc-epic-z1: linear-gradient(160deg, #1a284a, #142040);
-  --fc-unique-z1: linear-gradient(160deg, #38301a, #302a14);
-  --fc-legend-z1: linear-gradient(160deg, #3e1a1a, #361414);
-  /* fc zone2 */
-  --fc-normal-z2: #2e3c28;
-  --fc-rare-z2: #20402a;
-  --fc-epic-z2: #203050;
-  --fc-unique-z2: #3e3620;
-  --fc-legend-z2: #482222;
-  /* fc zone3 */
-  --fc-normal-z3: #344630;
-  --fc-rare-z3: #284a32;
-  --fc-epic-z3: #283a5a;
-  --fc-unique-z3: #484024;
-  --fc-legend-z3: #522a2a;
-  /* fc zone4 */
-  --fc-normal-z4: linear-gradient(160deg, #3a4e36, #344630);
-  --fc-rare-z4: linear-gradient(160deg, #30543a, #284a32);
-  --fc-epic-z4: linear-gradient(160deg, #304468, #283a5a);
-  --fc-unique-z4: linear-gradient(160deg, #524a2a, #484024);
-  --fc-legend-z4: linear-gradient(160deg, #5c3232, #522a2a);
+  /* fc zone1 — 다크 금속 (가장 어둡게) */
+  --fc-normal-z1: linear-gradient(160deg, #3a443a, #303830 40%, #3e483e 70%, #2e362e);
+  --fc-rare-z1: linear-gradient(160deg, #1e4428, #183a20 35%, #245030 65%, #163818);
+  --fc-epic-z1: linear-gradient(160deg, #1e3460, #182c54 35%, #243c68 60%, #162a50);
+  --fc-unique-z1: linear-gradient(160deg, #5a4808, #504006 35%, #644e0c 65%, #4c3c04);
+  --fc-legend-z1: linear-gradient(160deg, #6a2020, #601818 35%, #742828 65%, #5c1616);
+  /* fc zone2 — 다크 금속 (중간) */
+  --fc-normal-z2: linear-gradient(145deg, #485848, #405040 50%, #506050);
+  --fc-rare-z2: linear-gradient(145deg, #2a5c38, #24522e 50%, #30643e);
+  --fc-epic-z2: linear-gradient(145deg, #2e4e7a, #284670 50%, #345684);
+  --fc-unique-z2: linear-gradient(145deg, #705c12, #68540e 50%, #786418);
+  --fc-legend-z2: linear-gradient(145deg, #883030, #802828 50%, #903838);
+  /* fc zone3 — 다크 금속 (밝은) */
+  --fc-normal-z3: linear-gradient(155deg, #566a56, #4e624e 50%, #5e725e);
+  --fc-rare-z3: linear-gradient(155deg, #387044, #30683c 50%, #40784c);
+  --fc-epic-z3: linear-gradient(155deg, #406090, #385888 50%, #486898);
+  --fc-unique-z3: linear-gradient(155deg, #887020, #806818 50%, #907828);
+  --fc-legend-z3: linear-gradient(155deg, #a04848, #983e3e 50%, #a85050);
+  /* fc zone4 — 다크 금속 (가장 밝은 하이라이트) */
+  --fc-normal-z4: linear-gradient(160deg, #687e68, #607660 40%, #708670 70%, #5c725c);
+  --fc-rare-z4: linear-gradient(160deg, #508860, #488056 35%, #589068 65%, #447c52);
+  --fc-epic-z4: linear-gradient(160deg, #6080b0, #5878a8 35%, #6888b8 65%, #5474a4);
+  --fc-unique-z4: linear-gradient(160deg, #a89040, #a08838 35%, #b09848 65%, #9c8434);
+  --fc-legend-z4: linear-gradient(160deg, #c07070, #b86868 35%, #c87878 65%, #b46464);
   /* fc misc */
   --fc-name-color: #e2e8f0;
   --fc-normal-grade-color: #86efac;
@@ -5408,93 +5408,137 @@ input[type="checkbox"]:active,
 /* ── 상단 바 ── */
 .farm-topbar { display: flex; gap: 8px; margin-bottom: 16px; }
 
-/* ── 농부 카드 (4존 그리드) ── */
+/* ── 농부 카드 (4존 그리드) — 금속 질감 ── */
 .fc-card {
-  flex: 1; border-radius: 14px; cursor: pointer; overflow: hidden;
+  flex: 1; border-radius: 12px; cursor: pointer; overflow: hidden;
   display: grid; grid-template-columns: 0.87fr 1.08fr 1.12fr;
   grid-template-rows: 1fr 1fr; position: relative;
   transition: transform 0.12s;
 }
 .fc-card:active { transform: scale(0.97); }
 
+/* 존 공통: 금속 텍스쳐 + 하이라이트 */
+.fc-zone1, .fc-zone2, .fc-zone3, .fc-zone4 {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+/* 금속 노이즈 */
+.fc-zone1::after, .fc-zone2::after, .fc-zone3::after, .fc-zone4::after {
+  content: '';
+  position: absolute; inset: 0; opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 100px; pointer-events: none; mix-blend-mode: overlay;
+}
+/* 존마다 다른 금속 반사 하이라이트 */
+.fc-zone1::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,.12) 30%, transparent 50%, rgba(255,255,255,.06) 70%, transparent 100%);
+}
+.fc-zone2::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(160deg, rgba(255,255,255,.08) 0%, transparent 40%, rgba(255,255,255,.04) 80%, transparent 100%);
+}
+.fc-zone3::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(145deg, transparent 0%, rgba(255,255,255,.06) 25%, transparent 55%);
+}
+.fc-zone4::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(170deg, rgba(255,255,255,.1) 0%, transparent 35%, rgba(255,255,255,.03) 65%, transparent 100%);
+}
+
 /* 등급별 외곽 + 글로우 */
-.fc-grade-normal { border: 2px solid #a0b8a0; box-shadow: 0 2px 8px rgba(100,140,100,.15); }
-.fc-grade-rare   { border: 2px solid #4ade80; box-shadow: 0 2px 12px rgba(34,197,94,.2), inset 0 0 20px rgba(34,197,94,.03); }
-.fc-grade-epic   { border: 2px solid #60a5fa; box-shadow: 0 2px 14px rgba(59,130,246,.25), inset 0 0 20px rgba(59,130,246,.04); }
-.fc-grade-unique { border: 2px solid #facc15; box-shadow: 0 2px 16px rgba(234,179,8,.3), inset 0 0 24px rgba(234,179,8,.05); }
-.fc-grade-legend { border: 2px solid #f87171; box-shadow: 0 2px 20px rgba(239,68,68,.35), 0 0 30px rgba(239,68,68,.1), inset 0 0 24px rgba(239,68,68,.05); }
+.fc-grade-normal { border: 2px solid #9eaaa0; box-shadow: 0 2px 8px rgba(100,140,100,.15), inset 0 1px 0 rgba(255,255,255,.08); }
+.fc-grade-rare   { border: 2px solid #5cc07a; box-shadow: 0 2px 12px rgba(34,197,94,.25), inset 0 1px 0 rgba(255,255,255,.1); }
+.fc-grade-epic   { border: 2px solid #6aA4e8; box-shadow: 0 2px 14px rgba(59,130,246,.3), inset 0 1px 0 rgba(255,255,255,.12); }
+.fc-grade-unique { border: 2px solid #e8c440; box-shadow: 0 2px 16px rgba(234,179,8,.35), inset 0 1px 0 rgba(255,255,255,.14); }
+.fc-grade-legend { border: 2px solid #f07070; box-shadow: 0 2px 20px rgba(239,68,68,.4), 0 0 30px rgba(239,68,68,.12), inset 0 1px 0 rgba(255,255,255,.14); }
 @keyframes fcLegendPulse {
-  0%, 100% { box-shadow: 0 2px 20px rgba(239,68,68,.35), 0 0 30px rgba(239,68,68,.1); }
-  50% { box-shadow: 0 2px 24px rgba(239,68,68,.5), 0 0 40px rgba(239,68,68,.2); }
+  0%, 100% { box-shadow: 0 2px 20px rgba(239,68,68,.4), 0 0 30px rgba(239,68,68,.12); }
+  50% { box-shadow: 0 2px 24px rgba(239,68,68,.55), 0 0 40px rgba(239,68,68,.2); }
 }
 .fc-grade-legend { animation: fcLegendPulse 2.5s ease-in-out infinite; }
 
-/* 존1: 다람쥐 이미지 */
+/* 존1: 다람쥐 이미지 — 가장 어두운 원금속 */
 .fc-zone1 {
-  grid-column: 1; grid-row: 1 / 3;
-  display: flex; align-items: center; justify-content: center; padding: 6px;
+  grid-column: 1; grid-row: 1 / 3; padding: 6px;
+  border-right: 1px solid rgba(0,0,0,.18);
 }
-.fc-grade-normal .fc-zone1 { background: linear-gradient(160deg, #c5d4bc, #b8c8ae); }
-.fc-grade-rare   .fc-zone1 { background: linear-gradient(160deg, #b8e0c0, #a0d4a8); }
-.fc-grade-epic   .fc-zone1 { background: linear-gradient(160deg, #b8cfe8, #a0bce0); }
-.fc-grade-unique .fc-zone1 { background: linear-gradient(160deg, #e8dca0, #dcd098); }
-.fc-grade-legend .fc-zone1 { background: linear-gradient(160deg, #e8b8b0, #dca8a0); }
+.fc-grade-normal .fc-zone1 { background: linear-gradient(160deg, #8a9a88, #7a8c78 40%, #8e9e8c 70%, #7a8a78); }
+.fc-grade-rare   .fc-zone1 { background: linear-gradient(160deg, #3a8a50, #2e7a42 35%, #44945a 65%, #2e7840); }
+.fc-grade-epic   .fc-zone1 { background: linear-gradient(160deg, #3a6aaa, #2e5e9c 35%, #4474b4 65%, #2e5c98); }
+.fc-grade-unique .fc-zone1 { background: linear-gradient(160deg, #b8920a, #a68208 35%, #c49e14 65%, #a88006); }
+.fc-grade-legend .fc-zone1 { background: linear-gradient(160deg, #c04040, #b03838 35%, #cc4c4c 65%, #ae3636); }
 .fc-zone1 img {
   width: 100%; max-width: 64px; height: auto; object-fit: contain; display: block;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+  position: relative; z-index: 1;
 }
-.fc-emoji-fb { font-size: 44px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.15)); }
+.fc-emoji-fb { font-size: 44px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)); position: relative; z-index: 1; }
 
-/* 존2: 이름 */
+/* 존2: 이름 — 중간 톤 */
 .fc-zone2 {
-  grid-column: 2; grid-row: 1;
-  display: flex; align-items: center; justify-content: center; padding: 6px;
+  grid-column: 2; grid-row: 1; padding: 6px;
+  border-bottom: 1px solid rgba(0,0,0,.12);
+  border-right: 1px solid rgba(0,0,0,.10);
 }
-.fc-grade-normal .fc-zone2 { background: #d8e4d0; }
-.fc-grade-rare   .fc-zone2 { background: #d0ecd4; }
-.fc-grade-epic   .fc-zone2 { background: #d0dced; }
-.fc-grade-unique .fc-zone2 { background: #ede4c0; }
-.fc-grade-legend .fc-zone2 { background: #ecd4d0; }
+.fc-grade-normal .fc-zone2 { background: linear-gradient(145deg, #a0b0a0, #94a894 50%, #a8b8a6); }
+.fc-grade-rare   .fc-zone2 { background: linear-gradient(145deg, #52b06a, #46a45e 50%, #5cba74); }
+.fc-grade-epic   .fc-zone2 { background: linear-gradient(145deg, #5a8cd0, #4e82c6 50%, #6496da); }
+.fc-grade-unique .fc-zone2 { background: linear-gradient(145deg, #d4b020, #c8a418 50%, #dcb828); }
+.fc-grade-legend .fc-zone2 { background: linear-gradient(145deg, #e06060, #d45454 50%, #e86a6a); }
 .fc-name {
-  font-size: 13px; font-weight: 900; color: var(--text-primary);
+  font-size: 13px; font-weight: 900;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   text-align: center; font-family: 'Pretendard', sans-serif;
+  position: relative; z-index: 1;
 }
+.fc-grade-normal .fc-name { color: #2a3a28; text-shadow: 0 1px 0 rgba(255,255,255,.15); }
+.fc-grade-rare   .fc-name { color: #0a3018; text-shadow: 0 1px 0 rgba(255,255,255,.15); }
+.fc-grade-epic   .fc-name { color: #0a1e3a; text-shadow: 0 1px 0 rgba(255,255,255,.18); }
+.fc-grade-unique .fc-name { color: #3a2800; text-shadow: 0 1px 0 rgba(255,255,255,.2); }
+.fc-grade-legend .fc-name { color: #3a0808; text-shadow: 0 1px 0 rgba(255,255,255,.2); }
 
-/* 존3: 등급 */
+/* 존3: 등급 — 밝은 톤 */
 .fc-zone3 {
-  grid-column: 2; grid-row: 2;
-  display: flex; align-items: center; justify-content: center; padding: 6px;
+  grid-column: 2; grid-row: 2; padding: 6px;
+  border-right: 1px solid rgba(0,0,0,.10);
 }
-.fc-grade-normal .fc-zone3 { background: #e4eede; }
-.fc-grade-rare   .fc-zone3 { background: #e0f4e4; }
-.fc-grade-epic   .fc-zone3 { background: #e0e8f4; }
-.fc-grade-unique .fc-zone3 { background: #f4ecd4; }
-.fc-grade-legend .fc-zone3 { background: #f4e0dc; }
+.fc-grade-normal .fc-zone3 { background: linear-gradient(155deg, #b0c0ae, #a4b4a2 50%, #b8c6b6); }
+.fc-grade-rare   .fc-zone3 { background: linear-gradient(155deg, #6ac882, #5ebc76 50%, #74d08c); }
+.fc-grade-epic   .fc-zone3 { background: linear-gradient(155deg, #7aa8e4, #6e9edc 50%, #84b2ec); }
+.fc-grade-unique .fc-zone3 { background: linear-gradient(155deg, #e4c840, #dcc038 50%, #ecd048); }
+.fc-grade-legend .fc-zone3 { background: linear-gradient(155deg, #f08888, #e87c7c 50%, #f49090); }
 .fc-grade {
   font-size: 12px; font-weight: 800; text-align: center;
-  text-shadow: 0 1px 2px rgba(0,0,0,.06); font-family: 'Pretendard', sans-serif;
+  font-family: 'Pretendard', sans-serif;
+  position: relative; z-index: 1;
 }
-.fc-grade-normal .fc-grade { color: #6b8068; }
-.fc-grade-rare   .fc-grade { color: #16a34a; }
-.fc-grade-epic   .fc-grade { color: #2563eb; }
-.fc-grade-unique .fc-grade { color: #b8860b; }
-.fc-grade-legend .fc-grade { color: #dc2626; }
+.fc-grade-normal .fc-grade { color: #4a5e48; text-shadow: 0 1px 0 rgba(255,255,255,.1); }
+.fc-grade-rare   .fc-grade { color: #0e4420; text-shadow: 0 1px 0 rgba(255,255,255,.12); }
+.fc-grade-epic   .fc-grade { color: #14306a; text-shadow: 0 1px 0 rgba(255,255,255,.14); }
+.fc-grade-unique .fc-grade { color: #5c4000; text-shadow: 0 1px 0 rgba(255,255,255,.16); }
+.fc-grade-legend .fc-grade { color: #5c1010; text-shadow: 0 1px 0 rgba(255,255,255,.16); }
 
-/* 존4: 버프 효과 */
+/* 존4: 버프 효과 — 가장 밝은 하이라이트 */
 .fc-zone4 {
-  grid-column: 3; grid-row: 1 / 3;
-  display: flex; align-items: center; justify-content: center; padding: 6px 8px;
+  grid-column: 3; grid-row: 1 / 3; padding: 6px 8px;
 }
-.fc-grade-normal .fc-zone4 { background: linear-gradient(160deg, #eef3ea, #e8ede4); }
-.fc-grade-rare   .fc-zone4 { background: linear-gradient(160deg, #eafaee, #e4f4e8); }
-.fc-grade-epic   .fc-zone4 { background: linear-gradient(160deg, #eaf0fa, #e4eaf6); }
-.fc-grade-unique .fc-zone4 { background: linear-gradient(160deg, #faf4e0, #f6f0da); }
-.fc-grade-legend .fc-zone4 { background: linear-gradient(160deg, #faece8, #f6e4e0); }
+.fc-grade-normal .fc-zone4 { background: linear-gradient(160deg, #c0cebe, #b4c4b2 40%, #c6d2c4 70%, #bccaba); }
+.fc-grade-rare   .fc-zone4 { background: linear-gradient(160deg, #b0e8be, #a4dcb2 35%, #b8ecc6 65%, #a0d8ae); }
+.fc-grade-epic   .fc-zone4 { background: linear-gradient(160deg, #c0d8f4, #b4cee8 35%, #c8e0f8 65%, #b0c8e4); }
+.fc-grade-unique .fc-zone4 { background: linear-gradient(160deg, #f4e8a0, #eee098 35%, #f8eca8 65%, #ece094); }
+.fc-grade-legend .fc-zone4 { background: linear-gradient(160deg, #f8c8c0, #f4beb6 35%, #fcd0c8 65%, #f2bab2); }
 .fc-buff {
-  font-size: 10px; font-weight: 700; color: var(--text-success);
+  font-size: 10px; font-weight: 700;
   line-height: 1.7; text-align: center; font-family: 'Pretendard', sans-serif;
+  position: relative; z-index: 1;
 }
+.fc-grade-normal .fc-buff { color: #3a5038; }
+.fc-grade-rare   .fc-buff { color: #145028; }
+.fc-grade-epic   .fc-buff { color: #1a3a6e; }
+.fc-grade-unique .fc-buff { color: #4a3400; }
+.fc-grade-legend .fc-buff { color: #4a0e0e; }
 .fc-buff-line { display: block; }
 .fc-buff-default { font-size: 12px; }
 
@@ -5522,16 +5566,58 @@ input[type="checkbox"]:active,
 }
 .farm-deposit-badge:active { transform: scale(0.95); }
 
-/* ── 상점 버튼 ── */
+/* ── 상점 버튼 — 3D + 뽀송뽀송 (세련된 다크) ── */
 .farm-shop-btn {
-  width: 100%; padding: 6px; border-radius: 8px; text-align: center; font-size: 14px;
-  cursor: pointer; transition: transform 0.15s;
-  background: var(--farm-shop-btn-bg); border: none; color: var(--farm-shop-btn-text);
-  display: flex; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none;
 }
-.farm-shop-btn:hover { transform: scale(1.05); }
-.farm-shop-btn:active { transform: scale(0.92); }
-.farm-shop-btn::after { content: ''; font-size: 0; }
+.farm-shop-btn-face {
+  position: relative;
+  border-radius: 10px; padding: 5px 0; text-align: center;
+  background: linear-gradient(160deg, #6e6a66, #4a4642 30%, #3a3836 60%, #2a2826);
+  color: #e8e4e0; font-size: 13px; font-weight: 900;
+  box-shadow: 0 4px 0 #1a1816, 0 6px 8px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
+  transition: transform 0.08s, box-shadow 0.08s;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+/* 뽀송뽀송 보풀 */
+.farm-shop-btn-face::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  background-image:
+    radial-gradient(ellipse 3px 2px at 20% 30%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 60% 20%, rgba(255,255,255,0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 3px 2px at 80% 60%, rgba(255,255,255,0.16) 0%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 40% 70%, rgba(255,255,255,0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 3px 2px at 15% 80%, rgba(255,255,255,0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 2px 2px at 70% 40%, rgba(255,255,255,0.18) 0%, transparent 100%);
+  pointer-events: none; opacity: 0.9;
+}
+/* 보풀 노이즈 */
+.farm-shop-btn-face::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 80px; pointer-events: none; mix-blend-mode: soft-light;
+}
+.farm-shop-btn-face span {
+  position: relative; z-index: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.farm-shop-btn-label {
+  font-size: 10px; font-weight: 800; color: #d0ccc8;
+  position: relative; z-index: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.farm-shop-btn:active .farm-shop-btn-face {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #1a1816, 0 2px 4px rgba(0,0,0,0.3),
+    inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 0 rgba(255,255,255,0.05);
+}
 .farm-shop-lbl { font-size: 11px; font-weight: 800; color: var(--text-inverse); }
 
 /* ── 밭 감싸기 — 흙/땅 바탕 + 울타리 ── */
@@ -8001,14 +8087,48 @@ input[type="checkbox"]:active,
 .farm-inv-badge-seed { background: var(--p-green-700); }
 .farm-inv-badge-crop { background: var(--p-amber-700); }
 
-/* ── 예치금 배지 ── */
-.farm-deposit-outer { border: 3px solid var(--p-amber-600); border-radius: 14px; padding: 2px; }
-.farm-deposit-inner {
-  border: 2px solid var(--p-amber-400); border-radius: 11px; padding: 6px 12px;
-  background: linear-gradient(135deg, var(--bg-amber-subtle), var(--bg-amber-muted));
+/* ── 예치금 배지 — 금고(Vault) 컨셉 / 음각 ── */
+.farm-deposit-outer {
+  border-radius: 10px;
+  padding: 2px;
+  background: linear-gradient(160deg, #5a5048, #3e362e 40%, #4a4238 70%, #342c24);
+  box-shadow: 0 2px 6px rgba(40,30,20,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  border: 2px solid #6a5c48;
+  position: relative;
 }
-.farm-deposit-acorns { font-size: 13px; font-weight: 900; color: var(--text-brand); line-height: 1.1; }
-.farm-deposit-crumbs { font-size: 9px; color: var(--p-amber-700); line-height: 1; }
+/* 금고 도어 장식선 */
+.farm-deposit-outer::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 4px; right: 4px; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(180,160,120,0.2) 20%, rgba(180,160,120,0.3) 50%, rgba(180,160,120,0.2) 80%, transparent 100%);
+  pointer-events: none; z-index: 2;
+}
+.farm-deposit-inner {
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #2e2822, #382e26 50%, #302820);
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(200,180,140,0.06);
+  border: 1px solid #1e1810;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  text-align: center;
+}
+/* 금속 노이즈 */
+.farm-deposit-inner::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 100px; pointer-events: none; mix-blend-mode: overlay;
+}
+.farm-deposit-acorns {
+  font-size: 14px; font-weight: 900;
+  color: #d4b878;
+  line-height: 1.1;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 -1px 0 rgba(220,200,140,0.1);
+  position: relative; z-index: 1;
+}
 
 /* ── 농부 슬롯 ── */
 .farm-farmer-active {
@@ -8064,7 +8184,7 @@ input[type="checkbox"]:active,
 [data-theme="dark"] .farm-cell-ready  { background: linear-gradient(180deg, #4a7030 0%, #407028 100%); border-color: #70b048; box-shadow: inset 0 1px 0 #5a903c, 0 5px 0 #0e200a, 0 7px 12px rgba(0,0,0,0.45); }
 [data-theme="dark"] .farm-cell-growing { background: linear-gradient(180deg, #306038 0%, #265430 100%); border-color: #50a058; box-shadow: inset 0 1px 0 #387840, 0 5px 0 #0a1808, 0 7px 12px rgba(0,0,0,0.4); }
 [data-theme="dark"] .farm-cell-empty   { background: #163018; border-color: #305830; box-shadow: inset 0 3px 8px rgba(0,0,0,0.4); }
-[data-theme="dark"] .farm-deposit-inner { background: linear-gradient(135deg, var(--bg-amber-subtle), var(--bg-amber-muted)); }
+/* 금고 컨셉은 라이트/다크 공용 — 별도 오버라이드 불필요 */
 [data-theme="dark"] .farm-farmer-active { background: linear-gradient(135deg, var(--bg-green-subtle), var(--bg-green-muted)); }
 [data-theme="dark"] .farm-inv-seed { background: linear-gradient(135deg, var(--bg-green-subtle), var(--bg-green-muted)); }
 [data-theme="dark"] .farm-inv-crop { background: linear-gradient(135deg, var(--bg-amber-subtle), var(--bg-amber-muted)); }
