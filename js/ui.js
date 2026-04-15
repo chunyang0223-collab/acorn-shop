@@ -60,7 +60,7 @@ async function initAppUI() {
   }
   // 탭바 드래그 스크롤 초기화 (PC 웹 대응)
   setTimeout(() => {
-    initTabBarDragScroll(document.getElementById('userTabBar'));
+    initTabBarDragScroll(document.getElementById('userTabScroll') || document.getElementById('userTabBar'));
     initTabBarDragScroll(document.getElementById('adminTabBar'));
   }, 300);
 }
