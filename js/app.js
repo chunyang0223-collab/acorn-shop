@@ -1,35 +1,60 @@
 
 // ──────────────────────────────────────────────
-//  탭바 드래그 스크롤 (PC 웹 대응)
+//  탭바 드래그 스크롤 (translateX 방식 — overflow:visible 유지)
 // ──────────────────────────────────────────────
 function initTabBarDragScroll(el) {
   if (!el) return;
-  let isDown = false, startX = 0, scrollLeft = 0;
+
+  let offset = 0;       // 현재 이동 거리
+  let maxOffset = 0;    // 최대 이동 가능 거리
+  let startX = 0;
+  let startOffset = 0;
+  let isDragging = false;
+
+  function updateMax() {
+    // 버튼 전체 너비 - 탭바 보이는 너비
+    maxOffset = Math.max(0, el.scrollWidth - el.clientWidth);
+  }
+
+  function applyOffset(val) {
+    offset = Math.max(0, Math.min(val, maxOffset));
+    el.style.transform = `translateX(${-offset}px)`;
+
+    // 스크롤 힌트
+    const wrap = el.closest('.tab-bar-wrap');
+    if (wrap) wrap.classList.toggle('can-scroll', offset < maxOffset - 4);
+  }
+
+  // 마우스
   el.addEventListener('mousedown', e => {
-    isDown = true;
+    isDragging = true;
+    startX = e.pageX;
+    startOffset = offset;
     el.style.cursor = 'grabbing';
-    startX = e.pageX - el.offsetLeft;
-    scrollLeft = el.scrollLeft;
+    updateMax();
   });
-  el.addEventListener('mouseleave', () => { isDown = false; el.style.cursor = 'grab'; });
-  el.addEventListener('mouseup',    () => { isDown = false; el.style.cursor = 'grab'; });
-  el.addEventListener('mousemove',  e => {
-    if (!isDown) return;
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    el.style.cursor = 'grab';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
     e.preventDefault();
-    const x = e.pageX - el.offsetLeft;
-    el.scrollLeft = scrollLeft - (x - startX) * 1.2;
+    applyOffset(startOffset - (e.pageX - startX));
   });
 
-  // 스크롤 힌트 (우측 화살표 표시)
-  function checkScroll() {
-    const wrap = el.closest('.tab-bar-wrap');
-    if (!wrap) return;
-    const canScroll = el.scrollWidth > el.clientWidth && el.scrollLeft < el.scrollWidth - el.clientWidth - 4;
-    wrap.classList.toggle('can-scroll', canScroll);
-  }
-  el.addEventListener('scroll', checkScroll);
-  new ResizeObserver(checkScroll).observe(el);
-  setTimeout(checkScroll, 100);
+  // 터치
+  el.addEventListener('touchstart', e => {
+    startX = e.touches[0].pageX;
+    startOffset = offset;
+    updateMax();
+  }, { passive: true });
+  el.addEventListener('touchmove', e => {
+    applyOffset(startOffset - (e.touches[0].pageX - startX));
+  }, { passive: true });
+
+  new ResizeObserver(() => { updateMax(); applyOffset(offset); }).observe(el);
+  setTimeout(() => { updateMax(); applyOffset(0); }, 100);
 }
 
 // ──────────────────────────────────────────────
