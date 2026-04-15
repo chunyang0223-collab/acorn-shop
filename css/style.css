@@ -833,7 +833,7 @@
   --bg-login-card:  var(--bg-surface);
 
   /* 카드/필드/모달 컴포넌트 */
-  --card-bg:        var(--bg-surface);
+  --card-bg:        #fff8f4;
   --card-border:    var(--border-default);
   --card-shadow:    var(--shadow-clay);
   --border-card:    var(--border-default);
