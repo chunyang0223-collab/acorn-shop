@@ -182,7 +182,7 @@
 
   <!-- ── 사용자 모드 ── -->
   <div id="userMode" class="hidden">
-    <div class="tab-bar-wrap"><div id="userTabBar" class="clay-card">
+    <div class="tab-bar-outer"><div class="tab-bar-wrap"><div id="userTabBar" class="clay-card">
       <button class="tab-btn active" onclick="uTab('shop',this)" style="flex-shrink:0"><span class="tab-icon">🛍️</span><span class="tab-label">상점</span></button>
       <button class="tab-btn" onclick="uTab('gacha',this)" style="flex-shrink:0"><span class="tab-icon">🎲</span><span class="tab-label">뽑기</span></button>
       <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0"><span class="tab-icon">📋</span><span class="tab-label">퀘스트</span></button>
@@ -193,7 +193,7 @@
       <button class="tab-btn" onclick="uTab('recycle',this)" style="flex-shrink:0"><span class="tab-icon">♻️</span><span class="tab-label">재활용</span></button>
       <button class="tab-btn" onclick="uTab('friend',this)" style="flex-shrink:0;position:relative"><span class="tab-icon">🤝</span><span class="tab-label">친구</span><span class="notif-dot hidden" id="friendReqDot" style="position:absolute;top:2px;right:2px"></span></button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0"><span class="tab-icon">👤</span><span class="tab-label">MyPage</span></button>
-    </div></div>
+    </div></div></div>
     <div id="utab-shop">
       <p class="text-sm font-bold text-amber-700 mb-3 px-1">🛒 구매 가능한 상품</p>
       <div id="shopGrid" class="grid grid-cols-2 gap-3"></div>
