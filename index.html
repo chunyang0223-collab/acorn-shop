@@ -182,7 +182,8 @@
 
   <!-- ── 사용자 모드 ── -->
   <div id="userMode" class="hidden">
-    <div class="tab-bar-wrap" style="margin-top:18px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;padding-top:16px;margin-bottom:20px;cursor:grab;"><div id="userTabBar" class="clay-card" style="display:flex;align-items:flex-end;height:52px;padding:4px 4px 6px;overflow:visible;position:relative;min-width:max-content;">
+    <div class="tab-bar-wrap" style="margin-top:18px;padding-top:16px;margin-bottom:20px;overflow:visible;"><div id="userTabBar" class="clay-card" style="overflow:visible;position:relative;height:52px;">
+      <div id="userTabScroll" style="display:flex;align-items:flex-end;height:100%;padding:4px 4px 6px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;">
       <button class="tab-btn active" onclick="uTab('shop',this)" style="flex-shrink:0"><span class="tab-icon">🛍️</span><span class="tab-label">상점</span></button>
       <button class="tab-btn" onclick="uTab('gacha',this)" style="flex-shrink:0"><span class="tab-icon">🎲</span><span class="tab-label">뽑기</span></button>
       <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0"><span class="tab-icon">📋</span><span class="tab-label">퀘스트</span></button>
@@ -193,6 +194,7 @@
       <button class="tab-btn" onclick="uTab('recycle',this)" style="flex-shrink:0"><span class="tab-icon">♻️</span><span class="tab-label">재활용</span></button>
       <button class="tab-btn" onclick="uTab('friend',this)" style="flex-shrink:0;position:relative"><span class="tab-icon">🤝</span><span class="tab-label">친구</span><span class="notif-dot hidden" id="friendReqDot" style="position:absolute;top:2px;right:2px"></span></button>
       <button class="tab-btn" onclick="uTab('mypage',this)" style="flex-shrink:0"><span class="tab-icon">👤</span><span class="tab-label">MyPage</span></button>
+      </div>
     </div></div>
     <div id="utab-shop">
       <p class="text-sm font-bold text-amber-700 mb-3 px-1">🛒 구매 가능한 상품</p>
