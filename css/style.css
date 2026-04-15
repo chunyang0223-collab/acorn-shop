@@ -3613,7 +3613,7 @@ input[type="checkbox"]:active,
   position: relative;
   overflow-x: auto;
   overflow-y: hidden;
-  border-radius: 24px;
+  border-radius: 0;
   padding-top: 20px;
   clip-path: inset(-4px -9999px 0 -9999px);
   scrollbar-width: none;
@@ -3622,32 +3622,12 @@ input[type="checkbox"]:active,
 .tab-bar-wrap::-webkit-scrollbar { display: none; }
 .tab-bar-wrap::after { display: none; }
 
-/* 화살표 힌트: 스크롤 바깥 래퍼에 고정 */
 .tab-bar-outer {
   position: relative;
   margin-top: 18px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
-.tab-bar-outer::after {
-  content: '›';
-  position: absolute;
-  right: 0; top: 20px; bottom: 0;
-  width: 32px;
-  border-radius: 0 24px 24px 0;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(90deg, transparent, var(--bg-surface) 40%);
-  color: var(--text-accent);
-  font-size: 18px; font-weight: 900;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 2;
-}
-.tab-bar-outer.can-scroll::after { opacity: 1; }
-[data-theme="dark"] .tab-bar-outer::after {
-  background: var(--tab-bar-fade);
-  color: var(--tab-bar-fade-color);
-}
+.tab-bar-outer::after { display: none; }
 
 /* ══════════════════════════════════════════════
    관리자 C안 — 핀 탭바 + 홈 그리드
@@ -8595,6 +8575,10 @@ input[type="checkbox"]:active,
 /* ── 상점 그리드 카드: 오로라 보더 약하게 ── */
 :root:not([data-theme="dark"]) #shopGrid .clay-card::before {
   opacity: 0.35;
+}
+/* ── 보유다람쥐 카드: 오로라 보더 약간 연하게 ── */
+:root:not([data-theme="dark"]) #utab-sq_my > .clay-card::before {
+  opacity: 0.45;
 }
 
 /* ── 필터칩 ── */
