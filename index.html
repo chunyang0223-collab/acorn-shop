@@ -182,7 +182,7 @@
 
   <!-- ── 사용자 모드 ── -->
   <div id="userMode" class="hidden">
-    <div class="tab-bar-wrap" style="margin-top:18px"><div id="userTabBar" class="flex gap-1 mb-5 clay-card p-2" style="overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;cursor:grab">
+    <div class="tab-bar-wrap" style="margin-top:18px"><div id="userTabBar" class="flex gap-1 mb-5 clay-card p-2" style="scrollbar-width:none;-ms-overflow-style:none;cursor:grab">
       <button class="tab-btn active" onclick="uTab('shop',this)" style="flex-shrink:0"><span class="tab-icon">🛍️</span><span class="tab-label">상점</span></button>
       <button class="tab-btn" onclick="uTab('gacha',this)" style="flex-shrink:0"><span class="tab-icon">🎲</span><span class="tab-label">뽑기</span></button>
       <button class="tab-btn" onclick="uTab('quest',this)" style="flex-shrink:0"><span class="tab-icon">📋</span><span class="tab-label">퀘스트</span></button>
@@ -403,12 +403,12 @@
 
     <div id="utab-squirrel" class="hidden">
       <!-- 서브탭 -->
-      <div class="clay-card p-2 flex gap-1 mb-4" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-        <button class="tab-btn active" onclick="sqTab('my')"         id="sqtab-my" style="flex:1 0 auto;min-width:0">🏠 내 다람쥐</button>
-        <button class="tab-btn"        onclick="sqTab('shop')"       id="sqtab-shop" style="flex:1 0 auto;min-width:0">🛒 상점</button>
-        <button class="tab-btn"        onclick="sqTab('fuse')"       id="sqtab-fuse" style="flex:1 0 auto;min-width:0">🧬 합성</button>
-        <button class="tab-btn"        onclick="sqTab('expedition')" id="sqtab-expedition" style="flex:1 0 auto;min-width:0">⚔️ 탐험</button>
-        <button class="tab-btn"        onclick="sqTab('farm')"       id="sqtab-farm" style="flex:1 0 auto;min-width:0">🌾 농장</button>
+      <div class="adm-subtab-bar mb-4">
+        <button class="adm-subtab active" onclick="sqTab('my')"         id="sqtab-my">🏠 내 다람쥐</button>
+        <button class="adm-subtab"        onclick="sqTab('shop')"       id="sqtab-shop">🛒 상점</button>
+        <button class="adm-subtab"        onclick="sqTab('fuse')"       id="sqtab-fuse">🧬 합성</button>
+        <button class="adm-subtab"        onclick="sqTab('expedition')" id="sqtab-expedition">⚔️ 탐험</button>
+        <button class="adm-subtab"        onclick="sqTab('farm')"       id="sqtab-farm">🌾 농장</button>
       </div>
     <div id="sq-maint-overlay" class="hidden"></div>
     <div id="utab-sq_my">
