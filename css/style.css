@@ -3135,13 +3135,18 @@ input[type="checkbox"]:active,
     0 6px 0 #1c1a22,
     0 9px 20px rgba(0,0,0,0.55);
   display: flex;
-  height: 52px;
+  height: 64px;
   align-items: flex-end;
-  justify-content: space-around;
+  justify-content: flex-start;
   padding: 4px 4px 6px;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
   position: relative;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
 }
+[data-theme="dark"] #userTabBar.clay-card::-webkit-scrollbar { display: none; }
 [data-theme="dark"] #userTabBar .tab-btn {
   display: flex; flex-direction: column; align-items: center;
   gap: 1px; padding: 2px 8px;
@@ -3606,13 +3611,12 @@ input[type="checkbox"]:active,
   position: relative;
   overflow: visible;
   border-radius: 24px;
-  padding-top: 12px;
 }
 .tab-bar-wrap::after {
   content: '›';
   position: absolute;
   right: 0; top: 0; bottom: 0;
-  width: 36px;
+  width: 32px;
   border-radius: 0 24px 24px 0;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(90deg, transparent, var(--bg-surface) 40%);
@@ -3621,7 +3625,7 @@ input[type="checkbox"]:active,
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s;
-  z-index: 1;
+  z-index: 2;
 }
 .tab-bar-wrap.can-scroll::after { opacity: 1; }
 [data-theme="dark"] .tab-bar-wrap::after {
@@ -8450,13 +8454,14 @@ input[type="checkbox"]:active,
   will-change: auto;
   box-shadow: 0 4px 18px rgba(180,150,220,0.1), 0 1px 3px rgba(180,150,220,0.05);
   display: flex;
-  height: 52px;
+  height: 64px;
   align-items: flex-end;
-  justify-content: space-around;
+  justify-content: flex-start;
   gap: 0;
   padding: 4px 4px 6px;
   margin-bottom: 20px;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
   position: relative;
   z-index: 0;
   scrollbar-width: none;
@@ -8465,9 +8470,13 @@ input[type="checkbox"]:active,
 }
 :root:not([data-theme="dark"]) #userTabBar.clay-card::-webkit-scrollbar { display: none; }
 :root:not([data-theme="dark"]) #userTabBar.clay-card::before {
+  display: none;
+}
+/* 오로라 보더를 tab-bar-wrap으로 이동 — 스크롤과 무관하게 고정 */
+:root:not([data-theme="dark"]) .tab-bar-wrap::before {
   content: '';
-  position: absolute; inset: -2px; bottom: -2px;
-  border-radius: 24px;
+  position: absolute; inset: -2px;
+  border-radius: 26px;
   background: linear-gradient(135deg, #ffc8e0, #c8d8ff, #e0c8ff, #ffe0c8);
   z-index: -1;
   pointer-events: none;
