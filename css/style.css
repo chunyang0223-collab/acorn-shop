@@ -3625,7 +3625,7 @@ input[type="checkbox"]:active,
 .tab-bar-wrap::after {
   content: '›';
   position: absolute;
-  right: 0; top: 0; bottom: 0;
+  right: 0; top: 20px; bottom: 0;
   width: 32px;
   border-radius: 0 24px 24px 0;
   display: flex; align-items: center; justify-content: center;
