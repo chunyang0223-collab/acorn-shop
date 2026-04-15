@@ -22,10 +22,10 @@ function initTabBarDragScroll(el) {
 
   // 스크롤 힌트 (우측 화살표 표시)
   function checkScroll() {
-    const wrap = el.closest('.tab-bar-wrap');
-    if (!wrap) return;
+    const outer = el.closest('.tab-bar-outer') || el.closest('.tab-bar-wrap');
+    if (!outer) return;
     const canScroll = el.scrollWidth > el.clientWidth && el.scrollLeft < el.scrollWidth - el.clientWidth - 4;
-    wrap.classList.toggle('can-scroll', canScroll);
+    outer.classList.toggle('can-scroll', canScroll);
   }
   el.addEventListener('scroll', checkScroll);
   new ResizeObserver(checkScroll).observe(el);
