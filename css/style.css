@@ -2502,39 +2502,52 @@ body {
 }
 
 /* ── 탭 버튼 ── */
+/* ── 메인 탭 버튼 (E-1 돌출 원형 — 라이트모드 기본) ── */
 .tab-btn {
-  border-radius: 16px;
-  padding: 10px 14px;
-  font-weight: 700;
-  font-size: 13px;
-  font-family: 'Jua', 'Nunito', sans-serif;
-  cursor: pointer;
-  transition:
-    all var(--duration-normal) var(--ease-bounce);
-  border: none;
-  background: transparent;
-  color: var(--tab-inactive-text);
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1px; padding: 2px 8px;
+  font-weight: 700; font-family: 'Jua', 'Nunito', sans-serif;
+  cursor: pointer; border: none; background: transparent;
+  white-space: nowrap; flex-shrink: 0;
   position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.25s var(--ease-bounce);
+}
+.tab-btn .tab-icon {
+  font-size: 16px; line-height: 1;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: all 0.25s var(--ease-bounce);
+  background: transparent;
+}
+.tab-btn .tab-label {
+  font-size: 10px; line-height: 1;
+  color: rgba(80,120,160,0.45);
+  transition: all 0.2s ease;
 }
 .tab-btn:active {
   transform: scale(0.93);
-  transition-duration: var(--duration-fast);
+  transition-duration: var(--dur-fast);
 }
-.tab-btn.active {
-  background: var(--tab-active-bg);
-  color: var(--tab-active-text);
-  box-shadow: none;
-  position: relative;
+
+/* 활성: 아이콘 돌출 원형 + 하늘색 */
+.tab-btn.active .tab-icon {
+  width: 36px; height: 36px;
+  font-size: 18px;
+  transform: translateY(-14px);
+  background: linear-gradient(145deg, #dff0ff, #c4e2ff);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
+.tab-btn.active .tab-label {
+  transform: translateY(-4px);
+  font-size: 10px; font-weight: 800;
+  color: #2870a8;
+}
+/* 라이트모드: 기존 밑줄 제거 */
 .tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 2px; left: 20%; right: 20%;
-  height: 3.5px; border-radius: 2px;
-  background: #a78bfa;
-  box-shadow: 0 0 8px rgba(167,139,250,0.3);
+  display: none;
 }
 
 /* ── 인풋 필드 ── */
@@ -3181,7 +3194,46 @@ input[type="checkbox"]:active,
   box-shadow: var(--field-shadow);
 }
 [data-theme="dark"] .field::placeholder { color: var(--field-placeholder-dk); }
-[data-theme="dark"] .tab-btn { color: var(--tab-btn-dk-text); }
+/* 다크모드: 탭 구조를 원래 가로 배치로 복원 */
+[data-theme="dark"] .tab-btn {
+  display: inline-flex; flex-direction: row; align-items: center;
+  gap: 0; padding: 10px 14px;
+  border-radius: 16px; font-size: 13px;
+  color: var(--tab-btn-dk-text);
+}
+[data-theme="dark"] .tab-btn .tab-icon {
+  font-size: 13px; width: auto; height: auto;
+  border-radius: 0; background: none !important;
+  border: none !important; box-shadow: none !important;
+  transform: none !important;
+  display: inline; margin-right: 2px;
+}
+[data-theme="dark"] .tab-btn .tab-label {
+  font-size: 13px; font-weight: 700;
+  transform: none !important;
+  color: inherit;
+}
+[data-theme="dark"] .tab-btn.active .tab-icon {
+  width: auto; height: auto;
+  transform: none; background: none !important;
+  border: none !important; box-shadow: none !important;
+}
+[data-theme="dark"] .tab-btn.active .tab-label {
+  transform: none; color: var(--tab-btn-dk-active-text);
+}
+[data-theme="dark"] .tab-btn.active::after {
+  display: block;
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 20%; right: 20%;
+  height: 3.5px; border-radius: 2px;
+  background: #a78bfa;
+  box-shadow: 0 0 8px rgba(167,139,250,0.3);
+}
+[data-theme="dark"] #userTabBar.clay-card {
+  height: auto; padding-top: 8px; overflow: hidden;
+}
+[data-theme="dark"] .tab-bar-wrap { padding-top: 0; }
 [data-theme="dark"] .acorn-pill {
   background: var(--acorn-pill-bg);
   color: var(--acorn-pill-text);
@@ -8414,3 +8466,82 @@ input[type="checkbox"]:active,
 .myp-gift-plus     { font-size: 1.1rem; color: var(--text-success); }
 .myp-gift-notice   { font-size: 11px; color: var(--p-green-300); margin-top: 3px; font-weight: 700; }
 .myp-result-item   { display: flex; align-items: center; justify-content: center; gap: 2px; font-size: 14px; font-weight: 700; color: var(--p-blue-800); }
+
+/* ══════════════════════════════════════════════════════════════
+   E-1 하늘빛 구름 — 라이트모드 전용 컨테이너 오버라이드
+   ─ 메인탭바: 오로라 보더 + 크림 기반 + 고정 높이
+   ─ 서브탭바: 오로라 보더 연한 버전
+   ─ 카드: 오로라 보더 + 크림 그라디언트
+   ─ 서브탭 활성: 파스텔 필 배경
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 메인탭바 컨테이너 ── */
+:root:not([data-theme="dark"]) #userTabBar.clay-card {
+  background: linear-gradient(145deg, #fff6ef 0%, #f5eeff 50%, #eef5ff 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  box-shadow: 0 4px 18px rgba(180,150,220,0.1), 0 1px 3px rgba(180,150,220,0.05);
+  height: 52px;
+  align-items: flex-end;
+  padding-top: 12px;
+  overflow: visible;
+}
+:root:not([data-theme="dark"]) #userTabBar.clay-card::before {
+  content: '';
+  position: absolute; inset: -2px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #ffc8e0, #c8d8ff, #e0c8ff, #ffe0c8);
+  z-index: -1;
+}
+:root:not([data-theme="dark"]) .tab-bar-wrap {
+  padding-top: 12px;
+}
+
+/* ── 서브탭바 컨테이너 (다람쥐 탭 등 .clay-card 서브탭) ── */
+:root:not([data-theme="dark"]) #squirrelSection .clay-card {
+  background: linear-gradient(145deg, #fff8f2 0%, #f4edff 100%);
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(180,150,220,0.06);
+}
+:root:not([data-theme="dark"]) #squirrelSection .clay-card::before {
+  content: '';
+  position: absolute; inset: -1.5px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #ffd0e8, #d0dfff, #e8d0ff, #ffe8d0);
+  z-index: -1;
+  opacity: 0.7;
+}
+
+/* ── 서브탭 활성 스타일 (라이트모드) ── */
+:root:not([data-theme="dark"]) .adm-subtab.active {
+  color: #2870a8;
+  background: #e0f0ff;
+  border-radius: 8px;
+  border-color: transparent;
+  box-shadow: none;
+}
+:root:not([data-theme="dark"]) .adm-subtab.active::after {
+  display: none;
+}
+:root:not([data-theme="dark"]) .adm-subtab {
+  color: rgba(80,120,160,0.4);
+}
+
+/* ── 컨텐츠 카드 (라이트모드) ── */
+:root:not([data-theme="dark"]) .clay-card:not(#userTabBar):not(#adminTabBar) {
+  background: linear-gradient(160deg, #fff8f4 0%, #f6f0ff 40%, #f0f6ff 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  box-shadow: 0 6px 24px rgba(180,150,220,0.09), 0 2px 6px rgba(180,150,220,0.04);
+}
+:root:not([data-theme="dark"]) .clay-card:not(#userTabBar):not(#adminTabBar)::before {
+  content: '';
+  position: absolute; inset: -2px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #ffcce0, #ccdcff, #e0ccff, #ffe0cc);
+  z-index: -1;
+}
