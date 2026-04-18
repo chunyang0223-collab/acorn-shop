@@ -1,0 +1,176 @@
+/* ═══════════════════════════════════════════════════════
+   Design Tokens V3 — Phase 3a Override
+   ──────────────────────────────────────────────
+   목적: 기존 style.css의 토큰 정의를 전면 재작성하지 않고,
+         C 컨셉(수채화) + 조약돌 컨셉으로 값만 교체.
+   로드 순서: style.css 다음에 로드되어 cascade로 덮어씀.
+   ──────────────────────────────────────────────
+   라이트 = 비 오기 전, 수면 위의 빛 (수채 파스텔)
+   다크   = 비 온 뒤, 수면 아래의 조약돌 (모카톤 폐기)
+═══════════════════════════════════════════════════════ */
+
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT MODE — C 컨셉: 수채화 / 수면 위의 빛
+   ══════════════════════════════════════════════════════════════ */
+:root {
+
+  /* ═══ 표면 계층 (불투명 필수) ═══ */
+  --bg-base:        #f0eaf4;   /* 앱 바닥층 - 연한 라벤더 크림 */
+  --bg-surface:     #fbf8fc;   /* 섹션·카드 바탕 - 크림 라벤더 */
+  --bg-elevated:    #ffffff;   /* 모달·팝오버 */
+  --bg-sunken:      #ede5f0;   /* 인풋·눌린 영역 */
+
+  /* 표면 alias (기존 코드 호환) */
+  --card-bg:         #fbf8fc;
+  --bg-card:         #fbf8fc;
+  --clay-bg:         #fbf8fc;
+  --bg-login-card:   #fbf8fc;
+  --bg-modal:        #ffffff;
+  --modal-bg:        #ffffff;
+  --bg-page:         #f0eaf4;
+  --bg-hover:        #f5eff8;
+  --field-bg:        #ede5f0;
+  --bg-input:        #ede5f0;
+
+  /* ═══ 텍스트 ═══ */
+  --text-primary:    #111827;   /* 다크그레이 — 가독성 최우선 */
+  --text-secondary:  #4b5563;
+  --text-tertiary:   #6b7280;
+  --text-muted:      #9ca3af;
+  --text-disabled:   #c8c0d0;
+  --text-inverse:    #ffffff;
+  --text-field:      #111827;
+
+  /* ═══ 보더 ═══ */
+  --border-default:  #e8e0f0;   /* 옅은 라벤더 */
+  --border-light:    #f0ebf5;
+  --border-strong:   #d8ccdf;
+  --border-input:    #d8ccdf;
+  --border-card:     #e8e0f0;
+  --border-color:    #e8e0f0;
+  --border-main:     #e8e0f0;
+  --field-border:    #d8ccdf;
+  --modal-border:    #e8e0f0;
+
+  /* ═══ 그림자 — 수채화 soft clay ═══ */
+  --shadow-xs:
+    0 1px 2px rgba(120,100,160,0.06);
+  --shadow-sm:
+    0 1px 3px rgba(120,100,160,0.08);
+  --shadow-md:
+    0 4px 10px rgba(140,110,180,0.08);
+  --shadow-lg:
+    0 10px 22px rgba(140,110,180,0.1);
+  --shadow-xl:
+    0 18px 40px rgba(140,110,180,0.12);
+
+  /* 클레이 양각 (soft) */
+  --shadow-clay:
+    6px 6px 14px rgba(140,110,180,0.12),
+    -6px -6px 14px rgba(255,255,255,0.9);
+  --shadow-clay-hover:
+    8px 8px 18px rgba(140,110,180,0.16),
+    -8px -8px 18px rgba(255,255,255,0.95);
+  --shadow-clay-active:
+    inset 3px 3px 8px rgba(140,110,180,0.1),
+    inset -3px -3px 8px rgba(255,255,255,0.85);
+
+  /* 클레이 버튼 (수채 코랄) */
+  --shadow-clay-btn:
+    0 4px 14px rgba(255,130,170,0.35),
+    inset 0 1.5px 0 rgba(255,255,255,0.5),
+    inset 0 -2px 4px rgba(0,0,0,0.04);
+  --shadow-clay-btn-hover:
+    0 6px 22px rgba(255,130,170,0.45),
+    inset 0 2px 0 rgba(255,255,255,0.6),
+    inset 0 -2px 6px rgba(0,0,0,0.06);
+
+  /* shadow alias (구 이름 호환) */
+  --shadow-card:          var(--shadow-clay);
+  --shadow-card-hover:    var(--shadow-clay-hover);
+  --shadow-card-active:   var(--shadow-clay-active);
+  --shadow-button:        var(--shadow-clay-btn);
+  --shadow-button-hover:  var(--shadow-clay-btn-hover);
+  --shadow-button-active:
+    0 2px 8px rgba(255,130,170,0.25),
+    inset 0 2px 8px rgba(0,0,0,0.08);
+  --card-shadow:          var(--shadow-clay);
+
+  /* ═══ Primary CTA — 수채 코랄 ═══ */
+  --btn-primary-bg:        linear-gradient(135deg, #ffaec3, #ff8aa5);
+  --btn-primary:           linear-gradient(135deg, #ffaec3, #ff8aa5);  /* alias */
+  --btn-primary-text:      #ffffff;
+  --btn-primary-shadow:       var(--shadow-clay-btn);
+  --btn-primary-shadow-hover: var(--shadow-clay-btn-hover);
+
+  /* Secondary — 수채 라벤더 */
+  --btn-secondary-bg:      linear-gradient(135deg, #c4a7f7, #a87ef0);
+  --btn-secondary-text:    #ffffff;
+
+  /* Success — 수채 민트 */
+  --btn-success-bg:        linear-gradient(135deg, #7ce0a0, #4fc880);
+  --btn-success-text:      #1a4020;
+
+  /* Danger — 수채 살몬 */
+  --btn-danger-bg:         linear-gradient(135deg, #fca5a5, #f47171);
+
+  /* Ghost / Cancel */
+  --btn-ghost-bg:          #ede5f0;
+  --btn-ghost-text:        #4b5563;
+  --btn-ghost-border:      #d8ccdf;
+  --btn-cancel-bg:         #ede5f0;
+  --btn-cancel-text:       #4b5563;
+  --btn-cancel-border:     #d8ccdf;
+
+  /* ═══ 오버레이 ═══ */
+  --bg-overlay:         rgba(60,40,90,0.35);
+  --bg-overlay-light:   rgba(255,255,255,0.25);
+  --bg-overlay-medium:  rgba(0,0,0,0.15);
+  --modal-overlay:      rgba(60,40,90,0.35);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE — 젖은 조약돌 (기존 톤 유지, 모카톤 primitive만 폐기)
+   ──────────────────────────────────────────────
+   다크의 기본 색감은 style.css의 기존 정의를 그대로 유지합니다.
+   이 블록은 Phase 1에서 수정한 하위탭바 조약돌 토큰을 시맨틱
+   레이어로 승격하는 등 "토큰 이름만 정리"가 주 목적입니다.
+   ══════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+
+  /* 모카톤 primitive 폐기 — 참조 0건 확인, 값을 빈 상수로 */
+  --p-dark-amber:   var(--p-stone-700, #1a1820);
+  --p-dark-green:   var(--p-stone-700, #1a1820);
+  --p-dark-purple:  var(--p-stone-700, #1a1820);
+  --p-dark-pink:    var(--p-stone-700, #1a1820);
+  --p-dark-red:     var(--p-stone-700, #1a1820);
+  --p-dark-blue:    var(--p-stone-700, #1a1820);
+
+  /* 조약돌 중성 스케일 (Phase 3b에서 p-stone-* 전면 전환 예정) */
+  --p-stone-950: #0c0a12;
+  --p-stone-900: #14121a;
+  --p-stone-800: #1a1820;
+  --p-stone-700: #201e26;
+  --p-stone-600: #26242c;
+  --p-stone-500: #2e2c34;
+  --p-stone-400: #3a3842;
+  --p-stone-300: #4a4854;
+  --p-stone-200: #6a6878;
+  --p-stone-100: #b8b4c6;
+
+  /* 젖은 조약돌 탭 active — Phase 1 수정값을 토큰으로 승격 */
+  --tab-active-bg:     #0e0c14;
+  --tab-active-text:   #e8e6f0;
+  --tab-active-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.75),
+    inset 0 -1px 0 rgba(255,255,255,0.045),
+    inset 0 1px 0 rgba(0,0,0,0.4);
+
+  /* 하위탭바 bowl shadow (Phase 1에서 하드코딩했던 값) */
+  --subtab-bar-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.55),
+    inset 0 -1px 0 rgba(255,255,255,0.025),
+    0 1px 0 rgba(255,255,255,0.03);
+}
