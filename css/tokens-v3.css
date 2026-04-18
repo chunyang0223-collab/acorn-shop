@@ -178,3 +178,87 @@
     inset 0 -1px 0 rgba(255,255,255,0.025),
     0 1px 0 rgba(255,255,255,0.03);
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   E-1 (Sky Cloud) OVERRIDE → C 컨셉 (수채화 코랄-라벤더)
+   ──────────────────────────────────────────────
+   style.css L8455+의 하드코딩 pink-purple-sky 그라디언트를
+   크림 라벤더 + 수채 코랄 팔레트로 전환.
+   같은 셀렉터로 오버라이드 → cascade 순서상 tokens-v3.css가 승.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 메인탭바 컨테이너 ── */
+:root:not([data-theme="dark"]) #userTabBar.clay-card {
+  background: linear-gradient(160deg, #fcf6fa 0%, #f8f0f5 50%, #faf4f0 100%);
+  box-shadow: 0 4px 18px rgba(200,150,180,0.12), 0 1px 3px rgba(200,150,180,0.06);
+}
+
+/* ── 메인탭바 오로라 보더 ── */
+:root:not([data-theme="dark"]) .tab-bar-outer::before {
+  background: linear-gradient(135deg, #ffd0dc, #f5d0e8, #e0ccf0, #ffdcc8);
+}
+
+/* ── 메인탭 active 아이콘 & 레이블 ── */
+:root:not([data-theme="dark"]) #userTabBar .tab-btn.active .tab-icon {
+  background: linear-gradient(145deg, #fff0f5, #ffdce8);
+}
+:root:not([data-theme="dark"]) #userTabBar .tab-btn.active,
+:root:not([data-theme="dark"]) #userTabBar .tab-btn.active .tab-label {
+  color: #b03060;
+}
+
+/* ── 메인탭 비활성 ── */
+:root:not([data-theme="dark"]) #userTabBar .tab-btn,
+:root:not([data-theme="dark"]) #userTabBar .tab-btn .tab-label {
+  color: rgba(150,110,140,0.5);
+}
+
+/* ── 하위탭바 컨테이너 ── */
+:root:not([data-theme="dark"]) .adm-subtab-bar {
+  background: linear-gradient(145deg, #fcf6fa 0%, #f6f0f5 100%);
+  box-shadow: 0 2px 10px rgba(200,150,180,0.06);
+}
+
+/* ── 하위탭바 오로라 보더 ── */
+:root:not([data-theme="dark"]) .adm-subtab-bar::before {
+  background: linear-gradient(135deg, #ffd8e4, #f0d8ed, #e4d6ed, #ffe4d4);
+  opacity: 0.75;
+}
+
+/* ── 하위탭 active ── */
+:root:not([data-theme="dark"]) .adm-subtab.active {
+  color: #b03060;
+  background: #fde8ee;
+}
+
+/* ── 하위탭 비활성 ── */
+:root:not([data-theme="dark"]) .adm-subtab {
+  color: rgba(150,110,140,0.5);
+}
+
+/* ── 컨텐츠 카드 (뽑기·상점·다람쥐 카드 등 전부) ── */
+:root:not([data-theme="dark"]) .clay-card:not(#userTabBar):not(#adminTabBar) {
+  background: linear-gradient(160deg, #fbf8fc 0%, #f8f2f8 40%, #fbf6f4 100%);
+}
+
+/* ── 카드 오로라 보더 ── */
+:root:not([data-theme="dark"]) .clay-card:not(#userTabBar):not(#adminTabBar)::before {
+  background: linear-gradient(135deg, #ffd8e4, #f0d4ec, #e4d2f0, #ffe0d0);
+}
+
+/* ── 필터칩 ── */
+:root:not([data-theme="dark"]) .filter-chip {
+  border-color: rgba(200,150,180,0.22);
+  color: rgba(150,100,140,0.55);
+}
+:root:not([data-theme="dark"]) .filter-chip.active {
+  border-color: #f0a0c8;
+  color: #b03060;
+  background: #fde8ee;
+}
+
+/* ── 다람쥐 스탯 배경 ── */
+:root:not([data-theme="dark"]) .sq-stat {
+  background: #faf3f5;
+}
