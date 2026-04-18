@@ -129,7 +129,8 @@ function start2048Game() {
 
   play.innerHTML = `
     <style>
-      .mg2048-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
+      .mg2048-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;background:linear-gradient(160deg,#2a2344 0%,#1e1836 100%);border-radius:22px;padding:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 24px rgba(14,10,30,.4)}
+      .mg2048-cabinet{background:#14102a;border-radius:18px;padding:14px 12px 12px;box-shadow:inset 0 2px 8px rgba(0,0,0,.6),inset 0 -1px 0 rgba(255,255,255,.03)}
       .mg2048-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 2px}
       .mg2048-title{font-size:1.5rem;font-weight:900;color:#ede9fe;display:flex;align-items:baseline;gap:8px;letter-spacing:.5px;text-shadow:0 0 12px rgba(168,85,247,.35)}
       .mg2048-badge{font-size:.5rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:3px 8px;border-radius:6px;animation:mg2048-pulse 1.5s ease infinite;box-shadow:0 2px 12px rgba(245,158,11,.45),inset 0 1px 0 rgba(255,255,255,.25)}
@@ -208,6 +209,7 @@ function start2048Game() {
       .mg2048-foot{text-align:center;font-size:.6rem;color:#6a5990;margin-top:10px;letter-spacing:1px}
     </style>
     <div class="mg2048-wrap" id="mg2048Wrap">
+      <div class="mg2048-cabinet">
       <div class="mg2048-header">
         <div class="mg2048-title">2048 <span class="mg2048-badge">HARDCORE</span></div>
         <button class="mg2048-exit-top" onclick="_2048_confirmExit()">✕</button>
@@ -246,6 +248,7 @@ function start2048Game() {
         <span class="mg2048-swipe-hint">↕ 여기서도 스와이프 가능 ↕</span>
       </div>
       <p class="mg2048-foot">방향키 · WASD · 스와이프 · 💀+💀 = 💥</p>
+      </div>
     </div>`;
 
   _2048.tileLayer = document.getElementById('mg2048TileLayer');
