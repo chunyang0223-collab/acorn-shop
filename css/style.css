@@ -8594,15 +8594,10 @@ input[type="checkbox"]:active,
   border-radius: 26px;
   background: linear-gradient(135deg, #ffd8e4, #f0d4ec, #e4d2f0, #ffe0d0);
   z-index: -1;
-}
-
-/* ── 상점 그리드 카드: 오로라 보더 약하게 ── */
-:root:not([data-theme="dark"]) #shopGrid .clay-card::before {
   opacity: 0.35;
-}
-/* ── 보유다람쥐 카드: 오로라 보더 약간 연하게 ── */
-:root:not([data-theme="dark"]) #utab-sq_my > .clay-card::before {
-  opacity: 0.45;
+  /* NOTE: 부모 .clay-card의 z-index:0 때문에 ::before가 부모 배경 뒤로
+     완전히 가지 않는다. opacity 0.35로 낮춰서 크림 라벤더 배경이 비치는
+     은은한 오로라 틴트로 처리. 참고: 상점 카드가 이 값에서 잘 보였음. */
 }
 
 /* ── 필터칩 ── */
