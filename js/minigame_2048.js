@@ -162,8 +162,8 @@ function start2048Game() {
       @keyframes mg2048-spawn{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
       @keyframes mg2048-merge{0%{transform:scale(1)}35%{transform:scale(1.3)}70%{transform:scale(.94)}100%{transform:scale(1)}}
       @keyframes mg2048-bombDrop{0%{transform:scale(1.8) rotate(20deg);opacity:0}50%{transform:scale(.9) rotate(-5deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
-      .mg2048-v2{background:var(--bg-surface)7ed;color:#c2410c;font-weight:800}
-      .mg2048-v4{background:#ffedd5;color:#c2410c}
+      .mg2048-v2{background:#fef3c7;color:#c2410c;font-weight:800}
+      .mg2048-v4{background:#fde68a;color:#c2410c}
       .mg2048-v8{background:var(--p-amber-500);color:var(--bg-surface);box-shadow:0 3px 0 #d97706,0 2px 8px rgba(245,158,11,.2)}
       .mg2048-v16{background:var(--p-orange-500);color:var(--bg-surface);box-shadow:0 3px 0 #ea580c,0 2px 8px rgba(249,115,22,.2)}
       .mg2048-v32{background:var(--p-red-500);color:var(--bg-surface);box-shadow:0 3px 0 #dc2626,0 2px 8px rgba(239,68,68,.2)}
