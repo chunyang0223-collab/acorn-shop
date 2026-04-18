@@ -131,25 +131,30 @@ function start2048Game() {
     <style>
       .mg2048-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
       .mg2048-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 2px}
-      .mg2048-title{font-size:1.5rem;font-weight:900;color:var(--text-brand);display:flex;align-items:baseline;gap:8px}
-      .mg2048-badge{font-size:.5rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,#f59e0b,#ef4444);color:var(--bg-surface);padding:3px 8px;border-radius:6px;animation:mg2048-pulse 1.5s ease infinite;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+      .mg2048-title{font-size:1.5rem;font-weight:900;color:#ede9fe;display:flex;align-items:baseline;gap:8px;letter-spacing:.5px;text-shadow:0 0 12px rgba(168,85,247,.35)}
+      .mg2048-badge{font-size:.5rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:3px 8px;border-radius:6px;animation:mg2048-pulse 1.5s ease infinite;box-shadow:0 2px 12px rgba(245,158,11,.45),inset 0 1px 0 rgba(255,255,255,.25)}
       @keyframes mg2048-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.85;transform:scale(1.04)}}
-      .mg2048-exit-top{width:32px;height:32px;border-radius:50%;border:none;background:rgba(120,53,15,.08);color:var(--p-amber-700);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
-      .mg2048-exit-top:hover{background:rgba(120,53,15,.15)}
+      .mg2048-exit-top{width:32px;height:32px;border-radius:50%;border:none;background:#1a1530;color:#c4b5fd;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+      .mg2048-exit-top:hover{background:#2a1e4a;color:#ede9fe}
       .mg2048-scores{display:flex;gap:6px;margin-bottom:14px}
-      .mg2048-sbox{flex:1;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:12px;padding:8px 10px;text-align:center;border:1.5px solid rgba(180,100,0,.1);box-shadow:0 2px 8px rgba(180,100,0,.06)}
-      .mg2048-sbox-label{font-size:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--p-amber-600);opacity:.6;font-weight:700}
-      .mg2048-sbox-val{font-size:1.1rem;font-weight:900;color:var(--p-amber-600);margin-top:2px}
-      .mg2048-sbox.drop{background:linear-gradient(135deg,#fffbeb,#fef9e7);border-color:rgba(251,191,36,.2)}
-      .mg2048-sbox.combo{background:linear-gradient(135deg,#faf5ff,#f3e8ff);border-color:rgba(168,85,247,.12)}
-      .mg2048-sbox.combo .mg2048-sbox-label{color:var(--p-purple-700);opacity:.6}
-      .mg2048-sbox.combo .mg2048-sbox-val{color:var(--p-purple-700)}
-      .mg2048-timer-wrap{position:relative;height:8px;background:rgba(180,100,0,.08);border-radius:6px;margin-bottom:14px;overflow:hidden;border:1px solid rgba(180,100,0,.06)}
-      .mg2048-timer-bar{height:100%;border-radius:6px;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);transition:width .1s linear}
-      .mg2048-timer-bar.danger{background:linear-gradient(90deg,#ef4444,#dc2626);animation:mg2048-tflash .3s ease infinite}
+      .mg2048-sbox{flex:1;background:#1a1530;border-radius:12px;padding:8px 10px;text-align:center;border:1.5px solid #2a1e4a;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 2px 8px rgba(0,0,0,.35)}
+      .mg2048-sbox-label{font-size:.5rem;text-transform:uppercase;letter-spacing:1px;color:#8b7cb0;font-weight:700}
+      .mg2048-sbox-val{font-size:1.1rem;font-weight:900;color:#ede9fe;margin-top:2px}
+      .mg2048-sbox.drop{border-color:#3d2e1a}
+      .mg2048-sbox.drop .mg2048-sbox-label{color:#b59b6a}
+      .mg2048-sbox.drop .mg2048-sbox-val{color:#fde047}
+      .mg2048-sbox.combo{border-color:#3a1e42}
+      .mg2048-sbox.combo .mg2048-sbox-label{color:#a87ea8}
+      .mg2048-sbox.combo .mg2048-sbox-val{color:#f9a8d4}
+      .mg2048-sbox.item{border-color:#2a1e4a}
+      .mg2048-sbox.item .mg2048-sbox-label{color:#9b87d0}
+      .mg2048-sbox.item .mg2048-sbox-val{color:#c4b5fd}
+      .mg2048-timer-wrap{position:relative;height:8px;background:#14102a;border-radius:6px;margin-bottom:14px;overflow:hidden;border:1px solid #2a1e4a;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+      .mg2048-timer-bar{height:100%;border-radius:6px;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);transition:width .1s linear;box-shadow:0 0 8px rgba(245,158,11,.35)}
+      .mg2048-timer-bar.danger{background:linear-gradient(90deg,#ef4444,#dc2626);animation:mg2048-tflash .3s ease infinite;box-shadow:0 0 12px rgba(239,68,68,.6)}
       @keyframes mg2048-tflash{0%,100%{opacity:1}50%{opacity:.5}}
-      .mg2048-timer-text{position:absolute;right:6px;top:-18px;font-size:.72rem;font-weight:800;color:var(--p-red-600);font-variant-numeric:tabular-nums}
-      .mg2048-time-bonus{position:absolute;right:6px;top:-35px;font-size:.78rem;font-weight:800;color:var(--p-green-600);pointer-events:none;animation:mg2048-floatUp 650ms ease forwards}
+      .mg2048-timer-text{position:absolute;right:6px;top:-18px;font-size:.72rem;font-weight:800;color:#fca5a5;font-variant-numeric:tabular-nums;text-shadow:0 0 8px rgba(239,68,68,.4)}
+      .mg2048-time-bonus{position:absolute;right:6px;top:-35px;font-size:.78rem;font-weight:800;color:#86efac;pointer-events:none;animation:mg2048-floatUp 650ms ease forwards;text-shadow:0 0 8px rgba(34,197,94,.5)}
       @keyframes mg2048-floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-20px)}}
       .mg2048-board{width:100%;aspect-ratio:1;background:#0e0a1e;border-radius:16px;padding:10px;display:grid;grid-template:repeat(4,1fr)/repeat(4,1fr);gap:10px;position:relative;border:1px solid #2a1e4a;box-shadow:inset 0 2px 6px rgba(0,0,0,.7),0 0 30px rgba(124,58,237,.18),0 8px 20px rgba(0,0,0,.5);touch-action:none;transition:box-shadow .3s}
       .mg2048-board.danger-glow{box-shadow:inset 0 2px 6px rgba(0,0,0,.7),0 0 36px rgba(239,68,68,.45),0 8px 20px rgba(0,0,0,.5)}
@@ -179,28 +184,28 @@ function start2048Game() {
       .mg2048-bomb{background:radial-gradient(circle at 40% 35%,#6b7280,#111827);color:#fca5a5;border:2px solid rgba(252,165,165,.4);--tile-chunk:#000;--tile-glow:rgba(239,68,68,.3);font-size:1.4rem!important}
       .mg2048-particle{position:absolute;border-radius:50%;pointer-events:none;z-index:5;animation:mg2048-pfly var(--dur,450ms) ease-out forwards}
       @keyframes mg2048-pfly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)}}
-      .mg2048-float{position:absolute;font-weight:900;color:var(--p-red-600);pointer-events:none;z-index:20;font-size:.95rem;text-shadow:0 1px 2px rgba(0,0,0,.1);animation:mg2048-floatUp 600ms ease forwards}
-      .mg2048-acorn-drop{position:absolute;font-weight:900;color:var(--p-amber-600);pointer-events:none;z-index:21;font-size:.9rem;text-shadow:0 1px 4px rgba(217,119,6,.3);animation:mg2048-acornDrop 800ms ease forwards}
+      .mg2048-float{position:absolute;font-weight:900;color:#fca5a5;pointer-events:none;z-index:20;font-size:.95rem;text-shadow:0 0 10px rgba(239,68,68,.6),0 1px 2px rgba(0,0,0,.5);animation:mg2048-floatUp 600ms ease forwards}
+      .mg2048-acorn-drop{position:absolute;font-weight:900;color:#fde047;pointer-events:none;z-index:21;font-size:.9rem;text-shadow:0 0 10px rgba(250,204,21,.7),0 1px 2px rgba(0,0,0,.5);animation:mg2048-acornDrop 800ms ease forwards}
       @keyframes mg2048-acornDrop{0%{opacity:0;transform:scale(.5) translateY(5px)}20%{opacity:1;transform:scale(1.2) translateY(-8px)}100%{opacity:0;transform:scale(1) translateY(-28px)}}
-      .mg2048-combo{position:absolute;font-weight:900;color:var(--p-amber-600);pointer-events:none;z-index:20;font-size:1.3rem;text-shadow:0 2px 8px rgba(180,83,9,.3);animation:mg2048-comboAnim 800ms ease forwards}
+      .mg2048-combo{position:absolute;font-weight:900;color:#fbbf24;pointer-events:none;z-index:20;font-size:1.3rem;text-shadow:0 0 14px rgba(251,191,36,.7),0 2px 4px rgba(0,0,0,.5);animation:mg2048-comboAnim 800ms ease forwards}
       @keyframes mg2048-comboAnim{0%{opacity:0;transform:scale(.5) translateY(10px)}30%{opacity:1;transform:scale(1.2) translateY(-5px)}100%{opacity:0;transform:scale(1) translateY(-35px)}}
-      .mg2048-defuse{position:absolute;font-weight:900;color:#0891b2;pointer-events:none;z-index:20;font-size:1.15rem;text-shadow:0 2px 8px rgba(8,145,178,.3);animation:mg2048-comboAnim 900ms ease forwards}
-      .mg2048-ring{position:absolute;border-radius:50%;border:3px solid rgba(245,158,11,.6);pointer-events:none;z-index:6;animation:mg2048-ring 500ms ease-out forwards}
+      .mg2048-defuse{position:absolute;font-weight:900;color:#67e8f9;pointer-events:none;z-index:20;font-size:1.15rem;text-shadow:0 0 12px rgba(34,211,238,.7),0 2px 4px rgba(0,0,0,.5);animation:mg2048-comboAnim 900ms ease forwards}
+      .mg2048-ring{position:absolute;border-radius:50%;border:3px solid rgba(253,224,71,.7);pointer-events:none;z-index:6;animation:mg2048-ring 500ms ease-out forwards;box-shadow:0 0 12px rgba(250,204,21,.4)}
       @keyframes mg2048-ring{0%{width:8px;height:8px;opacity:1;transform:translate(-4px,-4px)}100%{width:90px;height:90px;opacity:0;transform:translate(-45px,-45px)}}
       .mg2048-board.shake{animation:mg2048-shake 200ms ease}
       @keyframes mg2048-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-      .mg2048-swipe-zone{min-height:80px;border-radius:16px;margin-top:14px;display:flex;align-items:center;justify-content:center;border:1.5px dashed rgba(180,100,0,.08);background:rgba(180,100,0,.02)}
-      .mg2048-swipe-hint{font-size:.65rem;color:rgba(120,53,15,.18);font-weight:700;letter-spacing:.5px}
+      .mg2048-swipe-zone{min-height:80px;border-radius:16px;margin-top:14px;display:flex;align-items:center;justify-content:center;border:1.5px dashed #2a1e4a;background:#14102a;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+      .mg2048-swipe-hint{font-size:.65rem;color:#6a5990;font-weight:700;letter-spacing:.5px}
       .mg2048-overlay{position:absolute;inset:0;background:rgba(14,10,30,.94);backdrop-filter:blur(8px);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .3s}
       [data-theme="dark"] .mg2048-overlay{background:rgba(14,10,30,.94)}
       .mg2048-overlay.hidden{opacity:0;pointer-events:none}
-      .mg2048-overlay h3{font-size:1.4rem;font-weight:900;margin-bottom:6px;color:var(--text-brand)}
-      .mg2048-overlay .rules{font-size:.75rem;color:var(--p-amber-700);opacity:.7;text-align:center;line-height:1.8;margin-bottom:16px;padding:0 18px}
-      .mg2048-overlay .rules b{color:var(--p-red-600);font-weight:800;opacity:1}
-      .mg2048-overlay .rules .cyan{color:#0891b2;font-weight:800;opacity:1}
-      [data-theme="dark"] .mg2048-overlay h3{color:#e8e8f0}
-      [data-theme="dark"] .mg2048-overlay .rules{color:#ccc}
-      .mg2048-foot{text-align:center;font-size:.6rem;opacity:.2;margin-top:10px;letter-spacing:1px}
+      .mg2048-overlay h3{font-size:1.4rem;font-weight:900;margin-bottom:6px;color:#ede9fe;text-shadow:0 0 14px rgba(168,85,247,.4)}
+      .mg2048-overlay .rules{font-size:.75rem;color:#c4b5fd;opacity:.85;text-align:center;line-height:1.8;margin-bottom:16px;padding:0 18px}
+      .mg2048-overlay .rules b{color:#fca5a5;font-weight:800;opacity:1}
+      .mg2048-overlay .rules .cyan{color:#67e8f9;font-weight:800;opacity:1}
+      [data-theme="dark"] .mg2048-overlay h3{color:#ede9fe}
+      [data-theme="dark"] .mg2048-overlay .rules{color:#c4b5fd}
+      .mg2048-foot{text-align:center;font-size:.6rem;color:#6a5990;margin-top:10px;letter-spacing:1px}
     </style>
     <div class="mg2048-wrap" id="mg2048Wrap">
       <div class="mg2048-header">
@@ -211,7 +216,7 @@ function start2048Game() {
         <div class="mg2048-sbox"><div class="mg2048-sbox-label">Score</div><div class="mg2048-sbox-val" id="mg2048Score">0</div></div>
         <div class="mg2048-sbox"><div class="mg2048-sbox-label">Best</div><div class="mg2048-sbox-val" id="mg2048Best">${_2048_getBest()}</div></div>
         <div class="mg2048-sbox drop"><div class="mg2048-sbox-label">Drop</div><div class="mg2048-sbox-val" id="mg2048AcornCount">🌰 0</div></div>
-        ${itemDropChance > 0 ? `<div class="mg2048-sbox" style="background:var(--bg-purple-subtle,#ede9fe);border-color:rgba(139,92,246,.2)"><div class="mg2048-sbox-label">Item</div><div class="mg2048-sbox-val" id="mg2048ItemCount">🎫 0</div></div>` : ''}
+        ${itemDropChance > 0 ? `<div class="mg2048-sbox item"><div class="mg2048-sbox-label">Item</div><div class="mg2048-sbox-val" id="mg2048ItemCount">🎫 0</div></div>` : ''}
         <div class="mg2048-sbox combo"><div class="mg2048-sbox-label">Combo</div><div class="mg2048-sbox-val" id="mg2048ComboCount">-</div></div>
       </div>
       <div class="mg2048-timer-wrap" id="mg2048TimerWrap">
