@@ -3804,12 +3804,36 @@ input[type="checkbox"]:active,
   position: relative;
 }
 
-/* 서브탭 다크모드 */
-[data-theme="dark"] .adm-subtab-bar { background: var(--adm-subtab-bar-bg); }
-[data-theme="dark"] .adm-subtab-home { background: var(--adm-subtab-home-bg); border-color: var(--adm-subtab-home-border); color: var(--adm-subtab-home-color); }
-[data-theme="dark"] .adm-subtab { color: var(--adm-subtab-color); }
-[data-theme="dark"] .adm-subtab:hover { background: var(--adm-subtab-hover-bg); }
-[data-theme="dark"] .adm-subtab.active { background: var(--adm-subtab-active-bg); color: var(--adm-subtab-active-color); border-color: var(--adm-subtab-active-border); box-shadow: none; }
+/* 서브탭 다크모드 — 젖은 조약돌 컨셉 */
+[data-theme="dark"] .adm-subtab-bar {
+  background: var(--bg-surface);
+  /* 라이트용 -4px -4px 흰빛 양각 shadow를 제거하고, 바닥 살짝 눌린 bowl 느낌으로 대체 */
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.55),
+    inset 0 -1px 0 rgba(255,255,255,0.025),
+    0 1px 0 rgba(255,255,255,0.03);
+}
+[data-theme="dark"] .adm-subtab-home {
+  background: var(--bg-sunken);
+  border-color: transparent;
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .adm-subtab { color: var(--text-tertiary); }
+[data-theme="dark"] .adm-subtab:hover {
+  color: var(--text-secondary);
+  background: transparent;
+}
+[data-theme="dark"] .adm-subtab.active {
+  /* 비에 젖은 조약돌: 더 검고, 움푹 들어간 인셋, 바닥에 옅은 광택 */
+  background: #0e0c14;
+  color: var(--text-primary);
+  border-color: transparent;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.75),
+    inset 0 -1px 0 rgba(255,255,255,0.045),
+    inset 0 1px 0 rgba(0,0,0,0.4);
+}
 
 /* ══════════════════════════════════════════════
    v2 개선: 품절 카드 강화
