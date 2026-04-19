@@ -157,7 +157,7 @@ function _buildSquirrelGrid(squirrels) {
 
       // 이미지
       let imgSrc = isBaby ? 'images/baby-squirrel.png' : `images/squirrels/${spriteFile}.png`;
-      let borderStyle = gs ? `${gs.border};box-shadow:${gs.shadow}` : 'border:2px solid #e5e7eb';
+      let borderStyle = gs ? `${gs.border};box-shadow:${gs.shadow}` : 'border:2px solid var(--grade-default-border)';
 
       gridHtml += `
         <div class="pf-sq-cell" style="${borderStyle}">

@@ -1,0 +1,346 @@
+/* ═══════════════════════════════════════════════════════
+   🚧 minigames-wip.css — 개발 중 미니게임 스타일
+   ──────────────────────────────────────────────
+   index.html 에서 로드되지 않음. 개발 재개 시 <link> 추가.
+   추출 일자: 2026-04-19 (style.css 에서 분리)
+   포함: 행운의 룰렛, 다람쥐 도둑
+   제외: 크로스워드(전용 CSS 없음, 인라인 스타일로 동작)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── 행운의 룰렛 ── */
+.rlt-container{max-width:340px;margin:0 auto;padding:12px;text-align:center}
+.rlt-header{margin-bottom:10px}
+.rlt-back-btn{background:none;border:1px solid rgba(255,255,255,.15);color:#9ca3af;font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:inherit}
+.rlt-title{font-size:17px;font-weight:900;color:#e0e0e0;margin:6px 0 2px}
+.rlt-info{font-size:11px;color:#9ca3af;font-weight:700}
+.rlt-wheel-wrap{position:relative;display:inline-block;margin:8px 0 12px}
+.rlt-pointer{position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:20px;color:#ffd700;z-index:2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));line-height:1}
+#rltCanvas{display:block;border-radius:50%}
+.rlt-bet-section{margin:8px 0 12px}
+.rlt-bet-label{font-size:11px;font-weight:800;color:#a0a0a0;margin-bottom:6px}
+.rlt-bet-row{display:flex;gap:5px;justify-content:center}
+.rlt-bet-btn{flex:1;max-width:56px;padding:6px 3px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#ccc;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px}
+.rlt-bet-btn:hover{border-color:rgba(255,200,50,.3);background:rgba(255,200,50,.08)}
+.rlt-bet-active{border-color:#ffd700!important;background:rgba(255,200,50,.15)!important;color:#ffd700!important;box-shadow:0 0 10px rgba(255,200,50,.2)}
+.rlt-bet-fee{font-size:9px;font-weight:700;opacity:.7}
+.rlt-bet-total{font-size:12px;font-weight:900;color:#fbbf24;margin-top:8px}
+.rlt-spin-btn{width:100%;max-width:240px;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;color:#1a1000;background:linear-gradient(135deg,#f0c040,#c8960a);box-shadow:0 4px 0 #a07808,0 6px 20px rgba(200,150,10,.25);transition:transform .1s,box-shadow .1s}
+.rlt-spin-btn:hover{transform:translateY(-1px);box-shadow:0 5px 0 #a07808,0 8px 24px rgba(200,150,10,.3)}
+.rlt-spin-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #a07808,0 2px 8px rgba(200,150,10,.2)}
+.rlt-spin-btn:disabled{opacity:.5;cursor:default;transform:none;box-shadow:0 4px 0 #a07808}
+.rlt-result{margin-top:12px;min-height:16px}
+.rlt-result-box{padding:12px;border-radius:12px;animation:rltResultIn .4s ease}
+.rlt-result-lose{background:rgba(80,40,40,.5);border:1px solid rgba(200,60,60,.2)}
+.rlt-result-win{background:rgba(40,60,40,.5);border:1px solid rgba(60,200,60,.2)}
+.rlt-result-big{background:rgba(60,50,20,.6);border:1px solid rgba(255,200,50,.3);box-shadow:0 0 20px rgba(255,200,50,.15)}
+.rlt-result-emoji{font-size:24px;margin-bottom:2px}
+.rlt-result-text{font-size:14px;font-weight:900;color:#e0e0e0;margin-bottom:2px}
+.rlt-result-amount{font-size:16px;font-weight:900;color:#fbbf24}
+.rlt-result-net{font-size:11px;color:#9ca3af;font-weight:700;margin-top:3px}
+@keyframes rltResultIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* ══════════════════════════════════════════════
+   🐿️ 다람쥐 도둑 (Squirrel Thief)
+   ══════════════════════════════════════════════ */
+
+/* 블록 그리드 */
+.st-block-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 스펠링 블록 */
+.st-block {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.1rem;
+  transition: transform var(--duration-normal) var(--ease-bounce),
+              box-shadow var(--duration-normal) var(--ease-soft);
+  cursor: default;
+  user-select: none;
+}
+.st-block:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+.st-block:active {
+  transform: translateY(1px) scale(0.95);
+}
+
+.st-block-common {
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  color: #0369a1;
+  border: 1.5px solid #7dd3fc;
+  box-shadow: 0 3px 10px rgba(56,189,248,0.2), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.st-block-uncommon {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  color: #6d28d9;
+  border: 1.5px solid #c4b5fd;
+  box-shadow: 0 3px 10px rgba(167,139,250,0.25), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.st-block-rare {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #b45309;
+  border: 1.5px solid #fbbf24;
+  box-shadow: 0 3px 12px rgba(245,158,11,0.3), inset 0 1px 0 rgba(255,255,255,0.6);
+  animation: pulse 2s infinite;
+}
+
+.st-block-letter {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.st-stolen-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.6rem;
+  background: #fecaca;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-block-used {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.st-block-hidden {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  color: #6b7280;
+  border: 1.5px dashed #9ca3af;
+  box-shadow: none;
+}
+
+/* 단어 만들기 슬롯 */
+.st-word-slots {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: none;
+}
+.st-word-slots::-webkit-scrollbar { display: none; }
+
+.st-word-slot {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px dashed var(--border-light, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-normal) var(--ease-bounce);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.st-word-slot:hover {
+  border-color: var(--pink-300, #f9a8d4);
+  background: rgba(249,168,212,0.08);
+}
+.st-slot-filled {
+  border-style: solid;
+  border-color: transparent;
+}
+.st-block-in-slot {
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+}
+
+/* 다람쥐 출정 타겟 슬롯 */
+.st-dispatch-slot {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 2px dashed var(--border-light, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-bounce);
+  background: var(--bg-card, rgba(255,255,255,0.78));
+}
+.st-dispatch-slot:hover {
+  border-color: #fbbf24;
+  background: rgba(251,191,36,0.08);
+  transform: translateY(-2px);
+}
+.st-target-filled {
+  border-style: solid;
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+}
+
+/* 낚시터 */
+.st-fishing-pond {
+  position: relative;
+  height: 200px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 40%, #0ea5e9 70%, #0369a1 100%);
+  overflow: hidden;
+  border: 2px solid #38bdf8;
+  box-shadow: inset 0 -10px 30px rgba(3,105,161,0.2);
+}
+
+.st-water-surface {
+  position: absolute;
+  top: 35%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255,255,255,0.4);
+  animation: st-wave 3s ease-in-out infinite;
+}
+
+@keyframes st-wave {
+  0%, 100% { transform: translateX(0) scaleY(1); opacity: 0.4; }
+  50% { transform: translateX(10px) scaleY(1.5); opacity: 0.6; }
+}
+
+.st-fishing-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 45%;
+  background: #64748b;
+  transform: translateX(-50%);
+}
+
+.st-float {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.st-float-idle {
+  animation: st-float-bob 2s ease-in-out infinite;
+}
+
+@keyframes st-float-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-6px); }
+}
+
+.st-float-bite {
+  animation: st-float-sink 0.3s ease-out forwards;
+}
+
+@keyframes st-float-sink {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(20px); opacity: 0.5; }
+}
+
+.st-catch-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: rgba(255,255,255,0.92);
+  padding: 16px 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+/* 완성 단어 뱃지 */
+.st-word-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border: 1.5px solid #6ee7b7;
+}
+
+/* 스코어보드 내 랭크 하이라이트 */
+.st-my-rank {
+  border: 2px solid #fbbf24 !important;
+  background: linear-gradient(135deg, rgba(254,243,199,0.5), rgba(253,230,138,0.3)) !important;
+}
+
+/* ── 다크모드 ── */
+.st-block-common {
+  background: linear-gradient(135deg, #1e3a5f, #1e4d7a);
+  color: #7dd3fc;
+  border-color: #2563eb;
+  box-shadow: 0 3px 10px rgba(37,99,235,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.st-block-uncommon {
+  background: linear-gradient(135deg, #2e1a5e, #3b2180);
+  color: #c4b5fd;
+  border-color: #7c3aed;
+  box-shadow: 0 3px 10px rgba(124,58,237,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.st-block-rare {
+  background: linear-gradient(135deg, #5c3c0a, #7c4e12);
+  color: #fde68a;
+  border-color: #f59e0b;
+  box-shadow: 0 3px 12px rgba(245,158,11,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.st-block-hidden {
+  background: linear-gradient(135deg, #1f2937, #374151);
+  color: #9ca3af;
+  border-color: #4b5563;
+}
+.st-word-slot {
+  border-color: #374151;
+}
+.st-word-slot:hover {
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.08);
+}
+.st-dispatch-slot {
+  border-color: #374151;
+  background: rgba(255,255,255,0.05);
+}
+.st-dispatch-slot:hover {
+  border-color: #f59e0b;
+  background: rgba(245,158,11,0.1);
+}
+.st-target-filled {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #5c3c0a, #7c4e12);
+}
+.st-fishing-pond {
+  background: linear-gradient(180deg, #1e3a5f 0%, #1a365d 40%, #0c4a6e 70%, #082f49 100%);
+  border-color: #2563eb;
+}
+.st-word-badge {
+  background: linear-gradient(135deg, #064e3b, #065f46);
+  color: #6ee7b7;
+  border-color: #059669;
+}
+.st-my-rank {
+  border-color: #f59e0b !important;
+  background: linear-gradient(135deg, rgba(92,60,10,0.3), rgba(124,78,18,0.2)) !important;
+}
+.st-stolen-badge {
+  background: #7f1d1d;
+}

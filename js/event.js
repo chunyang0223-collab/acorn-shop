@@ -310,7 +310,8 @@ function renderEventAdmin() {
     if (!statusEl) return;
 
     const unit = type === 'minigame' ? '🌰' : '%';
-    let text = '비활성', bg = '#fee2e2', color = '#b91c1c';
+    // Phase 3b-1b: hex → 시맨틱 Badge 토큰
+    let text = '비활성', bg = 'var(--badge-inactive-bg)', color = 'var(--badge-inactive-text)';
     let evActive = false;
 
     // 기간 이벤트 상태
@@ -320,13 +321,13 @@ function renderEventAdmin() {
       if (started && notEnded) {
         evActive = true;
         text = `✅ 활성 ${ev.discountPct}${unit}`;
-        bg = '#dcfce7'; color = '#166534';
+        bg = 'var(--badge-active-bg)'; color = 'var(--badge-active-text)';
         if (ev.endAt) {
           text += ` (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.endAt - now)}</span> 남음)`;
         }
       } else if (ev.startAt && now < ev.startAt) {
         text = `⏳ 예약 ${ev.discountPct}${unit} (<span id="adminEvtTimer-${type}">${_fmtRemaining(ev.startAt - now)}</span> 후 시작)`;
-        bg = '#fef9c3'; color = '#854d0e';
+        bg = 'var(--badge-pending-bg)'; color = 'var(--badge-pending-text)';
       }
     }
 
@@ -334,10 +335,10 @@ function renderEventAdmin() {
     if (!evActive) {
       const disc = getActiveEventDiscount(type);
       if (disc > 0) {
-        text = `✅ 요일반복 ${disc}${unit} 활성`; bg = '#dcfce7'; color = '#166534';
+        text = `✅ 요일반복 ${disc}${unit} 활성`; bg = 'var(--badge-active-bg)'; color = 'var(--badge-active-text)';
       } else {
         const hasRepeat = _repeats.some(r => r.active && r.type === type);
-        if (hasRepeat) { text = '📆 요일반복 대기'; bg = '#fef9c3'; color = '#854d0e'; }
+        if (hasRepeat) { text = '📆 요일반복 대기'; bg = 'var(--badge-pending-bg)'; color = 'var(--badge-pending-text)'; }
       }
     }
 

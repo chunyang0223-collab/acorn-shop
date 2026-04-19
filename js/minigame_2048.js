@@ -132,15 +132,15 @@ function start2048Game() {
       .mg2048-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;background:linear-gradient(160deg,#2a2344 0%,#1e1836 100%);border-radius:22px;padding:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 24px rgba(14,10,30,.4)}
       .mg2048-cabinet{background:#14102a;border-radius:18px;padding:14px 12px 12px;box-shadow:inset 0 2px 8px rgba(0,0,0,.6),inset 0 -1px 0 rgba(255,255,255,.03)}
       .mg2048-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 2px}
-      .mg2048-title{font-size:1.5rem;font-weight:900;color:#ede9fe;display:flex;align-items:baseline;gap:8px;letter-spacing:.5px;text-shadow:0 0 12px rgba(168,85,247,.35)}
+      .mg2048-title{font-size:1.5rem;font-weight:900;color:var(--mg2048-title-text);display:flex;align-items:baseline;gap:8px;letter-spacing:.5px;text-shadow:0 0 12px rgba(168,85,247,.35)}
       .mg2048-badge{font-size:.5rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:3px 8px;border-radius:6px;animation:mg2048-pulse 1.5s ease infinite;box-shadow:0 2px 12px rgba(245,158,11,.45),inset 0 1px 0 rgba(255,255,255,.25)}
       @keyframes mg2048-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.85;transform:scale(1.04)}}
-      .mg2048-exit-top{width:32px;height:32px;border-radius:50%;border:none;background:#1a1530;color:#c4b5fd;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+      .mg2048-exit-top{width:32px;height:32px;border-radius:50%;border:none;background:var(--mg2048-exit-bg);color:var(--mg2048-exit-text);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
       .mg2048-exit-top:hover{background:#2a1e4a;color:#ede9fe}
       .mg2048-scores{display:flex;gap:6px;margin-bottom:14px}
-      .mg2048-sbox{flex:1;background:#1a1530;border-radius:12px;padding:8px 10px;text-align:center;border:1.5px solid #2a1e4a;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 2px 8px rgba(0,0,0,.35)}
-      .mg2048-sbox-label{font-size:.5rem;text-transform:uppercase;letter-spacing:1px;color:#8b7cb0;font-weight:700}
-      .mg2048-sbox-val{font-size:1.1rem;font-weight:900;color:#ede9fe;margin-top:2px}
+      .mg2048-sbox{flex:1;background:var(--mg2048-sbox-bg);border-radius:12px;padding:8px 10px;text-align:center;border:1.5px solid var(--mg2048-sbox-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 2px 8px rgba(0,0,0,.35)}
+      .mg2048-sbox-label{font-size:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mg2048-sbox-label-text);font-weight:700}
+      .mg2048-sbox-val{font-size:1.1rem;font-weight:900;color:var(--mg2048-sbox-val-text);margin-top:2px}
       .mg2048-sbox.drop{border-color:#3d2e1a}
       .mg2048-sbox.drop .mg2048-sbox-label{color:#b59b6a}
       .mg2048-sbox.drop .mg2048-sbox-val{color:#fde047}
@@ -188,7 +188,7 @@ function start2048Game() {
       .mg2048-float{position:absolute;font-weight:900;color:#fca5a5;pointer-events:none;z-index:20;font-size:.95rem;text-shadow:0 0 10px rgba(239,68,68,.6),0 1px 2px rgba(0,0,0,.5);animation:mg2048-floatUp 600ms ease forwards}
       .mg2048-acorn-drop{position:absolute;font-weight:900;color:#fde047;pointer-events:none;z-index:21;font-size:.9rem;text-shadow:0 0 10px rgba(250,204,21,.7),0 1px 2px rgba(0,0,0,.5);animation:mg2048-acornDrop 800ms ease forwards}
       @keyframes mg2048-acornDrop{0%{opacity:0;transform:scale(.5) translateY(5px)}20%{opacity:1;transform:scale(1.2) translateY(-8px)}100%{opacity:0;transform:scale(1) translateY(-28px)}}
-      .mg2048-combo{position:absolute;font-weight:900;color:#fbbf24;pointer-events:none;z-index:20;font-size:1.3rem;text-shadow:0 0 14px rgba(251,191,36,.7),0 2px 4px rgba(0,0,0,.5);animation:mg2048-comboAnim 800ms ease forwards}
+      .mg2048-combo{position:absolute;font-weight:900;color:var(--mg2048-combo-text);pointer-events:none;z-index:20;font-size:1.3rem;text-shadow:0 0 14px rgba(251,191,36,.7),0 2px 4px rgba(0,0,0,.5);animation:mg2048-comboAnim 800ms ease forwards}
       @keyframes mg2048-comboAnim{0%{opacity:0;transform:scale(.5) translateY(10px)}30%{opacity:1;transform:scale(1.2) translateY(-5px)}100%{opacity:0;transform:scale(1) translateY(-35px)}}
       .mg2048-defuse{position:absolute;font-weight:900;color:#67e8f9;pointer-events:none;z-index:20;font-size:1.15rem;text-shadow:0 0 12px rgba(34,211,238,.7),0 2px 4px rgba(0,0,0,.5);animation:mg2048-comboAnim 900ms ease forwards}
       .mg2048-ring{position:absolute;border-radius:50%;border:3px solid rgba(253,224,71,.7);pointer-events:none;z-index:6;animation:mg2048-ring 500ms ease-out forwards;box-shadow:0 0 12px rgba(250,204,21,.4)}
@@ -198,14 +198,11 @@ function start2048Game() {
       .mg2048-swipe-zone{min-height:80px;border-radius:16px;margin-top:14px;display:flex;align-items:center;justify-content:center;border:1.5px dashed #2a1e4a;background:#14102a;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
       .mg2048-swipe-hint{font-size:.65rem;color:#6a5990;font-weight:700;letter-spacing:.5px}
       .mg2048-overlay{position:absolute;inset:0;background:rgba(14,10,30,.94);backdrop-filter:blur(8px);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .3s}
-      [data-theme="dark"] .mg2048-overlay{background:rgba(14,10,30,.94)}
       .mg2048-overlay.hidden{opacity:0;pointer-events:none}
-      .mg2048-overlay h3{font-size:1.4rem;font-weight:900;margin-bottom:6px;color:#ede9fe;text-shadow:0 0 14px rgba(168,85,247,.4)}
-      .mg2048-overlay .rules{font-size:.75rem;color:#c4b5fd;opacity:.85;text-align:center;line-height:1.8;margin-bottom:16px;padding:0 18px}
+      .mg2048-overlay h3{font-size:1.4rem;font-weight:900;margin-bottom:6px;color:var(--mg2048-overlay-h3-text);text-shadow:0 0 14px rgba(168,85,247,.4)}
+      .mg2048-overlay .rules{font-size:.75rem;color:var(--mg2048-overlay-rules-text);opacity:.85;text-align:center;line-height:1.8;margin-bottom:16px;padding:0 18px}
       .mg2048-overlay .rules b{color:#fca5a5;font-weight:800;opacity:1}
       .mg2048-overlay .rules .cyan{color:#67e8f9;font-weight:800;opacity:1}
-      [data-theme="dark"] .mg2048-overlay h3{color:#ede9fe}
-      [data-theme="dark"] .mg2048-overlay .rules{color:#c4b5fd}
       .mg2048-foot{text-align:center;font-size:.6rem;color:#6a5990;margin-top:10px;letter-spacing:1px}
     </style>
     <div class="mg2048-wrap" id="mg2048Wrap">

@@ -83,12 +83,13 @@ function _sqCalcGrade(sq) {
 }
 
 function _sqGradeStyle(grade) {
+  // 등급 스타일은 style.css 의 --grade-* 토큰에서 공급.
   switch(grade) {
-    case 'legend': return { label:'레전드', border:'border:3px solid #ef4444', shadow:'0 0 12px rgba(239,68,68,.5),0 0 24px rgba(239,68,68,.2)', color:'#dc2626', bg:'#fef2f2' };
-    case 'unique': return { label:'유일', border:'border:3px solid #eab308', shadow:'0 0 10px rgba(234,179,8,.4)', color:'#ca8a04', bg:'#fefce8' };
-    case 'epic':   return { label:'희귀', border:'border:3px solid #3b82f6', shadow:'0 0 8px rgba(59,130,246,.3)', color:'#2563eb', bg:'#eff6ff' };
-    case 'rare':   return { label:'레어', border:'border:3px solid #22c55e', shadow:'0 0 8px rgba(34,197,94,.3)', color:'#16a34a', bg:'#f0fdf4' };
-    default:       return { label:'일반', border:'border:3px solid #8896a4', shadow:'0 0 4px rgba(100,120,140,.2)', color:'#6b7280', bg:'#eef1f5' };
+    case 'legend': return { label:'레전드', border:'border:3px solid var(--grade-legend-border)', shadow:'0 0 12px rgba(239,68,68,.5),0 0 24px rgba(239,68,68,.2)', color:'var(--grade-legend-text)', bg:'var(--grade-legend-bg)', tagBg:'var(--grade-legend-tag-bg)' };
+    case 'unique': return { label:'유일',   border:'border:3px solid var(--grade-unique-border)', shadow:'0 0 10px rgba(234,179,8,.4)',                          color:'var(--grade-unique-text)', bg:'var(--grade-unique-bg)', tagBg:'var(--grade-unique-tag-bg)' };
+    case 'epic':   return { label:'희귀',   border:'border:3px solid var(--grade-epic-border)',   shadow:'0 0 8px rgba(59,130,246,.3)',                          color:'var(--grade-epic-text)',   bg:'var(--grade-epic-bg)',   tagBg:'var(--grade-epic-tag-bg)' };
+    case 'rare':   return { label:'레어',   border:'border:3px solid var(--grade-rare-border)',   shadow:'0 0 8px rgba(34,197,94,.3)',                           color:'var(--grade-rare-text)',   bg:'var(--grade-rare-bg)',   tagBg:'var(--grade-rare-tag-bg)' };
+    default:       return { label:'일반',   border:'border:3px solid var(--grade-common-border)', shadow:'0 0 4px rgba(100,120,140,.2)',                         color:'var(--grade-common-text)', bg:'var(--grade-common-bg)', tagBg:'var(--grade-common-tag-bg)' };
   }
 }
 
@@ -542,23 +543,18 @@ async function sqRenderGrid() {
     return gb - ga; // 높은 등급 우선
   });
 
-  const _ftDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const filterBtn = (val, label) => {
     const active = filter === val;
-    // ── 필터 버튼 색상 (라이트/다크 × 활성/비활성) ──
+    // ── 필터 버튼 색상 (활성/비활성) ──
     const bg = active
-      ? (_ftDark ? 'linear-gradient(180deg,#fde68a,#fbbf24)' : 'linear-gradient(180deg,#fef3c7,#fde68a)')
-      : (_ftDark ? 'linear-gradient(180deg,#2a3a4e,#1e2d40)' : 'linear-gradient(180deg,#ffffff,#f1f5f9)');
-    const border = active
-      ? (_ftDark ? '#d97706' : '#f59e0b')
-      : (_ftDark ? '#475569' : '#d1d5db');
-    const color = active
-      ? (_ftDark ? '#1e1e1e' : '#1e1e1e')
-      : (_ftDark ? '#e2e8f0' : '#4b5563');
+      ? 'linear-gradient(180deg,#fde68a,#fbbf24)'
+      : 'linear-gradient(180deg,#2a3a4e,#1e2d40)';
+    const border = active ? '#d97706' : '#475569';
+    const color = active ? '#1e1e1e' : '#e2e8f0';
     const shadow = active
-      ? (_ftDark ? '0 2px 0 #b45309,0 4px 10px rgba(245,158,11,0.25)' : '0 2px 0 #d97706,0 4px 10px rgba(251,191,36,0.15)')
-      : (_ftDark ? '0 2px 0 #0f172a,0 3px 6px rgba(0,0,0,0.25)' : '0 2px 0 #e2e8f0,0 3px 6px rgba(0,0,0,0.04)');
-    const gloss = active ? 'rgba(255,255,255,0.3)' : (_ftDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)');
+      ? '0 2px 0 #b45309,0 4px 10px rgba(245,158,11,0.25)'
+      : '0 2px 0 #0f172a,0 3px 6px rgba(0,0,0,0.25)';
+    const gloss = active ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.06)';
     return `<button onclick="window._sqFilter='${val}';sqRenderGrid()"
       style="padding:5px 14px;border-radius:20px;
         border:1.5px solid ${border};
@@ -625,7 +621,7 @@ function sqCardHTML(sq) {
                     : sq.type === 'pet' ? '#ec4899'
                     : sq.type === 'baby' ? '#fbbf24' : '#a3a3a3';
   const badgeStyle  = sq.type === 'explorer' ? 'background:var(--p-blue-500);color:var(--bg-surface)'
-                    : sq.type === 'pet' ? 'background:#fce7f3;color:#9d174d'
+                    : sq.type === 'pet' ? 'background:var(--badge-pet-bg);color:var(--badge-pet-text)'
                     : 'background:var(--bg-amber-muted);color:var(--p-amber-700)';
   const badgeLabel  = sq.type === 'explorer' ? '탐험형' : sq.type === 'pet' ? '애완형' : '아기';
 
@@ -723,15 +719,12 @@ function sqCardHTML(sq) {
     const _recRemaining = Math.max(0, new Date(sq.recovers_at) - Date.now());
     const _recTotalMs = _recBaseMin * 60000;
     const _recCost = Math.max(1, Math.ceil(_recMaxCost * (_recRemaining / _recTotalMs)));
-    const _isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const _rcBg = _isDark
-      ? 'linear-gradient(135deg,#818cf8,#a78bfa,#f0abfc,#c084fc,#818cf8)'
-      : 'linear-gradient(135deg,#c4b5fd,#d8b4fe,#f0abfc,#e9d5ff,#c4b5fd)';
-    const _rcColor = _isDark ? 'white' : '#581c87';
-    const _rcShadowBase = _isDark ? '#7c3aed' : '#a855f7';
-    const _rcShadowGlow = _isDark ? 'rgba(124,58,237,0.3)' : 'rgba(168,85,247,0.2)';
-    const _rcTextShadow = _isDark ? '0 1px 3px rgba(0,0,0,0.15)' : 'none';
-    const _rcGloss = _isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.55)';
+    const _rcBg = 'linear-gradient(135deg,#818cf8,#a78bfa,#f0abfc,#c084fc,#818cf8)';
+    const _rcColor = 'white';
+    const _rcShadowBase = '#7c3aed';
+    const _rcShadowGlow = 'rgba(124,58,237,0.3)';
+    const _rcTextShadow = '0 1px 3px rgba(0,0,0,0.15)';
+    const _rcGloss = 'rgba(255,255,255,0.4)';
     const _rcShadowFull = `0 4px 0 ${_rcShadowBase},0 6px 20px ${_rcShadowGlow}`;
     const _rcShadowDown = `0 1px 0 ${_rcShadowBase}`;
     recoverHTML = `
@@ -813,7 +806,7 @@ function sqCardHTML(sq) {
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
             <span style="font-size:16px;font-weight:900;color:var(--text-primary)">${sq.name}</span>
             <span onclick="sqEditName('${sq.id}')" style="font-size:12px;cursor:pointer;padding:1px 4px;display:inline-flex;align-items:center" title="클릭하여 이름 변경">✏️</span>
-            ${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}
+            ${gs ? `<span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.tagBg};padding:2px 7px;border-radius:8px">${gs.label}</span>` : ''}
             ${roleTag}
           </div>
           <div style="font-size:11px;font-weight:700;margin-top:2px">${statusText}</div>
@@ -897,8 +890,8 @@ function sqShowActionModal(id) {
     buttons.push({
       label: trainLabel, sub: trainSub,
       action: canTrain ? `sqShowTrainingModal('${sq.id}')` : '',
-      bg: canTrain ? 'linear-gradient(135deg,#38bdf8,#0284c7)' : '#e2e8f0',
-      color: canTrain ? 'white' : '#94a3b8',
+      bg: canTrain ? 'var(--sqbtn-train-bg)' : 'var(--btn-disabled-bg)',
+      color: canTrain ? 'white' : 'var(--btn-disabled-text)',
       disabled: !canTrain
     });
   }
@@ -910,8 +903,8 @@ function sqShowActionModal(id) {
         label: '📋 등급심사 신청',
         sub: '',
         action: `toast('⚠️','HP가 이미 최대치예요!')`,
-        bg: '#e2e8f0',
-        color: '#94a3b8',
+        bg: 'var(--btn-disabled-bg)',
+        color: 'var(--btn-disabled-text)',
         disabled: false
       });
     } else {
@@ -928,8 +921,8 @@ function sqShowActionModal(id) {
         label: examLabel,
         sub: canExam ? `비용 ${_sqSettings.exam_cost || 10} 도토리` : '',
         action: canExam ? `sqShowExamModal('${sq.id}')` : '',
-        bg: canExam ? 'linear-gradient(135deg,#a78bfa,#7c3aed)' : '#e2e8f0',
-        color: canExam ? 'white' : '#94a3b8',
+        bg: canExam ? 'var(--sqbtn-exam-bg)' : 'var(--btn-disabled-bg)',
+        color: canExam ? 'white' : 'var(--btn-disabled-text)',
         disabled: !canExam
       });
     }
@@ -940,7 +933,7 @@ function sqShowActionModal(id) {
     buttons.push({
       label: '⏩ 재심사 쿨타임 초기화 (관리자)', sub: '',
       action: `sqAdminResetCooldown('${sq.id}')`,
-      bg: '#fef3c7', color: '#92400e', disabled: false
+      bg: 'var(--sqbtn-admin-bg)', color: 'var(--sqbtn-admin-text)', disabled: false
     });
   }
 
@@ -954,7 +947,7 @@ function sqShowActionModal(id) {
     buttons.push({
       label: `🌰 ${currentCost} 도토리로 즉시 회복`,
       sub: '', action: `sqInstantRecover('${sq.id}')`,
-      bg: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', disabled: false
+      bg: 'var(--sqbtn-recover-bg)', color: 'white', disabled: false
     });
   }
 
@@ -965,8 +958,8 @@ function sqShowActionModal(id) {
       label: apprenticeDisabled ? '🌾 다른 수습 중' : '🌾 농부로 전직',
       sub: apprenticeDisabled ? '' : '수습 기간 후 농부가 돼요',
       action: apprenticeDisabled ? '' : `farmStartApprentice('${sq.id}')`,
-      bg: apprenticeDisabled ? '#f3f4f6' : '#ecfdf5',
-      color: apprenticeDisabled ? '#9ca3af' : '#15803d',
+      bg: apprenticeDisabled ? 'var(--btn-disabled-bg)' : 'var(--sqbtn-farmer-bg)',
+      color: apprenticeDisabled ? 'var(--btn-disabled-text)' : 'var(--sqbtn-farmer-text)',
       disabled: apprenticeDisabled
     });
   }
@@ -978,7 +971,7 @@ function sqShowActionModal(id) {
       buttons.push({
         label: '🎁 수습 결과 확인하기', sub: '',
         action: `farmRevealResult()`,
-        bg: 'linear-gradient(135deg,#fbbf24,#f59e0b)', color: 'white', disabled: false
+        bg: 'var(--sqbtn-reveal-bg)', color: 'white', disabled: false
       });
     }
   }
@@ -988,7 +981,7 @@ function sqShowActionModal(id) {
     buttons.push({
       label: '⏩ 수습 스킵 (관리자)', sub: '',
       action: `farmSkipApprentice()`,
-      bg: '#fef3c7', color: '#92400e', disabled: false
+      bg: 'var(--sqbtn-admin-bg)', color: 'var(--sqbtn-admin-text)', disabled: false
     });
   }
 
@@ -997,12 +990,12 @@ function sqShowActionModal(id) {
     buttons.push({
       label: '🏪 펫샵에 팔기', sub: '',
       action: `sqSellSquirrel('${sq.id}')`,
-      bg: '#fee2e2', color: '#dc2626', disabled: false
+      bg: 'var(--sqbtn-sell-bg)', color: 'var(--sqbtn-sell-text)', disabled: false
     });
   } else if (_isActiveFarmer) {
     buttons.push({
       label: '🌾 농장에서 일하는 중', sub: '판매 불가',
-      action: '', bg: '#f3f4f6', color: '#9ca3af', disabled: true
+      action: '', bg: 'var(--btn-disabled-bg)', color: 'var(--btn-disabled-text)', disabled: true
     });
   }
 
@@ -1028,7 +1021,7 @@ function sqShowActionModal(id) {
       <div style="font-size:18px;font-weight:900;color:var(--text-primary);margin-bottom:2px">${sq.name}</div>
       <div style="font-size:12px;font-weight:700;margin-bottom:4px">${statusLabel}</div>
       <div style="display:flex;justify-content:center;gap:4px;margin-bottom:14px">
-        <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.color}15;padding:2px 8px;border-radius:8px">${gs.label}</span>
+        <span style="font-size:9px;font-weight:900;color:${gs.color};background:${gs.tagBg};padding:2px 8px;border-radius:8px">${gs.label}</span>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px">
         <div style="text-align:center">

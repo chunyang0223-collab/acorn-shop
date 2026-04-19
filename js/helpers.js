@@ -178,22 +178,6 @@ function fmtTs(iso) {
   } catch { return iso.slice(0,16).replace('T',' '); }
 }
 
-// ── 테마 관리 ──
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('acornTheme', theme);
-}
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'light';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-  if (typeof sqRenderGrid === 'function') sqRenderGrid();
-}
-// 저장된 테마 반영 (기본값: light)
-(function() {
-  const saved = localStorage.getItem('acornTheme') || 'light';
-  applyTheme(saved);
-})();
-
 // ── 별 생성 (다크모드용, 35개 랜덤) ──
 (function() {
   const COUNT = 23;

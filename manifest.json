@@ -4,8 +4,8 @@
   "description": "귀여운 도토리 포인트 상점 🌰",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#fff8f0",
-  "theme_color": "#f59e0b",
+  "background_color": "#0d0b1e",
+  "theme_color": "#0d0b1e",
   "orientation": "portrait-primary",
   "lang": "ko",
   "icons": [

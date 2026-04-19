@@ -350,9 +350,9 @@ function farmRenderDepositBadge() {
   const sign = (acorns > 0 || crumbs > 0) ? '+' : '';
   const display = `${sign}${acorns}.${String(crumbs).padStart(2, '0')}`;
   return `
-    <div onclick="farmShowDeposit()" style="cursor:pointer;flex-shrink:0">
-      <div class="farm-deposit-outer">
-        <div class="farm-deposit-inner">
+    <div onclick="farmShowDeposit()" style="cursor:pointer;flex:1;display:flex">
+      <div class="farm-deposit-outer" style="flex:1;display:flex">
+        <div class="farm-deposit-inner" style="flex:1">
           <div class="farm-deposit-acorns">${display}</div>
         </div>
       </div>
